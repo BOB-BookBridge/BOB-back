@@ -1,32 +1,24 @@
 package com.bob.domain.post.entity;
 
-import com.bob.domain.trade.entity.Trade;
+import com.bob.domain.post.entity.status.BookStatus;
+import com.bob.domain.post.entity.status.PostStatus;
+import com.bob.global.audit.BaseTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.bob.domain.book.entity.Book;
-import com.bob.domain.category.entity.Category;
-import com.bob.domain.member.entity.Member;
-import com.bob.domain.post.entity.status.BookStatus;
-import com.bob.domain.post.entity.status.PostStatus;
-import com.bob.global.audit.BaseTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -44,20 +36,17 @@ public class Post extends BaseTime {
   @Column(nullable = false)
   private PostStatus postStatus;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "category_id", nullable = false)
-  private Category category;
+  @Column(nullable = false)
+  private Integer categoryId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "seller_id", nullable = false)
-  private Member seller;
+  @JoinColumn(nullable = false)
+  private UUID sellerId;
 
   @Column(nullable = false)
   private String thumbnailUrl;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "book_id", nullable = false)
-  private Book book;
+  @Column(nullable = false)
+  private Long bookId;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
