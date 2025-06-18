@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
-import com.bob.domain.member.service.port.MailService;
+import com.bob.infra.mail.service.GoogleMailService;
 import com.bob.web.auth.mail.controller.MailController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -24,11 +24,13 @@ import org.springframework.test.web.servlet.MockMvc;
 @ExtendWith(MockitoExtension.class)
 class MailControllerTest {
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
   @InjectMocks
   private MailController mailController;
+
   @Mock
-  private MailService mailService;
+  private GoogleMailService mailService;
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Test
   @DisplayName("이메일 인증 코드 전송 요청 테스트")

@@ -1,4 +1,4 @@
-package com.bob.infra.mail.adapter;
+package com.bob.infra.mail.service;
 
 import static com.bob.support.fixture.auth.MailFixture.EMAIL;
 import static com.bob.support.fixture.auth.MailFixture.INVALID_CODE;
@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import com.bob.domain.member.service.port.MailVerificationStore;
+import com.bob.infra.mail.service.port.MailRedisPort;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,50 +23,50 @@ import org.springframework.mail.javamail.JavaMailSender;
 class GoogleMailServiceTest {
 
   @InjectMocks
-  private GoogleMailService googleMailService;
+  private GoogleMailService mailService;
+
+  @Mock
+  private MailRedisPort redisPort;
 
   @Mock
   private JavaMailSender mailSender;
 
   @Mock
-  private SimpleMailMessage simpleMailMessage;
-
-  @Mock
-  private MailVerificationStore mailVerificationStore;
+  private SimpleMailMessage message;
 
   @Test
   @DisplayName("이메일 전송 - 성공 테스트")
   void 이메일_인증_코드를_전송할_수_있다() {
     // when
-    googleMailService.sendCodeProcess(EMAIL);
+    mailService.sendCodeProcess(EMAIL);
 
     // then
-    then(mailSender).should().send(simpleMailMessage);
+    then(mailSender).should().send(message);
   }
 
   @Test
   @DisplayName("이메일 인증 코드 검증 - 성공 테스트")
   void 이메일_인증_코드를_검증할_수_있다() {
     // given
-    given(mailVerificationStore.getCode(EMAIL)).willReturn(Optional.of(VALID_CODE));
+    given(redisPort.getCode(EMAIL)).willReturn(Optional.of(VALID_CODE));
 
     // when
-    googleMailService.verifyCodeProcess(EMAIL, VALID_CODE);
+    mailService.verifyCodeProcess(EMAIL, VALID_CODE);
 
     // then
-    then(mailVerificationStore).should().getCode(EMAIL);
-    then(mailVerificationStore).should().saveVerified(EMAIL, "true", 10);
-    then(mailVerificationStore).should().deleteCode(EMAIL);
+    then(redisPort).should().getCode(EMAIL);
+    then(redisPort).should().saveVerified(EMAIL, "true", 10);
+    then(redisPort).should().deleteCode(EMAIL);
   }
 
   @Test
   @DisplayName("인증 코드 검증 - 실패 테스트(인증 코드 불일치)")
   void 인증_코드가_일치하지_않으면_예외를_발생시킨다() {
     // given
-    given(mailVerificationStore.getCode(EMAIL)).willReturn(Optional.of(INVALID_CODE));
+    given(redisPort.getCode(EMAIL)).willReturn(Optional.of(INVALID_CODE));
 
     // when, then
-    assertThatThrownBy(() -> googleMailService.verifyCodeProcess(EMAIL, VALID_CODE))
+    assertThatThrownBy(() -> mailService.verifyCodeProcess(EMAIL, VALID_CODE))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("입력하신 인증 코드가 일치하지 않습니다.");
   }
@@ -75,10 +75,10 @@ class GoogleMailServiceTest {
   @DisplayName("인증 코드 만료 - 실패 테스트")
   void 인증_코드가_만료되었으면_예외를_발생시킨다() {
     // given
-    given(mailVerificationStore.getCode(EMAIL)).willReturn(Optional.empty());
+    given(redisPort.getCode(EMAIL)).willReturn(Optional.empty());
 
     // when, then
-    assertThatThrownBy(() -> googleMailService.verifyCodeProcess(EMAIL, VALID_CODE))
+    assertThatThrownBy(() -> mailService.verifyCodeProcess(EMAIL, VALID_CODE))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("인증 코드가 만료되었습니다.");
   }
