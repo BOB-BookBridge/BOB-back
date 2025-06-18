@@ -6,6 +6,7 @@ import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST
 import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
 import static com.bob.global.utils.image.ImageDirectory.PROFILE;
 import static com.bob.global.utils.image.ImageUtils.generateImageFileName;
+import static com.bob.global.utils.random.RandomUtils.generateCode;
 
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
@@ -106,7 +107,8 @@ public class MemberService {
   @Transactional
   public void issueTempPasswordProcess(IssuePasswordCommand command) {
     Member member = memberReader.readMemberByEmail(command.email());
-    String tempPassword = mailPort.sendTempPasswordProcess(command.email());
+    String tempPassword = generateCode(12);
+    mailPort.sendTempPasswordProcess(command.email(), tempPassword);
     member.updatePassword(encoder.encode(tempPassword));
   }
 
