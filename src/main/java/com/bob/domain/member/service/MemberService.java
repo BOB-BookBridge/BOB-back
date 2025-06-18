@@ -19,11 +19,14 @@ import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberAreaSummaryResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileImageUrlResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
-import com.bob.domain.member.service.port.MemberAreaPort;
-import com.bob.domain.member.service.port.MemberMailPort;
-import com.bob.domain.member.service.port.MemberProfileImageAccessor;
-import com.bob.domain.member.service.port.MemberRedisPort;
+import com.bob.domain.member.service.port.out.MemberAreaPort;
+import com.bob.domain.member.service.port.out.MemberMailPort;
+import com.bob.domain.member.service.port.out.MemberProfileImageAccessor;
+import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
+import com.bob.domain.member.usecase.MemberModifyUseCase;
+import com.bob.domain.member.usecase.MemberReadUseCase;
+import com.bob.domain.member.usecase.MemberWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class MemberService {
+public class MemberService implements MemberWriteUseCase, MemberReadUseCase, MemberModifyUseCase {
 
   private final MemberRepository memberRepository;
   private final MemberReader memberReader;

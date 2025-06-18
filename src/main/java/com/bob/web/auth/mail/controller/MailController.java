@@ -1,6 +1,6 @@
 package com.bob.web.auth.mail.controller;
 
-import com.bob.infra.mail.adapter.AuthMailAdapter;
+import com.bob.web.auth.mail.port.out.AuthMailPort;
 import com.bob.web.auth.mail.request.MailSendRequest;
 import com.bob.web.auth.mail.request.MailVerifyRequest;
 import com.bob.web.common.CommonResponse;
@@ -16,17 +16,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MailController {
 
-  private final AuthMailAdapter mailAdapter;
+  private final AuthMailPort mailPort;
 
   @PostMapping
   public CommonResponse<ResponseSymbol> handleSendCode(@RequestBody MailSendRequest request) {
-    mailAdapter.sendCode(request.email());
+    mailPort.sendCode(request.email());
     return new CommonResponse<>(true, ResponseSymbol.SENT);
   }
 
   @PostMapping("/confirm")
   public CommonResponse<ResponseSymbol> handleVerifyCode(@RequestBody MailVerifyRequest request) {
-    mailAdapter.verifyCode(request.email(), request.code());
+    mailPort.verifyCode(request.email(), request.code());
     return new CommonResponse<>(true, ResponseSymbol.VERIFIED);
   }
 }

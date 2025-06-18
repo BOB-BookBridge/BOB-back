@@ -14,6 +14,9 @@ import com.bob.domain.area.service.dto.query.ReadAreaQuery;
 import com.bob.domain.area.service.dto.response.AreaSummaryResponse;
 import com.bob.domain.area.service.reader.ActivityAreaReader;
 import com.bob.domain.area.service.reader.EmdAreaReader;
+import com.bob.domain.area.usecase.AreaModifyUseCase;
+import com.bob.domain.area.usecase.AreaReadUseCase;
+import com.bob.domain.area.usecase.AreaWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.time.LocalDate;
@@ -25,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class AreaService {
+public class AreaService implements AreaWriteUseCase, AreaReadUseCase, AreaModifyUseCase {
 
   private final ActivityAreaRepository activityAreaRepository;
   private final ActivityAreaReader activityAreaReader;

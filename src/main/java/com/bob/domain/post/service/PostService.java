@@ -18,9 +18,13 @@ import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
 import com.bob.domain.post.service.dto.response.PostMemberSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostsResponse;
-import com.bob.domain.post.service.port.PostAreaPort;
-import com.bob.domain.post.service.port.PostMemberPort;
+import com.bob.domain.post.service.port.out.PostAreaPort;
+import com.bob.domain.post.service.port.out.PostMemberPort;
 import com.bob.domain.post.service.reader.PostReader;
+import com.bob.domain.post.usecase.PostDeleteUseCase;
+import com.bob.domain.post.usecase.PostModifyUseCase;
+import com.bob.domain.post.usecase.PostReadUseCase;
+import com.bob.domain.post.usecase.PostWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
@@ -33,7 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class PostService {
+public class PostService implements PostWriteUseCase, PostReadUseCase, PostModifyUseCase, PostDeleteUseCase {
 
   private final PostRepository postRepository;
   private final PostReader postReader;

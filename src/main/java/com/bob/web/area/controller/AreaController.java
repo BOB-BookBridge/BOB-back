@@ -1,6 +1,6 @@
 package com.bob.web.area.controller;
 
-import com.bob.domain.area.service.AreaService;
+import com.bob.domain.area.usecase.AreaModifyUseCase;
 import com.bob.web.area.request.AuthenticationRequest;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
@@ -17,14 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AreaController {
 
-  private final AreaService areaAuthenticationService;
+  private final AreaModifyUseCase modifyUseCase;
 
   @PatchMapping("/authentication")
   public CommonResponse<ResponseSymbol> handleAreaAuthentication(
       @RequestBody AuthenticationRequest request,
       @AuthenticationId UUID memberId
   ) {
-    areaAuthenticationService.authenticateProcess(request.toCommand(memberId));
+    modifyUseCase.authenticateProcess(request.toCommand(memberId));
     return new CommonResponse<>(true, ResponseSymbol.OK);
   }
 }
