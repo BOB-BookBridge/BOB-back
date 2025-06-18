@@ -12,7 +12,7 @@ public record PostFavoritesResponse(
 
   public static PostFavoritesResponse of(Long totalCount, List<PostFavorite> postList) {
     List<PostSummary> summaries = postList.stream()
-        .map((postFavorite) -> PostSummary.of(postFavorite.getPost()))
+        .map((postFavorite) -> PostSummary.from(postFavorite.getPost()))
         .toList();
 
     return new PostFavoritesResponse(totalCount, summaries);

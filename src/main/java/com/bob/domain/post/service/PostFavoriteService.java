@@ -4,7 +4,6 @@ import static com.bob.domain.post.entity.PostFavorite.create;
 import static com.bob.domain.post.service.helper.PostFavoriteHandler.safeRegister;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_POST_FAVORITE;
 
-import com.bob.domain.member.entity.Member;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.PostFavorite;
 import com.bob.domain.post.repository.PostFavoriteRepository;
@@ -25,8 +24,8 @@ public class PostFavoriteService {
   private final PostFavoriteReader postFavoriteReader;
 
   @Transactional
-  public void createPostFavoriteProcess(Member member, Post post) {
-    safeRegister(() -> postFavoriteRepository.save(create(member, post)), ALREADY_POST_FAVORITE);
+  public void createPostFavoriteProcess(UUID memberId, Post post) {
+    safeRegister(() -> postFavoriteRepository.save(create(memberId, post)), ALREADY_POST_FAVORITE);
   }
 
   @Transactional
