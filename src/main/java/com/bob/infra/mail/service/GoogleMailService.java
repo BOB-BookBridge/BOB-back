@@ -9,6 +9,7 @@ import com.bob.infra.mail.service.port.MailRedisPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -20,10 +21,16 @@ public class GoogleMailService {
 
   private final MailRedisPort redisPort;
 
+  @Async
   public void sendCodeProcess(String email) {
     String verificationCode = generateCode(6);
     redisPort.saveCode(email, verificationCode, 3);
     sendMail("인증 코드", verificationCode, email);
+  }
+
+  @Async
+  public void sendTempPasswordProcess(String email, String tempPassword) {
+    sendMail("임시 비밀번호", tempPassword, email);
   }
 
   public void verifyCodeProcess(String email, String code) {

@@ -13,6 +13,6 @@ public class MemberMailAdapter implements MemberMailPort {
 
   @Override
   public void sendTempPasswordProcess(String email, String tempPassword) {
-    mailService.sendMail("임시 비밀번호", tempPassword, email);
+    mailService.sendTempPasswordProcess(tempPassword, email);
   }
 }
