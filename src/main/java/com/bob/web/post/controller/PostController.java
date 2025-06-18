@@ -15,6 +15,7 @@ import com.bob.web.common.symbol.ResponseSymbol;
 import com.bob.web.post.request.ChangePostRequest;
 import com.bob.web.post.request.CreatePostRequest;
 import com.bob.web.post.request.ReadFilteredPostsRequest;
+import com.bob.web.post.request.ReadPostFavoritesRequest;
 import com.bob.web.post.request.RemovePostRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -65,6 +66,15 @@ public class PostController {
       Pageable pageable
   ) {
     return ResponseEntity.ok(postService.readFilteredPostsProcess(request.toQuery(), pageable));
+  }
+
+  @GetMapping("/favorites")
+  public ResponseEntity<PostsResponse> handleReadMemberFavoritePosts(
+      @AuthenticationId UUID memberId,
+      Pageable pageable
+  ) {
+    return ResponseEntity.ok(
+        postService.readPostFavoritesProcess(ReadPostFavoritesRequest.toQuery(memberId), pageable));
   }
 
   @GetMapping("/{postId}")

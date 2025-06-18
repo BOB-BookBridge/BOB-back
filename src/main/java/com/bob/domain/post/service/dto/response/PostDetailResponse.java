@@ -25,18 +25,28 @@ public record PostDetailResponse(
     LocalDateTime createdAt
 ) {
 
-  public static PostDetailResponse of(Post post, boolean isFavorite, boolean isOwner, List<String> images) {
+  public static PostDetailResponse from(
+      Post post,
+      PostMemberSummaryResponse memberSummary,
+      PostAreaSummaryResponse areaSummary,
+      boolean isFavorite,
+      boolean isOwner
+  ) {
     return PostDetailResponse.builder()
         .postId(post.getId())
-        .sellerId(post.getSeller().getId())
+        .sellerId(post.getSellerId())
         .sellPrice(post.getSellPrice())
         .bookStatus(post.getBookStatus().name())
         .postStatus(post.getPostStatus().getStatus())
         .category(post.getCategory().getId())
-        .book(BookInfo.of(post))
+        .book(BookInfo.from(post))
         .description(post.getDescription())
-        .images(images)
-        .writer(WriterInfo.of(post))
+        .images(List.of())
+        .writer(WriterInfo.of(
+            post.getSellerId(),
+            memberSummary.nickname(), memberSummary.profileImageUrl(),
+            areaSummary.emdName(), areaSummary.siggName()
+        ))
         .scrapCount(post.getScrapCount())
         .viewCount(post.getViewCount())
         .isFavorite(isFavorite)
@@ -54,7 +64,7 @@ public record PostDetailResponse(
       String pubDate
   ) {
 
-    public static BookInfo of(Post post) {
+    public static BookInfo from(Post post) {
       return BookInfo.builder()
           .title(post.getBook().getTitle())
           .author(post.getBook().getAuthor())
@@ -73,17 +83,12 @@ public record PostDetailResponse(
       String profileUrl
   ) {
 
-    public static WriterInfo of(Post post) {
-      var activityArea = post.getSeller().getActivityArea();
-      var emdArea = activityArea.getEmdArea();
-      var siggArea = emdArea.getSiggArea();
-      String activityAreaName = String.format("%s %s", siggArea.getName(), emdArea.getName());
-
+    public static WriterInfo of(UUID memberId, String nickname, String profileUrl, String emdName, String siggName) {
       return WriterInfo.builder()
-          .memberId(post.getSeller().getId())
-          .nickname(post.getSeller().getNickname())
-          .activityArea(activityAreaName)
-          .profileUrl(post.getSeller().getProfileImageUrl())
+          .memberId(memberId)
+          .nickname(nickname)
+          .activityArea(String.format("%s %s", siggName, emdName))
+          .profileUrl(profileUrl)
           .build();
     }
   }

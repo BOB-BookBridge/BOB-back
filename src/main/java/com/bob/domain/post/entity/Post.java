@@ -1,5 +1,7 @@
 package com.bob.domain.post.entity;
 
+import com.bob.domain.book.entity.Book;
+import com.bob.domain.category.entity.Category;
 import com.bob.domain.post.entity.status.BookStatus;
 import com.bob.domain.post.entity.status.PostStatus;
 import com.bob.global.audit.BaseTime;
@@ -7,10 +9,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,17 +40,19 @@ public class Post extends BaseTime {
   @Column(nullable = false)
   private PostStatus postStatus;
 
-  @Column(nullable = false)
-  private Integer categoryId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "category_id", nullable = false)
+  private Category category;
 
-  @JoinColumn(nullable = false)
+  @Column(nullable = false)
   private UUID sellerId;
 
   @Column(nullable = false)
   private String thumbnailUrl;
 
-  @Column(nullable = false)
-  private Long bookId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "book_id", nullable = false)
+  private Book book;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)

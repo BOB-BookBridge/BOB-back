@@ -16,7 +16,7 @@ public record PostSummary(
     LocalDateTime createdAt
 ) {
 
-  public static PostSummary of(Post post) {
+  public static PostSummary from(Post post) {
     return PostSummary.builder()
         .postId(post.getId())
         .categoryId(post.getCategory().getId())
