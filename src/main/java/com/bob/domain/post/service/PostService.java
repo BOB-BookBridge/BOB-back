@@ -91,8 +91,8 @@ public class PostService {
   public PostDetailResponse readPostDetailProcess(ReadPostDetailQuery query) {
     postRepository.increaseViewCount(query.postId());
     Post post = postReader.readPostById(query.postId());
-    PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(query.memberId());
-    PostAreaSummaryResponse areaSummary = areaPort.readPostAreaSummary(query.memberId());
+    PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
+    PostAreaSummaryResponse areaSummary = areaPort.readPostAreaSummary(post.getSellerId());
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
     // TODO : 첨부 이미지 기능 구현 시 이미지 경로 List 매핑

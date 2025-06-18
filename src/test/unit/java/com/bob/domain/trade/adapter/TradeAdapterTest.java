@@ -21,7 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class TradeAdapterTest {
 
   @InjectMocks
-  private TradeAdapter tradeAdapter;
+  private ChatTradeAdapter tradeAdapter;
 
   @Mock
   private TradeService tradeService;

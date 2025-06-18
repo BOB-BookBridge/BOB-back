@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class TradeAdapter implements ChatTradePort {
+public class ChatTradeAdapter implements ChatTradePort {
 
   private final TradeService tradeService;
 
