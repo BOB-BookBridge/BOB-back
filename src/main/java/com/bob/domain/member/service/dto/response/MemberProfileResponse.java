@@ -1,37 +1,40 @@
 package com.bob.domain.member.service.dto.response;
 
-import com.bob.domain.area.entity.activity.ActivityArea;
 import com.bob.domain.member.entity.Member;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
 @Builder
-public class MemberProfileResponse {
+public record MemberProfileResponse(
+    UUID memberId,
+    String nickname,
+    String profileImageUrl,
+    Area area
+) {
 
-  private UUID memberId;
-  private String nickname;
-  private String profileImageUrl;
-  private Area area;
-
-  public static MemberProfileResponse of(Member member) {
-    ActivityArea aa = member.getActivityArea();
+  public static MemberProfileResponse from(Member member, MemberAreaSummaryResponse areaSummary) {
     return MemberProfileResponse.builder()
         .memberId(member.getId())
         .nickname(member.getNickname())
         .profileImageUrl(member.getProfileImageUrl())
-        .area(Area.of(aa.getId().getEmdAreaId(), aa.isValidAuthentication()))
+        .area(Area.of(areaSummary.emdId(), areaSummary.validity(), areaSummary.authenticatedAt()))
         .build();
   }
 
+  @Builder
   public record Area(
-      Integer emdId,
-      Boolean isAuthentication
+      int emdId,
+      boolean isAuthentication,
+      LocalDate authenticatedAt
   ) {
 
-    static Area of(Integer emdId, Boolean isAuthentication) {
-      return new Area(emdId, isAuthentication);
+    public static Area of(int emdId, boolean isAuthentication, LocalDate authenticatedAt) {
+      return Area.builder()
+          .emdId(emdId)
+          .isAuthentication(isAuthentication)
+          .authenticatedAt(authenticatedAt)
+          .build();
     }
   }
 }
