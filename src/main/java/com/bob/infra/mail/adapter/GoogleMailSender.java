@@ -3,8 +3,8 @@ package com.bob.infra.mail.adapter;
 import static com.bob.global.exception.response.ApplicationError.EXPIRED_MAIL_CODE;
 import static com.bob.global.exception.response.ApplicationError.INVALID_MAIL_CODE;
 
-import com.bob.domain.member.service.port.MailService;
-import com.bob.domain.member.service.port.MailVerificationStore;
+import com.bob.domain.member.service.port.MemberMailPort;
+import com.bob.domain.member.service.port.MemberRedisPort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
@@ -13,11 +13,11 @@ import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
-public class GoogleMailService implements MailService {
+public class GoogleMailSender implements MemberMailPort {
 
   private final JavaMailSender mailSender;
   private final SimpleMailMessage message;
-  private final MailVerificationStore mailVerificationStore;
+  private final MemberRedisPort mailVerificationStore;
 
   @Override
   public void sendCodeProcess(String email) {
@@ -47,7 +47,7 @@ public class GoogleMailService implements MailService {
   }
 
   private void sendMail(String title, String content, String email) {
-    message.setSubject("[Bookswap] " + title + " 안내");
+    message.setSubject("[BookBridge] " + title + " 안내");
     message.setText(title + " : " + content);
     message.setTo(email);
     mailSender.send(message);

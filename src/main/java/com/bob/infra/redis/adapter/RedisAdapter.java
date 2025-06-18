@@ -1,6 +1,6 @@
 package com.bob.infra.redis.adapter;
 
-import com.bob.domain.member.service.port.MailVerificationStore;
+import com.bob.domain.member.service.port.MemberRedisPort;
 import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
 @Repository
-public class RedisMailVerificationStore implements MailVerificationStore {
+public class RedisAdapter implements MemberRedisPort {
 
   private final StringRedisTemplate redisTemplate;
 
@@ -19,8 +19,8 @@ public class RedisMailVerificationStore implements MailVerificationStore {
   }
 
   @Override
-  public Optional<String> getVerified(String email) {
-    return Optional.ofNullable(redisTemplate.opsForValue().get(emailVerifiedKey(email)));
+  public boolean isVerified(String email) {
+    return Boolean.parseBoolean(redisTemplate.opsForValue().get(emailVerifiedKey(email)));
   }
 
   @Override

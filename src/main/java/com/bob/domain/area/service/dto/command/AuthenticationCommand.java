@@ -1,6 +1,7 @@
-package com.bob.domain.area.command;
+package com.bob.domain.area.service.dto.command;
 
-import com.bob.domain.member.service.dto.command.AuthenticationPurpose;
+import static com.bob.domain.area.service.dto.command.AuthenticationPurpose.SIGN_UP;
+
 import java.util.UUID;
 
 public record AuthenticationCommand(
@@ -13,5 +14,9 @@ public record AuthenticationCommand(
 
   public boolean isGuest() {
     return memberId == null;
+  }
+
+  public boolean isSignup() {
+    return purpose == SIGN_UP;
   }
 }

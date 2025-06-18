@@ -2,11 +2,11 @@ package com.bob.domain.member.service.port;
 
 import java.util.Optional;
 
-public interface MailVerificationStore {
+public interface MemberRedisPort {
 
   void saveVerified(String email, String value, int expireMinutes);
 
-  Optional<String> getVerified(String email);
+  boolean isVerified(String email);
 
   void deleteVerified(String email);
 

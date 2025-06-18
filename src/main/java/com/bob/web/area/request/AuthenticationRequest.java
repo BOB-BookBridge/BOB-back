@@ -1,7 +1,7 @@
 package com.bob.web.area.request;
 
-import com.bob.domain.area.command.AuthenticationCommand;
-import com.bob.domain.member.service.dto.command.AuthenticationPurpose;
+import com.bob.domain.area.service.dto.command.AuthenticationCommand;
+import com.bob.domain.area.service.dto.command.AuthenticationPurpose;
 import java.util.UUID;
 
 public record AuthenticationRequest(

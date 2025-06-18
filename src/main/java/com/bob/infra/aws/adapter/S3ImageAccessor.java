@@ -1,6 +1,6 @@
 package com.bob.infra.aws.adapter;
 
-import com.bob.domain.member.service.port.ImageStorageAccessor;
+import com.bob.domain.member.service.port.MemberProfileImageAccessor;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 @RequiredArgsConstructor
 @Service
-public class S3Accessor implements ImageStorageAccessor {
+public class S3ImageAccessor implements MemberProfileImageAccessor {
 
   private final S3Presigner signer;
 

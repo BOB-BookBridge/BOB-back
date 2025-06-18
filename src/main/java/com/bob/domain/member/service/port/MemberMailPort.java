@@ -3,7 +3,7 @@ package com.bob.domain.member.service.port;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public interface MailService {
+public interface MemberMailPort {
 
   void sendCodeProcess(String email);
 

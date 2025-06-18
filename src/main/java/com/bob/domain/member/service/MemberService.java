@@ -7,27 +7,22 @@ import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAI
 import static com.bob.global.utils.image.ImageDirectory.PROFILE;
 import static com.bob.global.utils.image.ImageUtils.generateImageFileName;
 
-import com.bob.domain.area.entity.EmdArea;
-import com.bob.domain.area.service.reader.AreaReader;
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
 import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
+import com.bob.domain.member.service.dto.command.ChangeProfileImageUrlCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
-import com.bob.domain.member.service.dto.command.ChangeProfileImageUrlCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
-import com.bob.domain.member.service.dto.query.ReadProfileWithPostsQuery;
+import com.bob.domain.member.service.dto.response.MemberAreaSummaryResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileImageUrlResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
-import com.bob.domain.member.service.dto.response.MemberProfileWithPostsResponse;
-import com.bob.domain.member.service.dto.response.internal.MemberPostsResponse;
-import com.bob.domain.member.service.port.ImageStorageAccessor;
-import com.bob.domain.member.service.port.MailService;
-import com.bob.domain.member.service.port.MailVerificationStore;
-import com.bob.domain.member.service.port.PostSearcher;
+import com.bob.domain.member.service.port.MemberAreaPort;
+import com.bob.domain.member.service.port.MemberMailPort;
+import com.bob.domain.member.service.port.MemberProfileImageAccessor;
+import com.bob.domain.member.service.port.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
-import com.bob.domain.post.service.dto.query.ReadMemberPostsQuery;
 import com.bob.global.exception.exceptions.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,64 +35,46 @@ public class MemberService {
 
   private final MemberRepository memberRepository;
   private final MemberReader memberReader;
-  private final AreaReader areaReader;
 
-  private final ImageStorageAccessor imageStorageAccessor;
-  private final MailVerificationStore mailVerificationStore;
-  private final MailService mailService;
-  private final PostSearcher postSearcher;
+  private final MemberAreaPort areaPort;
+  private final MemberMailPort mailPort;
+  private final MemberRedisPort redisPort;
+  private final MemberProfileImageAccessor imageAccessor;
 
   private final PasswordEncoder encoder;
 
   @Transactional
   public void signupProcess(CreateMemberCommand command) {
     verifyEmail(command.email());
-
-    EmdArea memberEmdArea = areaReader.readEmdArea(command.emdId());
     String encodedPassword = encoder.encode(command.password());
-
-    Member member = command.toMember(memberEmdArea, encodedPassword);
+    Member member = command.toMember(encodedPassword);
     memberRepository.save(member);
+    areaPort.createMemberActivityArea(member.getId(), command.emdId());
   }
 
   private void verifyEmail(String email) {
+    validateEmailNotExists(email);
+    validateEmailIsVerified(email);
+    redisPort.deleteVerified(email);
+  }
+
+  private void validateEmailNotExists(String email) {
     if (memberRepository.existsByEmail(email)) {
       throw new ApplicationException(ALREADY_EXISTS_EMAIL);
     }
+  }
 
-    boolean isVerified = mailVerificationStore.getVerified(email)
-        .map("true"::equals)
-        .orElse(false);
-
-    if (!isVerified) {
+  private void validateEmailIsVerified(String email) {
+    if (!redisPort.isVerified(email)) {
       throw new ApplicationException(UNVERIFIED_EMAIL);
     }
-
-    mailVerificationStore.deleteVerified(email);
   }
 
   @Transactional(readOnly = true)
   public MemberProfileResponse readProfileProcess(ReadProfileQuery query) {
     Member member = memberReader.readMemberById(query.memberId());
-    return MemberProfileResponse.of(member);
-  }
-
-  @Transactional(readOnly = true)
-  public MemberPostsResponse readMemberPostsProcess(ReadMemberPostsQuery query) {
-    return MemberPostsResponse.from(postSearcher.readMemberPostSummary(query.memberId(), query.pageable()));
-  }
-
-  @Transactional(readOnly = true)
-  public MemberPostsResponse readMemberFavoritePosts(ReadMemberPostsQuery query) {
-    return MemberPostsResponse.from(postSearcher.readMemberFavoritePostsSummary(query.memberId(), query.pageable()));
-  }
-
-  @Transactional(readOnly = true)
-  public MemberProfileWithPostsResponse readProfileByIdWithPostsProcess(ReadProfileWithPostsQuery query) {
-    Member member = memberReader.readMemberById(query.memberId());
-    MemberProfileResponse profile = MemberProfileResponse.of(member);
-    MemberPostsResponse posts = MemberPostsResponse.from(postSearcher.readMemberPostSummary(query.memberId(), query.pageable()));
-    return MemberProfileWithPostsResponse.of(profile, posts);
+    MemberAreaSummaryResponse areaSummary = areaPort.readMemberAreaSummary(query.memberId());
+    return MemberProfileResponse.from(member, areaSummary);
   }
 
   @Transactional
@@ -107,7 +84,7 @@ public class MemberService {
     member.updateNickname(command.nickname());
   }
 
-  private static void verifyNickname(Member member, String nickname) {
+  private void verifyNickname(Member member, String nickname) {
     if (member.isEqualsNickname(nickname)) {
       throw new ApplicationException(IS_SAME_REQUEST);
     }
@@ -129,14 +106,14 @@ public class MemberService {
   @Transactional
   public void issueTempPasswordProcess(IssuePasswordCommand command) {
     Member member = memberReader.readMemberByEmail(command.email());
-    String tempPassword = mailService.sendTempPasswordProcess(command.email());
+    String tempPassword = mailPort.sendTempPasswordProcess(command.email());
     member.updatePassword(encoder.encode(tempPassword));
   }
 
   @Transactional
   public MemberProfileImageUrlResponse changeProfileImageUrlProcess(ChangeProfileImageUrlCommand command) {
     String fileName = generateImageFileName(command.contentType(), PROFILE);
-    String signedUrl = imageStorageAccessor.getImageUploadUrl(fileName, command.contentType());
+    String signedUrl = imageAccessor.getImageUploadUrl(fileName, command.contentType());
     Member member = memberReader.readMemberById(command.memberId());
     member.updateProfileImageUrl(fileName);
     return MemberProfileImageUrlResponse.of(fileName, signedUrl);

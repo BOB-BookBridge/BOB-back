@@ -24,7 +24,7 @@ public class AreaController {
       @RequestBody AuthenticationRequest request,
       @AuthenticationId UUID memberId
   ) {
-    areaAuthenticationService.authenticate(request.toCommand(memberId));
+    areaAuthenticationService.authenticateProcess(request.toCommand(memberId));
     return new CommonResponse<>(true, ResponseSymbol.OK);
   }
 }
