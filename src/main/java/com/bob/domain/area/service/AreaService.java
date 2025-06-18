@@ -42,7 +42,7 @@ public class AreaService implements AreaWriteUseCase, AreaReadUseCase, AreaModif
 
   @Transactional
   public void authenticateProcess(AuthenticationCommand command) {
-    validateLocation(command);
+    verifyLocation(command);
     if (command.isSignup()) {
       return;
     }
@@ -64,10 +64,11 @@ public class AreaService implements AreaWriteUseCase, AreaReadUseCase, AreaModif
 
   private void handleReAuthenticate(AuthenticationCommand command) {
     ActivityArea area = activityAreaReader.readActivityAreaByMemberId(command.memberId());
+    verifyIsNotSameArea(area.getId().getEmdAreaId(), command.emdId());
     area.updateAuthenticationAt(LocalDate.now());
   }
 
-  private void validateLocation(AuthenticationCommand command) {
+  private void verifyLocation(AuthenticationCommand command) {
     EmdArea emdArea = emdAreaReader.readEmdAreaById(command.emdId());
     Point point = createPoint(command.lat(), command.lon());
     if (!emdArea.getGeom().contains(point)) {
@@ -84,6 +85,12 @@ public class AreaService implements AreaWriteUseCase, AreaReadUseCase, AreaModif
   private void verifyIsSameArea(Integer oldId, Integer newId) {
     if (Objects.equals(oldId, newId)) {
       throw new ApplicationException(ApplicationError.IS_SAME_REQUEST);
+    }
+  }
+
+  private void verifyIsNotSameArea(Integer oldId, Integer newId) {
+    if (!Objects.equals(oldId, newId)) {
+      throw new ApplicationException(ApplicationError.IS_NOT_SAME_AREA);
     }
   }
 
