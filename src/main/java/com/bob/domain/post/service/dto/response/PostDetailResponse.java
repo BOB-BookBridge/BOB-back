@@ -10,6 +10,7 @@ import lombok.Builder;
 public record PostDetailResponse(
     Long postId,
     UUID sellerId,
+    String thumbnailUrl,
     Integer sellPrice,
     String bookStatus,
     String postStatus,
@@ -35,6 +36,7 @@ public record PostDetailResponse(
     return PostDetailResponse.builder()
         .postId(post.getId())
         .sellerId(post.getSellerId())
+        .thumbnailUrl(post.getThumbnailUrl())
         .sellPrice(post.getSellPrice())
         .bookStatus(post.getBookStatus().name())
         .postStatus(post.getPostStatus().getStatus())
