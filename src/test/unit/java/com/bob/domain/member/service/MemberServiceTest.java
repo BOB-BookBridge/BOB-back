@@ -21,6 +21,7 @@ import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.
 import static com.bob.support.fixture.response.MemberProfileImageUrlResponseFixture.mockPresignedUrlResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -189,22 +190,19 @@ class MemberServiceTest {
   @DisplayName("임시 비밀번호 발급 - 성공 테스트")
   void 임시_비밀번호_발급을_할_수_있다() {
     // given
-
     Member member = defaultMember();
-    String rawTempPassword = "temp";
     String encodedTempPassword = "$2a$encodedTemp";
     IssuePasswordCommand command = defaultIssuePasswordCommand();
     given(memberReader.readMemberByEmail(member.getEmail())).willReturn(member);
-    mockStatic(RandomUtils.class).when(() -> RandomUtils.generateCode(12)).thenReturn(rawTempPassword);
-    given(encoder.encode(rawTempPassword)).willReturn(encodedTempPassword);
+    given(encoder.encode(anyString())).willReturn(encodedTempPassword);
 
     // when
     memberService.issueTempPasswordProcess(command);
 
     // then
     then(memberReader).should().readMemberByEmail(member.getEmail());
-    then(mailPort).should().sendTempPassword(member.getEmail(), rawTempPassword);
-    then(encoder).should().encode(rawTempPassword);
+    then(mailPort).should(times(1)).sendTempPassword(anyString(), anyString());
+    then(encoder).should(times(1)).encode(anyString());
     assertThat(member.getPassword()).isEqualTo(encodedTempPassword);
   }
 

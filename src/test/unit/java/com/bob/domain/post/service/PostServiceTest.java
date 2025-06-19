@@ -15,8 +15,8 @@ import static com.bob.support.fixture.domain.PostFixture.defaultIdPost;
 import static com.bob.support.fixture.domain.PostFixture.defaultPost;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadFilteredPostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadMemberFavoritePostsQuery;
-import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY;
-import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.NOT_VALID_AREA_SUMMARY;
+import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
+import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.NOT_VALID_POST_AREA_SUMMARY;
 import static com.bob.support.fixture.response.PostMemberSummaryResponseFixture.DEFAULT_MEMBER_SUMMARY;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_FAVORITE_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,7 +97,7 @@ class PostServiceTest {
     Category category = defaultCategory();
     given(bookService.createBookProcess(command.toBookCreateCommand())).willReturn(book);
     given(categoryReader.readCategoryById(command.categoryId())).willReturn(category);
-    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
     ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
 
@@ -120,7 +120,7 @@ class PostServiceTest {
   void 위치인증_되지_않은_사용자는_게시글을_등록할_수_없다() {
     // given
     CreatePostCommand command = defaultCreatePostCommand();
-    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(NOT_VALID_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(NOT_VALID_POST_AREA_SUMMARY);
 
     // when & then
     assertThatThrownBy(() -> postService.createPostProcess(command))
@@ -251,7 +251,7 @@ class PostServiceTest {
     ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, post.getId());
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_SUMMARY);
-    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_POST_AREA_SUMMARY);
     willDoNothing().given(postRepository).increaseViewCount(post.getId());
 
     // when
@@ -273,7 +273,7 @@ class PostServiceTest {
     ReadPostDetailQuery query = new ReadPostDetailQuery(otherMemberId, post.getId());
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_SUMMARY);
-    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_POST_AREA_SUMMARY);
     willDoNothing().given(postRepository).increaseViewCount(post.getId());
 
     // when
