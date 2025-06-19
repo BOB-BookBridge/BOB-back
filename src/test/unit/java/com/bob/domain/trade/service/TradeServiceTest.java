@@ -38,7 +38,7 @@ class TradeServiceTest {
     given(tradeRepository.save(any(Trade.class))).willReturn(trade);
 
     // when
-    Long tradeId = tradeService.createTrade(command);
+    Long tradeId = tradeService.createTradeProcess(command);
 
     // then
     assertThat(tradeId).isEqualTo(1L);

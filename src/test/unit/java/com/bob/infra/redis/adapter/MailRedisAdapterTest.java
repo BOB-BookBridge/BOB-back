@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.bob.infra.redis.adapter.in.MailRedisAdapter;
 import com.bob.infra.redis.repository.RedisRepository;
 import java.time.Duration;
 import java.util.Optional;

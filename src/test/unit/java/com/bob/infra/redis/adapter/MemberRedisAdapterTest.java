@@ -1,9 +1,13 @@
 package com.bob.infra.redis.adapter;
 
+import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.infra.redis.adapter.in.MemberRedisAdapter;
 import com.bob.infra.redis.repository.RedisRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -24,8 +28,8 @@ public class MemberRedisAdapterTest {
   private RedisRepository redisRepository;
 
   @Test
-  @DisplayName("인증 상태 조회 테스트")
-  void 이메일_인증상태를_조회한다() {
+  @DisplayName("인증 상태 조회 - 성공 테스트")
+  void 성공한_이메일_인증상태를_조회한다() {
     // given
     String email = "user@email.com";
     given(redisRepository.getValue(emailVerifiedKey(email))).willReturn(Optional.of("true"));
@@ -35,6 +39,19 @@ public class MemberRedisAdapterTest {
 
     // then
     assertThat(result).isEqualTo(true);
+  }
+
+  @Test
+  @DisplayName("인증 상태 조회 - 실패 테스트")
+  void 존재하지_않는_이메일_인증상태를_조회한다() {
+    // given
+    String email = "user@email.com";
+    given(redisRepository.getValue(emailVerifiedKey(email))).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> redisAdapter.isVerified(email))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(UNVERIFIED_EMAIL.getMessage());
   }
 
   @Test

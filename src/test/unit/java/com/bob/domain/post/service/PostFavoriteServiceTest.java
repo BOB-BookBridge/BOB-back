@@ -1,7 +1,7 @@
 package com.bob.domain.post.service;
 
 import static com.bob.global.exception.response.ApplicationError.ALREADY_POST_FAVORITE;
-import static com.bob.support.fixture.domain.MemberFixture.defaultIdMember;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.PostFavoriteFixture.DEFAULT_MOCK_POST_FAVORITES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -11,7 +11,6 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.times;
 
-import com.bob.domain.member.entity.Member;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.PostFavorite;
 import com.bob.domain.post.repository.PostFavoriteRepository;
@@ -51,12 +50,11 @@ class PostFavoriteServiceTest {
   @DisplayName("게시글 즐겨찾기 등록 - 성공 테스트")
   void 게시글_즐겨찾기_등록에_성공한다() {
     // given
-    Member member = defaultIdMember();
-    PostFavorite postFavorite = PostFavorite.create(member, post);
+    PostFavorite postFavorite = PostFavorite.create(MEMBER_ID, post);
     given(postFavoriteRepository.save(any(PostFavorite.class))).willReturn(postFavorite);
 
     // when
-    postFavoriteService.createPostFavoriteProcess(member, post);
+    postFavoriteService.createPostFavoriteProcess(MEMBER_ID, post);
 
     // then
     then(postFavoriteRepository).should().save(any(PostFavorite.class));
@@ -66,15 +64,12 @@ class PostFavoriteServiceTest {
   @DisplayName("게시글 즐겨찾기 등록 - 실패 테스트 (중복 즐겨찾기)")
   void 이미_즐겨찾기한_게시글이면_예외가_발생한다() {
     // given
-    Member member = defaultIdMember();
     willThrow(new DataIntegrityViolationException("duplicate"))
         .given(postFavoriteRepository)
         .save(any(PostFavorite.class));
 
     // when & then
-    assertThatThrownBy(() ->
-        postFavoriteService.createPostFavoriteProcess(member, post)
-    )
+    assertThatThrownBy(() -> postFavoriteService.createPostFavoriteProcess(MEMBER_ID, post))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ALREADY_POST_FAVORITE.getMessage());
 
@@ -85,17 +80,16 @@ class PostFavoriteServiceTest {
   @DisplayName("좋아요 해제 - 성공 테스트")
   void 좋아요를_성공적으로_해제한다() {
     // given
-    Member member = defaultIdMember();
-    PostFavorite postFavorite = PostFavorite.create(member, post);
-    given(postFavoriteReader.readFavoritePostByMemberIdAndPostId(member.getId(), post.getId())).willReturn(postFavorite);
+    PostFavorite postFavorite = PostFavorite.create(MEMBER_ID, post);
+    given(postFavoriteReader.readFavoritePostByMemberIdAndPostId(MEMBER_ID, post.getId())).willReturn(postFavorite);
 
     // when
-    postFavoriteService.deletePostFavoriteProcess(member.getId(), post.getId());
+    postFavoriteService.deletePostFavoriteProcess(MEMBER_ID, post.getId());
 
     // then
     then(postFavoriteReader)
         .should(times(1))
-        .readFavoritePostByMemberIdAndPostId(member.getId(), post.getId());
+        .readFavoritePostByMemberIdAndPostId(MEMBER_ID, post.getId());
 
     then(postFavoriteRepository)
         .should(times(1))
@@ -106,7 +100,7 @@ class PostFavoriteServiceTest {
   @DisplayName("게시글 좋아요 여부 확인 - true 반환")
   void 게시글을_좋아요한_경우_true를_반환한다() {
     // given
-    UUID memberId = UUID.randomUUID();
+    UUID memberId = MEMBER_ID;
     Long postId = 1L;
     given(postFavoriteRepository.existsByMemberIdAndPostId(memberId, postId)).willReturn(true);
 
@@ -121,7 +115,7 @@ class PostFavoriteServiceTest {
   @DisplayName("게시글 좋아요 여부 확인 - false 반환")
   void 게시글을_좋아요하지_않은_경우_false를_반환한다() {
     // given
-    UUID memberId = UUID.randomUUID();
+    UUID memberId = MEMBER_ID;
     Long postId = 2L;
     given(postFavoriteRepository.existsByMemberIdAndPostId(memberId, postId)).willReturn(false);
 
@@ -136,7 +130,7 @@ class PostFavoriteServiceTest {
   @DisplayName("좋아요 한 게시글 목록 조회")
   void 사용자의_즐겨찾기_게시글_목록을_조회할_수_있다() {
     // given
-    UUID memberId = UUID.randomUUID();
+    UUID memberId = MEMBER_ID;
     given(postFavoriteReader.readFavoritePostsByMemberId(memberId, pageable)).willReturn(DEFAULT_MOCK_POST_FAVORITES());
     given(postFavoriteRepository.countByMemberId(memberId)).willReturn((long) DEFAULT_MOCK_POST_FAVORITES().size());
 

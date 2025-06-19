@@ -1,45 +1,36 @@
 package com.bob.support.fixture.domain;
 
+import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
-import com.bob.domain.area.entity.EmdArea;
 import com.bob.domain.area.entity.activity.ActivityArea;
 import com.bob.domain.area.entity.activity.ActivityAreaId;
-import com.bob.domain.member.entity.Member;
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class ActivityAreaFixture {
 
   public static ActivityAreaId defaultActivityAreaId() {
-    return new ActivityAreaId(MEMBER_ID, 213);
+    return new ActivityAreaId(MEMBER_ID, EMD_AREA_ID);
   }
 
   public static ActivityArea defaultActivityArea() {
-    Member member = MemberFixture.defaultIdMember();
-    EmdArea emdArea = EmdAreaFixture.defaultEmdArea();
-
     return ActivityArea.builder()
-        .id(new ActivityAreaId(member.getId(), emdArea.getId()))
-        .member(member)
-        .emdArea(emdArea)
+        .id(new ActivityAreaId(MEMBER_ID, EMD_AREA_ID))
         .authenticationAt(LocalDate.now())
         .build();
   }
 
-  public static ActivityArea customActivityArea(Member member, EmdArea emdArea) {
+  public static ActivityArea customActivityArea(UUID memberId, Integer emdAreaId) {
     return ActivityArea.builder()
-        .id(new ActivityAreaId(member.getId(), emdArea.getId()))
-        .member(member)
-        .emdArea(emdArea)
+        .id(new ActivityAreaId(memberId, emdAreaId))
         .authenticationAt(LocalDate.now())
         .build();
   }
 
-  public static ActivityArea customTimeActivityArea(Member member, EmdArea emdArea, LocalDate date) {
+  public static ActivityArea customTimeActivityArea(UUID memberId, Integer emdAreaId, LocalDate date) {
     return ActivityArea.builder()
-        .id(new ActivityAreaId(member.getId(), emdArea.getId()))
-        .member(member)
-        .emdArea(emdArea)
+        .id(new ActivityAreaId(memberId, emdAreaId))
         .authenticationAt(date)
         .build();
   }

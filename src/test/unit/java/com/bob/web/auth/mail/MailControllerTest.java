@@ -8,8 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
-import com.bob.infra.mail.service.GoogleMailService;
 import com.bob.web.auth.mail.controller.MailController;
+import com.bob.web.auth.mail.port.out.AuthMailPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,13 +24,11 @@ import org.springframework.test.web.servlet.MockMvc;
 @ExtendWith(MockitoExtension.class)
 class MailControllerTest {
 
+  private final ObjectMapper objectMapper = new ObjectMapper();
   @InjectMocks
   private MailController mailController;
-
   @Mock
-  private GoogleMailService mailService;
-
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private AuthMailPort mailPort;
 
   @Test
   @DisplayName("이메일 인증 코드 전송 요청 테스트")
@@ -42,7 +40,7 @@ class MailControllerTest {
             .content(objectMapper.writeValueAsString(MAIL_SEND_REQUEST)))
         .andExpect(status().isOk());
 
-    verify(mailService, times(1)).sendCodeProcess(MAIL_SEND_REQUEST.email());
+    verify(mailPort, times(1)).sendCode(MAIL_SEND_REQUEST.email());
   }
 
   @Test
@@ -55,6 +53,6 @@ class MailControllerTest {
             .content(objectMapper.writeValueAsString(MAIL_VERIFY_REQUEST)))
         .andExpect(status().isOk());
 
-    verify(mailService, times(1)).verifyCodeProcess(MAIL_VERIFY_REQUEST.email(), MAIL_VERIFY_REQUEST.code());
+    verify(mailPort, times(1)).verifyCode(MAIL_VERIFY_REQUEST.email(), MAIL_VERIFY_REQUEST.code());
   }
 }

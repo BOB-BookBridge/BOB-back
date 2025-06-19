@@ -2,6 +2,7 @@ package com.bob.domain.area.service.reader;
 
 import static com.bob.support.fixture.domain.ActivityAreaFixture.defaultActivityArea;
 import static com.bob.support.fixture.domain.ActivityAreaFixture.defaultActivityAreaId;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -34,10 +35,10 @@ class ActivityAreaReaderTest {
   void 활동지역을_정상적으로_조회할_수_있다() {
     // given
     ActivityArea expected = defaultActivityArea();
-    given(activityAreaRepository.findById(expected.getId())).willReturn(Optional.of(expected));
+    given(activityAreaRepository.findByIdMemberId(MEMBER_ID)).willReturn(Optional.of(expected));
 
     // when
-    ActivityArea result = reader.readActivityArea(expected.getId());
+    ActivityArea result = reader.readActivityAreaByMemberId(expected.getId().getMemberId());
 
     // then
     assertThat(result).isEqualTo(expected);
@@ -48,10 +49,10 @@ class ActivityAreaReaderTest {
   void 활동지역이_존재하지_않으면_예외가_발생한다() {
     // given
     ActivityAreaId id = defaultActivityAreaId();
-    given(activityAreaRepository.findById(id)).willReturn(Optional.empty());
+    given(activityAreaRepository.findByIdMemberId(MEMBER_ID)).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> reader.readActivityArea(id))
+    assertThatThrownBy(() -> reader.readActivityAreaByMemberId(id.getMemberId()))
         .isInstanceOf(ApplicationException.class)
         .hasMessageContaining(ApplicationError.NOT_EXISTS_ACTIVITY_AREA.getMessage());
   }

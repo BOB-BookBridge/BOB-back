@@ -12,24 +12,21 @@ import static com.bob.support.fixture.command.ChangeProfileImageUrlCommandFixtur
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultChangePasswordCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultCreateMemberCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultIssuePasswordCommand;
-import static com.bob.support.fixture.domain.ActivityAreaFixture.defaultActivityArea;
-import static com.bob.support.fixture.domain.EmdAreaFixture.defaultEmdArea;
+import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.defaultIdMember;
 import static com.bob.support.fixture.domain.MemberFixture.defaultMember;
 import static com.bob.support.fixture.query.MemberQueryFixture.defaultReadProfileQuery;
-import static com.bob.support.fixture.query.MemberQueryFixture.defaultReadProfileWithPostsQuery;
+import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileImageUrlResponseFixture.mockPresignedUrlResponse;
-import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_FAVORITE_RESPONSE;
-import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POSTS_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
-import com.bob.domain.area.entity.EmdArea;
-import com.bob.domain.area.service.reader.AreaReader;
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
 import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
@@ -38,21 +35,16 @@ import com.bob.domain.member.service.dto.command.ChangeProfileImageUrlCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
-import com.bob.domain.member.service.dto.query.ReadProfileWithPostsQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileImageUrlResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
-import com.bob.domain.member.service.dto.response.MemberProfileWithPostsResponse;
-import com.bob.domain.member.service.dto.response.internal.MemberPostSummary;
-import com.bob.domain.member.service.dto.response.internal.MemberPostsResponse;
-import com.bob.domain.member.service.port.ImageStorageAccessor;
-import com.bob.domain.member.service.port.MailService;
-import com.bob.domain.member.service.port.MailVerificationStore;
-import com.bob.domain.member.service.port.PostSearcher;
+import com.bob.domain.member.service.port.out.MemberAreaPort;
+import com.bob.domain.member.service.port.out.MemberMailPort;
+import com.bob.domain.member.service.port.out.MemberProfileImageAccessor;
+import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
-import com.bob.domain.post.service.dto.query.ReadMemberPostsQuery;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
-import java.util.Optional;
+import com.bob.global.utils.random.RandomUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,8 +52,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @DisplayName("사용자 서비스 테스트")
@@ -78,51 +68,42 @@ class MemberServiceTest {
   private MemberReader memberReader;
 
   @Mock
+  private MemberMailPort mailPort;
+
+  @Mock
+  private MemberRedisPort redisPort;
+
+  @Mock
+  private MemberAreaPort areaPort;
+
+  @Mock
+  private MemberProfileImageAccessor imageAccessor;
+
+  @Mock
   private BCryptPasswordEncoder encoder;
-
-  @Mock
-  private MailService mailService;
-
-  @Mock
-  private MailVerificationStore mailVerificationStore;
-
-  @Mock
-  private AreaReader areaReader;
-
-  @Mock
-  private PostSearcher postSearcher;
-
-  @Mock
-  private ImageStorageAccessor imageStorageAccessor;
 
   @Test
   @DisplayName("회원가입 - 성공 테스트")
   void 회원가입을_진행할_수_있다() {
     // given
     CreateMemberCommand command = defaultCreateMemberCommand();
-    EmdArea dummyEmdArea = defaultEmdArea();
     String encodedPassword = "$2a$10";
-
     given(encoder.encode(command.password())).willReturn(encodedPassword);
-    given(mailVerificationStore.getVerified(command.email())).willReturn(Optional.of("true"));
-    given(areaReader.readEmdArea(command.emdId())).willReturn(dummyEmdArea);
-
+    given(redisPort.isVerified(command.email())).willReturn(true);
     ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
 
     // when
     memberService.signupProcess(command);
 
     // then
-    then(mailVerificationStore).should().getVerified(command.email());
-    then(mailVerificationStore).should().deleteVerified(command.email());
+    then(redisPort).should().isVerified(command.email());
+    then(redisPort).should().deleteVerified(command.email());
     then(memberRepository).should(times(1)).save(captor.capture());
-
-    Member saved = captor.getValue();
-    assertThat(saved.getEmail()).isEqualTo(command.email());
-    assertThat(saved.getNickname()).isEqualTo(command.nickname());
-    assertThat(saved.getPassword()).isEqualTo(encodedPassword);
-    assertThat(saved.getActivityArea().getEmdArea().getId()).isEqualTo(command.emdId());
-    assertThat(saved.getActivityArea().getAuthenticationAt()).isNotNull();
+    Member member = captor.getValue();
+    then(areaPort).should().createMemberActivityArea(member.getId(), command.emdId());
+    assertThat(member.getEmail()).isEqualTo(command.email());
+    assertThat(member.getNickname()).isEqualTo(command.nickname());
+    assertThat(member.getPassword()).isEqualTo(encodedPassword);
   }
 
   @Test
@@ -130,7 +111,7 @@ class MemberServiceTest {
   void 이메일_인증이_되지_않으면_회원가입에_실패한다() {
     // given
     CreateMemberCommand command = defaultCreateMemberCommand();
-    given(mailVerificationStore.getVerified(command.email())).willReturn(Optional.empty());
+    given(redisPort.isVerified(command.email())).willReturn(false);
 
     // when & then
     assertThatThrownBy(() -> memberService.signupProcess(command))
@@ -152,90 +133,24 @@ class MemberServiceTest {
   }
 
   @Test
-  @DisplayName("내 프로필 조회 - 성공 테스트")
-  void 내_프로필을_조회할_수_있다() {
+  @DisplayName("사용자 프로필 조회 - 성공 테스트")
+  void 사용자의_프로필을_조회할_수_있다() {
     // given
     Member member = defaultMember();
-    member.updateActivityArea(defaultActivityArea());
     ReadProfileQuery query = defaultReadProfileQuery();
+
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
+    given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
 
     // when
     MemberProfileResponse response = memberService.readProfileProcess(query);
 
     // then
     then(memberReader).should(times(1)).readMemberById(query.memberId());
-    assertThat(response.getMemberId()).isEqualTo(member.getId());
-    assertThat(response.getNickname()).isEqualTo(member.getNickname());
-    assertThat(response.getProfileImageUrl()).isEqualTo(member.getProfileImageUrl());
-    assertThat(response.getArea().emdId()).isEqualTo(member.getActivityArea().getEmdArea().getId());
-    assertThat(response.getArea().isAuthentication()).isEqualTo(member.getActivityArea().isValidAuthentication());
-  }
-
-  @DisplayName("내 게시글 목록 조회 테스트")
-  @Test
-  void 내_게시글_목록을_조회할_수_있다() {
-    // given
-    Member member = defaultIdMember();
-    Pageable pageable = PageRequest.of(0, 10);
-    ReadMemberPostsQuery query = new ReadMemberPostsQuery(member.getId(), pageable);
-    given(postSearcher.readMemberPostSummary(query.memberId(), query.pageable())).willReturn(DEFAULT_POSTS_RESPONSE());
-
-    // when
-    MemberPostsResponse response = memberService.readMemberPostsProcess(query);
-
-    // then
-    assertThat(response.getTotalCount()).isEqualTo(2);
-    assertThat(response.getPosts())
-        .extracting(MemberPostSummary::postTitle)
-        .containsExactly("객체지향의 사실과 오해", "오브젝트");
-
-    then(postSearcher).should(times(1)).readMemberPostSummary(query.memberId(), query.pageable());
-  }
-
-  @DisplayName("내가 좋아요한 게시글 목록 조회 테스트")
-  @Test
-  void 좋아요한_게시글_목록을_조회할_수_있다() {
-    // given
-    Member member = defaultIdMember();
-    Pageable pageable = PageRequest.of(0, 10);
-    ReadMemberPostsQuery query = new ReadMemberPostsQuery(member.getId(), pageable);
-    given(postSearcher.readMemberFavoritePostsSummary(query.memberId(), query.pageable())).willReturn(DEFAULT_FAVORITE_RESPONSE());
-
-    // when
-    MemberPostsResponse response = memberService.readMemberFavoritePosts(query);
-
-    // then
-    assertThat(response.getTotalCount()).isEqualTo(2);
-    assertThat(response.getPosts())
-        .extracting(MemberPostSummary::postTitle)
-        .containsExactly("객체지향의 사실과 오해", "오브젝트");
-
-    then(postSearcher).should(times(1)).readMemberFavoritePostsSummary(query.memberId(), query.pageable());
-  }
-
-  @Test
-  @DisplayName("다른 사용자 프로필 조회 - 성공 테스트")
-  void 특정_사용자의_프로필과_게시글_목록을_조회할_수_있다() {
-    // given
-    Member member = defaultMember();
-    member.updateActivityArea(defaultActivityArea());
-    ReadProfileWithPostsQuery query = defaultReadProfileWithPostsQuery(member.getId());
-
-    given(memberReader.readMemberById(query.memberId())).willReturn(member);
-    given(postSearcher.readMemberPostSummary(query.memberId(), query.pageable())).willReturn(DEFAULT_POSTS_RESPONSE());
-
-    // when
-    MemberProfileWithPostsResponse response = memberService.readProfileByIdWithPostsProcess(query);
-
-    // then
-    then(memberReader).should(times(1)).readMemberById(query.memberId());
-    then(postSearcher).should(times(1)).readMemberPostSummary(query.memberId(), query.pageable());
-    assertThat(response.getProfile().getMemberId()).isEqualTo(member.getId());
-    assertThat(response.getProfile().getNickname()).isEqualTo(member.getNickname());
-    assertThat(response.getMemberPosts().getTotalCount()).isEqualTo(2);
-    assertThat(response.getMemberPosts().getPosts().get(0).postTitle()).isEqualTo("객체지향의 사실과 오해");
-    assertThat(response.getMemberPosts().getPosts().get(1).postTitle()).isEqualTo("오브젝트");
+    assertThat(response.memberId()).isEqualTo(member.getId());
+    assertThat(response.nickname()).isEqualTo(member.getNickname());
+    assertThat(response.area().emdId()).isEqualTo(EMD_AREA_ID);
+    assertThat(response.area().isAuthentication()).isTrue();
   }
 
   @Test
@@ -274,14 +189,13 @@ class MemberServiceTest {
   @DisplayName("임시 비밀번호 발급 - 성공 테스트")
   void 임시_비밀번호_발급을_할_수_있다() {
     // given
+
     Member member = defaultMember();
-    String rawTempPassword = member.getPassword();
+    String rawTempPassword = "temp";
     String encodedTempPassword = "$2a$encodedTemp";
-
     IssuePasswordCommand command = defaultIssuePasswordCommand();
-
     given(memberReader.readMemberByEmail(member.getEmail())).willReturn(member);
-    given(mailService.sendTempPasswordProcess(member.getEmail())).willReturn(rawTempPassword);
+    mockStatic(RandomUtils.class).when(() -> RandomUtils.generateCode(12)).thenReturn(rawTempPassword);
     given(encoder.encode(rawTempPassword)).willReturn(encodedTempPassword);
 
     // when
@@ -289,7 +203,7 @@ class MemberServiceTest {
 
     // then
     then(memberReader).should().readMemberByEmail(member.getEmail());
-    then(mailService).should().sendTempPasswordProcess(member.getEmail());
+    then(mailPort).should().sendTempPassword(member.getEmail(), rawTempPassword);
     then(encoder).should().encode(rawTempPassword);
     assertThat(member.getPassword()).isEqualTo(encodedTempPassword);
   }
@@ -359,18 +273,17 @@ class MemberServiceTest {
 
     String fileName = "profile/test.png";
     MemberProfileImageUrlResponse expected = mockPresignedUrlResponse(fileName);
-    given(imageStorageAccessor.getImageUploadUrl(anyString(), anyString())).willReturn(expected.getImageUploadUrl());
+    given(imageAccessor.getImageUploadUrl(anyString(), anyString())).willReturn(expected.imageUploadUrl());
 
     // when
     MemberProfileImageUrlResponse response = memberService.changeProfileImageUrlProcess(command);
 
     // then
     then(memberReader).should().readMemberById(command.memberId());
-    then(imageStorageAccessor).should().getImageUploadUrl(anyString(), anyString());
-    assertThat(response.getImageUploadUrl()).isEqualTo(expected.getImageUploadUrl());
-    assertThat(response.getFileName()).startsWith("profile/");
-    assertThat(response.getFileName()).endsWith(".png");
-    assertThat(member.getProfileImageUrl()).isEqualTo(response.getFileName());
+    then(imageAccessor).should().getImageUploadUrl(anyString(), anyString());
+    assertThat(response.imageUploadUrl()).isEqualTo(expected.imageUploadUrl());
+    assertThat(response.fileName()).startsWith("profile/").endsWith(".png");
+    assertThat(member.getProfileImageUrl()).isEqualTo(response.fileName());
   }
 
   @Test
