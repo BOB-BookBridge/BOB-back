@@ -17,7 +17,7 @@ public class RedisRepository {
   }
 
   public Optional<String> getValue(String key) {
-    return Optional.ofNullable(redisTemplate.opsForValue().get(key));
+    return Optional.of(redisTemplate.opsForValue().get(key));
   }
 
   public void delete(String key) {

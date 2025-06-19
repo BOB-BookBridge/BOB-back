@@ -111,7 +111,7 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   public void issueTempPasswordProcess(IssuePasswordCommand command) {
     Member member = memberReader.readMemberByEmail(command.email());
     String tempPassword = generateCode(12);
-    mailPort.sendTempPasswordProcess(command.email(), tempPassword);
+    mailPort.sendTempPassword(command.email(), tempPassword);
     member.updatePassword(encoder.encode(tempPassword));
   }
 

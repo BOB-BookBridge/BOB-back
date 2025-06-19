@@ -12,7 +12,7 @@ public class MemberMailAdapter implements MemberMailPort {
   private final GoogleMailService mailService;
 
   @Override
-  public void sendTempPasswordProcess(String email, String tempPassword) {
-    mailService.sendTempPasswordProcess(tempPassword, email);
+  public void sendTempPassword(String email, String tempPassword) {
+    mailService.sendTempPasswordProcess(email, tempPassword);
   }
 }
