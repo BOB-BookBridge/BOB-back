@@ -6,7 +6,6 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
-import java.util.UUID;
 
 public class JWTFixture {
 

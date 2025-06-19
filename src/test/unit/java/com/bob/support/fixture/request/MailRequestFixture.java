@@ -1,6 +1,5 @@
 package com.bob.support.fixture.request;
 
-
 import com.bob.web.auth.mail.request.MailSendRequest;
 import com.bob.web.auth.mail.request.MailVerifyRequest;
 

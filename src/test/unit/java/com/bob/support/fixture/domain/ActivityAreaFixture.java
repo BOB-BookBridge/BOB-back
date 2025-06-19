@@ -21,13 +21,6 @@ public class ActivityAreaFixture {
         .build();
   }
 
-  public static ActivityArea customActivityArea(UUID memberId, Integer emdAreaId) {
-    return ActivityArea.builder()
-        .id(new ActivityAreaId(memberId, emdAreaId))
-        .authenticationAt(LocalDate.now())
-        .build();
-  }
-
   public static ActivityArea customTimeActivityArea(UUID memberId, Integer emdAreaId, LocalDate date) {
     return ActivityArea.builder()
         .id(new ActivityAreaId(memberId, emdAreaId))

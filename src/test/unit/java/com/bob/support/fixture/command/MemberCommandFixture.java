@@ -21,10 +21,6 @@ public class MemberCommandFixture {
     return new ChangePasswordCommand(defaultIdMember().getId(), defaultMember().getPassword(), newPassword);
   }
 
-  public static ChangePasswordCommand mismatchChangePasswordCommand(String oldPassword, String newPassword) {
-    return new ChangePasswordCommand(defaultIdMember().getId(), oldPassword, newPassword);
-  }
-
   public static ChangePasswordCommand customChangePasswordCommand(UUID id, String oldPassword, String newPassword) {
     return new ChangePasswordCommand(id, oldPassword, newPassword);
   }

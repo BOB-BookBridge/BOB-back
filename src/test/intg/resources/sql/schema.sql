@@ -305,7 +305,8 @@ INSERT INTO posts (book_id, seller_id, category_id, book_status, post_status, se
 (6, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 18000, '책 상태 하', 213, 'https://image/12.png', now()),
 (1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '오래된 게시글', 213, 'https://image/old.png', '2023-01-01 10:00:00'),
 (2, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 12000, '중간 게시글', 213, 'https://image/mid.png', '2023-06-01 10:00:00'),
-(3, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 14000, '최신 게시글', 213, 'https://image/new.png', '2024-01-01 10:00:00');
+(3, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 14000, '최신 게시글', 213, 'https://image/new.png', '2024-01-01 10:00:00'),
+(4, UUID_TO_BIN('0197365f-8074-7d24-a332-0c5f1dbe9c59'), 1, 'LOW', 'READY', 6000, "다른 사람의 게시글", 213, 'https://image/new.png', '2024-01-01 10:00:00');
 
 INSERT INTO post_favorites (member_id, post_id, created_at) VALUES
 (UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, NOW()),

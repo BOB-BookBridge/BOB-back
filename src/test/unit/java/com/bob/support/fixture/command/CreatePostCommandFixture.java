@@ -1,5 +1,6 @@
 package com.bob.support.fixture.command;
 
+import static com.bob.support.fixture.domain.BookFixture.DEFAULT_ISBN;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
@@ -15,7 +16,7 @@ public class CreatePostCommandFixture {
         .sellPrice(38000)
         .bookStatus("최상")
         .postDescription("거의 새 책입니다.")
-        .bookIsbn("9788966264414")
+        .bookIsbn("1020366172839")
         .bookTitle("JVM 밑바닥까지 파헤치기")
         .bookAuthor("저우즈밍")
         .bookDescription("JVM 핵심 원리 소개")
@@ -32,7 +33,7 @@ public class CreatePostCommandFixture {
         .sellPrice(39000)
         .bookStatus("최상")
         .postDescription("신품급 도서 팝니다.")
-        .bookIsbn("9788966264414")
+        .bookIsbn("1020366172839")
         .bookTitle("JVM 밑바닥까지 파헤치기")
         .bookAuthor("저우즈밍")
         .bookDescription("핵심 JVM 원리 설명")

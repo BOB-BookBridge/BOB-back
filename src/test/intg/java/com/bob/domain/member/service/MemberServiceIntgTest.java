@@ -6,17 +6,17 @@ import static com.bob.support.fixture.command.ChangeProfileImageUrlCommandFixtur
 import static com.bob.support.fixture.command.MemberCommandFixture.customChangePasswordCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultCreateMemberCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultIssuePasswordCommand;
-import static com.bob.support.fixture.domain.ActivityAreaFixture.defaultActivityArea;
 import static com.bob.support.fixture.domain.MemberFixture.customEmailMember;
 import static com.bob.support.fixture.domain.MemberFixture.defaultMember;
 import static com.bob.support.fixture.domain.MemberFixture.encryptPasswordMember;
-import static com.bob.support.fixture.query.MemberQueryFixture.defaultReadProfileWithPostsQuery;
+import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileImageUrlResponseFixture.DEFAULT_MEMBER_PROFILE_IMAGE_URL_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mockStatic;
 
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
@@ -26,28 +26,22 @@ import com.bob.domain.member.service.dto.command.ChangeProfileImageUrlCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
-import com.bob.domain.member.service.dto.query.ReadProfileWithPostsQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileImageUrlResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
-import com.bob.domain.member.service.dto.response.MemberProfileWithPostsResponse;
-import com.bob.domain.member.service.dto.response.internal.MemberPostsResponse;
-import com.bob.domain.member.service.port.ImageStorageAccessor;
-import com.bob.domain.member.service.port.MailService;
-import com.bob.domain.member.service.port.MailVerificationStore;
-import com.bob.domain.member.service.port.PostSearcher;
-import com.bob.domain.post.service.dto.query.ReadMemberPostsQuery;
+import com.bob.domain.member.service.port.out.MemberAreaPort;
+import com.bob.domain.member.service.port.out.MemberMailPort;
+import com.bob.domain.member.service.port.out.MemberProfileImageAccessor;
+import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import com.bob.global.utils.random.RandomUtils;
 import com.bob.support.TestContainerSupport;
 import com.bob.support.redis.RedisContainerConfig;
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,39 +58,37 @@ class MemberServiceIntgTest extends TestContainerSupport {
   @Autowired
   private MemberRepository memberRepository;
 
+  @MockitoBean
+  private MemberAreaPort areaPort;
+
+  @MockitoBean
+  private MemberRedisPort redisPort;
+
+  @MockitoBean
+  private MemberProfileImageAccessor profileImageAccessor;
+
+  @MockitoBean
+  private MemberMailPort mailPort;
+
   @Autowired
   private PasswordEncoder passwordEncoder;
-
-  @Autowired
-  private MailVerificationStore mailVerificationStore;
-
-  @Autowired
-  private PostSearcher postSearcher;
-
-  @MockitoBean
-  private MailService mailService;
-
-  @MockitoBean
-  private ImageStorageAccessor imageStorageAccessor;
 
   @Test
   @DisplayName("회원가입 - 성공 테스트")
   void 이메일_인증이_완료된_사용자는_회원가입을_할_수_있다() {
     // given
     String email = "test@email.com";
-    mailVerificationStore.saveVerified(email, "true", 5);
     CreateMemberCommand command = defaultCreateMemberCommand();
+    given(redisPort.isVerified(email)).willReturn(true);
 
     // when
     memberService.signupProcess(command);
 
     // then
-    Member saved = memberRepository.findByEmail(email).orElseThrow();
-    assertThat(saved.getEmail()).isEqualTo(email);
-    assertThat(passwordEncoder.matches(command.password(), saved.getPassword())).isTrue();
-    assertThat(saved.getNickname()).isEqualTo(command.nickname());
-    assertThat(saved.getActivityArea().getEmdArea().getId()).isEqualTo(command.emdId());
-    assertThat(saved.getActivityArea().getAuthenticationAt()).isNotNull();
+    Member member = memberRepository.findByEmail(email).orElseThrow();
+    assertThat(member.getEmail()).isEqualTo(email);
+    assertThat(passwordEncoder.matches(command.password(), member.getPassword())).isTrue();
+    assertThat(member.getNickname()).isEqualTo(command.nickname());
   }
 
   @Test
@@ -115,12 +107,11 @@ class MemberServiceIntgTest extends TestContainerSupport {
   @DisplayName("회원가입 - 실패 테스트(중복된 이메일)")
   void 동일한_이메일_계정이_존재하면_사용자는_회원가입을_할_수_없다() {
     // given
-    String email = "test@email.com";
-    mailVerificationStore.saveVerified(email, "true", 5);
+    String duplicateEmail = "test@email.com";
+    given(redisPort.isVerified(duplicateEmail)).willReturn(true);
 
-    Member existing = customEmailMember(email);
+    Member existing = customEmailMember(duplicateEmail);
     memberRepository.save(existing);
-
     CreateMemberCommand command = defaultCreateMemberCommand();
 
     // when & then
@@ -130,59 +121,22 @@ class MemberServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("내 프로필 조회 - 성공 테스트")
+  @DisplayName("사용자 프로필 조회 - 성공 테스트")
   void 회원은_자신의_프로필을_조회할_수_있다() {
     // given
     Member member = defaultMember();
     memberRepository.save(member);
-    member.updateActivityArea(defaultActivityArea());
     ReadProfileQuery query = ReadProfileQuery.of(member.getId());
+    given(areaPort.readMemberAreaSummary(member.getId())).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
 
     // when
     MemberProfileResponse response = memberService.readProfileProcess(query);
 
     // then
-    assertThat(response.getMemberId()).isEqualTo(member.getId());
-    assertThat(response.getNickname()).isEqualTo(member.getNickname());
-    assertThat(response.getProfileImageUrl()).isEqualTo(member.getProfileImageUrl());
-    assertThat(response.getArea().emdId()).isEqualTo(member.getActivityArea().getEmdArea().getId());
-    assertThat(response.getArea().isAuthentication()).isEqualTo(member.getActivityArea().isValidAuthentication());
-  }
-
-  @Test
-  @DisplayName("다른 사용자 프로필 + 게시글 목록 조회 - 성공 테스트")
-  void 회원은_다른_사용자의_프로필과_게시글_목록을_조회할_수_있다() {
-    // given
-    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0"); // DB Dummy Insert Data by schema.sql
-    Member foundMember = memberRepository.findById(memberId).orElseThrow();
-    ReadProfileWithPostsQuery query = defaultReadProfileWithPostsQuery(memberId);
-
-    // when
-    MemberProfileWithPostsResponse response = memberService.readProfileByIdWithPostsProcess(query);
-
-    // then
-    assertThat(response.getProfile().getMemberId()).isEqualTo(foundMember.getId());
-    assertThat(response.getProfile().getNickname()).isEqualTo(foundMember.getNickname());
-    assertThat(response.getMemberPosts().getTotalCount()).isEqualTo(15);
-    assertThat(response.getMemberPosts().getPosts().get(0).postTitle()).isEqualTo("자바의 정석");
-    assertThat(response.getMemberPosts().getPosts().get(1).postTitle()).isEqualTo("자바 ORM 표준 JPA 프로그래밍");
-  }
-
-  @Test
-  @DisplayName("사용자의 좋아요한 게시글 목록 조회 - 성공 테스트")
-  void 회원은_좋아요한_게시글_목록을_조회할_수_있다() {
-    // given
-    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
-    Pageable pageable = PageRequest.of(0, 12);
-    ReadMemberPostsQuery query = new ReadMemberPostsQuery(memberId, pageable);
-
-    // when
-    MemberPostsResponse response = memberService.readMemberFavoritePosts(query);
-
-    // then
-    assertThat(response.getTotalCount()).isEqualTo(2);
-    assertThat(response.getPosts().get(0).postTitle()).isEqualTo("자바의 정석"); // 1번 게시글
-    assertThat(response.getPosts().get(1).postTitle()).isEqualTo("토비의 스프링"); // 3번 게시글
+    assertThat(response.memberId()).isEqualTo(member.getId());
+    assertThat(response.nickname()).isEqualTo(member.getNickname());
+    assertThat(response.profileImageUrl()).isEqualTo(member.getProfileImageUrl());
+    assertThat(response.area()).isNotNull();
   }
 
   @Test
@@ -221,17 +175,13 @@ class MemberServiceIntgTest extends TestContainerSupport {
     // given
     Member member = defaultMember();
     memberRepository.save(member);
-
     IssuePasswordCommand command = defaultIssuePasswordCommand();
-    String tempPassword = "temp-password";
-    given(mailService.sendTempPasswordProcess(command.email())).willReturn(tempPassword);
 
     // when
     memberService.issueTempPasswordProcess(command);
 
     // then
     assertThat(member.getPassword()).isNotEqualTo(defaultMember().getPassword());
-    assertThat(passwordEncoder.matches(tempPassword, member.getPassword())).isTrue();
   }
 
   @Test
@@ -255,7 +205,6 @@ class MemberServiceIntgTest extends TestContainerSupport {
     String newPassword = "new-password";
     Member member = encryptPasswordMember(passwordEncoder.encode(password));
     memberRepository.save(member);
-
     ChangePasswordCommand command = customChangePasswordCommand(member.getId(), password, newPassword);
 
     // when
@@ -270,8 +219,6 @@ class MemberServiceIntgTest extends TestContainerSupport {
   void 기존_비밀번호가_일치하지_않으면_비밀번호를_변경할_수_없다() {
     // given
     String password = "password";
-    String encoded = passwordEncoder.encode(password);
-
     String wrongOldPassword = "wrong-password";
     String newPassword = "new-password";
 
@@ -294,16 +241,15 @@ class MemberServiceIntgTest extends TestContainerSupport {
     memberRepository.save(member);
     ChangeProfileImageUrlCommand command = customChangeProfileImageUrlCommand(member.getId());
     MemberProfileImageUrlResponse expected = DEFAULT_MEMBER_PROFILE_IMAGE_URL_RESPONSE;
-    given(imageStorageAccessor.getImageUploadUrl(anyString(), eq(command.contentType())))
-        .willReturn(expected.getImageUploadUrl());
+    given(profileImageAccessor.getImageUploadUrl(anyString(), eq(command.contentType()))).willReturn(expected.imageUploadUrl());
 
     // when
     MemberProfileImageUrlResponse response = memberService.changeProfileImageUrlProcess(command);
 
     // then
-    assertThat(member.getProfileImageUrl()).isEqualTo(response.getFileName());
-    assertThat(response.getImageUploadUrl()).isEqualTo(expected.getImageUploadUrl());
-    assertThat(response.getFileName()).startsWith("profile");
-    assertThat(response.getFileName()).endsWith(".png");
+    assertThat(member.getProfileImageUrl()).isEqualTo(response.fileName());
+    assertThat(response.imageUploadUrl()).isEqualTo(expected.imageUploadUrl());
+    assertThat(response.fileName()).startsWith("profile");
+    assertThat(response.fileName()).endsWith(".png");
   }
 }
