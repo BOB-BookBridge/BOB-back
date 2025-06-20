@@ -4,9 +4,13 @@ import com.bob.domain.area.entity.EmdArea;
 import com.bob.domain.area.entity.SiggArea;
 
 public class EmdAreaFixture {
+
+  public static final Integer EMD_AREA_ID = 213;
+  public static final Integer SIGG_AREA_ID = 100;
+
   public static EmdArea defaultEmdArea() {
     return EmdArea.builder()
-        .id(213)
+        .id(EMD_AREA_ID)
         .admCode("640")
         .name("역삼동")
         .siggArea(defaultSiggArea())
@@ -14,19 +18,9 @@ public class EmdAreaFixture {
         .build();
   }
 
-  public static EmdArea otherEmdArea() {
-    return EmdArea.builder()
-        .id(1)
-        .admCode("570")
-        .name("신곡동")
-        .siggArea(defaultSiggArea())
-        .geom(null)
-        .build();
-  }
-
   public static SiggArea defaultSiggArea() {
     return SiggArea.builder()
-        .id(100)
+        .id(SIGG_AREA_ID)
         .admCode("25")
         .name("노원구")
         .sidoArea(null)

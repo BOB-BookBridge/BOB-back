@@ -3,14 +3,13 @@ package com.bob.web.member.controller;
 import static com.bob.web.common.symbol.ResponseSymbol.CREATED;
 import static com.bob.web.common.symbol.ResponseSymbol.SENT;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
-import static com.bob.web.member.request.ReadProfileByIdRequest.toQuery;
 import static com.bob.web.member.request.ReadProfileRequest.toQuery;
 
-import com.bob.domain.member.service.MemberService;
 import com.bob.domain.member.service.dto.response.MemberProfileImageUrlResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
-import com.bob.domain.member.service.dto.response.MemberProfileWithPostsResponse;
-import com.bob.domain.member.service.dto.response.internal.MemberPostsResponse;
+import com.bob.domain.member.usecase.MemberModifyUseCase;
+import com.bob.domain.member.usecase.MemberReadUseCase;
+import com.bob.domain.member.usecase.MemberWriteUseCase;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
@@ -19,11 +18,9 @@ import com.bob.web.member.request.ChangeProfileRequest;
 import com.bob.web.member.request.IssuePasswordRequest;
 import com.bob.web.member.request.ReadImageUploadUrlRequest;
 import com.bob.web.member.request.SignupRequest;
-import com.bob.web.post.request.ReadMemberPostsRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,41 +37,25 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MemberController {
 
-  private final MemberService memberService;
+  private final MemberWriteUseCase writeUseCase;
+  private final MemberReadUseCase readUseCase;
+  private final MemberModifyUseCase modifyUseCase;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public CommonResponse<ResponseSymbol> handleSignup(@Valid @RequestBody SignupRequest request) {
-    memberService.signupProcess(request.toCommand());
+    writeUseCase.signupProcess(request.toCommand());
     return new CommonResponse<>(true, CREATED);
   }
 
   @GetMapping("/me")
   public ResponseEntity<MemberProfileResponse> handleReadProfile(@AuthenticationId UUID memberId) {
-    return ResponseEntity.ok(memberService.readProfileProcess(toQuery(memberId)));
-  }
-
-  @GetMapping("/me/posts")
-  public ResponseEntity<MemberPostsResponse> handleReadMemberPosts(
-      @AuthenticationId UUID memberId,
-      Pageable pageable
-  ) {
-    return ResponseEntity.ok(memberService.readMemberPostsProcess(ReadMemberPostsRequest.toQuery(memberId, pageable)));
-  }
-
-  @GetMapping("/me/favorites")
-  public ResponseEntity<MemberPostsResponse> handleReadMemberFavoritePosts(
-      @AuthenticationId UUID memberId,
-      Pageable pageable
-  ) {
-    return ResponseEntity.ok(memberService.readMemberFavoritePosts(ReadMemberPostsRequest.toQuery(memberId, pageable)));
+    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId)));
   }
 
   @GetMapping("/{memberId}")
-  public ResponseEntity<MemberProfileWithPostsResponse> handleReadProfileById(
-      @PathVariable UUID memberId,
-      Pageable pageable) {
-    return ResponseEntity.ok(memberService.readProfileByIdWithPostsProcess(toQuery(memberId, pageable)));
+  public ResponseEntity<MemberProfileResponse> handleReadProfileById(@PathVariable UUID memberId) {
+    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId)));
   }
 
   @PatchMapping("/me")
@@ -82,7 +63,7 @@ public class MemberController {
       @Valid @RequestBody ChangeProfileRequest request,
       @AuthenticationId UUID memberId
   ) {
-    memberService.changeProfileProcess(request.toCommand(memberId));
+    modifyUseCase.changeProfileProcess(request.toCommand(memberId));
     return new CommonResponse<>(true, UPDATED);
   }
 
@@ -91,13 +72,13 @@ public class MemberController {
       @Valid @RequestBody ChangePasswordRequest request,
       @AuthenticationId UUID memberId
   ) {
-    memberService.changePasswordProcess(request.toCommand(memberId));
+    modifyUseCase.changePasswordProcess(request.toCommand(memberId));
     return new CommonResponse<>(true, UPDATED);
   }
 
   @PatchMapping("/temp/password")
   public CommonResponse<ResponseSymbol> handleSendTempPassword(@Valid @RequestBody IssuePasswordRequest request) {
-    memberService.issueTempPasswordProcess(request.toCommand());
+    modifyUseCase.issueTempPasswordProcess(request.toCommand());
     return new CommonResponse<>(true, SENT);
   }
 
@@ -106,6 +87,6 @@ public class MemberController {
       @Valid @RequestBody ReadImageUploadUrlRequest request,
       @AuthenticationId UUID memberId
   ) {
-    return ResponseEntity.ok(memberService.changeProfileImageUrlProcess(request.toQuery(memberId)));
+    return ResponseEntity.ok(modifyUseCase.changeProfileImageUrlProcess(request.toQuery(memberId)));
   }
 }

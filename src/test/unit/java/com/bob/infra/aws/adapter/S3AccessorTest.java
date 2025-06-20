@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.bob.infra.aws.adapter.in.S3ImageAccessor;
 import java.net.MalformedURLException;
 import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,7 @@ class S3AccessorTest {
   private S3Presigner signer;
 
   @InjectMocks
-  private S3Accessor s3Accessor;
+  private S3ImageAccessor s3Accessor;
 
   @BeforeEach
   void setUp() {

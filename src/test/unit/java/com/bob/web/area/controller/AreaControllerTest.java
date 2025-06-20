@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
-import com.bob.domain.area.command.AuthenticationCommand;
+import com.bob.domain.area.service.dto.command.AuthenticationCommand;
 import com.bob.domain.area.service.AreaService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,6 +49,6 @@ class AreaControllerTest {
     ).andExpect(status().isOk());
 
     // then
-    verify(areaService, times(1)).authenticate(any(AuthenticationCommand.class));
+    verify(areaService, times(1)).authenticateProcess(any(AuthenticationCommand.class));
   }
 }

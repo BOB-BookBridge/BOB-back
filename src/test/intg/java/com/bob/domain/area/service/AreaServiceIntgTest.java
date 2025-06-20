@@ -1,7 +1,7 @@
 package com.bob.domain.area.service;
 
-import static com.bob.domain.member.service.dto.command.AuthenticationPurpose.CHANGE_AREA;
-import static com.bob.domain.member.service.dto.command.AuthenticationPurpose.RE_AUTHENTICATE;
+import static com.bob.domain.area.service.dto.command.AuthenticationPurpose.CHANGE_AREA;
+import static com.bob.domain.area.service.dto.command.AuthenticationPurpose.RE_AUTHENTICATE;
 import static com.bob.global.exception.response.ApplicationError.INVALID_AREA_AUTHENTICATION;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_MEMBER;
 import static com.bob.support.fixture.command.AuthenticationCommandFixture.DEFAULT_LAT;
@@ -12,22 +12,21 @@ import static com.bob.support.fixture.command.AuthenticationCommandFixture.custo
 import static com.bob.support.fixture.command.AuthenticationCommandFixture.defaultAuthenticationCommand;
 import static com.bob.support.fixture.command.AuthenticationCommandFixture.defaultMismatchAuthenticationCommand;
 import static com.bob.support.fixture.command.AuthenticationCommandFixture.guestCommand;
-import static com.bob.support.fixture.domain.ActivityAreaFixture.customActivityArea;
-import static com.bob.support.fixture.domain.MemberFixture.defaultMember;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.bob.domain.area.command.AuthenticationCommand;
 import com.bob.domain.area.entity.EmdArea;
 import com.bob.domain.area.entity.activity.ActivityArea;
-import com.bob.domain.area.repository.AreaRepository;
-import com.bob.domain.member.entity.Member;
-import com.bob.domain.member.repository.MemberRepository;
-import com.bob.domain.member.service.dto.command.AuthenticationPurpose;
+import com.bob.domain.area.repository.ActivityAreaRepository;
+import com.bob.domain.area.service.dto.command.AuthenticationCommand;
+import com.bob.domain.area.service.dto.command.AuthenticationPurpose;
+import com.bob.domain.area.service.reader.ActivityAreaReader;
+import com.bob.domain.area.service.reader.EmdAreaReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.TestContainerSupport;
 import com.bob.support.redis.RedisContainerConfig;
 import java.time.LocalDate;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,25 +48,26 @@ class AreaServiceIntgTest extends TestContainerSupport {
   private AreaService areaService;
 
   @Autowired
-  private MemberRepository memberRepository;
+  private ActivityAreaRepository activityAreaRepository;
 
   @Autowired
-  private AreaRepository areaRepository;
+  private ActivityAreaReader activityAreaReader;
 
-  private Member member;
+  @Autowired
+  private EmdAreaReader emdAreaReader;
 
   private EmdArea defaultEmdArea;
 
   private EmdArea otherEmdArea;
 
+  private static Stream<AuthenticationPurpose> 요청_목록() {
+    return Stream.of(CHANGE_AREA, RE_AUTHENTICATE);
+  }
+
   @BeforeEach
   void setUp() {
-    defaultEmdArea = areaRepository.findById(213).get(); // 역삼동
-    otherEmdArea = areaRepository.findById(785).get(); // 신곡동
-
-    member = defaultMember();
-    memberRepository.save(member);
-    member.updateActivityArea(customActivityArea(member, defaultEmdArea));
+    defaultEmdArea = emdAreaReader.readEmdAreaById(213); // 역삼동
+    otherEmdArea = emdAreaReader.readEmdAreaById(785); // 신곡동
   }
 
   @Test
@@ -77,7 +77,7 @@ class AreaServiceIntgTest extends TestContainerSupport {
     AuthenticationCommand command = defaultAuthenticationCommand();
 
     // when & then
-    areaService.authenticate(command);
+    areaService.authenticateProcess(command);
   }
 
   @Test
@@ -87,7 +87,7 @@ class AreaServiceIntgTest extends TestContainerSupport {
     AuthenticationCommand command = defaultMismatchAuthenticationCommand();
 
     // when & then
-    assertThatThrownBy(() -> areaService.authenticate(command))
+    assertThatThrownBy(() -> areaService.authenticateProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(INVALID_AREA_AUTHENTICATION.getMessage());
   }
@@ -96,38 +96,43 @@ class AreaServiceIntgTest extends TestContainerSupport {
   @DisplayName("활동지역 변경 - 성공 테스트")
   void 활동지역_변경() {
     // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     AuthenticationCommand command = customAuthenticationCommand(
-        member.getId(),
+        memberId,
         otherEmdArea.getId(),
         OTHER_LAT, OTHER_LON,
         CHANGE_AREA
     );
 
     // when
-    areaService.authenticate(command);
+    areaService.authenticateProcess(command);
 
     // then
-    ActivityArea updated = member.getActivityArea();
-    assertThat(member.getId()).isEqualTo(command.memberId());
-    assertThat(member.getActivityArea().getEmdArea().getId()).isEqualTo(command.emdId());
+    ActivityArea changedArea = activityAreaReader.readActivityAreaByMemberId(memberId);
+    assertThat(changedArea.getId().getMemberId()).isEqualTo(command.memberId());
+    assertThat(changedArea.getId().getEmdAreaId()).isEqualTo(command.emdId());
   }
 
   @Test
   @DisplayName("활동지역 재인증 - 성공 테스트")
   void 재인증_성공() {
     // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    ActivityArea area = activityAreaReader.readActivityAreaByMemberId(memberId);
     AuthenticationCommand command = customAuthenticationCommand(
-        member.getId(),
+        memberId,
         defaultEmdArea.getId(),
         DEFAULT_LAT, DEFAULT_LON,
         RE_AUTHENTICATE
     );
 
     // when
-    areaService.authenticate(command);
+    areaService.authenticateProcess(command);
 
     // then
-    assertThat(member.getActivityArea().getAuthenticationAt()).isEqualTo(LocalDate.now());
+    assertThat(area.getId().getMemberId()).isEqualTo(memberId);
+    assertThat(area.getId().getEmdAreaId()).isEqualTo(defaultEmdArea.getId());
+    assertThat(area.getAuthenticationAt()).isEqualTo(LocalDate.now());
   }
 
   @ParameterizedTest
@@ -138,12 +143,8 @@ class AreaServiceIntgTest extends TestContainerSupport {
     AuthenticationCommand command = guestCommand(purpose);
 
     // when & then
-    assertThatThrownBy(() -> areaService.authenticate(command))
+    assertThatThrownBy(() -> areaService.authenticateProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(NOT_EXISTS_MEMBER.getMessage());
-  }
-
-  private static Stream<AuthenticationPurpose> 요청_목록() {
-    return Stream.of(CHANGE_AREA, RE_AUTHENTICATE);
   }
 }

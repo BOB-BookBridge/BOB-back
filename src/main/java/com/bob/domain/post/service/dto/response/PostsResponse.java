@@ -10,7 +10,7 @@ public record PostsResponse(
 
   public static PostsResponse of(Long totalCount, List<Post> postList) {
     List<PostSummary> summaries = postList.stream()
-        .map(PostSummary::of)
+        .map(PostSummary::from)
         .toList();
 
     return new PostsResponse(totalCount, summaries);

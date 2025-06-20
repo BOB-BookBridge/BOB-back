@@ -9,6 +9,7 @@ import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.service.port.out.ChatPostPort;
 import com.bob.domain.chat.service.port.out.ChatTradePort;
 import com.bob.domain.chat.service.reader.ChatRoomReader;
+import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
@@ -20,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class ChatRoomService {
+public class ChatRoomService implements ChatRoomWriteUseCase {
 
   private final ChatRoomRepository chatRoomRepository;
   private final ChatRoomReader chatRoomReader;

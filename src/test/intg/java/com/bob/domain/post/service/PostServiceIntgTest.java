@@ -6,9 +6,7 @@ import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
 import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
 import static com.bob.support.fixture.command.ChangePostCommandFixture.DEFAULT_CHANGE_POST_COMMAND;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.defaultCreatePostCommand;
-import static com.bob.support.fixture.domain.ActivityAreaFixture.customActivityArea;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
-import static com.bob.support.fixture.domain.MemberFixture.defaultMember;
 import static com.bob.support.fixture.query.PostQueryFixture.searchAuthorQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchBookStatusQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchCategoryQuery;
@@ -19,17 +17,15 @@ import static com.bob.support.fixture.query.PostQueryFixture.searchOldestQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTitleQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTradeStatusQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchUnderPriceQuery;
+import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
 
-import com.bob.domain.area.entity.EmdArea;
-import com.bob.domain.area.repository.AreaRepository;
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.repository.BookRepository;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.repository.CategoryRepository;
-import com.bob.domain.member.entity.Member;
-import com.bob.domain.member.repository.MemberRepository;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.PostFavorite;
 import com.bob.domain.post.repository.PostFavoriteRepository;
@@ -39,28 +35,28 @@ import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
-import com.bob.domain.post.service.dto.query.ReadMemberFavoritePostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
+import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
+import com.bob.domain.post.service.dto.response.PostAreaSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
-import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
 import com.bob.domain.post.service.dto.response.PostSummary;
 import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.service.port.out.PostAreaPort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.TestContainerSupport;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 @DisplayName("게시글 서비스 통합 테스트")
@@ -81,52 +77,41 @@ class PostServiceIntgTest extends TestContainerSupport {
   private PostFavoriteRepository postFavoriteRepository;
 
   @Autowired
-  private MemberRepository memberRepository;
-
-  @Autowired
   private CategoryRepository categoryRepository;
 
   @Autowired
   private BookRepository bookRepository;
 
-  @Autowired
-  private AreaRepository areaRepository;
+  @MockitoBean
+  private PostAreaPort areaPort;
 
   @PersistenceContext
   private EntityManager em;
 
-  private EmdArea emdArea;
-
-  private final PageRequest pageable = PageRequest.of(0, 10);
-
-  @BeforeEach
-  void setUp() {
-    emdArea = areaRepository.findById(213).get();
-  }
+  private final PageRequest pageable = PageRequest.of(0, 12);
 
   @Test
   @DisplayName("게시글 등록 - 성공 테스트")
   void 위치_인증이_된_사용자는_게시글을_등록할_수_있다() {
     // given
-    Member seller = defaultMember();
-    memberRepository.save(seller);
-    seller.updateActivityArea(customActivityArea(seller, emdArea));
-    seller.getActivityArea().updateAuthenticationAt(LocalDate.now());
-
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Category category = categoryRepository.save(defaultCategory());
-    CreatePostCommand command = defaultCreatePostCommand(seller.getId(), category.getId());
+    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId());
+    given(areaPort.readPostAreaSummary(memberId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    int beforePostCount = postRepository.findAllBySellerId(memberId).size();
+    int expectedPostCount = beforePostCount + 1;
 
     // when
     postService.createPostProcess(command);
 
     // then
-    List<Post> posts = postRepository.findAllBySellerId(seller.getId());
-    assertThat(posts).hasSize(1);
+    List<Post> posts = postRepository.findAllBySellerId(memberId);
+    assertThat(posts).hasSize(expectedPostCount);
 
-    Post saved = posts.get(0);
-    assertThat(saved.getSeller().getId()).isEqualTo(seller.getId());
-    assertThat(saved.getCategory().getId()).isEqualTo(category.getId());
-    assertThat(saved.getBook().getIsbn13()).isEqualTo(command.bookIsbn());
+    Post currentPost = posts.get(expectedPostCount - 1);
+    assertThat(currentPost.getSellerId()).isEqualTo(memberId);
+    assertThat(currentPost.getCategory().getId()).isEqualTo(category.getId());
+    assertThat(currentPost.getBook().getIsbn13()).isEqualTo(command.bookIsbn());
 
     Book book = bookRepository.findByIsbn13(command.bookIsbn()).get();
     assertThat(book).isNotNull();
@@ -137,13 +122,10 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("게시글 등록 - 실패 테스트(위치 인증 X)")
   void 위치_인증이_안된_사용자는_게시글을_등록할_수_없다() {
     // given
-    Member seller = defaultMember();
-    memberRepository.save(seller);
-    seller.updateActivityArea(customActivityArea(seller, emdArea));
-    seller.getActivityArea().updateAuthenticationAt(LocalDate.now().minusMonths(2));
-
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    given(areaPort.readPostAreaSummary(memberId)).willReturn(PostAreaSummaryResponse.of(213, "역삼동", "강남구", false));
     Category category = categoryRepository.save(defaultCategory());
-    CreatePostCommand command = defaultCreatePostCommand(seller.getId(), category.getId());
+    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId());
 
     // when & then
     assertThatThrownBy(() -> postService.createPostProcess(command))
@@ -156,14 +138,14 @@ class PostServiceIntgTest extends TestContainerSupport {
   void 회원이_좋아요한_게시글을_조회할_수_있다() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
-    ReadMemberFavoritePostsQuery query = ReadMemberFavoritePostsQuery.of(memberId);
+    ReadPostFavoritesQuery query = ReadPostFavoritesQuery.of(memberId);
 
     // when
-    PostFavoritesResponse response = postService.readMemberFavoritePostsProcess(query, pageable);
+    PostsResponse response = postService.readPostFavoritesProcess(query, pageable);
 
     // then
     assertThat(response.totalCount()).isEqualTo(2);
-    assertThat(response.postFavorites())
+    assertThat(response.posts())
         .extracting(PostSummary::postTitle)
         .containsExactlyInAnyOrder("자바의 정석", "토비의 스프링");
   }
@@ -173,24 +155,24 @@ class PostServiceIntgTest extends TestContainerSupport {
   void 회원이_좋아요한_게시글이_없는_경우_빈_리스트를_반환한다() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
-    ReadMemberFavoritePostsQuery query = ReadMemberFavoritePostsQuery.of(memberId);
+    ReadPostFavoritesQuery query = ReadPostFavoritesQuery.of(memberId);
 
     // when
-    PostFavoritesResponse response = postService.readMemberFavoritePostsProcess(query, pageable);
+    PostsResponse response = postService.readPostFavoritesProcess(query, pageable);
 
     // then
     assertThat(response.totalCount()).isEqualTo(0);
-    assertThat(response.postFavorites()).hasSize(0);
+    assertThat(response.posts()).hasSize(0);
   }
 
   @Test
   @DisplayName("게시글 좋아요 등록 - 성공 테스트")
   void 사용자가_게시글을_좋아요_누를_수_있다() {
     // given
-    Member member = memberRepository.save(defaultMember());
-    Post post = postRepository.findAll().iterator().next();
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    Post post = postRepository.findById(10L).get();
 
-    RegisterPostFavoriteCommand command = new RegisterPostFavoriteCommand(member.getId(), post.getId());
+    RegisterPostFavoriteCommand command = new RegisterPostFavoriteCommand(memberId, post.getId());
 
     // when
     postService.registerPostFavoriteProcess(command);
@@ -198,7 +180,7 @@ class PostServiceIntgTest extends TestContainerSupport {
 
     // then
     Post updatedPost = postRepository.findById(post.getId()).orElseThrow();
-    PostFavorite postFavorite = postFavoriteRepository.findByMemberIdAndPostId(member.getId(), post.getId()).get();
+    PostFavorite postFavorite = postFavoriteRepository.findByMemberIdAndPostId(memberId, post.getId()).get();
     assertThat(updatedPost.getScrapCount()).isEqualTo(post.getScrapCount() + 1);
     assertThat(postFavorite).isNotNull();
   }
@@ -207,14 +189,13 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("게시글 좋아요 등록 - 실패 테스트 (이미 좋아요한 경우)")
   void 사용자가_이미_좋아요한_게시글에_중복_좋아요시_예외가_발생한다() {
     // given
-    Member member = memberRepository.save(defaultMember());
-    Post post = postRepository.findAll().iterator().next();
-    RegisterPostFavoriteCommand command = new RegisterPostFavoriteCommand(member.getId(), post.getId());
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    Post post = postRepository.findById(10L).get();
+    RegisterPostFavoriteCommand command = new RegisterPostFavoriteCommand(memberId, post.getId());
     postService.registerPostFavoriteProcess(command);
 
     // when & then
-    assertThatThrownBy(() -> postService.registerPostFavoriteProcess(command)
-    )
+    assertThatThrownBy(() -> postService.registerPostFavoriteProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessageContaining(ALREADY_POST_FAVORITE.getMessage());
   }
@@ -223,9 +204,9 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("게시글 좋아요 해제 - 성공 테스트")
   void 사용자가_게시글의_좋아요를_해제할_수_있다() {
     // given
-    Member member = memberRepository.save(defaultMember());
-    Post post = postRepository.findAll().iterator().next();
-    RegisterPostFavoriteCommand command = new RegisterPostFavoriteCommand(member.getId(), post.getId());
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    Post post = postRepository.findById(10L).get();
+    RegisterPostFavoriteCommand command = new RegisterPostFavoriteCommand(memberId, post.getId());
     postService.registerPostFavoriteProcess(command);
     clearPersistContext();
     int before = postRepository.findById(post.getId()).get().getScrapCount();
@@ -235,7 +216,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     clearPersistContext();
 
     // then
-    Optional<PostFavorite> result = postFavoriteRepository.findByMemberIdAndPostId(member.getId(), post.getId());
+    Optional<PostFavorite> result = postFavoriteRepository.findByMemberIdAndPostId(memberId, post.getId());
     int after = postRepository.findById(post.getId()).get().getScrapCount();
 
     assertThat(result).isEmpty();
@@ -246,9 +227,9 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("게시글 좋아요 해제 - 실패 테스트 (좋아요하지 않은 경우)")
   void 좋아요를_누르지_않은_게시글에_해제요청하면_예외발생한다() {
     // given
-    Member member = memberRepository.save(defaultMember());
-    Post post = postRepository.findAll().iterator().next();
-    RegisterPostFavoriteCommand command = new RegisterPostFavoriteCommand(member.getId(), post.getId());
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    Post post = postRepository.findById(10L).get();
+    RegisterPostFavoriteCommand command = new RegisterPostFavoriteCommand(memberId, post.getId());
 
     // when & then
     assertThatThrownBy(() -> postService.unregisterPostFavoriteProcess(command))
@@ -381,6 +362,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Post post = postRepository.findAllBySellerId(writerId).get(0); // 더미 데이터의 첫 번째 게시글
     int beforeViewCount = post.getViewCount();
+    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
     // when
     PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(writerId, post.getId()));
@@ -399,6 +381,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID viewerId = UUID.randomUUID();
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Post post = postRepository.findAllBySellerId(writerId).get(0);
+    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
     // when
     PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(viewerId, post.getId()));
@@ -429,9 +412,9 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("게시글 수정 - 작성자 불일치 예외")
   void 게시글_작성자가_아니면_예외가_발생한다() {
     // given
-    Member viewer = memberRepository.save(defaultMember());
+    UUID randomMemberId = UUID.randomUUID();
     Post post = postRepository.findAll().iterator().next();
-    ChangePostCommand command = DEFAULT_CHANGE_POST_COMMAND(viewer.getId(), post.getId());
+    ChangePostCommand command = DEFAULT_CHANGE_POST_COMMAND(randomMemberId, post.getId());
 
     // when & then
     assertThatThrownBy(() -> postService.changePostProcess(command))
@@ -443,21 +426,22 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("게시글 삭제 - 작성자 본인이 삭제하면 게시글과 좋아요가 모두 삭제된다")
   void 작성자_본인이_게시글을_삭제하면_게시글과_좋아요가_모두_삭제된다() {
     // given
-    Member writer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).get();
-    Member other = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).get();
+    UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
+    UUID otherId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
-    postService.createPostProcess(defaultCreatePostCommand(writer.getId(), defaultCategory().getId()));
-    Post post = postRepository.findAllBySellerId(writer.getId()).get(0);
-    postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(writer.getId(), post.getId()));
-    postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(other.getId(), post.getId()));
+    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId()));
+    Post post = postRepository.findAllBySellerId(writerId).get(0);
+    postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(writerId, post.getId()));
+    postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(otherId, post.getId()));
 
     // when
-    postService.removePostProcess(new RemovePostCommand(writer.getId(), post.getId()));
+    postService.removePostProcess(new RemovePostCommand(writerId, post.getId()));
 
     // then
     Optional<Post> deletedPost = postRepository.findById(post.getId());
-    Optional<PostFavorite> writerFavorite = postFavoriteRepository.findByMemberIdAndPostId(writer.getId(), post.getId());
-    Optional<PostFavorite> otherFavorite = postFavoriteRepository.findByMemberIdAndPostId(other.getId(), post.getId());
+    Optional<PostFavorite> writerFavorite = postFavoriteRepository.findByMemberIdAndPostId(writerId, post.getId());
+    Optional<PostFavorite> otherFavorite = postFavoriteRepository.findByMemberIdAndPostId(otherId, post.getId());
 
     assertThat(deletedPost).isEmpty();
     assertThat(writerFavorite).isEmpty();
@@ -468,16 +452,17 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("게시글 삭제 - 작성자가 아닌 사용자가 삭제 시도하면 예외가 발생한다")
   void 작성자가_아닌_사용자가_게시글을_삭제하려고_하면_예외가_발생한다() {
     // given
-    Member writer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).get();
-    Member other = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).get();
+    UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
+    UUID otherId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
-    postService.createPostProcess(defaultCreatePostCommand(writer.getId(), defaultCategory().getId()));
-    Post post = postRepository.findAllBySellerId(writer.getId()).get(0);
-    postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(writer.getId(), post.getId()));
-    postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(other.getId(), post.getId()));
+    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId()));
+    Post post = postRepository.findAllBySellerId(writerId).get(0);
+    postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(writerId, post.getId()));
+    postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(otherId, post.getId()));
 
     // when & then
-    assertThatThrownBy(() -> postService.removePostProcess(new RemovePostCommand(other.getId(), post.getId())))
+    assertThatThrownBy(() -> postService.removePostProcess(new RemovePostCommand(otherId, post.getId())))
         .isInstanceOf(ApplicationException.class)
         .hasMessageContaining(NOT_POST_OWNER.getMessage());
 

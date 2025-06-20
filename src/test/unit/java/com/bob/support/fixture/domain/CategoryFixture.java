@@ -13,4 +13,10 @@ public class CategoryFixture {
         .name(DEFAULT_CATEGORY_NAME)
         .build();
   }
+
+  public static Category defaultCategory2() {
+    return Category.builder()
+        .name(DEFAULT_CATEGORY_NAME)
+        .build();
+  }
 }

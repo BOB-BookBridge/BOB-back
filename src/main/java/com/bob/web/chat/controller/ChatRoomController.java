@@ -1,10 +1,9 @@
 package com.bob.web.chat.controller;
 
-
 import static org.springframework.http.HttpStatus.CREATED;
 
-import com.bob.domain.chat.service.ChatRoomService;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
+import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.web.chat.request.CreateChatRoomRequest;
 import com.bob.web.common.AuthenticationId;
 import jakarta.validation.Valid;
@@ -21,14 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ChatRoomController {
 
-  private final ChatRoomService chatRoomService;
+  private final ChatRoomWriteUseCase writeUseCase;
 
   @PostMapping
   public ResponseEntity<CreateChatRoomResponse> handleCreateChatRoom(
       @Valid @RequestBody CreateChatRoomRequest request,
       @AuthenticationId UUID memberId
   ) {
-    CreateChatRoomResponse response = chatRoomService.createChatRoomProcess(request.toCommand(memberId));
+    CreateChatRoomResponse response = writeUseCase.createChatRoomProcess(request.toCommand(memberId));
     return ResponseEntity.status(CREATED).body(response);
   }
 }

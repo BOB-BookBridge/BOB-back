@@ -1,14 +1,10 @@
 package com.bob.domain.member.entity;
 
-import com.bob.domain.area.entity.activity.ActivityArea;
 import com.bob.global.audit.BaseTime;
 import com.bob.global.utils.uuid.GeneratedUuidV7;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.util.Objects;
 import java.util.UUID;
@@ -41,18 +37,6 @@ public class Member extends BaseTime {
 
   @Column
   private String profileImageUrl;
-
-  @OneToOne(
-      mappedBy = "member",
-      cascade = CascadeType.ALL,
-      orphanRemoval = true,
-      fetch = FetchType.LAZY
-  )
-  private ActivityArea activityArea;
-
-  public void updateActivityArea(ActivityArea newActivityArea) {
-    activityArea = newActivityArea;
-  }
 
   public void updatePassword(String newPassword) {
     password = newPassword;

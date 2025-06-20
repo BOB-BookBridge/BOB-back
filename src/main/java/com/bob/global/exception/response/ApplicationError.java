@@ -29,6 +29,7 @@ public enum ApplicationError {
   NOT_EXISTS_AREA("E201", "존재하지 않는 읍/면/동 입니다.", HttpStatus.BAD_REQUEST),
   NOT_EXISTS_ACTIVITY_AREA("E201", "활동지역을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
   INVALID_AREA_AUTHENTICATION("E211", "현재 위치를 인증할 수 없습니다.", HttpStatus.BAD_REQUEST),
+  IS_NOT_SAME_AREA("E212", "이전 활동지역과 달라 위치 재인증을 할 수 없습니다.", HttpStatus.BAD_REQUEST),
 
   // 게시글 예외
   NOT_VERIFIED_MEMBER("E301", "위치 인증을 하지 않은 사용자는 게시글을 작성할 수 없습니다.", HttpStatus.FORBIDDEN),

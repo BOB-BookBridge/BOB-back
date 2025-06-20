@@ -2,8 +2,8 @@ package com.bob.support.fixture.command;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
-import com.bob.domain.area.command.AuthenticationCommand;
-import com.bob.domain.member.service.dto.command.AuthenticationPurpose;
+import com.bob.domain.area.service.dto.command.AuthenticationCommand;
+import com.bob.domain.area.service.dto.command.AuthenticationPurpose;
 import java.util.UUID;
 
 public class AuthenticationCommandFixture {

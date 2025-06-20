@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
+import com.bob.web.trade.adapter.in.ChatTradeAdapter;
 import com.bob.domain.trade.service.TradeService;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class TradeAdapterTest {
 
   @InjectMocks
-  private TradeAdapter tradeAdapter;
+  private ChatTradeAdapter tradeAdapter;
 
   @Mock
   private TradeService tradeService;
@@ -32,13 +33,13 @@ class TradeAdapterTest {
     // given
     Long expect = 1L;
     CreateTradeCommand command = DEFAULT_CREATE_TRADE_COMMAND();
-    given(tradeService.createTrade(any(CreateTradeCommand.class))).willReturn(expect);
+    given(tradeService.createTradeProcess(any(CreateTradeCommand.class))).willReturn(expect);
 
     // when
     Long tradeId = tradeAdapter.createTrade(command.postId(), command.sellerId(), command.buyerId());
 
     // then
     assertThat(tradeId).isEqualTo(expect);
-    then(tradeService).should(times(1)).createTrade(any(CreateTradeCommand.class));
+    then(tradeService).should(times(1)).createTradeProcess(any(CreateTradeCommand.class));
   }
 }

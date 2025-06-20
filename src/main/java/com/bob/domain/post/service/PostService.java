@@ -4,8 +4,6 @@ import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.service.BookService;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.service.reader.CategoryReader;
-import com.bob.domain.member.entity.Member;
-import com.bob.domain.member.service.reader.MemberReader;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
@@ -13,12 +11,20 @@ import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
-import com.bob.domain.post.service.dto.query.ReadMemberFavoritePostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
+import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
+import com.bob.domain.post.service.dto.response.PostAreaSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
+import com.bob.domain.post.service.dto.response.PostMemberSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.service.port.out.PostAreaPort;
+import com.bob.domain.post.service.port.out.PostMemberPort;
 import com.bob.domain.post.service.reader.PostReader;
+import com.bob.domain.post.usecase.PostDeleteUseCase;
+import com.bob.domain.post.usecase.PostModifyUseCase;
+import com.bob.domain.post.usecase.PostReadUseCase;
+import com.bob.domain.post.usecase.PostWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
@@ -31,39 +37,38 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class PostService {
+public class PostService implements PostWriteUseCase, PostReadUseCase, PostModifyUseCase, PostDeleteUseCase {
 
   private final PostRepository postRepository;
   private final PostReader postReader;
 
   private final PostFavoriteService postFavoriteService;
-
-  private final BookService bookService;
-  private final MemberReader memberReader;
   private final CategoryReader categoryReader;
+  private final BookService bookService;
+
+  private final PostMemberPort memberPort;
+  private final PostAreaPort areaPort;
 
   @Transactional
   public void createPostProcess(CreatePostCommand command) {
-    Book book = bookService.createBookProcess(command.toBookCreateCommand());
-    Member member = memberReader.readMemberById(command.memberId());
-    verifyAreaAuthentication(member);
+    PostAreaSummaryResponse areaSummary = areaPort.readPostAreaSummary(command.memberId());
+    verifyAreaAuthentication(areaSummary.validity());
     Category category = categoryReader.readCategoryById(command.categoryId());
-    Post post = command.toPost(book, member, category);
+    Book book = bookService.createBookProcess(command.toBookCreateCommand());
+    Post post = command.toPost(book, category, command.memberId(), areaSummary.emdId());
     postRepository.save(post);
   }
 
-  private void verifyAreaAuthentication(Member member) {
-    if (member.getActivityArea().isValidAuthentication()) {
-      return;
+  private void verifyAreaAuthentication(boolean validity) {
+    if (!validity) {
+      throw new ApplicationException(ApplicationError.NOT_VERIFIED_MEMBER);
     }
-    throw new ApplicationException(ApplicationError.NOT_VERIFIED_MEMBER);
   }
 
   @Transactional
   public void registerPostFavoriteProcess(RegisterPostFavoriteCommand command) {
-    Member member = memberReader.readMemberById(command.memberId());
     Post post = postReader.readPostById(command.postId());
-    postFavoriteService.createPostFavoriteProcess(member, post);
+    postFavoriteService.createPostFavoriteProcess(command.memberId(), post);
     postRepository.increaseFavoriteCount(post.getId());
   }
 
@@ -81,30 +86,34 @@ public class PostService {
   }
 
   @Transactional(readOnly = true)
-  public PostFavoritesResponse readMemberFavoritePostsProcess(ReadMemberFavoritePostsQuery query, Pageable pageable) {
-    return postFavoriteService.readMemberFavoritePosts(query.memberId(), pageable);
+  public PostsResponse readPostFavoritesProcess(ReadPostFavoritesQuery query, Pageable pageable) {
+    PostFavoritesResponse response = postFavoriteService.readMemberFavoritePosts(query.memberId(), pageable);
+    return new PostsResponse(response.totalCount(), response.postFavorites());
   }
 
   @Transactional
   public PostDetailResponse readPostDetailProcess(ReadPostDetailQuery query) {
     postRepository.increaseViewCount(query.postId());
     Post post = postReader.readPostById(query.postId());
-    boolean isOwner = query.memberId() != null && post.getSeller().getId().equals(query.memberId());
+    PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
+    PostAreaSummaryResponse areaSummary = areaPort.readPostAreaSummary(post.getSellerId());
+    boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
-    return PostDetailResponse.of(post, isFavorite, isOwner, List.of()); // TODO : 첨부 이미지 기능 구현 시 이미지 경로 List 매핑
+    // TODO : 첨부 이미지 기능 구현 시 이미지 경로 List 매핑
+    return PostDetailResponse.from(post, memberSummary, areaSummary, isFavorite, isOwner);
   }
 
   @Transactional
   public void changePostProcess(ChangePostCommand command) {
     Post post = postReader.readPostById(command.postId());
-    verifyPostOwner(command.memberId(), post.getSeller().getId());
+    verifyPostOwner(command.memberId(), post.getSellerId());
     post.updateOptionalFields(command.sellPrice(), command.bookStatus(), command.description());
   }
 
   @Transactional
   public void removePostProcess(RemovePostCommand command) {
     Post post = postReader.readPostById(command.postId());
-    verifyPostOwner(command.memberId(), post.getSeller().getId());
+    verifyPostOwner(command.memberId(), post.getSellerId());
     postFavoriteService.removePostFavoriteProcess(post.getId());
     postRepository.deleteById(post.getId());
   }

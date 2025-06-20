@@ -6,15 +6,19 @@ import static com.bob.web.common.symbol.ResponseSymbol.OK;
 import static com.bob.web.post.request.ReadPostDetailRequest.toQuery;
 import static com.bob.web.post.request.RegisterPostFavoriteRequest.toCommand;
 
-import com.bob.domain.post.service.PostService;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.usecase.PostDeleteUseCase;
+import com.bob.domain.post.usecase.PostModifyUseCase;
+import com.bob.domain.post.usecase.PostReadUseCase;
+import com.bob.domain.post.usecase.PostWriteUseCase;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
 import com.bob.web.post.request.ChangePostRequest;
 import com.bob.web.post.request.CreatePostRequest;
 import com.bob.web.post.request.ReadFilteredPostsRequest;
+import com.bob.web.post.request.ReadPostFavoritesRequest;
 import com.bob.web.post.request.RemovePostRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -37,7 +41,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/posts")
 public class PostController {
 
-  private final PostService postService;
+  private final PostWriteUseCase writeUseCase;
+  private final PostReadUseCase readUseCase;
+  private final PostModifyUseCase modifyUseCase;
+  private final PostDeleteUseCase deleteUseCase;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -45,7 +52,7 @@ public class PostController {
       @Valid @RequestBody CreatePostRequest request,
       @AuthenticationId UUID memberId
   ) {
-    postService.createPostProcess(request.toCommand(memberId));
+    writeUseCase.createPostProcess(request.toCommand(memberId));
     return new CommonResponse<>(true, CREATED);
   }
 
@@ -55,7 +62,7 @@ public class PostController {
       @PathVariable Long postId,
       @AuthenticationId UUID memberId
   ) {
-    postService.registerPostFavoriteProcess(toCommand(memberId, postId));
+    writeUseCase.registerPostFavoriteProcess(toCommand(memberId, postId));
     return new CommonResponse<>(true, CREATED);
   }
 
@@ -64,7 +71,15 @@ public class PostController {
       ReadFilteredPostsRequest request,
       Pageable pageable
   ) {
-    return ResponseEntity.ok(postService.readFilteredPostsProcess(request.toQuery(), pageable));
+    return ResponseEntity.ok(readUseCase.readFilteredPostsProcess(request.toQuery(), pageable));
+  }
+
+  @GetMapping("/favorites")
+  public ResponseEntity<PostsResponse> handleReadMemberFavoritePosts(
+      @AuthenticationId UUID memberId,
+      Pageable pageable
+  ) {
+    return ResponseEntity.ok(readUseCase.readPostFavoritesProcess(ReadPostFavoritesRequest.toQuery(memberId), pageable));
   }
 
   @GetMapping("/{postId}")
@@ -72,7 +87,7 @@ public class PostController {
       @PathVariable Long postId,
       @AuthenticationId UUID memberId
   ) {
-    return ResponseEntity.ok(postService.readPostDetailProcess(toQuery(memberId, postId)));
+    return ResponseEntity.ok(readUseCase.readPostDetailProcess(toQuery(memberId, postId)));
   }
 
   @PatchMapping("/{postId}")
@@ -81,7 +96,7 @@ public class PostController {
       @RequestBody ChangePostRequest request,
       @AuthenticationId UUID memberId
   ) {
-    postService.changePostProcess(request.toCommand(postId, memberId));
+    modifyUseCase.changePostProcess(request.toCommand(postId, memberId));
     return new CommonResponse<>(true, OK);
   }
 
@@ -90,7 +105,7 @@ public class PostController {
       @PathVariable Long postId,
       @AuthenticationId UUID memberId
   ) {
-    postService.unregisterPostFavoriteProcess(toCommand(memberId, postId));
+    deleteUseCase.unregisterPostFavoriteProcess(toCommand(memberId, postId));
     return new CommonResponse<>(true, DELETED);
   }
 
@@ -99,7 +114,7 @@ public class PostController {
       @PathVariable Long postId,
       @AuthenticationId UUID memberId
   ) {
-    postService.removePostProcess(RemovePostRequest.toCommand(memberId, postId));
+    deleteUseCase.removePostProcess(RemovePostRequest.toCommand(memberId, postId));
     return new CommonResponse<>(true, DELETED);
   }
 }

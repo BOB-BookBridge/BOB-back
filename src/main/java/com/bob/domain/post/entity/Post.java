@@ -1,6 +1,10 @@
 package com.bob.domain.post.entity;
 
-import com.bob.domain.trade.entity.Trade;
+import com.bob.domain.book.entity.Book;
+import com.bob.domain.category.entity.Category;
+import com.bob.domain.post.entity.status.BookStatus;
+import com.bob.domain.post.entity.status.PostStatus;
+import com.bob.global.audit.BaseTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,22 +15,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.bob.domain.book.entity.Book;
-import com.bob.domain.category.entity.Category;
-import com.bob.domain.member.entity.Member;
-import com.bob.domain.post.entity.status.BookStatus;
-import com.bob.domain.post.entity.status.PostStatus;
-import com.bob.global.audit.BaseTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -48,9 +44,8 @@ public class Post extends BaseTime {
   @JoinColumn(name = "category_id", nullable = false)
   private Category category;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "seller_id", nullable = false)
-  private Member seller;
+  @Column(nullable = false)
+  private UUID sellerId;
 
   @Column(nullable = false)
   private String thumbnailUrl;

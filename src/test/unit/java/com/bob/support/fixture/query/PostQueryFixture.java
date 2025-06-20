@@ -1,7 +1,7 @@
 package com.bob.support.fixture.query;
 
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
-import com.bob.domain.post.service.dto.query.ReadMemberFavoritePostsQuery;
+import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
 import com.bob.domain.post.service.dto.query.condition.SearchKey;
 import com.bob.domain.post.service.dto.query.condition.SearchPrice;
 import com.bob.domain.post.service.dto.query.condition.SortKey;
@@ -22,8 +22,8 @@ public class PostQueryFixture {
         .build();
   }
 
-  public static ReadMemberFavoritePostsQuery defaultReadMemberFavoritePostsQuery(UUID memberId) {
-    return ReadMemberFavoritePostsQuery.of(memberId);
+  public static ReadPostFavoritesQuery defaultReadMemberFavoritePostsQuery(UUID memberId) {
+    return ReadPostFavoritesQuery.of(memberId);
   }
 
   public static ReadFilteredPostsQuery searchTitleQuery() {

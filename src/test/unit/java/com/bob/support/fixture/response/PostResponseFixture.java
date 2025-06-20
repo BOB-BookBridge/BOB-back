@@ -1,7 +1,6 @@
 package com.bob.support.fixture.response;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
-import static com.bob.support.fixture.domain.PostFixture.DEFAULT_MOCK_POSTS;
 
 import com.bob.domain.post.entity.status.BookStatus;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
@@ -9,7 +8,6 @@ import com.bob.domain.post.service.dto.response.PostDetailResponse.BookInfo;
 import com.bob.domain.post.service.dto.response.PostDetailResponse.WriterInfo;
 import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
 import com.bob.domain.post.service.dto.response.PostSummary;
-import com.bob.domain.post.service.dto.response.PostsResponse;
 import com.bob.domain.trade.entity.status.TradeStatus;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -69,10 +67,6 @@ public class PostResponseFixture {
 
   public static List<PostSummary> DEFAULT_POST_SUMMARY() {
     return List.of(FIRST_POST, SECOND_POST);
-  }
-
-  public static PostsResponse DEFAULT_POSTS_RESPONSE() {
-    return PostsResponse.of(2L, DEFAULT_MOCK_POSTS());
   }
 
   public static PostFavoritesResponse DEFAULT_FAVORITE_RESPONSE() {

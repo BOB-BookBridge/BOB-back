@@ -1,7 +1,7 @@
 package com.bob.domain.post.service.reader;
 
 import static com.bob.global.exception.response.ApplicationError.INVALID_POST_FAVORITE;
-import static com.bob.support.fixture.domain.MemberFixture.defaultIdMember;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.PostFavoriteFixture.DEFAULT_MOCK_POST_FAVORITES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import com.bob.domain.member.entity.Member;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.PostFavorite;
 import com.bob.domain.post.repository.PostFavoriteRepository;
@@ -44,30 +43,25 @@ class PostFavoriteReaderTest {
   @DisplayName("좋아요 게시글 조회 - 성공 테스트")
   void 좋아요가_존재하면_PostFavorite를_반환한다() {
     // given
-    Member member = defaultIdMember();
-    PostFavorite postFavorite = PostFavorite.create(member, post);
-    given(postFavoriteRepository.findByMemberIdAndPostId(member.getId(), post.getId())).willReturn(
-        Optional.of(postFavorite));
+    PostFavorite postFavorite = PostFavorite.create(MEMBER_ID, post);
+    given(postFavoriteRepository.findByMemberIdAndPostId(MEMBER_ID, post.getId())).willReturn(Optional.of(postFavorite));
 
     // when
-    PostFavorite result = postFavoriteReader.readFavoritePostByMemberIdAndPostId(member.getId(), post.getId());
+    PostFavorite result = postFavoriteReader.readFavoritePostByMemberIdAndPostId(MEMBER_ID, post.getId());
 
     // then
     assertNotNull(result);
-    then(postFavoriteRepository).should().findByMemberIdAndPostId(member.getId(), post.getId());
+    then(postFavoriteRepository).should().findByMemberIdAndPostId(MEMBER_ID, post.getId());
   }
 
   @Test
   @DisplayName("좋아요 게시글 조회 - 실패 테스트(존재하지 않는 좋아요 게시글)")
   void 좋아요가_없으면_ApplicationException이_발생한다() {
     // given
-    Member member = defaultIdMember();
-    given(postFavoriteRepository.findByMemberIdAndPostId(member.getId(), post.getId())).willReturn(Optional.empty());
+    given(postFavoriteRepository.findByMemberIdAndPostId(MEMBER_ID, post.getId())).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() ->
-        postFavoriteReader.readFavoritePostByMemberIdAndPostId(member.getId(), post.getId())
-    )
+    assertThatThrownBy(() -> postFavoriteReader.readFavoritePostByMemberIdAndPostId(MEMBER_ID, post.getId()))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(INVALID_POST_FAVORITE.getMessage());
   }
@@ -76,14 +70,14 @@ class PostFavoriteReaderTest {
   @DisplayName("좋아요 게시글 목록 조회 테스트")
   void 사용자가_좋아요_한_게시글_목록을_조회한다() {
     // given
-    Member member = defaultIdMember();
-    given(postFavoriteRepository.findByMemberIdOrderByCreatedAtDesc(member.getId(), pageable)).willReturn(DEFAULT_MOCK_POST_FAVORITES());
+    given(postFavoriteRepository.findByMemberIdOrderByCreatedAtDesc(MEMBER_ID, pageable)).willReturn(
+        DEFAULT_MOCK_POST_FAVORITES());
 
     // when
-    List<PostFavorite> result = postFavoriteReader.readFavoritePostsByMemberId(member.getId(), pageable);
+    List<PostFavorite> result = postFavoriteReader.readFavoritePostsByMemberId(MEMBER_ID, pageable);
 
     // then
-    then(postFavoriteRepository).should().findByMemberIdOrderByCreatedAtDesc(member.getId(), pageable);
+    then(postFavoriteRepository).should().findByMemberIdOrderByCreatedAtDesc(MEMBER_ID, pageable);
     assertThat(result).hasSize(2);
   }
 }

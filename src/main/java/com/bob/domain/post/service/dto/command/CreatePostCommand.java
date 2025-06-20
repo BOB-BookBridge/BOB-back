@@ -1,12 +1,12 @@
 package com.bob.domain.post.service.dto.command;
 
+import static com.bob.domain.post.entity.status.PostStatus.READY;
+
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.service.dto.BookCreateCommand;
 import com.bob.domain.category.entity.Category;
-import com.bob.domain.member.entity.Member;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.BookStatus;
-import com.bob.domain.post.entity.status.PostStatus;
 import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Builder;
@@ -27,16 +27,16 @@ public record CreatePostCommand(
     LocalDate bookPubDate
 ) {
 
-  public Post toPost(Book book, Member member, Category category) {
+  public Post toPost(Book book, Category category, UUID sellerId, Integer emdId) {
     return Post.builder()
         .book(book)
-        .seller(member)
+        .sellerId(sellerId)
         .category(category)
         .bookStatus(BookStatus.from(bookStatus))
-        .postStatus(PostStatus.READY)
+        .postStatus(READY)
         .sellPrice(sellPrice)
         .description(postDescription)
-        .registrationAreaId(member.getActivityArea().getId().getEmdAreaId())
+        .registrationAreaId(emdId)
         .thumbnailUrl(bookCover)
         .build();
   }

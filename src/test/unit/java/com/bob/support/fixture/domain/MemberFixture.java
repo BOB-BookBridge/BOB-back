@@ -1,11 +1,6 @@
 package com.bob.support.fixture.domain;
 
-import static com.bob.support.fixture.domain.ActivityAreaFixture.customTimeActivityArea;
-import static com.bob.support.fixture.domain.ActivityAreaFixture.defaultActivityArea;
-import static com.bob.support.fixture.domain.EmdAreaFixture.defaultEmdArea;
-
 import com.bob.domain.member.entity.Member;
-import java.time.LocalDate;
 import java.util.UUID;
 
 public class MemberFixture {
@@ -27,15 +22,6 @@ public class MemberFixture {
         .email("test@email.com")
         .password("password")
         .nickname("tester")
-        .build();
-  }
-
-  public static Member customIdMember(UUID memberId) {
-    return Member.builder()
-        .id(memberId)
-        .email("other@email.com")
-        .password("password")
-        .nickname("other")
         .build();
   }
 
@@ -61,17 +47,5 @@ public class MemberFixture {
         .password(encryptedPassword)
         .nickname("tester")
         .build();
-  }
-
-  public static Member authenticatedMember() {
-    Member member = defaultMember();
-    member.updateActivityArea(defaultActivityArea());
-    return member;
-  }
-
-  public static Member unverifiedMember() {
-    Member member = defaultMember();
-    member.updateActivityArea(customTimeActivityArea(member, defaultEmdArea(), LocalDate.now().minusMonths(2)));
-    return member;
   }
 }

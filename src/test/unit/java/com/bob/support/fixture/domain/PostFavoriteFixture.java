@@ -2,7 +2,8 @@ package com.bob.support.fixture.domain;
 
 import static com.bob.support.fixture.domain.BookFixture.defaultBook;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
-import static com.bob.support.fixture.domain.MemberFixture.authenticatedMember;
+import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.PostFixture.defaultPost;
 
 import com.bob.domain.post.entity.PostFavorite;
@@ -14,13 +15,13 @@ public class PostFavoriteFixture {
     return List.of(
         PostFavorite.builder()
             .id(1L)
-            .member(authenticatedMember())
-            .post(defaultPost(defaultBook(), authenticatedMember(), defaultCategory()))
+            .memberId(MEMBER_ID)
+            .post(defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID))
             .build(),
         PostFavorite.builder()
             .id(2L)
-            .member(authenticatedMember())
-            .post(defaultPost(defaultBook(), authenticatedMember(), defaultCategory()))
+            .memberId(MEMBER_ID)
+            .post(defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID))
             .build()
     );
   }

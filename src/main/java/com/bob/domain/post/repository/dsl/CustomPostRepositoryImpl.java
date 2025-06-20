@@ -31,12 +31,12 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         .selectFrom(post)
         .where(
             keywordCondition(query.key(), query.keyword()),
+            memberIdCondition(query.memberId()),
             emdCondition(query.emdId()),
             categoryCondition(query.categoryId()),
             priceCondition(query.price()),
             tradeStatusCondition(query.postStatus()),
-            bookStatusCondition(query.bookStatus()),
-            memberIdCondition(query.memberId())
+            bookStatusCondition(query.bookStatus())
         )
         .orderBy(getSortKey(query.sortKey()))
         .offset(pageable.getOffset())
@@ -51,12 +51,12 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         .from(post)
         .where(
             keywordCondition(query.key(), query.keyword()),
+            memberIdCondition(query.memberId()),
             emdCondition(query.emdId()),
             categoryCondition(query.categoryId()),
             priceCondition(query.price()),
             tradeStatusCondition(query.postStatus()),
-            bookStatusCondition(query.bookStatus()),
-            memberIdCondition(query.memberId())
+            bookStatusCondition(query.bookStatus())
         )
         .fetchOne();
   }
@@ -71,6 +71,10 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
       case AUTHOR -> post.book.author.containsIgnoreCase(keyword);
       case ALL -> post.book.title.containsIgnoreCase(keyword).or(post.book.author.containsIgnoreCase(keyword));
     };
+  }
+
+  private BooleanExpression memberIdCondition(UUID memberId) {
+    return memberId != null ? post.sellerId.eq(memberId) : null;
   }
 
   private BooleanExpression emdCondition(Integer emdId) {
@@ -91,10 +95,6 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
   private BooleanExpression bookStatusCondition(String status) {
     return !StringUtils.hasText(status) ? null : post.bookStatus.eq(BookStatus.valueOf(status));
-  }
-
-  private BooleanExpression memberIdCondition(UUID sellerId) {
-    return sellerId != null ? post.seller.id.eq(sellerId) : null;
   }
 
   private OrderSpecifier<?> getSortKey(SortKey sort) {
