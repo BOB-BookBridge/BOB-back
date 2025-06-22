@@ -7,7 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.bob.infra.aws.adapter.in.S3ImageAccessor;
+import com.bob.infra.aws.adapter.in.MemberImageAdapter;
 import java.net.MalformedURLException;
 import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,11 +30,11 @@ class S3AccessorTest {
   private S3Presigner signer;
 
   @InjectMocks
-  private S3ImageAccessor s3Accessor;
+  private MemberImageAdapter imageAdapter;
 
   @BeforeEach
   void setUp() {
-    ReflectionTestUtils.setField(s3Accessor, "bucketName", "bucket");
+    ReflectionTestUtils.setField(imageAdapter, "bucketName", "bucket");
   }
 
   @Test
@@ -50,7 +50,7 @@ class S3AccessorTest {
     given(signer.presignPutObject(any(PutObjectPresignRequest.class))).willReturn(presignedRequest);
 
     // when
-    String result = s3Accessor.getImageUploadUrl(fileName, contentType);
+    String result = imageAdapter.generateMemberProfileImageUploadUrl(fileName, contentType);
 
     // then
     assertThat(result).isEqualTo(uri.toString());

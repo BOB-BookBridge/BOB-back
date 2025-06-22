@@ -16,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mockStatic;
 
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
@@ -34,7 +33,6 @@ import com.bob.domain.member.service.port.out.MemberProfileImageAccessor;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
-import com.bob.global.utils.random.RandomUtils;
 import com.bob.support.TestContainerSupport;
 import com.bob.support.redis.RedisContainerConfig;
 import org.junit.jupiter.api.DisplayName;
@@ -241,7 +239,7 @@ class MemberServiceIntgTest extends TestContainerSupport {
     memberRepository.save(member);
     ChangeProfileImageUrlCommand command = customChangeProfileImageUrlCommand(member.getId());
     MemberProfileImageUrlResponse expected = DEFAULT_MEMBER_PROFILE_IMAGE_URL_RESPONSE;
-    given(profileImageAccessor.getImageUploadUrl(anyString(), eq(command.contentType()))).willReturn(expected.imageUploadUrl());
+    given(profileImageAccessor.generateMemberProfileImageUploadUrl(anyString(), eq(command.contentType()))).willReturn(expected.imageUploadUrl());
 
     // when
     MemberProfileImageUrlResponse response = memberService.changeProfileImageUrlProcess(command);

@@ -118,7 +118,7 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   @Transactional
   public MemberProfileImageUrlResponse changeProfileImageUrlProcess(ChangeProfileImageUrlCommand command) {
     String fileName = generateImageFileName(command.contentType(), PROFILE);
-    String signedUrl = imageAccessor.getImageUploadUrl(fileName, command.contentType());
+    String signedUrl = imageAccessor.generateMemberProfileImageUploadUrl(fileName, command.contentType());
     Member member = memberReader.readMemberById(command.memberId());
     member.updateProfileImageUrl(fileName);
     return MemberProfileImageUrlResponse.of(fileName, signedUrl);

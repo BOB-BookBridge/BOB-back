@@ -21,11 +21,9 @@ import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.
 import static com.bob.support.fixture.response.MemberProfileImageUrlResponseFixture.mockPresignedUrlResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
 import com.bob.domain.member.entity.Member;
@@ -45,7 +43,6 @@ import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
-import com.bob.global.utils.random.RandomUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -271,14 +268,14 @@ class MemberServiceTest {
 
     String fileName = "profile/test.png";
     MemberProfileImageUrlResponse expected = mockPresignedUrlResponse(fileName);
-    given(imageAccessor.getImageUploadUrl(anyString(), anyString())).willReturn(expected.imageUploadUrl());
+    given(imageAccessor.generateMemberProfileImageUploadUrl(anyString(), anyString())).willReturn(expected.imageUploadUrl());
 
     // when
     MemberProfileImageUrlResponse response = memberService.changeProfileImageUrlProcess(command);
 
     // then
     then(memberReader).should().readMemberById(command.memberId());
-    then(imageAccessor).should().getImageUploadUrl(anyString(), anyString());
+    then(imageAccessor).should().generateMemberProfileImageUploadUrl(anyString(), anyString());
     assertThat(response.imageUploadUrl()).isEqualTo(expected.imageUploadUrl());
     assertThat(response.fileName()).startsWith("profile/").endsWith(".png");
     assertThat(member.getProfileImageUrl()).isEqualTo(response.fileName());
