@@ -1,6 +1,6 @@
 package com.bob.web.file.request;
 
-import com.bob.domain.file.service.dto.command.ReadMultiFileUploadUrlQuery;
+import com.bob.domain.file.service.dto.query.ReadMultiFileUploadUrlQuery;
 import com.bob.web.file.request.validator.ValidDomain;
 import com.bob.web.file.request.validator.ValidImageContentType;
 import jakarta.validation.constraints.Size;

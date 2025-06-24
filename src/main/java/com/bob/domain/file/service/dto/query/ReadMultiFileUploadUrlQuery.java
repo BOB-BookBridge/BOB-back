@@ -1,4 +1,4 @@
-package com.bob.domain.file.service.dto.command;
+package com.bob.domain.file.service.dto.query;
 
 import java.util.List;
 import lombok.Builder;
