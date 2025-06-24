@@ -40,4 +40,8 @@ public class File extends BaseTime {
 
   @Column
   private Integer sequence;
+
+  public void updateReferenceId(String newReferenceId) {
+    this.referenceId = newReferenceId;
+  }
 }

@@ -14,11 +14,13 @@ import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
 import com.bob.domain.post.service.dto.response.PostAreaSummaryResponse;
+import com.bob.domain.post.service.dto.response.PostCreateResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
 import com.bob.domain.post.service.dto.response.PostMemberSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostsResponse;
 import com.bob.domain.post.service.port.out.PostAreaPort;
+import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.domain.post.service.port.out.PostMemberPort;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.domain.post.usecase.PostDeleteUseCase;
@@ -48,21 +50,31 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
 
   private final PostMemberPort memberPort;
   private final PostAreaPort areaPort;
+  private final PostFilePort filePort;
 
   @Transactional
-  public void createPostProcess(CreatePostCommand command) {
+  public PostCreateResponse createPostProcess(CreatePostCommand command) {
     PostAreaSummaryResponse areaSummary = areaPort.readPostAreaSummary(command.memberId());
     verifyAreaAuthentication(areaSummary.validity());
     Category category = categoryReader.readCategoryById(command.categoryId());
     Book book = bookService.createBookProcess(command.toBookCreateCommand());
     Post post = command.toPost(book, category, command.memberId(), areaSummary.emdId());
     postRepository.save(post);
+    imageMapping(command.imageReferenceId(), post.getId());
+    return PostCreateResponse.of(post.getId());
   }
 
   private void verifyAreaAuthentication(boolean validity) {
     if (!validity) {
       throw new ApplicationException(ApplicationError.NOT_VERIFIED_MEMBER);
     }
+  }
+
+  private void imageMapping(String imageReferenceId, Long postId) {
+    if(imageReferenceId == null || imageReferenceId.isBlank()) {
+      return;
+    }
+    filePort.modifyReferenceId(imageReferenceId, postId);
   }
 
   @Transactional

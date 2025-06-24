@@ -12,7 +12,7 @@ public record RegisterFileRequest(
     @ValidDomain
     String domain,
 
-    @NotNull(message = "연관 ID는 필수입니다.")
+    @NotNull(message = "ID는 필수입니다.")
     Object referenceId,
 
     @NotNull(message = "파일 이름 목록은 필수입니다.")

@@ -25,7 +25,9 @@ public record CreatePostRequest(
 
     @Valid
     @NotNull(message = "책 정보는 필수입니다.")
-    BookInfo book
+    BookInfo book,
+
+    String imageReferenceId
 ) {
 
   public CreatePostCommand toCommand(UUID memberId) {
@@ -42,6 +44,7 @@ public record CreatePostRequest(
         .bookPriceStandard(book.priceStandard())
         .bookCover(book.cover())
         .bookPubDate(book.pubDate())
+        .imageReferenceId(imageReferenceId)
         .build();
   }
 }

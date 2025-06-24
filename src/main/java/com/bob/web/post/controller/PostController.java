@@ -6,6 +6,7 @@ import static com.bob.web.common.symbol.ResponseSymbol.OK;
 import static com.bob.web.post.request.ReadPostDetailRequest.toQuery;
 import static com.bob.web.post.request.RegisterPostFavoriteRequest.toCommand;
 
+import com.bob.domain.post.service.dto.response.PostCreateResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostsResponse;
 import com.bob.domain.post.usecase.PostDeleteUseCase;
@@ -48,12 +49,12 @@ public class PostController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public CommonResponse<ResponseSymbol> handleCreatePost(
+  public ResponseEntity<PostCreateResponse> handleCreatePost(
       @Valid @RequestBody CreatePostRequest request,
       @AuthenticationId UUID memberId
   ) {
-    writeUseCase.createPostProcess(request.toCommand(memberId));
-    return new CommonResponse<>(true, CREATED);
+    PostCreateResponse response = writeUseCase.createPostProcess(request.toCommand(memberId));
+    return ResponseEntity.ok(response);
   }
 
   @PostMapping("/{postId}/favorite")

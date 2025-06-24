@@ -24,7 +24,8 @@ public record CreatePostCommand(
     String bookDescription,
     Integer bookPriceStandard,
     String bookCover,
-    LocalDate bookPubDate
+    LocalDate bookPubDate,
+    String imageReferenceId
 ) {
 
   public Post toPost(Book book, Category category, UUID sellerId, Integer emdId) {
