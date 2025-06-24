@@ -12,8 +12,10 @@ import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
+import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.query.ReadMultiFileUploadUrlQuery;
 import com.bob.domain.file.service.dto.query.ReadSingleFileUploadUrlQuery;
+import com.bob.domain.file.service.dto.response.ReadFilesResponse;
 import com.bob.domain.file.service.dto.response.ReadMultiFileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.ReadSingleFileUploadUrlResponse;
 import com.bob.domain.file.service.port.FileImagePort;
@@ -25,12 +27,12 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
-import org.mockito.MockedStatic;
 
 @Import(RedisContainerConfig.class)
 @Transactional
@@ -50,7 +52,7 @@ class FileServiceIntgTest extends TestContainerSupport {
   private FileImagePort imagePort;
 
   @Test
-  @DisplayName("파일 등록 - 통합 테스트")
+  @DisplayName("파일 등록 테스트")
   void 파일을_등록할_수_있다() {
     // given
     RegisterFileCommand command = defaultRegisterFileCommand();
@@ -65,8 +67,29 @@ class FileServiceIntgTest extends TestContainerSupport {
         .allSatisfy(file -> assertThat(file.getReferenceId()).isEqualTo(command.referenceId()));
   }
 
+  @DisplayName("도메인 ID로 파일 요약 조회 테스트")
   @Test
-  @DisplayName("파일 referenceId 변경 - 통합 테스트")
+  void 도메인_ID로_파일을_요약_조회할_수_있다() {
+    // given
+    String referenceId = "post-1234";
+    List<File> files = defaultFiles(referenceId);
+    fileRepository.saveAll(files);
+
+    // when
+    ReadFilesResponse response = fileService.readFilesByDomainId(new ReadFilesWithDomainIdQuery(referenceId));
+
+    // then
+    assertThat(response.summaries()).hasSize(files.size());
+    assertThat(response.summaries())
+        .extracting("sequence")
+        .containsExactlyElementsOf(files.stream().map(File::getSequence).toList());
+    assertThat(response.summaries())
+        .extracting("fileName")
+        .containsExactlyElementsOf(files.stream().map(File::getFileName).toList());
+  }
+
+  @Test
+  @DisplayName("파일 referenceId 변경 테스트")
   void 파일의_referenceId를_변경할_수_있다() {
     // given
     String oldReferenceId = "temp-ref-id";
@@ -87,7 +110,7 @@ class FileServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("단일 presigned URL 발급 - 통합 테스트")
+  @DisplayName("단일 presigned URL 발급 테스트")
   void 단일_presigned_url을_발급받을_수_있다() {
     // given
     ReadSingleFileUploadUrlQuery query = new ReadSingleFileUploadUrlQuery("post", "image/png");
@@ -106,7 +129,7 @@ class FileServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("다중 presigned URL 발급 - 통합 테스트")
+  @DisplayName("다중 presigned URL 발급 테스트")
   void 여러_개의_presigned_url을_발급받을_수_있다() {
     // given
     List<String> contentTypes = List.of("image/png", "image/jpeg");

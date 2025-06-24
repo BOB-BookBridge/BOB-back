@@ -15,8 +15,10 @@ import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
+import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.query.ReadMultiFileUploadUrlQuery;
 import com.bob.domain.file.service.dto.query.ReadSingleFileUploadUrlQuery;
+import com.bob.domain.file.service.dto.response.ReadFilesResponse;
 import com.bob.domain.file.service.dto.response.ReadMultiFileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.ReadSingleFileUploadUrlResponse;
 import com.bob.domain.file.service.port.FileImagePort;
@@ -59,6 +61,25 @@ class FileServiceTest {
 
     // then
     then(fileRepository).should(times(1)).saveAll(any());
+  }
+
+  @DisplayName("도메인 ID로 파일 요약 조회 테스트")
+  @Test
+  void 도메인_ID로_파일을_요약_조회할_수_있다() {
+    // given
+    String referenceId = "post-1234";
+    List<File> files = defaultFiles(referenceId);
+    given(fileReader.readFileByReferenceId(referenceId)).willReturn(files);
+
+    // when
+    ReadFilesResponse response = fileService.readFilesByDomainId(new ReadFilesWithDomainIdQuery(referenceId));
+
+    // then
+    assertThat(response.summaries()).hasSize(files.size());
+    assertThat(response.summaries())
+        .extracting("fileName")
+        .containsExactlyElementsOf(files.stream().map(File::getFileName).toList());
+    then(fileReader).should().readFileByReferenceId(referenceId);
   }
 
   @DisplayName("파일 레퍼런스ID 수정 - 성공 테스트")
