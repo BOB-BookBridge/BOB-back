@@ -4,6 +4,7 @@ import static com.bob.global.exception.response.ApplicationError.ALREADY_POST_FA
 import static com.bob.global.exception.response.ApplicationError.INVALID_POST_FAVORITE;
 import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
 import static com.bob.support.fixture.command.ChangePostCommandFixture.DEFAULT_CHANGE_POST_COMMAND;
+import static com.bob.support.fixture.command.CreatePostCommandFixture.createPostCommandWithImageRefId;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.defaultCreatePostCommand;
 import static com.bob.support.fixture.command.RegisterPostFavoriteCommandFixture.defaultRegisterPostFavoriteCommand;
 import static com.bob.support.fixture.domain.BookFixture.defaultBook;
@@ -40,9 +41,11 @@ import com.bob.domain.post.service.dto.command.RemovePostCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
+import com.bob.domain.post.service.dto.response.PostCreateResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostsResponse;
 import com.bob.domain.post.service.port.out.PostAreaPort;
+import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.domain.post.service.port.out.PostMemberPort;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.global.exception.exceptions.ApplicationException;
@@ -86,6 +89,9 @@ class PostServiceTest {
   @Mock
   private PostAreaPort areaPort;
 
+  @Mock
+  private PostFilePort filePort;
+
   private Pageable pageable = PageRequest.of(0, 12);
 
   @Test
@@ -102,17 +108,50 @@ class PostServiceTest {
     ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
 
     // when
-    postService.createPostProcess(command);
+    PostCreateResponse response = postService.createPostProcess(command);
 
     // then
     then(bookService).should().createBookProcess(command.toBookCreateCommand());
     then(categoryReader).should().readCategoryById(command.categoryId());
     then(postRepository).should(times(1)).save(captor.capture());
+    then(filePort).should(times(1)).modifyReferenceId(command.imageReferenceId(), response.postId());
 
     Post post = captor.getValue();
     assertThat(post.getBook()).isEqualTo(book);
     assertThat(post.getSellerId()).isEqualTo(MEMBER_ID);
     assertThat(post.getCategory()).isEqualTo(category);
+  }
+
+  @DisplayName("게시글 등록 - 이미지 매핑 생략 (null)")
+  @Test
+  void 게시글_등록시_referenceId가_null이면_이미지_매핑을_하지_않는다() {
+    // given
+    CreatePostCommand command = createPostCommandWithImageRefId(null);
+    given(bookService.createBookProcess(command.toBookCreateCommand())).willReturn(defaultBook());
+    given(categoryReader.readCategoryById(command.categoryId())).willReturn(defaultCategory());
+    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+
+    // when
+    postService.createPostProcess(command);
+
+    // then
+    then(filePort).shouldHaveNoInteractions();
+  }
+
+  @DisplayName("게시글 등록 - 이미지 매핑 생략 (공백)")
+  @Test
+  void 게시글_등록시_referenceId가_공백이면_이미지_매핑을_하지_않는다() {
+    // given
+    CreatePostCommand command = createPostCommandWithImageRefId("   ");
+    given(bookService.createBookProcess(command.toBookCreateCommand())).willReturn(defaultBook());
+    given(categoryReader.readCategoryById(command.categoryId())).willReturn(defaultCategory());
+    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+
+    // when
+    postService.createPostProcess(command);
+
+    // then
+    then(filePort).shouldHaveNoInteractions();
   }
 
   @Test

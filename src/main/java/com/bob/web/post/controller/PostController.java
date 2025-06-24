@@ -48,13 +48,12 @@ public class PostController {
   private final PostDeleteUseCase deleteUseCase;
 
   @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<PostCreateResponse> handleCreatePost(
       @Valid @RequestBody CreatePostRequest request,
       @AuthenticationId UUID memberId
   ) {
     PostCreateResponse response = writeUseCase.createPostProcess(request.toCommand(memberId));
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @PostMapping("/{postId}/favorite")
@@ -80,7 +79,8 @@ public class PostController {
       @AuthenticationId UUID memberId,
       Pageable pageable
   ) {
-    return ResponseEntity.ok(readUseCase.readPostFavoritesProcess(ReadPostFavoritesRequest.toQuery(memberId), pageable));
+    return ResponseEntity.ok(
+        readUseCase.readPostFavoritesProcess(ReadPostFavoritesRequest.toQuery(memberId), pageable));
   }
 
   @GetMapping("/{postId}")
