@@ -4,24 +4,20 @@ import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_
 import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
 import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
-import static com.bob.global.utils.image.ImageDirectory.PROFILE;
-import static com.bob.global.utils.image.ImageUtils.generateImageFileName;
 import static com.bob.global.utils.random.RandomUtils.generateCode;
 
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
 import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
-import com.bob.domain.member.service.dto.command.ChangeProfileImageUrlCommand;
+import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberAreaSummaryResponse;
-import com.bob.domain.member.service.dto.response.MemberProfileImageUrlResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
-import com.bob.domain.member.service.port.out.MemberProfileImageAccessor;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
@@ -43,7 +39,6 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   private final MemberAreaPort areaPort;
   private final MemberMailPort mailPort;
   private final MemberRedisPort redisPort;
-  private final MemberProfileImageAccessor imageAccessor;
 
   private final PasswordEncoder encoder;
 
@@ -116,11 +111,8 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   }
 
   @Transactional
-  public MemberProfileImageUrlResponse changeProfileImageUrlProcess(ChangeProfileImageUrlCommand command) {
-    String fileName = generateImageFileName(PROFILE, command.contentType());
-    String signedUrl = imageAccessor.generateMemberProfileImageUploadUrl(fileName, command.contentType());
+  public void changeMemberProfileImageProcess(ChangeProfileImageCommand command) {
     Member member = memberReader.readMemberById(command.memberId());
-    member.updateProfileImageUrl(fileName);
-    return MemberProfileImageUrlResponse.of(fileName, signedUrl);
+    member.updateProfileImageUrl(command.fileName());
   }
 }
