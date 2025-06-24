@@ -17,4 +17,8 @@ public class FileReader {
   public List<File> readFileByReferenceId(String referenceId) {
     return fileRepository.findByReferenceId(referenceId);
   }
+
+  public List<File> readFileByDomainId(String domainId) {
+    return fileRepository.findByReferenceId(domainId);
+  }
 }

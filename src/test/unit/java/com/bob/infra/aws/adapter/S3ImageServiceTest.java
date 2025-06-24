@@ -7,7 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.bob.infra.aws.adapter.in.MemberImageAdapter;
+import com.bob.infra.aws.service.S3ImageService;
 import java.net.MalformedURLException;
 import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,13 +24,13 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 @DisplayName("S3 Presigned URL 생성 테스트")
 @ExtendWith(MockitoExtension.class)
-class S3AccessorTest {
+class S3ImageServiceTest {
+
+  @InjectMocks
+  private S3ImageService imageAdapter;
 
   @Mock
   private S3Presigner signer;
-
-  @InjectMocks
-  private MemberImageAdapter imageAdapter;
 
   @BeforeEach
   void setUp() {
@@ -50,7 +50,7 @@ class S3AccessorTest {
     given(signer.presignPutObject(any(PutObjectPresignRequest.class))).willReturn(presignedRequest);
 
     // when
-    String result = imageAdapter.generateMemberProfileImageUploadUrl(fileName, contentType);
+    String result = imageAdapter.generateSingleImageUploadUrlProcess(fileName, contentType);
 
     // then
     assertThat(result).isEqualTo(uri.toString());

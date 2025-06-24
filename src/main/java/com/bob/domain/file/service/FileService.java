@@ -18,7 +18,6 @@ import com.bob.domain.file.usecase.FileModifyUseCase;
 import com.bob.domain.file.usecase.FileReadUseCase;
 import com.bob.domain.file.usecase.FileWriteUseCase;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
