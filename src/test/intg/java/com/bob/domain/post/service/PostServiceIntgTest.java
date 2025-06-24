@@ -18,6 +18,7 @@ import static com.bob.support.fixture.query.PostQueryFixture.searchTitleQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTradeStatusQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchUnderPriceQuery;
 import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
+import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_POST_FILE_SUMMARIES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -384,6 +385,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     Post post = postRepository.findAllBySellerId(writerId).get(0); // 더미 데이터의 첫 번째 게시글
     int beforeViewCount = post.getViewCount();
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
 
     // when
     PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(writerId, post.getId()));
@@ -403,6 +405,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Post post = postRepository.findAllBySellerId(writerId).get(0);
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
 
     // when
     PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(viewerId, post.getId()));

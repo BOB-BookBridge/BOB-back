@@ -7,8 +7,6 @@ import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_MEMB
 import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
 import static com.bob.support.fixture.command.ChangeProfileCommandFixture.defaultChangeProfileCommand;
 import static com.bob.support.fixture.command.ChangeProfileCommandFixture.sameNicknameChangeProfileCommand;
-import static com.bob.support.fixture.command.ChangeProfileImageUrlCommandFixture.defaultChangeProfileImageUrlCommand;
-import static com.bob.support.fixture.command.ChangeProfileImageUrlCommandFixture.unSupportedChangeProfileImageUrlCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultChangePasswordCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultCreateMemberCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultIssuePasswordCommand;
@@ -18,7 +16,6 @@ import static com.bob.support.fixture.domain.MemberFixture.defaultIdMember;
 import static com.bob.support.fixture.domain.MemberFixture.defaultMember;
 import static com.bob.support.fixture.query.MemberQueryFixture.defaultReadProfileQuery;
 import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
-import static com.bob.support.fixture.response.MemberProfileImageUrlResponseFixture.mockPresignedUrlResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -30,19 +27,15 @@ import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
 import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
-import com.bob.domain.member.service.dto.command.ChangeProfileImageUrlCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
-import com.bob.domain.member.service.dto.response.MemberProfileImageUrlResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
-import com.bob.domain.member.service.port.out.MemberProfileImageAccessor;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,9 +66,6 @@ class MemberServiceTest {
 
   @Mock
   private MemberAreaPort areaPort;
-
-  @Mock
-  private MemberProfileImageAccessor imageAccessor;
 
   @Mock
   private BCryptPasswordEncoder encoder;
@@ -256,40 +246,5 @@ class MemberServiceTest {
     assertThatThrownBy(() -> memberService.changePasswordProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(INVALID_OLD_PASSWORD.getMessage());
-  }
-
-  @Test
-  @DisplayName("프로필 이미지 Presigned URL 발급 - 성공 테스트")
-  void 프로필_이미지_Presigned_URL_발급에_성공한다() {
-    // given
-    Member member = defaultIdMember();
-    ChangeProfileImageUrlCommand command = defaultChangeProfileImageUrlCommand();
-    given(memberReader.readMemberById(command.memberId())).willReturn(member);
-
-    String fileName = "profile/test.png";
-    MemberProfileImageUrlResponse expected = mockPresignedUrlResponse(fileName);
-    given(imageAccessor.generateMemberProfileImageUploadUrl(anyString(), anyString())).willReturn(expected.imageUploadUrl());
-
-    // when
-    MemberProfileImageUrlResponse response = memberService.changeProfileImageUrlProcess(command);
-
-    // then
-    then(memberReader).should().readMemberById(command.memberId());
-    then(imageAccessor).should().generateMemberProfileImageUploadUrl(anyString(), anyString());
-    assertThat(response.imageUploadUrl()).isEqualTo(expected.imageUploadUrl());
-    assertThat(response.fileName()).startsWith("profile/").endsWith(".png");
-    assertThat(member.getProfileImageUrl()).isEqualTo(response.fileName());
-  }
-
-  @Test
-  @DisplayName("프로필 이미지 Presigned URL 발급 - 실패 테스트(지원하지 않는 확장자)")
-  void 지원하지_않는_ContentType이면_예외가_발생한다() {
-    // given
-    ChangeProfileImageUrlCommand command = unSupportedChangeProfileImageUrlCommand();
-
-    // when & then
-    assertThatThrownBy(() -> memberService.changeProfileImageUrlProcess(command))
-        .isInstanceOf(ApplicationException.class)
-        .hasMessageContaining(ApplicationError.UN_SUPPORTED_TYPE.getMessage());
   }
 }

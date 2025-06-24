@@ -2,20 +2,16 @@ package com.bob.support.fixture.command;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
-import com.bob.domain.member.service.dto.command.ChangeProfileImageUrlCommand;
+import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import java.util.UUID;
 
 public class ChangeProfileImageUrlCommandFixture {
 
-  public static ChangeProfileImageUrlCommand defaultChangeProfileImageUrlCommand() {
-    return new ChangeProfileImageUrlCommand(MEMBER_ID, "image/png");
+  public static ChangeProfileImageCommand defaultChangeProfileImageUrlCommand() {
+    return new ChangeProfileImageCommand(MEMBER_ID, "profile/temp-uuid");
   }
 
-  public static ChangeProfileImageUrlCommand customChangeProfileImageUrlCommand(UUID memberId) {
-    return new ChangeProfileImageUrlCommand(memberId, "image/png");
-  }
-
-  public static ChangeProfileImageUrlCommand unSupportedChangeProfileImageUrlCommand() {
-    return new ChangeProfileImageUrlCommand(MEMBER_ID, "video/mp4");
+  public static ChangeProfileImageCommand customChangeProfileImageUrlCommand(UUID memberId) {
+    return new ChangeProfileImageCommand(memberId, "profile/temp-uuid");
   }
 }
