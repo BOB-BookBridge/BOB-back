@@ -2,6 +2,8 @@ package com.bob.infra.aws.service;
 
 import com.bob.infra.aws.service.usecase.ImageUrlReadUseCase;
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,11 +21,17 @@ public class S3ImageService implements ImageUrlReadUseCase {
   @Value("${spring.cloud.aws.s3.bucket}")
   private String bucketName;
 
-  public String generateImageUploadUrlProcess(String key, String contentType) {
-    PutObjectRequest putObjectRequest = createPutObjectRequest(key, contentType);
+  public String generateSingleImageUploadUrlProcess(String fileName, String contentType) {
+    PutObjectRequest putObjectRequest = createPutObjectRequest(fileName, contentType);
     PutObjectPresignRequest preSignRequest = createPutObjectPresignRequest(putObjectRequest);
     PresignedPutObjectRequest putRequest = signer.presignPutObject(preSignRequest);
     return putRequest.url().toString();
+  }
+
+  public List<String> generateMultiImageUploadUrlProcess(List<String> fileNames, List<String> contentTypes) {
+    return IntStream.range(0, fileNames.size())
+        .mapToObj(idx -> generateSingleImageUploadUrlProcess(fileNames.get(idx), contentTypes.get(idx)))
+        .toList();
   }
 
   private PutObjectPresignRequest createPutObjectPresignRequest(PutObjectRequest putObjectRequest) {

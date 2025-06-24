@@ -1,6 +1,10 @@
 package com.bob.infra.aws.service.usecase;
 
+import java.util.List;
+
 public interface ImageUrlReadUseCase {
 
-  String generateImageUploadUrlProcess(String imageName, String contentType);
+  String generateSingleImageUploadUrlProcess(String fileName, String contentType);
+
+  List<String> generateMultiImageUploadUrlProcess(List<String> fileNames, List<String> contentTypes);
 }

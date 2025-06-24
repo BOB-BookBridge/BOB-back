@@ -13,6 +13,6 @@ public class MemberImageAdapter implements MemberProfileImageAccessor {
 
   @Override
   public String generateMemberProfileImageUploadUrl(String imageName, String contentType) {
-    return readUseCase.generateImageUploadUrlProcess(imageName, contentType);
+    return readUseCase.generateSingleImageUploadUrlProcess(imageName, contentType);
   }
 }

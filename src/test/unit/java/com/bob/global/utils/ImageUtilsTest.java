@@ -1,11 +1,11 @@
 package com.bob.global.utils;
 
+import static com.bob.global.utils.image.ImageDirectory.PROFILE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
-import com.bob.global.utils.image.ImageDirectory;
 import com.bob.global.utils.image.ImageUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class ImageUtilsTest {
   @Test
   @DisplayName("이미지 파일 이름 생성 테스트")
   void 이미지_파일명을_생성할_수_있다() {
-    String fileName = ImageUtils.generateImageFileName("image/png", ImageDirectory.PROFILE);
+    String fileName = ImageUtils.generateImageFileName(PROFILE, "image/png");
 
     assertThat(fileName).startsWith("profile/");
     assertThat(fileName).endsWith(".png");
