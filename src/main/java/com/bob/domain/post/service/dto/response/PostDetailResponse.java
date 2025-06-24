@@ -1,6 +1,7 @@
 package com.bob.domain.post.service.dto.response;
 
 import com.bob.domain.post.entity.Post;
+import com.bob.domain.post.service.dto.response.PostFileSummaryResponse.FileSummary;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +18,7 @@ public record PostDetailResponse(
     Integer category,
     BookInfo book,
     String description,
-    List<String> images,
+    List<FileSummary> images,
     WriterInfo writer,
     Integer scrapCount,
     Integer viewCount,
@@ -30,6 +31,7 @@ public record PostDetailResponse(
       Post post,
       PostMemberSummaryResponse memberSummary,
       PostAreaSummaryResponse areaSummary,
+      PostFileSummaryResponse fileSummary,
       boolean isFavorite,
       boolean isOwner
   ) {
@@ -43,7 +45,7 @@ public record PostDetailResponse(
         .category(post.getCategory().getId())
         .book(BookInfo.from(post))
         .description(post.getDescription())
-        .images(List.of())
+        .images(fileSummary.images())
         .writer(WriterInfo.of(
             post.getSellerId(),
             memberSummary.nickname(), memberSummary.profileImageUrl(),

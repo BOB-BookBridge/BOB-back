@@ -80,7 +80,7 @@ class FileServiceIntgTest extends TestContainerSupport {
     fileService.modifyReferenceIdProcess(command);
 
     // then
-    List<File> updated = fileReader.readFileByDomainId(newReferenceId.toString());
+    List<File> updated = fileReader.readFileByReferenceId(newReferenceId.toString());
     assertThat(updated)
         .extracting(File::getReferenceId)
         .containsOnly(newReferenceId.toString());

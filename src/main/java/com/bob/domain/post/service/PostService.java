@@ -17,6 +17,7 @@ import com.bob.domain.post.service.dto.response.PostAreaSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostCreateResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
+import com.bob.domain.post.service.dto.response.PostFileSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostMemberSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostsResponse;
 import com.bob.domain.post.service.port.out.PostAreaPort;
@@ -109,10 +110,10 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     Post post = postReader.readPostById(query.postId());
     PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
     PostAreaSummaryResponse areaSummary = areaPort.readPostAreaSummary(post.getSellerId());
+    PostFileSummaryResponse fileSummary = filePort.readPostFileSummaries(post.getId());
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
-    // TODO : 첨부 이미지 기능 구현 시 이미지 경로 List 매핑
-    return PostDetailResponse.from(post, memberSummary, areaSummary, isFavorite, isOwner);
+    return PostDetailResponse.from(post, memberSummary, areaSummary, fileSummary, isFavorite, isOwner);
   }
 
   @Transactional

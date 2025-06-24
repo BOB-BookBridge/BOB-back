@@ -8,10 +8,13 @@ import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
+import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.query.ReadMultiFileUploadUrlQuery;
 import com.bob.domain.file.service.dto.query.ReadSingleFileUploadUrlQuery;
+import com.bob.domain.file.service.dto.response.ReadFilesResponse;
 import com.bob.domain.file.service.dto.response.ReadMultiFileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.ReadSingleFileUploadUrlResponse;
+import com.bob.domain.file.service.dto.response.internal.FileSummaryResponse;
 import com.bob.domain.file.service.port.FileImagePort;
 import com.bob.domain.file.service.reader.FileReader;
 import com.bob.domain.file.usecase.FileModifyUseCase;
@@ -40,6 +43,12 @@ public class FileService implements FileWriteUseCase, FileReadUseCase, FileModif
   public void modifyReferenceIdProcess(ModifyReferenceIdCommand command) {
     List<File> files = fileReader.readFileByReferenceId(command.oldReferenceId());
     files.forEach(file -> file.updateReferenceId(String.valueOf(command.currentReferenceId())));
+  }
+
+  @Transactional(readOnly = true)
+  public ReadFilesResponse readFilesByDomainId(ReadFilesWithDomainIdQuery query) {
+    List<File> files = fileReader.readFileByReferenceId(query.domainId());
+    return new ReadFilesResponse(FileSummaryResponse.from(files));
   }
 
   public ReadSingleFileUploadUrlResponse readSingleFileUploadUrl(ReadSingleFileUploadUrlQuery query) {
