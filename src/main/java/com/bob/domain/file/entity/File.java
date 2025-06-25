@@ -32,7 +32,7 @@ public class File extends BaseTime {
   @Column(nullable = false)
   private FileDomain domain;
 
-  @Column(nullable = false)
+  @Column
   private String referenceId;
 
   @Column(nullable = false)
@@ -41,7 +41,8 @@ public class File extends BaseTime {
   @Column
   private Integer sequence;
 
-  public void updateReferenceId(String newReferenceId) {
-    this.referenceId = newReferenceId;
+  public void mappingDomainId(int sequence, String domainId) {
+    this.sequence = sequence;
+    this.referenceId = domainId;
   }
 }

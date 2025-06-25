@@ -2,6 +2,7 @@ package com.bob.domain.file.service;
 
 import static com.bob.global.utils.image.ImageDirectory.from;
 import static com.bob.global.utils.image.ImageUtils.generateImageFileNames;
+import static com.bob.global.utils.stream.StreamUtils.forEachWithIndex;
 
 import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
@@ -44,8 +45,10 @@ public class FileService implements FileWriteUseCase, FileReadUseCase, FileModif
 
   @Transactional
   public void modifyReferenceIdProcess(ModifyReferenceIdCommand command) {
-    List<File> files = fileReader.readFileByReferenceId(command.oldReferenceId());
-    files.forEach(file -> file.updateReferenceId(String.valueOf(command.currentReferenceId())));
+    forEachWithIndex(command.fileNames(), (index, fileName) -> {
+      fileReader.readFileByFileName(fileName)
+          .ifPresent(file -> file.mappingDomainId(index, String.valueOf(command.domainId())));
+    });
   }
 
   public FileUploadUrlResponse readFileUploadUrl(ReadFileUploadUrlQuery query) {

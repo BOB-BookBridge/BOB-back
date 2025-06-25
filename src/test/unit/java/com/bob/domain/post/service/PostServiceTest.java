@@ -51,6 +51,7 @@ import com.bob.domain.post.service.port.out.PostMemberPort;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -115,7 +116,7 @@ class PostServiceTest {
     then(bookService).should().createBookProcess(command.toBookCreateCommand());
     then(categoryReader).should().readCategoryById(command.categoryId());
     then(postRepository).should(times(1)).save(captor.capture());
-    then(filePort).should(times(1)).modifyReferenceId(command.imageReferenceId(), response.postId());
+    then(filePort).should(times(1)).modifyReferenceId(command.fileNames(), String.valueOf(response.postId()));
 
     Post post = captor.getValue();
     assertThat(post.getBook()).isEqualTo(book);
@@ -143,7 +144,7 @@ class PostServiceTest {
   @Test
   void 게시글_등록시_referenceId가_공백이면_이미지_매핑을_하지_않는다() {
     // given
-    CreatePostCommand command = createPostCommandWithImageRefId("   ");
+    CreatePostCommand command = createPostCommandWithImageRefId(List.of());
     given(bookService.createBookProcess(command.toBookCreateCommand())).willReturn(defaultBook());
     given(categoryReader.readCategoryById(command.categoryId())).willReturn(defaultCategory());
     given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_POST_AREA_SUMMARY);

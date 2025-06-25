@@ -1,8 +1,10 @@
 package com.bob.domain.file.service.dto.command;
 
+import java.util.List;
+
 public record ModifyReferenceIdCommand(
-    String oldReferenceId,
-    Long currentReferenceId
+    List<String> fileNames,
+    String domainId
 ) {
 
 }

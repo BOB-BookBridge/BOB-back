@@ -1,7 +1,9 @@
 package com.bob.domain.file.service;
 
 import static com.bob.global.utils.image.ImageDirectory.POST;
+import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.command.RegisterFileCommandFixture.defaultRegisterFileCommand;
+import static com.bob.support.fixture.domain.FileFixture.customRefIdFiles;
 import static com.bob.support.fixture.domain.FileFixture.defaultFiles;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -20,6 +22,7 @@ import com.bob.global.utils.image.ImageUtils;
 import com.bob.support.TestContainerSupport;
 import com.bob.support.redis.RedisContainerConfig;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -46,8 +49,8 @@ class FileServiceIntgTest extends TestContainerSupport {
   @MockitoBean
   private FileImagePort imagePort;
 
-  @Test
   @DisplayName("파일 등록 테스트")
+  @Test
   void 파일을_등록할_수_있다() {
     // given
     RegisterFileCommand command = defaultRegisterFileCommand();
@@ -56,18 +59,23 @@ class FileServiceIntgTest extends TestContainerSupport {
     fileService.registerFileProcess(command);
 
     // then
-    List<File> result = fileReader.readFileByReferenceId(command.referenceId().toString());
-    assertThat(result).hasSize(command.fileNames().size());
-    assertThat(result)
-        .allSatisfy(file -> assertThat(file.getReferenceId()).isEqualTo(command.referenceId()));
+    List<String> fileNames = command.fileNames();
+
+    fileNames.forEach(fileName -> {
+      Optional<File> optionalFile = fileReader.readFileByFileName(fileName);
+      assertThat(optionalFile).isPresent();
+
+      File file = optionalFile.get();
+      assertThat(file.getFileName()).isEqualTo(fileName);
+    });
   }
 
   @DisplayName("도메인 ID로 파일 요약 조회 테스트")
   @Test
   void 도메인_ID로_파일을_요약_조회할_수_있다() {
     // given
-    String referenceId = "post-1234";
-    List<File> files = defaultFiles(referenceId);
+    String referenceId = "1";
+    List<File> files = customRefIdFiles(referenceId);
     fileRepository.saveAll(files);
 
     // when
@@ -87,12 +95,11 @@ class FileServiceIntgTest extends TestContainerSupport {
   @DisplayName("파일 referenceId 변경 테스트")
   void 파일의_referenceId를_변경할_수_있다() {
     // given
-    String oldReferenceId = "temp-ref-id";
-    List<File> files = defaultFiles(oldReferenceId);
+    List<File> files = defaultFiles();
     fileRepository.saveAll(files);
 
     Long newReferenceId = 1L;
-    ModifyReferenceIdCommand command = new ModifyReferenceIdCommand(oldReferenceId, newReferenceId);
+    ModifyReferenceIdCommand command = new ModifyReferenceIdCommand(FILE_NAMES, newReferenceId.toString());
 
     // when
     fileService.modifyReferenceIdProcess(command);

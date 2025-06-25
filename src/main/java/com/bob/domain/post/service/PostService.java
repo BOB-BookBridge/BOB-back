@@ -61,7 +61,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     Book book = bookService.createBookProcess(command.toBookCreateCommand());
     Post post = command.toPost(book, category, command.memberId(), areaSummary.emdId());
     postRepository.save(post);
-    imageMapping(command.imageReferenceId(), post.getId());
+    imageMapping(command.fileNames(), post.getId());
     return PostCreateResponse.of(post.getId());
   }
 
@@ -71,11 +71,11 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     }
   }
 
-  private void imageMapping(String imageReferenceId, Long postId) {
-    if(imageReferenceId == null || imageReferenceId.isBlank()) {
+  private void imageMapping(List<String> fileNames, Long postId) {
+    if(fileNames == null || fileNames.isEmpty()) {
       return;
     }
-    filePort.modifyReferenceId(imageReferenceId, postId);
+    filePort.modifyReferenceId(fileNames, String.valueOf(postId));
   }
 
   @Transactional

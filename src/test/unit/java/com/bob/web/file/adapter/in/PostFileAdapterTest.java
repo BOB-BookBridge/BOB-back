@@ -1,5 +1,6 @@
 package com.bob.web.file.adapter.in;
 
+import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,11 +38,10 @@ class PostFileAdapterTest {
   @DisplayName("게시글 이미지 referenceId 변경 호출 테스트")
   void 게시글_파일의_referenceId를_변경할_수_있다() {
     // given
-    String oldRefId = "temporary-uuid";
-    Long newRefId = 123L;
+    Long referenceId = 123L;
 
     // when
-    adapter.modifyReferenceId(oldRefId, newRefId);
+    adapter.modifyReferenceId(FILE_NAMES, referenceId.toString());
 
     // then
     verify(fileModifyUseCase, times(1)).modifyReferenceIdProcess(any(ModifyReferenceIdCommand.class));

@@ -8,7 +8,6 @@ public class RegisterFileCommandFixture {
   public static RegisterFileCommand defaultRegisterFileCommand() {
     return RegisterFileCommand.builder()
         .domain("POST")
-        .referenceId("temp-reference-id")
         .fileNames(List.of(
             "post/1.jpg",
             "post/2.jpg"

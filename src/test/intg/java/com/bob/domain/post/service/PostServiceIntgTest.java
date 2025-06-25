@@ -5,6 +5,7 @@ import static com.bob.global.exception.response.ApplicationError.INVALID_POST_FA
 import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
 import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
 import static com.bob.support.fixture.command.ChangePostCommandFixture.DEFAULT_CHANGE_POST_COMMAND;
+import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.defaultCreatePostCommand;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
 import static com.bob.support.fixture.query.PostQueryFixture.searchAuthorQuery;
@@ -67,34 +68,25 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 class PostServiceIntgTest extends TestContainerSupport {
 
+  private final PageRequest pageable = PageRequest.of(0, 12);
   @Autowired
   private PostService postService;
-
   @Autowired
   private PostRepository postRepository;
-
   @Autowired
   private PostFavoriteService postFavoriteService;
-
   @Autowired
   private PostFavoriteRepository postFavoriteRepository;
-
   @Autowired
   private CategoryRepository categoryRepository;
-
   @Autowired
   private BookRepository bookRepository;
-
   @MockitoBean
   private PostAreaPort areaPort;
-
   @MockitoBean
   private PostFilePort filePort;
-
   @PersistenceContext
   private EntityManager em;
-
-  private final PageRequest pageable = PageRequest.of(0, 12);
 
   @Test
   @DisplayName("게시글 등록 - 성공 테스트")
@@ -102,7 +94,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Category category = categoryRepository.save(defaultCategory());
-    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), "refId");
+    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), FILE_NAMES);
     given(areaPort.readPostAreaSummary(memberId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
     int beforePostCount = postRepository.findAllBySellerId(memberId).size();
     int expectedPostCount = beforePostCount + 1;
@@ -147,7 +139,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     given(areaPort.readPostAreaSummary(memberId)).willReturn(PostAreaSummaryResponse.of(213, "역삼동", "강남구", false));
     Category category = categoryRepository.save(defaultCategory());
-    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), "refId");
+    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), FILE_NAMES);
 
     // when & then
     assertThatThrownBy(() -> postService.createPostProcess(command))
@@ -454,7 +446,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID otherId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
-    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId(), "refId"));
+    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId(), FILE_NAMES));
     Post post = postRepository.findAllBySellerId(writerId).get(0);
     postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(writerId, post.getId()));
     postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(otherId, post.getId()));
@@ -480,7 +472,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID otherId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
-    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId(), "refId"));
+    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId(), FILE_NAMES));
     Post post = postRepository.findAllBySellerId(writerId).get(0);
     postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(writerId, post.getId()));
     postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(otherId, post.getId()));

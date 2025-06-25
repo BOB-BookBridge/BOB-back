@@ -14,15 +14,16 @@ import org.junit.jupiter.api.Test;
 class FileDomainTest {
 
   @Test
-  @DisplayName("파일 참조 ID를 수정 테스트")
+  @DisplayName("파일 참조 수정 테스트")
   void 파일의_referenceId를_수정할_수_있다() {
     // given
-    File file = defaultFile("old", "post/1.jpg", 0);
+    File file = defaultFile("post/1.jpg", 0, "1");
 
     // when
-    file.updateReferenceId("new");
+    file.mappingDomainId(0, "new");
 
     // then
+    assertThat(file.getSequence()).isEqualTo(0);
     assertThat(file.getReferenceId()).isEqualTo("new");
   }
 

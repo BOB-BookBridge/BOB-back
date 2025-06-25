@@ -8,6 +8,7 @@ import com.bob.domain.file.usecase.FileReadUseCase;
 import com.bob.domain.post.service.dto.response.PostFileSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostFileSummaryResponse.FileSummary;
 import com.bob.domain.post.service.port.out.PostFilePort;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -30,8 +31,8 @@ public class PostFileAdapter implements PostFilePort {
   }
 
   @Override
-  public void modifyReferenceId(String oldRefId, Long newRefId) {
-    ModifyReferenceIdCommand command = new ModifyReferenceIdCommand(oldRefId, newRefId);
+  public void modifyReferenceId(List<String> fileNames, String domainId) {
+    ModifyReferenceIdCommand command = new ModifyReferenceIdCommand(fileNames, domainId);
     modifyUseCase.modifyReferenceIdProcess(command);
   }
 }

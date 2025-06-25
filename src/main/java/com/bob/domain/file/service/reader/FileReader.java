@@ -3,6 +3,7 @@ package com.bob.domain.file.service.reader;
 import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,11 @@ public class FileReader {
 
   private final FileRepository fileRepository;
 
-  public List<File> readFileByReferenceId(String referenceId) {
-    return fileRepository.findByReferenceId(referenceId);
+  public List<File> readFileByReferenceId(String refId) {
+    return fileRepository.findByReferenceId(refId);
+  }
+
+  public Optional<File> readFileByFileName(String fileName) {
+    return fileRepository.findByFileName(fileName);
   }
 }

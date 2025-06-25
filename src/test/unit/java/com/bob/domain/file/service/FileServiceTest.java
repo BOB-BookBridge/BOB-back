@@ -1,5 +1,6 @@
 package com.bob.domain.file.service;
 
+import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.command.RegisterFileCommandFixture.defaultRegisterFileCommand;
 import static com.bob.support.fixture.domain.FileFixture.defaultFiles;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,7 @@ import com.bob.domain.file.service.port.FileImagePort;
 import com.bob.domain.file.service.reader.FileReader;
 import com.bob.global.utils.image.ImageUtils;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,7 +66,7 @@ class FileServiceTest {
   void 도메인_ID로_파일을_요약_조회할_수_있다() {
     // given
     String referenceId = "post-1234";
-    List<File> files = defaultFiles(referenceId);
+    List<File> files = defaultFiles();
     given(fileReader.readFileByReferenceId(referenceId)).willReturn(files);
 
     // when
@@ -82,22 +84,28 @@ class FileServiceTest {
   @Test
   void 파일의_referenceId를_수정할_수_있다() {
     // given
-    String oldReferenceId = "temp-reference-id";
-    Long newReferenceId = 1L;
-    ModifyReferenceIdCommand command = new ModifyReferenceIdCommand(oldReferenceId, newReferenceId);
+    Long referenceId = 1L;
+    ModifyReferenceIdCommand command = new ModifyReferenceIdCommand(FILE_NAMES, referenceId.toString());
 
-    List<File> files = defaultFiles(oldReferenceId);
-    given(fileReader.readFileByReferenceId(oldReferenceId)).willReturn(files);
+    List<File> mockFiles = defaultFiles();
+
+    for (int i = 0; i < FILE_NAMES.size(); i++) {
+      String refId = FILE_NAMES.get(i);
+      File file = mockFiles.get(i);
+      given(fileReader.readFileByFileName(refId)).willReturn(Optional.of(file));
+    }
 
     // when
     fileService.modifyReferenceIdProcess(command);
 
     // then
-    assertThat(files)
-        .extracting(File::getReferenceId)
-        .containsOnly(newReferenceId.toString());
+    for (int i = 0; i < mockFiles.size(); i++) {
+      File file = mockFiles.get(i);
+      assertThat(file.getReferenceId()).isEqualTo(String.valueOf(referenceId));
+      assertThat(file.getSequence()).isEqualTo(i);
+    }
 
-    then(fileReader).should().readFileByReferenceId(oldReferenceId);
+    then(fileReader).should(times(FILE_NAMES.size())).readFileByFileName(any(String.class));
   }
 
   @DisplayName("presigned URL 발급 테스트")

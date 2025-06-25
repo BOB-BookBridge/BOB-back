@@ -1,5 +1,6 @@
 package com.bob.domain.file.service.reader;
 
+import static com.bob.support.fixture.domain.FileFixture.defaultFile;
 import static com.bob.support.fixture.domain.FileFixture.defaultFiles;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,18 +28,34 @@ class FileReaderTest {
   private FileRepository fileRepository;
 
   @Test
-  @DisplayName("referenceId로 파일 목록을 조회할 수 있다")
-  void referenceId로_파일_목록을_조회한다() {
+  @DisplayName("도메인 ID를 통한 파일 조회 테스트")
+  void domainId로_파일_목록을_조회한다() {
     // given
-    String referenceId = "temp-uuid";
-    List<File> files = defaultFiles(referenceId);
-    given(fileRepository.findByReferenceId(referenceId)).willReturn(files);
+    String domainId = String.valueOf(1L);
+    List<File> files = defaultFiles();
+    given(fileRepository.findByReferenceId(domainId)).willReturn(files);
 
     // when
-    List<File> result = fileReader.readFileByReferenceId(referenceId);
+    List<File> result = fileReader.readFileByReferenceId(domainId);
 
     // then
     assertThat(result).containsExactlyElementsOf(files);
-    verify(fileRepository).findByReferenceId(referenceId);
+    verify(fileRepository).findByReferenceId(domainId);
+  }
+
+  @Test
+  @DisplayName("파일 이름을 통한 파일 조회 테스트")
+  void referenceId로_파일_목록을_조회한다() {
+    // given
+    String fileName = "post/name.png";
+    File file = defaultFile("post/name.png", 0 ,"1");
+    given(fileRepository.findByFileName(fileName)).willReturn(Optional.of(file));
+
+    // when
+    File result = fileReader.readFileByFileName(fileName).get();
+
+    // then
+    assertThat(result.getReferenceId()).isEqualTo(file.getReferenceId());
+    verify(fileRepository).findByFileName(fileName);
   }
 }
