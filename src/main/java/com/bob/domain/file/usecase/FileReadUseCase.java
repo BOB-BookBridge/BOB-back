@@ -1,17 +1,13 @@
 package com.bob.domain.file.usecase;
 
+import com.bob.domain.file.service.dto.query.ReadFileUploadUrlQuery;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
-import com.bob.domain.file.service.dto.query.ReadMultiFileUploadUrlQuery;
-import com.bob.domain.file.service.dto.query.ReadSingleFileUploadUrlQuery;
-import com.bob.domain.file.service.dto.response.ReadFilesResponse;
-import com.bob.domain.file.service.dto.response.ReadMultiFileUploadUrlResponse;
-import com.bob.domain.file.service.dto.response.ReadSingleFileUploadUrlResponse;
+import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
+import com.bob.domain.file.service.dto.response.FilesResponse;
 
 public interface FileReadUseCase {
 
-  ReadSingleFileUploadUrlResponse readSingleFileUploadUrl(ReadSingleFileUploadUrlQuery query);
+  FileUploadUrlResponse readFileUploadUrl(ReadFileUploadUrlQuery query);
 
-  ReadMultiFileUploadUrlResponse readMultiFileUploadUrl(ReadMultiFileUploadUrlQuery query);
-
-  ReadFilesResponse readFilesByDomainId(ReadFilesWithDomainIdQuery query);
+  FilesResponse readFilesByDomainId(ReadFilesWithDomainIdQuery query);
 }

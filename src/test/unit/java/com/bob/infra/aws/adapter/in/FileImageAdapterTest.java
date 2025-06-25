@@ -23,34 +23,16 @@ class FileImageAdapterTest {
   private FileImageAdapter adapter;
 
   @Test
-  @DisplayName("단일 presigned URL 생성 테스트")
-  void 단일_이미지_업로드_URL을_생성할_수_있다() {
-    // given
-    String fileName = "profile/test.png";
-    String contentType = "image/png";
-    String expectedUrl = "https://example.com/upload";
-    given(readUseCase.generateSingleImageUploadUrlProcess(fileName, contentType))
-        .willReturn(expectedUrl);
-
-    // when
-    String result = adapter.generateSingleFileUploadUrlProcess(fileName, contentType);
-
-    // then
-    assertThat(result).isEqualTo(expectedUrl);
-  }
-
-  @Test
-  @DisplayName("여러 개 presigned URL 생성 테스트")
-  void 여러개의_이미지_업로드_URL을_생성할_수_있다() {
+  @DisplayName("presigned URL 생성 테스트")
+  void 이미지_업로드_URL을_생성할_수_있다() {
     // given
     List<String> fileNames = List.of("profile/a.jpg", "profile/b.jpg");
     List<String> contentTypes = List.of("image/jpeg", "image/jpeg");
     List<String> expectedUrls = List.of("url1", "url2");
-    given(readUseCase.generateMultiImageUploadUrlProcess(fileNames, contentTypes))
-        .willReturn(expectedUrls);
+    given(readUseCase.generateImageUploadUrlProcess(fileNames, contentTypes)).willReturn(expectedUrls);
 
     // when
-    List<String> result = adapter.generateMultiFileUploadUrlsProcess(fileNames, contentTypes);
+    List<String> result = adapter.generateFileUploadUrlsProcess(fileNames, contentTypes);
 
     // then
     assertThat(result).isEqualTo(expectedUrls);

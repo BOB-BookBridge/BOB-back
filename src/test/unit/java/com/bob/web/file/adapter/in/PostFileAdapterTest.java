@@ -1,6 +1,5 @@
 package com.bob.web.file.adapter.in;
 
-import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_POST_FILE_SUMMARIES;
 import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,7 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
-import com.bob.domain.file.service.dto.response.ReadFilesResponse;
+import com.bob.domain.file.service.dto.response.FilesResponse;
 import com.bob.domain.file.usecase.FileModifyUseCase;
 import com.bob.domain.file.usecase.FileReadUseCase;
 import com.bob.domain.post.service.dto.response.PostFileSummaryResponse;
@@ -53,7 +52,7 @@ class PostFileAdapterTest {
   void 게시글의_파일들을_요약_형태로_조회할_수_있다() {
     // given
     Long postId = 1L;
-    ReadFilesResponse mockResponse = DEFAULT_READ_FILES_RESPONSE;
+    FilesResponse mockResponse = DEFAULT_READ_FILES_RESPONSE;
     given(fileReadUseCase.readFilesByDomainId(any(ReadFilesWithDomainIdQuery.class)))
         .willReturn(mockResponse);
 

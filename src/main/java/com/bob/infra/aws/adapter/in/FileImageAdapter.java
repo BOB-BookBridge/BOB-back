@@ -13,12 +13,7 @@ public class FileImageAdapter implements FileImagePort {
   private final ImageUrlReadUseCase readUseCase;
 
   @Override
-  public String generateSingleFileUploadUrlProcess(String fileName, String contentType) {
-    return readUseCase.generateSingleImageUploadUrlProcess(fileName, contentType);
-  }
-
-  @Override
-  public List<String> generateMultiFileUploadUrlsProcess(List<String> fileNames, List<String> contentTypes) {
-    return readUseCase.generateMultiImageUploadUrlProcess(fileNames, contentTypes);
+  public List<String> generateFileUploadUrlsProcess(List<String> fileNames, List<String> contentTypes) {
+    return readUseCase.generateImageUploadUrlProcess(fileNames, contentTypes);
   }
 }

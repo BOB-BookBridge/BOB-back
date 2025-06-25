@@ -2,14 +2,12 @@ package com.bob.web.file.controller;
 
 import static com.bob.web.common.symbol.ResponseSymbol.CREATED;
 
-import com.bob.domain.file.service.dto.response.ReadMultiFileUploadUrlResponse;
-import com.bob.domain.file.service.dto.response.ReadSingleFileUploadUrlResponse;
+import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
 import com.bob.domain.file.usecase.FileReadUseCase;
 import com.bob.domain.file.usecase.FileWriteUseCase;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
-import com.bob.web.file.request.ReadSingleFileUploadUrlRequest;
-import com.bob.web.file.request.ReadMultiFileUploadUrlRequest;
+import com.bob.web.file.request.ReadFileUploadUrlRequest;
 import com.bob.web.file.request.RegisterFileRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,16 +38,9 @@ public class FileController {
   }
 
   @GetMapping("/url")
-  public ResponseEntity<ReadSingleFileUploadUrlResponse> handleReadSingleFileUploadUrl(
-      @Valid @RequestBody ReadSingleFileUploadUrlRequest request
+  public ResponseEntity<FileUploadUrlResponse> handleReadFileUploadUrl(
+      @Valid @RequestBody ReadFileUploadUrlRequest request
   ) {
-    return ResponseEntity.ok(readUseCase.readSingleFileUploadUrl(request.toQuery()));
-  }
-
-  @GetMapping("/urls")
-  public ResponseEntity<ReadMultiFileUploadUrlResponse> handleReadMultiFileUploadUrl(
-      @Valid @RequestBody ReadMultiFileUploadUrlRequest request
-  ) {
-    return ResponseEntity.ok(readUseCase.readMultiFileUploadUrl(request.toQuery()));
+    return ResponseEntity.ok(readUseCase.readFileUploadUrl(request.toQuery()));
   }
 }

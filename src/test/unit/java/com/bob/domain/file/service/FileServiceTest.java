@@ -4,7 +4,6 @@ import static com.bob.support.fixture.command.RegisterFileCommandFixture.default
 import static com.bob.support.fixture.domain.FileFixture.defaultFiles;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -15,17 +14,14 @@ import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
+import com.bob.domain.file.service.dto.query.ReadFileUploadUrlQuery;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
-import com.bob.domain.file.service.dto.query.ReadMultiFileUploadUrlQuery;
-import com.bob.domain.file.service.dto.query.ReadSingleFileUploadUrlQuery;
-import com.bob.domain.file.service.dto.response.ReadFilesResponse;
-import com.bob.domain.file.service.dto.response.ReadMultiFileUploadUrlResponse;
-import com.bob.domain.file.service.dto.response.ReadSingleFileUploadUrlResponse;
+import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
+import com.bob.domain.file.service.dto.response.FilesResponse;
 import com.bob.domain.file.service.port.FileImagePort;
 import com.bob.domain.file.service.reader.FileReader;
 import com.bob.global.utils.image.ImageUtils;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,7 +68,7 @@ class FileServiceTest {
     given(fileReader.readFileByReferenceId(referenceId)).willReturn(files);
 
     // when
-    ReadFilesResponse response = fileService.readFilesByDomainId(new ReadFilesWithDomainIdQuery(referenceId));
+    FilesResponse response = fileService.readFilesByDomainId(new ReadFilesWithDomainIdQuery(referenceId));
 
     // then
     assertThat(response.summaries()).hasSize(files.size());
@@ -104,31 +100,12 @@ class FileServiceTest {
     then(fileReader).should().readFileByReferenceId(oldReferenceId);
   }
 
-  @DisplayName("단일 presigned URL 발급 테스트")
+  @DisplayName("presigned URL 발급 테스트")
   @Test
-  void 단일_presigned_url을_발급받을_수_있다() {
-    // given
-    ReadSingleFileUploadUrlQuery query = new ReadSingleFileUploadUrlQuery("post", "image/png");
-    String expectedFileName = "post/" + UUID.randomUUID() + ".png";
-    String expectedUrl = "https://mock-url.com/" + expectedFileName;
-
-    given(imagePort.generateSingleFileUploadUrlProcess(anyString(), eq("image/png"))).willReturn(expectedUrl);
-
-    // when
-    ReadSingleFileUploadUrlResponse response = fileService.readSingleFileUploadUrl(query);
-
-    // then
-    assertThat(response.fileUploadUrl()).isEqualTo(expectedUrl);
-    assertThat(response.fileName()).isNotBlank();
-    then(imagePort).should().generateSingleFileUploadUrlProcess(anyString(), eq("image/png"));
-  }
-
-  @DisplayName("다중 presigned URL 발급 테스트")
-  @Test
-  void 여러_개의_presigned_url을_발급받을_수_있다() {
+  void presigned_url을_발급받을_수_있다() {
     // given
     List<String> contentTypes = List.of("image/png", "image/jpeg");
-    ReadMultiFileUploadUrlQuery query = new ReadMultiFileUploadUrlQuery("post", contentTypes);
+    ReadFileUploadUrlQuery query = new ReadFileUploadUrlQuery("post", contentTypes);
 
     List<String> fileNames = List.of("post/uuid1.png", "post/uuid2.jpg");
     List<String> urls = List.of(
@@ -136,7 +113,7 @@ class FileServiceTest {
         "https://mock-url.com/post/uuid2.jpg"
     );
 
-    given(imagePort.generateMultiFileUploadUrlsProcess(fileNames, contentTypes))
+    given(imagePort.generateFileUploadUrlsProcess(fileNames, contentTypes))
         .willReturn(urls);
 
     try (MockedStatic<ImageUtils> utils = mockStatic(ImageUtils.class)) {
@@ -144,7 +121,7 @@ class FileServiceTest {
           .thenReturn(fileNames);
 
       // when
-      ReadMultiFileUploadUrlResponse response = fileService.readMultiFileUploadUrl(query);
+      FileUploadUrlResponse response = fileService.readFileUploadUrl(query);
 
       // then
       assertThat(response.urls()).hasSize(2);
@@ -155,7 +132,7 @@ class FileServiceTest {
           .extracting("fileUploadUrl")
           .containsExactlyElementsOf(urls);
 
-      then(imagePort).should().generateMultiFileUploadUrlsProcess(fileNames, contentTypes);
+      then(imagePort).should().generateFileUploadUrlsProcess(fileNames, contentTypes);
     }
   }
 }

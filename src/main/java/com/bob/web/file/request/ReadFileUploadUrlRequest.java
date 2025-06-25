@@ -1,6 +1,6 @@
 package com.bob.web.file.request;
 
-import com.bob.domain.file.service.dto.query.ReadMultiFileUploadUrlQuery;
+import com.bob.domain.file.service.dto.query.ReadFileUploadUrlQuery;
 import com.bob.web.file.request.validator.ValidDomain;
 import com.bob.web.file.request.validator.ValidImageContentType;
 import jakarta.validation.constraints.Size;
@@ -8,7 +8,7 @@ import java.util.List;
 import lombok.Builder;
 
 @Builder
-public record ReadMultiFileUploadUrlRequest(
+public record ReadFileUploadUrlRequest(
     @ValidDomain
     String domain,
 
@@ -16,8 +16,8 @@ public record ReadMultiFileUploadUrlRequest(
     List<@ValidImageContentType String> contentTypes
 ) {
 
-  public ReadMultiFileUploadUrlQuery toQuery() {
-    return ReadMultiFileUploadUrlQuery.builder()
+  public ReadFileUploadUrlQuery toQuery() {
+    return ReadFileUploadUrlQuery.builder()
         .domain(domain)
         .contentTypes(contentTypes)
         .build();

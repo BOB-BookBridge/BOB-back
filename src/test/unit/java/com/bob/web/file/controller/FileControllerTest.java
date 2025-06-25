@@ -64,12 +64,12 @@ class FileControllerTest {
   }
 
   @Test
-  @DisplayName("단일 Presigned URL 조회 테스트")
-  void 단일_이미지_URL을_조회할_수_있다() throws Exception {
+  @DisplayName("Presigned URL 조회 테스트")
+  void 이미지_URL을_조회할_수_있다() throws Exception {
     String json = """
         {
           "domain": "POST",
-          "contentType": "image/png"
+          "contentTypes": ["image/jpeg", "image/png"]
         }
         """;
 
@@ -79,25 +79,6 @@ class FileControllerTest {
         )
         .andExpect(status().isOk());
 
-    verify(readUseCase, times(1)).readSingleFileUploadUrl(any());
-  }
-
-  @Test
-  @DisplayName("복수 Presigned URL 조회 테스트")
-  void 복수_이미지_URL을_조회할_수_있다() throws Exception {
-    String json = """
-        {
-          "domain": "POST",
-          "contentTypes": ["image/jpeg", "image/png"]
-        }
-        """;
-
-    mvc.perform(get("/files/urls")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json)
-        )
-        .andExpect(status().isOk());
-
-    verify(readUseCase, times(1)).readMultiFileUploadUrl(any());
+    verify(readUseCase, times(1)).readFileUploadUrl(any());
   }
 }

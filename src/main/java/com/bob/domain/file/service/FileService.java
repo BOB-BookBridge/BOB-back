@@ -1,19 +1,16 @@
 package com.bob.domain.file.service;
 
 import static com.bob.global.utils.image.ImageDirectory.from;
-import static com.bob.global.utils.image.ImageUtils.generateImageFileName;
 import static com.bob.global.utils.image.ImageUtils.generateImageFileNames;
 
 import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
+import com.bob.domain.file.service.dto.query.ReadFileUploadUrlQuery;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
-import com.bob.domain.file.service.dto.query.ReadMultiFileUploadUrlQuery;
-import com.bob.domain.file.service.dto.query.ReadSingleFileUploadUrlQuery;
-import com.bob.domain.file.service.dto.response.ReadFilesResponse;
-import com.bob.domain.file.service.dto.response.ReadMultiFileUploadUrlResponse;
-import com.bob.domain.file.service.dto.response.ReadSingleFileUploadUrlResponse;
+import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
+import com.bob.domain.file.service.dto.response.FilesResponse;
 import com.bob.domain.file.service.dto.response.internal.FileSummaryResponse;
 import com.bob.domain.file.service.port.FileImagePort;
 import com.bob.domain.file.service.reader.FileReader;
@@ -39,27 +36,21 @@ public class FileService implements FileWriteUseCase, FileReadUseCase, FileModif
     fileRepository.saveAll(command.toEntities());
   }
 
+  @Transactional(readOnly = true)
+  public FilesResponse readFilesByDomainId(ReadFilesWithDomainIdQuery query) {
+    List<File> files = fileReader.readFileByReferenceId(query.domainId());
+    return new FilesResponse(FileSummaryResponse.from(files));
+  }
+
   @Transactional
   public void modifyReferenceIdProcess(ModifyReferenceIdCommand command) {
     List<File> files = fileReader.readFileByReferenceId(command.oldReferenceId());
     files.forEach(file -> file.updateReferenceId(String.valueOf(command.currentReferenceId())));
   }
 
-  @Transactional(readOnly = true)
-  public ReadFilesResponse readFilesByDomainId(ReadFilesWithDomainIdQuery query) {
-    List<File> files = fileReader.readFileByReferenceId(query.domainId());
-    return new ReadFilesResponse(FileSummaryResponse.from(files));
-  }
-
-  public ReadSingleFileUploadUrlResponse readSingleFileUploadUrl(ReadSingleFileUploadUrlQuery query) {
-    String fileName = generateImageFileName(from(query.domain()), query.contentType());
-    String preSignedUrl = imagePort.generateSingleFileUploadUrlProcess(fileName, query.contentType());
-    return ReadSingleFileUploadUrlResponse.from(fileName, preSignedUrl);
-  }
-
-  public ReadMultiFileUploadUrlResponse readMultiFileUploadUrl(ReadMultiFileUploadUrlQuery query) {
+  public FileUploadUrlResponse readFileUploadUrl(ReadFileUploadUrlQuery query) {
     List<String> fileNames = generateImageFileNames(from(query.domain()), query.contentTypes());
-    List<String> preSignedUrls = imagePort.generateMultiFileUploadUrlsProcess(fileNames, query.contentTypes());
-    return ReadMultiFileUploadUrlResponse.from(fileNames, preSignedUrls);
+    List<String> preSignedUrls = imagePort.generateFileUploadUrlsProcess(fileNames, query.contentTypes());
+    return FileUploadUrlResponse.from(fileNames, preSignedUrls);
   }
 }

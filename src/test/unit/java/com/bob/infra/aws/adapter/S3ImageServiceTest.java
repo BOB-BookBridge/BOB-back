@@ -27,14 +27,14 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 class S3ImageServiceTest {
 
   @InjectMocks
-  private S3ImageService imageAdapter;
+  private S3ImageService imageService;
 
   @Mock
   private S3Presigner signer;
 
   @BeforeEach
   void setUp() {
-    ReflectionTestUtils.setField(imageAdapter, "bucketName", "bucket");
+    ReflectionTestUtils.setField(imageService, "bucketName", "bucket");
   }
 
   @Test
@@ -50,7 +50,7 @@ class S3ImageServiceTest {
     given(signer.presignPutObject(any(PutObjectPresignRequest.class))).willReturn(presignedRequest);
 
     // when
-    String result = imageAdapter.generateSingleImageUploadUrlProcess(fileName, contentType);
+    String result = imageService.issuePresignedImageUploadUrlProcess(fileName, contentType);
 
     // then
     assertThat(result).isEqualTo(uri.toString());

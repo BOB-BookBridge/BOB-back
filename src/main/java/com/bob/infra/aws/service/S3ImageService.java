@@ -21,16 +21,16 @@ public class S3ImageService implements ImageUrlReadUseCase {
   @Value("${spring.cloud.aws.s3.bucket}")
   private String bucketName;
 
-  public String generateSingleImageUploadUrlProcess(String fileName, String contentType) {
+  public String issuePresignedImageUploadUrlProcess(String fileName, String contentType) {
     PutObjectRequest putObjectRequest = createPutObjectRequest(fileName, contentType);
     PutObjectPresignRequest preSignRequest = createPutObjectPresignRequest(putObjectRequest);
     PresignedPutObjectRequest putRequest = signer.presignPutObject(preSignRequest);
     return putRequest.url().toString();
   }
 
-  public List<String> generateMultiImageUploadUrlProcess(List<String> fileNames, List<String> contentTypes) {
+  public List<String> generateImageUploadUrlProcess(List<String> fileNames, List<String> contentTypes) {
     return IntStream.range(0, fileNames.size())
-        .mapToObj(idx -> generateSingleImageUploadUrlProcess(fileNames.get(idx), contentTypes.get(idx)))
+        .mapToObj(idx -> issuePresignedImageUploadUrlProcess(fileNames.get(idx), contentTypes.get(idx)))
         .toList();
   }
 

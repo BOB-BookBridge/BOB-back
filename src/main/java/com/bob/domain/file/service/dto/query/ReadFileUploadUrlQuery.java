@@ -4,7 +4,7 @@ import java.util.List;
 import lombok.Builder;
 
 @Builder
-public record ReadMultiFileUploadUrlQuery(
+public record ReadFileUploadUrlQuery(
     String domain,
     List<String> contentTypes
 ) {
