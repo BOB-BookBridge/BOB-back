@@ -1,10 +1,15 @@
 package com.bob.domain.file.service;
 
+import static com.bob.global.exception.response.ApplicationError.FILE_UNAUTHORIZED;
+import static com.bob.support.fixture.command.ChangeFileCommandFixture.DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.command.RegisterFileCommandFixture.defaultRegisterFileCommand;
 import static com.bob.support.fixture.domain.FileFixture.defaultFiles;
+import static com.bob.support.fixture.domain.FileFixture.otherFiles;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -21,6 +26,7 @@ import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.FilesResponse;
 import com.bob.domain.file.service.port.FileImagePort;
 import com.bob.domain.file.service.reader.FileReader;
+import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.utils.image.ImageUtils;
 import java.util.List;
 import java.util.Optional;
@@ -78,6 +84,37 @@ class FileServiceTest {
         .extracting("fileName")
         .containsExactlyElementsOf(files.stream().map(File::getFileName).toList());
     then(fileReader).should().readFileByReferenceId(referenceId);
+  }
+
+  @DisplayName("파일 변경 - 성공 테스트")
+  @Test
+  void 파일을_변경할_수_있다() {
+    // given
+    String referenceId = "1";
+    List<File> existingFiles = defaultFiles();
+    given(fileReader.readFileByReferenceId(referenceId)).willReturn(existingFiles);
+
+    // when
+    fileService.changeFileProcess(DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1);
+
+    // then
+    then(fileRepository).should().deleteAll(existingFiles);
+    then(fileRepository).should().saveAll(anyList());
+  }
+
+  @DisplayName("파일 변경 - 실패 테스트 (권한 없음)")
+  @Test
+  void 파일을_수정할_때_권한이_없으면_예외가_발생한다() {
+    // given
+    String referenceId = "1";
+    given(fileReader.readFileByReferenceId(referenceId)).willReturn(otherFiles());
+
+    // when & then
+    assertThatThrownBy(() -> fileService.changeFileProcess(DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(FILE_UNAUTHORIZED.getMessage());
+
+    then(fileRepository).shouldHaveNoInteractions();
   }
 
   @DisplayName("파일 레퍼런스ID 수정 - 성공 테스트")
