@@ -40,7 +40,10 @@ public enum ApplicationError {
   INVALID_POST_FAVORITE("E305", "좋아요 하지 않은 게시글입니다.", HttpStatus.BAD_REQUEST),
 
   // 채팅 예외
-  IS_SAME_CHAT_MEMBER("E401", "자신과의 채팅은 불가능합니다.", HttpStatus.BAD_REQUEST)
+  IS_SAME_CHAT_MEMBER("E401", "자신과의 채팅은 불가능합니다.", HttpStatus.BAD_REQUEST),
+
+  // 파일 예외
+  FILE_UNAUTHORIZED("E501", "파일을 수정할 권한이 없습니다.", HttpStatus.BAD_REQUEST)
   ;
 
   private String code;

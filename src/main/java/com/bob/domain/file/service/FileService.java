@@ -1,11 +1,13 @@
 package com.bob.domain.file.service;
 
+import static com.bob.global.exception.response.ApplicationError.FILE_UNAUTHORIZED;
 import static com.bob.global.utils.image.ImageDirectory.from;
 import static com.bob.global.utils.image.ImageUtils.generateImageFileNames;
 import static com.bob.global.utils.stream.StreamUtils.forEachWithIndex;
 
 import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
+import com.bob.domain.file.service.dto.command.ChangeFileCommand;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
 import com.bob.domain.file.service.dto.query.ReadFileUploadUrlQuery;
@@ -18,7 +20,10 @@ import com.bob.domain.file.service.reader.FileReader;
 import com.bob.domain.file.usecase.FileModifyUseCase;
 import com.bob.domain.file.usecase.FileReadUseCase;
 import com.bob.domain.file.usecase.FileWriteUseCase;
+import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +46,20 @@ public class FileService implements FileWriteUseCase, FileReadUseCase, FileModif
   public FilesResponse readFilesByDomainId(ReadFilesWithDomainIdQuery query) {
     List<File> files = fileReader.readFileByReferenceId(query.domainId());
     return new FilesResponse(FileSummaryResponse.from(files));
+  }
+
+  @Transactional
+  public void changeFileProcess(ChangeFileCommand command) {
+    List<File> oldFiles = fileReader.readFileByReferenceId(command.referenceId());
+    verifyOwner(oldFiles, command.memberId());
+    fileRepository.deleteAll(oldFiles);
+    fileRepository.saveAll(command.toEntities());
+  }
+
+  private void verifyOwner(List<File> existingFiles, UUID memberId) {
+    if (existingFiles.stream().anyMatch(file -> !Objects.equals(file.getUploader(), memberId))) {
+      throw new ApplicationException(FILE_UNAUTHORIZED);
+    }
   }
 
   @Transactional
