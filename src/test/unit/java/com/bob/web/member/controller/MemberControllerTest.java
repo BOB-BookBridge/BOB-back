@@ -2,7 +2,6 @@ package com.bob.web.member.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
-import static com.bob.support.fixture.response.MemberProfileImageUrlResponseFixture.DEFAULT_MEMBER_PROFILE_IMAGE_URL_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.OTHER_MEMBER_PROFILE_RESPONSE;
 import static org.mockito.ArgumentMatchers.any;
@@ -186,20 +185,17 @@ class MemberControllerTest {
     // given
     String json = """
         {
-          "contentType": "image/png"
+          "fileName": "profile/temp-uuid"
         }
         """;
-    given(modifyUseCase.changeProfileImageUrlProcess(any())).willReturn(DEFAULT_MEMBER_PROFILE_IMAGE_URL_RESPONSE);
 
     // when & then
     mvc.perform(patch("/members/me/image")
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
             .requestAttr("memberId", MEMBER_ID))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.fileName").value("profile/test.png"))
-        .andExpect(jsonPath("$.imageUploadUrl").value("https://s3-url.com/presigned"));
+        .andExpect(status().isOk());
 
-    verify(modifyUseCase, times(1)).changeProfileImageUrlProcess(any());
+    verify(modifyUseCase, times(1)).changeMemberProfileImageProcess(any());
   }
 }

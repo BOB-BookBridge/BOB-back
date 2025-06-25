@@ -12,9 +12,10 @@ public enum ApplicationError {
   UN_SUPPORTED_TYPE("E001", "지원하지 않는 형식입니다.", HttpStatus.BAD_REQUEST),
   UN_SUPPORTED_CATEGORY("E002", "지원하지 않는 카테고리입니다.", HttpStatus.BAD_REQUEST),
   UN_SUPPORTED_BOOK_STATUS("E003", "지원하지 않는 도서 상태입니다.", HttpStatus.BAD_REQUEST),
-  IS_SAME_REQUEST("E004", "변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
-  VALIDATION_ERROR("E005", "요청 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-  TYPE_MISMATCH("E006", "요청 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+  UN_SUPPORTED_DOMAIN("E004", "지원하지 않는 도메인입니다.", HttpStatus.BAD_REQUEST),
+  IS_SAME_REQUEST("E005", "변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
+  VALIDATION_ERROR("E006", "요청 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+  TYPE_MISMATCH("E007", "요청 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
 
   // 사용자 예외
   UNVERIFIED_EMAIL("E101", "이메일 인증이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),
@@ -39,7 +40,10 @@ public enum ApplicationError {
   INVALID_POST_FAVORITE("E305", "좋아요 하지 않은 게시글입니다.", HttpStatus.BAD_REQUEST),
 
   // 채팅 예외
-  IS_SAME_CHAT_MEMBER("E401", "자신과의 채팅은 불가능합니다.", HttpStatus.BAD_REQUEST)
+  IS_SAME_CHAT_MEMBER("E401", "자신과의 채팅은 불가능합니다.", HttpStatus.BAD_REQUEST),
+
+  // 파일 예외
+  FILE_UNAUTHORIZED("E501", "파일을 수정할 권한이 없습니다.", HttpStatus.BAD_REQUEST)
   ;
 
   private String code;

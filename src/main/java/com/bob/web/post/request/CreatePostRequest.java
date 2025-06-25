@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 public record CreatePostRequest(
@@ -25,7 +26,9 @@ public record CreatePostRequest(
 
     @Valid
     @NotNull(message = "책 정보는 필수입니다.")
-    BookInfo book
+    BookInfo book,
+
+    List<String> fileNames
 ) {
 
   public CreatePostCommand toCommand(UUID memberId) {
@@ -42,6 +45,7 @@ public record CreatePostRequest(
         .bookPriceStandard(book.priceStandard())
         .bookCover(book.cover())
         .bookPubDate(book.pubDate())
+        .fileNames(fileNames)
         .build();
   }
 }
@@ -70,5 +74,3 @@ record BookInfo(
 ) {
 
 }
-
-

@@ -8,6 +8,7 @@ import com.bob.domain.category.entity.Category;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.BookStatus;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -24,7 +25,8 @@ public record CreatePostCommand(
     String bookDescription,
     Integer bookPriceStandard,
     String bookCover,
-    LocalDate bookPubDate
+    LocalDate bookPubDate,
+    List<String> fileNames
 ) {
 
   public Post toPost(Book book, Category category, UUID sellerId, Integer emdId) {

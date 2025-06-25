@@ -5,7 +5,6 @@ import static com.bob.web.common.symbol.ResponseSymbol.SENT;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static com.bob.web.member.request.ReadProfileRequest.toQuery;
 
-import com.bob.domain.member.service.dto.response.MemberProfileImageUrlResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
@@ -16,7 +15,7 @@ import com.bob.web.common.symbol.ResponseSymbol;
 import com.bob.web.member.request.ChangePasswordRequest;
 import com.bob.web.member.request.ChangeProfileRequest;
 import com.bob.web.member.request.IssuePasswordRequest;
-import com.bob.web.member.request.ReadImageUploadUrlRequest;
+import com.bob.web.member.request.ChangeMemberProfileImageRequest;
 import com.bob.web.member.request.SignupRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -83,10 +82,11 @@ public class MemberController {
   }
 
   @PatchMapping("/me/image")
-  public ResponseEntity<MemberProfileImageUrlResponse> handleGetImageUploadUrl(
-      @Valid @RequestBody ReadImageUploadUrlRequest request,
+  public CommonResponse<ResponseSymbol> handleChangeMemberProfileImage(
+      @Valid @RequestBody ChangeMemberProfileImageRequest request,
       @AuthenticationId UUID memberId
   ) {
-    return ResponseEntity.ok(modifyUseCase.changeProfileImageUrlProcess(request.toQuery(memberId)));
+    modifyUseCase.changeMemberProfileImageProcess(request.toCommand(memberId));
+    return new CommonResponse<>(true, UPDATED);
   }
 }

@@ -5,6 +5,7 @@ import static com.bob.global.exception.response.ApplicationError.INVALID_POST_FA
 import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
 import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
 import static com.bob.support.fixture.command.ChangePostCommandFixture.DEFAULT_CHANGE_POST_COMMAND;
+import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.defaultCreatePostCommand;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
 import static com.bob.support.fixture.query.PostQueryFixture.searchAuthorQuery;
@@ -18,9 +19,11 @@ import static com.bob.support.fixture.query.PostQueryFixture.searchTitleQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTradeStatusQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchUnderPriceQuery;
 import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
+import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_POST_FILE_SUMMARIES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.repository.BookRepository;
@@ -42,6 +45,7 @@ import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostSummary;
 import com.bob.domain.post.service.dto.response.PostsResponse;
 import com.bob.domain.post.service.port.out.PostAreaPort;
+import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.TestContainerSupport;
 import jakarta.persistence.EntityManager;
@@ -64,31 +68,25 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 class PostServiceIntgTest extends TestContainerSupport {
 
+  private final PageRequest pageable = PageRequest.of(0, 12);
   @Autowired
   private PostService postService;
-
   @Autowired
   private PostRepository postRepository;
-
   @Autowired
   private PostFavoriteService postFavoriteService;
-
   @Autowired
   private PostFavoriteRepository postFavoriteRepository;
-
   @Autowired
   private CategoryRepository categoryRepository;
-
   @Autowired
   private BookRepository bookRepository;
-
   @MockitoBean
   private PostAreaPort areaPort;
-
+  @MockitoBean
+  private PostFilePort filePort;
   @PersistenceContext
   private EntityManager em;
-
-  private final PageRequest pageable = PageRequest.of(0, 12);
 
   @Test
   @DisplayName("게시글 등록 - 성공 테스트")
@@ -96,7 +94,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Category category = categoryRepository.save(defaultCategory());
-    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId());
+    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), FILE_NAMES);
     given(areaPort.readPostAreaSummary(memberId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
     int beforePostCount = postRepository.findAllBySellerId(memberId).size();
     int expectedPostCount = beforePostCount + 1;
@@ -119,13 +117,29 @@ class PostServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
+  @DisplayName("게시글 등록 - 이미지 매핑 생략 (null)")
+  void 게시글_등록시_referenceId가_null이면_이미지_매핑을_하지_않는다() {
+    // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    Category category = categoryRepository.save(defaultCategory());
+    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), null);
+    given(areaPort.readPostAreaSummary(memberId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+
+    // when
+    postService.createPostProcess(command);
+
+    // then
+    then(filePort).shouldHaveNoInteractions();
+  }
+
+  @Test
   @DisplayName("게시글 등록 - 실패 테스트(위치 인증 X)")
   void 위치_인증이_안된_사용자는_게시글을_등록할_수_없다() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     given(areaPort.readPostAreaSummary(memberId)).willReturn(PostAreaSummaryResponse.of(213, "역삼동", "강남구", false));
     Category category = categoryRepository.save(defaultCategory());
-    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId());
+    CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), FILE_NAMES);
 
     // when & then
     assertThatThrownBy(() -> postService.createPostProcess(command))
@@ -363,6 +377,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     Post post = postRepository.findAllBySellerId(writerId).get(0); // 더미 데이터의 첫 번째 게시글
     int beforeViewCount = post.getViewCount();
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
 
     // when
     PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(writerId, post.getId()));
@@ -382,6 +397,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Post post = postRepository.findAllBySellerId(writerId).get(0);
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
 
     // when
     PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(viewerId, post.getId()));
@@ -430,7 +446,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID otherId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
-    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId()));
+    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId(), FILE_NAMES));
     Post post = postRepository.findAllBySellerId(writerId).get(0);
     postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(writerId, post.getId()));
     postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(otherId, post.getId()));
@@ -456,7 +472,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID otherId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
 
-    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId()));
+    postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId(), FILE_NAMES));
     Post post = postRepository.findAllBySellerId(writerId).get(0);
     postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(writerId, post.getId()));
     postService.registerPostFavoriteProcess(new RegisterPostFavoriteCommand(otherId, post.getId()));

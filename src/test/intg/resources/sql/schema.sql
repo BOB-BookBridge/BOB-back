@@ -184,6 +184,16 @@ CREATE TABLE IF NOT EXISTS chat_room_members (
     FOREIGN KEY (member_id) REFERENCES members(id)
 );
 
+CREATE TABLE IF NOT EXISTS files (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    domain VARCHAR(20) NOT NULL,
+    reference_id VARCHAR(100),
+    file_name VARCHAR(255) NOT NULL,
+    sequence INT,
+    created_at DATETIME(6),
+    updated_at DATETIME(6)
+);
+
 -- ========================
 -- 📂 CATEGORIES DATA
 -- ========================
