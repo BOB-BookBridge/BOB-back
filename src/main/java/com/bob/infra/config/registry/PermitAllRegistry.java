@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 public class PermitAllRegistry {
 
   private final List<RequestMatcher> whitelistMatchers = List.of(
+      new AntPathRequestMatcher("/dummy", POST.name()), // TODO : 개발 종료 시 삭제
       new AntPathRequestMatcher("/auth/**", POST.name()),
       new AntPathRequestMatcher("/ai/**", GET.name()),
       new AntPathRequestMatcher("/h2-console/**"),

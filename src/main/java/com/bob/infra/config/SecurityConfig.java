@@ -35,7 +35,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
-      "/auth/**", "/ai/**", "/areas/**", "/members/temp/**",
+      "/auth/**", "/ai/**", "/areas/**", "/members/temp/**", "/manager/**",
       "/h2-console/**",
       "/error/**",
   };
@@ -63,6 +63,7 @@ public class SecurityConfig {
         .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
         .authorizeHttpRequests(request -> request
             .requestMatchers(AUTH_WHITELIST).permitAll()
+            .requestMatchers(HttpMethod.POST, "/dummy").permitAll() // TODO : 개발 종료 시 삭제
             .requestMatchers(HttpMethod.POST, "/members").permitAll()
             .requestMatchers(HttpMethod.GET, "/members/{memberId:\\d+}").permitAll()
             .requestMatchers(HttpMethod.GET, "/posts").permitAll()
