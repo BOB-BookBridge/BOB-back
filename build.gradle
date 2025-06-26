@@ -196,7 +196,7 @@ jacocoTestCoverageVerification {
                     'com.bob.**.symbol.**',
                     'com.bob.**.dsl.**', // QueryDSL Impl 제외, 도메인 통합 테스트에서 검증
                     'com.bob.**.Q*', // QueryDSL Q 클래스 제외
-                    'com.bob.**.manager.**'
+                    'com.bob.**.dummy.**'
             ]
 
             // LINE 커버리지
