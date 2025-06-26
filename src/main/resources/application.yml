@@ -1,3 +1,5 @@
 spring:
   profiles:
     include: secret
+  jackson:
+    time-zone: Asia/Seoul

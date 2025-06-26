@@ -87,18 +87,18 @@ configurations {
 def envFile = rootProject.file(".env")
 if (envFile.exists()) {
     envFile.readLines()
-        .findAll { it && it.contains("=") }
-        .each { line ->
-            def (key, value) = line.split("=")
-            if (key == "USERNAME") {
-                System.setProperty("jib.from.auth.username", value)
-                System.setProperty("jib.to.auth.username", value)
+            .findAll { it && it.contains("=") }
+            .each { line ->
+                def (key, value) = line.split("=")
+                if (key == "USERNAME") {
+                    System.setProperty("jib.from.auth.username", value)
+                    System.setProperty("jib.to.auth.username", value)
+                }
+                if (key == "PASSWORD") {
+                    System.setProperty("jib.from.auth.password", value)
+                    System.setProperty("jib.to.auth.password", value)
+                }
             }
-            if (key == "PASSWORD") {
-                System.setProperty("jib.from.auth.password", value)
-                System.setProperty("jib.to.auth.password", value)
-            }
-        }
 }
 
 jib {
@@ -131,6 +131,7 @@ jib {
     container {
         ports = ['8080']
         creationTime = 'USE_CURRENT_TIMESTAMP'
+        jvmFlags = ['-Duser.timezone=Asia/Seoul']
     }
 }
 
