@@ -87,18 +87,18 @@ configurations {
 def envFile = rootProject.file(".env")
 if (envFile.exists()) {
     envFile.readLines()
-        .findAll { it && it.contains("=") }
-        .each { line ->
-            def (key, value) = line.split("=")
-            if (key == "USERNAME") {
-                System.setProperty("jib.from.auth.username", value)
-                System.setProperty("jib.to.auth.username", value)
+            .findAll { it && it.contains("=") }
+            .each { line ->
+                def (key, value) = line.split("=")
+                if (key == "USERNAME") {
+                    System.setProperty("jib.from.auth.username", value)
+                    System.setProperty("jib.to.auth.username", value)
+                }
+                if (key == "PASSWORD") {
+                    System.setProperty("jib.from.auth.password", value)
+                    System.setProperty("jib.to.auth.password", value)
+                }
             }
-            if (key == "PASSWORD") {
-                System.setProperty("jib.from.auth.password", value)
-                System.setProperty("jib.to.auth.password", value)
-            }
-        }
 }
 
 jib {
@@ -131,6 +131,7 @@ jib {
     container {
         ports = ['8080']
         creationTime = 'USE_CURRENT_TIMESTAMP'
+        jvmFlags = ['-Duser.timezone=Asia/Seoul']
     }
 }
 
@@ -195,6 +196,7 @@ jacocoTestCoverageVerification {
                     'com.bob.**.symbol.**',
                     'com.bob.**.dsl.**', // QueryDSL Impl 제외, 도메인 통합 테스트에서 검증
                     'com.bob.**.Q*', // QueryDSL Q 클래스 제외
+                    'com.bob.**.dummy.**'
             ]
 
             // LINE 커버리지
