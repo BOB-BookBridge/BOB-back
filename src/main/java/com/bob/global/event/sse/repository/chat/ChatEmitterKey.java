@@ -1,4 +1,4 @@
-package com.bob.infra.sse.repository.chat;
+package com.bob.global.event.sse.repository.chat;
 
 import java.util.UUID;
 

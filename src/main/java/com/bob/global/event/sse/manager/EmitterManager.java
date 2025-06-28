@@ -1,7 +1,7 @@
-package com.bob.infra.sse.manager;
+package com.bob.global.event.sse.manager;
 
-import com.bob.infra.sse.repository.EmitterRepository;
-import com.bob.infra.sse.repository.chat.ChatEmitterKey;
+import com.bob.global.event.sse.repository.EmitterRepository;
+import com.bob.global.event.sse.repository.chat.ChatEmitterKey;
 import jakarta.annotation.PostConstruct;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;

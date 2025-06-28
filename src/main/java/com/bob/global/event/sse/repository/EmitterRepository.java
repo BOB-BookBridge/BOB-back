@@ -1,4 +1,4 @@
-package com.bob.infra.sse.repository;
+package com.bob.global.event.sse.repository;
 
 import java.util.Map;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;

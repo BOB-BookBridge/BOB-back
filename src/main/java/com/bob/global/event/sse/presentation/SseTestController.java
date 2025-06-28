@@ -1,10 +1,10 @@
-package com.bob.infra.sse.adapter;
+package com.bob.global.event.sse.presentation;
 
 import static com.bob.global.utils.web.CookieUtils.getCookie;
 
 import com.bob.infra.auth.jwt.JwtProvider;
-import com.bob.infra.sse.manager.EmitterManager;
-import com.bob.infra.sse.repository.EmitterRepository;
+import com.bob.global.event.sse.manager.EmitterManager;
+import com.bob.global.event.sse.repository.EmitterRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

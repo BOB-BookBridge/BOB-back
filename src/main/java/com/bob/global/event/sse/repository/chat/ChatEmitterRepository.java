@@ -1,6 +1,6 @@
-package com.bob.infra.sse.repository.chat;
+package com.bob.global.event.sse.repository.chat;
 
-import com.bob.infra.sse.repository.EmitterRepository;
+import com.bob.global.event.sse.repository.EmitterRepository;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
