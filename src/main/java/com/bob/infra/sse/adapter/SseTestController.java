@@ -1,9 +1,11 @@
 package com.bob.infra.sse.adapter;
 
+import static com.bob.global.utils.web.CookieUtils.getCookie;
+
+import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.sse.manager.EmitterManager;
 import com.bob.infra.sse.repository.EmitterRepository;
-import com.bob.web.common.AuthenticationId;
-import java.util.UUID;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,23 +18,27 @@ public class SseTestController {
   private final EmitterRepository<String> notificationEmitterRepository;
   private final EmitterManager emitterManager;
 
+  private final JwtProvider jwtProvider;
+
   @GetMapping("/sse/test/subscribe")
-  public SseEmitter subscribe(@AuthenticationId UUID memberId) {
-    SseEmitter emitter = setupEmitter(memberId.toString());
-    sendConnectEvent(memberId.toString(), emitter);
+  public SseEmitter subscribe(HttpServletRequest request) {
+    String token = getCookie(request, "AUTHORIZATION");
+    String memberId = jwtProvider.getMemberId(token).toString();
+    SseEmitter emitter = setupEmitter(memberId);
+    sendConnectEvent(emitter, memberId);
     return emitter;
   }
 
-  private SseEmitter setupEmitter(String participantId) {
+  private SseEmitter setupEmitter(String key) {
     SseEmitter emitter = new SseEmitter(emitterManager.getDefaultTimeout());
-    emitter.onCompletion(() -> notificationEmitterRepository.remove(participantId));
-    emitter.onTimeout(() -> notificationEmitterRepository.remove(participantId));
-    emitter.onError(e -> notificationEmitterRepository.remove(participantId));
-    notificationEmitterRepository.save(participantId, emitter);
+    emitter.onCompletion(() -> notificationEmitterRepository.remove(key));
+    emitter.onTimeout(() -> notificationEmitterRepository.remove(key));
+    emitter.onError((e) -> notificationEmitterRepository.remove(key));
+    notificationEmitterRepository.save(key, emitter);
     return emitter;
   }
 
-  private void sendConnectEvent(String memberId, SseEmitter emitter) {
-    emitterManager.sendEvent(memberId, emitter, "connect", "connected", notificationEmitterRepository);
+  private void sendConnectEvent(SseEmitter emitter, String key) {
+    emitterManager.sendEvent(key, emitter, "connect", "connected", notificationEmitterRepository);
   }
 }

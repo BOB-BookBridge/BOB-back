@@ -48,6 +48,7 @@ public class EmitterManager implements Runnable {
     try {
       emitter.send(SseEmitter.event().name(eventName).data(data));
     } catch (Exception e) {
+      emitter.complete();
       repository.remove(key);
       log.warn("Failed to send SSE event - key: {}, event: {}, error: {}", key, eventName, e.toString());
     }
