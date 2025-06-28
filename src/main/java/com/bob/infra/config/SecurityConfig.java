@@ -35,7 +35,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
-      "/auth/**", "/ai/**", "/areas/**", "/members/temp/**",
+      "/auth/**", "/ai/**", "/areas/**", "/members/temp/**", "/sse/**",
       "/h2-console/**",
       "/error/**",
   };
