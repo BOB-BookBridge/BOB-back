@@ -3,3 +3,8 @@ spring:
     include: secret
   jackson:
     time-zone: Asia/Seoul
+
+sse:
+  heartbeat-interval: 10 # 10초
+  default-timeout: 60000 # 1분
+
