@@ -25,7 +25,7 @@ public record ReadFilteredPostsRequest(
         .memberId(memberId)
         .emdId(emdId)
         .categoryId(categoryId)
-        .price(SearchPrice.fromIndex(price).orElse(SearchPrice.ALL))
+        .price(SearchPrice.fromIndex(price).orElse(null))
         .postStatus(postStatus)
         .bookStatus(bookStatus)
         .sortKey(SortKey.from(sortKey).orElse(SortKey.RECENT))

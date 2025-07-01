@@ -7,18 +7,18 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum SearchPrice {
-  UNDER_5000(5_000),
-  UNDER_10000(10_000),
-  UNDER_20000(20_000),
-  ALL(1_000_000);
+  UNDER_5000(0, 5_000),
+  BETWEEN_5000_AND_10000(5_000, 10_000),
+  BETWEEN_10000_AND_20000(10_000, 20_000),
+  OVER_20000(20_000, Integer.MAX_VALUE);
 
-  private final Integer maxPrice;
+  private final int minPrice;
+  private final int maxPrice;
 
   public static Optional<SearchPrice> fromIndex(Integer index) {
     if (index == null || index < 0 || index >= values().length) {
-      return Optional.of(values()[3]);
+      return Optional.empty();
     }
-
     return Optional.of(values()[index]);
   }
 }
