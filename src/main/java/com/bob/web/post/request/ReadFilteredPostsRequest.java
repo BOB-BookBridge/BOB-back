@@ -15,7 +15,7 @@ public record ReadFilteredPostsRequest(
     Integer price,
     String postStatus,
     String bookStatus,
-    String sortKey
+    String sort
 ) {
 
   public ReadFilteredPostsQuery toQuery() {
@@ -28,7 +28,7 @@ public record ReadFilteredPostsRequest(
         .price(SearchPrice.fromIndex(price).orElse(null))
         .postStatus(postStatus)
         .bookStatus(bookStatus)
-        .sortKey(SortKey.from(sortKey).orElse(SortKey.RECENT))
+        .sortKey(SortKey.from(sort).orElse(SortKey.RECENT))
         .build();
   }
 }
