@@ -129,7 +129,7 @@ class PostControllerTest {
             .param("price", "0")
             .param("postStatus", "미거래")
             .param("bookStatus", "최상")
-            .param("sortKey", "RECENT")
+            .param("sort", "RECENT")
             .param("page", "0")
             .param("size", "12")
         )
