@@ -26,7 +26,6 @@ import com.bob.domain.file.service.reader.FileReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.utils.image.ImageUtils;
 import com.bob.support.TestContainerSupport;
-import com.bob.support.redis.RedisContainerConfig;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -34,11 +33,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
-@Import(RedisContainerConfig.class)
 @Transactional
 @SpringBootTest
 class FileServiceIntgTest extends TestContainerSupport {
