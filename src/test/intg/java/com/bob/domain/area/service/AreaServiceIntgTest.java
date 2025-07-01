@@ -24,7 +24,6 @@ import com.bob.domain.area.service.reader.ActivityAreaReader;
 import com.bob.domain.area.service.reader.EmdAreaReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.TestContainerSupport;
-import com.bob.support.redis.RedisContainerConfig;
 import java.time.LocalDate;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -35,11 +34,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 @DisplayName("위치 서비스 통합 테스트")
-@Import(RedisContainerConfig.class)
 @Transactional
 @SpringBootTest
 class AreaServiceIntgTest extends TestContainerSupport {

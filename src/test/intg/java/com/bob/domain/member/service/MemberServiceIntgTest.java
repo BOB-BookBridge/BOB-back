@@ -29,18 +29,15 @@ import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
-import com.bob.support.redis.RedisContainerConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 @DisplayName("사용자 서비스 통합 테스트")
-@Import(RedisContainerConfig.class)
 @Transactional
 @SpringBootTest
 class MemberServiceIntgTest extends TestContainerSupport {

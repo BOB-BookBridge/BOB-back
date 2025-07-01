@@ -292,7 +292,6 @@ class PostServiceTest {
     ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, post.getId());
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_SUMMARY);
-    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_POST_AREA_SUMMARY);
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
     willDoNothing().given(postRepository).increaseViewCount(post.getId());
 
@@ -316,7 +315,6 @@ class PostServiceTest {
     ReadPostDetailQuery query = new ReadPostDetailQuery(otherMemberId, post.getId());
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_SUMMARY);
-    given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_POST_AREA_SUMMARY);
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
     willDoNothing().given(postRepository).increaseViewCount(post.getId());
 

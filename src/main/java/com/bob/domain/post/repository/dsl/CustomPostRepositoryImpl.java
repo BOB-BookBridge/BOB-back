@@ -86,7 +86,8 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
   }
 
   private BooleanExpression priceCondition(SearchPrice price) {
-    return price == null ? null : post.sellPrice.loe(price.getMaxPrice());
+    if (price == null) return null;
+    return post.sellPrice.goe(price.getMinPrice()).and(post.sellPrice.loe(price.getMaxPrice()));
   }
 
   private BooleanExpression tradeStatusCondition(String status) {

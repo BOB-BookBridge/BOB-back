@@ -109,11 +109,10 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     postRepository.increaseViewCount(query.postId());
     Post post = postReader.readPostById(query.postId());
     PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
-    PostAreaSummaryResponse areaSummary = areaPort.readPostAreaSummary(post.getSellerId());
     PostFileSummaryResponse fileSummary = filePort.readPostFileSummaries(post.getId());
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
-    return PostDetailResponse.from(post, memberSummary, areaSummary, fileSummary, isFavorite, isOwner);
+    return PostDetailResponse.from(post, memberSummary, fileSummary, isFavorite, isOwner);
   }
 
   @Transactional

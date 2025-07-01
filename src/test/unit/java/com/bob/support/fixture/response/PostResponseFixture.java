@@ -54,7 +54,7 @@ public class PostResponseFixture {
         .writer(WriterInfo.builder()
             .memberId(UUID.fromString("018e0df5-b7ec-7f36-b67f-80f3e4f49895"))
             .nickname("booklover")
-            .activityArea("사하구 하단동")
+            .emdId(309)
             .profileUrl("https://s3.bucket.com/default.jpg")
             .build())
         .scrapCount(2)

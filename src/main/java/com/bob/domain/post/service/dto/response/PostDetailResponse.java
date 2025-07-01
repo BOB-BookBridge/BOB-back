@@ -30,7 +30,6 @@ public record PostDetailResponse(
   public static PostDetailResponse from(
       Post post,
       PostMemberSummaryResponse memberSummary,
-      PostAreaSummaryResponse areaSummary,
       PostFileSummaryResponse fileSummary,
       boolean isFavorite,
       boolean isOwner
@@ -47,9 +46,7 @@ public record PostDetailResponse(
         .description(post.getDescription())
         .images(fileSummary.images())
         .writer(WriterInfo.of(
-            post.getSellerId(),
-            memberSummary.nickname(), memberSummary.profileImageUrl(),
-            areaSummary.emdName(), areaSummary.siggName()
+            post.getSellerId(), memberSummary.nickname(), post.getRegistrationAreaId(), memberSummary.profileImageUrl()
         ))
         .scrapCount(post.getScrapCount())
         .viewCount(post.getViewCount())
@@ -83,15 +80,15 @@ public record PostDetailResponse(
   public record WriterInfo(
       UUID memberId,
       String nickname,
-      String activityArea,
+      Integer emdId,
       String profileUrl
   ) {
 
-    public static WriterInfo of(UUID memberId, String nickname, String profileUrl, String emdName, String siggName) {
+    public static WriterInfo of(UUID memberId, String nickname, Integer registrationAreaId, String profileUrl) {
       return WriterInfo.builder()
           .memberId(memberId)
           .nickname(nickname)
-          .activityArea(String.format("%s %s", siggName, emdName))
+          .emdId(registrationAreaId)
           .profileUrl(profileUrl)
           .build();
     }
