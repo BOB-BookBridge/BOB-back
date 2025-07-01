@@ -42,9 +42,16 @@ public class PostQueryFixture {
         .build();
   }
 
-  public static ReadFilteredPostsQuery searchUnderPriceQuery() {
+  public static ReadFilteredPostsQuery searchUnder5000PriceQuery() {
     return ReadFilteredPostsQuery.builder()
         .price(SearchPrice.UNDER_5000)
+        .sortKey(SortKey.RECENT)
+        .build();
+  }
+
+  public static ReadFilteredPostsQuery searchBetween_5000_10000_PriceQuery() {
+    return ReadFilteredPostsQuery.builder()
+        .price(SearchPrice.BETWEEN_5000_AND_10000)
         .sortKey(SortKey.RECENT)
         .build();
   }

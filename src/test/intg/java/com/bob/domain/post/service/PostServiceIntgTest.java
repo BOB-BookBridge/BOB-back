@@ -9,6 +9,7 @@ import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAME
 import static com.bob.support.fixture.command.CreatePostCommandFixture.defaultCreatePostCommand;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
 import static com.bob.support.fixture.query.PostQueryFixture.searchAuthorQuery;
+import static com.bob.support.fixture.query.PostQueryFixture.searchBetween_5000_10000_PriceQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchBookStatusQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchCategoryQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchHighPriceQuery;
@@ -17,7 +18,7 @@ import static com.bob.support.fixture.query.PostQueryFixture.searchNewestQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchOldestQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTitleQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTradeStatusQuery;
-import static com.bob.support.fixture.query.PostQueryFixture.searchUnderPriceQuery;
+import static com.bob.support.fixture.query.PostQueryFixture.searchUnder5000PriceQuery;
 import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
 import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_POST_FILE_SUMMARIES;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -276,12 +277,23 @@ class PostServiceIntgTest extends TestContainerSupport {
   @Test
   @DisplayName("가격 필터 - 5000원 이하 게시글 조회")
   void 가격이_5000원이하인_게시글만_조회할_수_있다() {
-    ReadFilteredPostsQuery query = searchUnderPriceQuery();
+    ReadFilteredPostsQuery query = searchUnder5000PriceQuery();
     PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
 
     assertThat(result.posts())
         .extracting(PostSummary::sellPrice)
         .allMatch(price -> price <= 5000);
+  }
+
+  @Test
+  @DisplayName("가격 필터 - 5000원 이상, 10000원 이하 게시글 조회")
+  void 가격이_5000원이상_10000원이하인_게시글만_조회할_수_있다() {
+    ReadFilteredPostsQuery query = searchBetween_5000_10000_PriceQuery();
+    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+
+    assertThat(result.posts())
+        .extracting(PostSummary::sellPrice)
+        .allMatch(price -> price >= 5000 && price <= 10000);
   }
 
   @Test
