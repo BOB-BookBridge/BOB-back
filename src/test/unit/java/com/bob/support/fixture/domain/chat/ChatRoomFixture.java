@@ -24,4 +24,26 @@ public class ChatRoomFixture {
           .lastChatAt(LocalDateTime.of(2024, 4, 30, 15, 0))
           .enableStatus(true)
           .build();
+
+  public static ChatRoom DISABLE_CHAT_ROOM_1 =
+      ChatRoom.builder()
+          .postId(3L)
+          .tradeId(3L)
+          .titleSuffix("제목")
+          .lastChatMessage(null)
+          .lastChatAt(null)
+          .enableStatus(false)
+          .build();
+
+  public static ChatRoom customChatRoom(Long id, String lastMessage, LocalDateTime lastMessageAt, boolean status) {
+    return ChatRoom.builder()
+        .id(id)
+        .postId(1L)
+        .tradeId(100L)
+        .titleSuffix("제목")
+        .lastChatMessage(lastMessage)
+        .lastChatAt(lastMessageAt)
+        .enableStatus(status)
+        .build();
+  }
 }

@@ -42,4 +42,31 @@ class StreamUtilsTest {
     // then
     assertThat(capturedIndices).isEmpty();
   }
+
+  @DisplayName("null 요소를 제외, 정렬 키 기준 내림차순 정렬 테스트")
+  @Test
+  void null을_제외하고_키_기준으로_내림차순_정렬된다() {
+    // given
+    List<Dummy> input = new ArrayList<>(List.of(
+        Dummy.of("A", 5),
+        Dummy.of("B", 10),
+        Dummy.of("C", 7)
+    ));
+    input.add(1, null);
+    
+    // when
+    List<Dummy> result = StreamUtils.sortByDesc(input, Dummy::score);
+
+    // then
+    assertThat(result)
+        .extracting(Dummy::name)
+        .containsExactly("B", "C", "A");
+  }
+
+  private record Dummy(String name, int score) {
+
+    static Dummy of(String name, int score) {
+      return new Dummy(name, score);
+    }
+  }
 }
