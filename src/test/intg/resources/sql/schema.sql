@@ -149,8 +149,9 @@ CREATE TABLE IF NOT EXISTS chat_rooms (
     post_id BIGINT NOT NULL,
     trade_id BIGINT NOT NULL,
     title_suffix VARCHAR(100) NOT NULL,
+    last_chat_message VARCHAR(500),
+    last_chat_at DATETIME,
     enable_status BOOLEAN NOT NULL,
-    last_chat_at DATETIME NOT NULL,
     created_at DATETIME NOT NULL,
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (trade_id) REFERENCES trades(id)
