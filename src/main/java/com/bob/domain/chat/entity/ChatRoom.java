@@ -44,4 +44,8 @@ public class ChatRoom extends BaseTime {
   @Column(nullable = false)
   @Builder.Default
   private Boolean enableStatus = false;
+
+  public void updateChatRoomStatus(boolean status) {
+    this.enableStatus = status;
+  }
 }
