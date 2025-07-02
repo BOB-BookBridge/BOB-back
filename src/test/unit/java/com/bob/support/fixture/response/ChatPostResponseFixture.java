@@ -10,7 +10,8 @@ public class ChatPostResponseFixture {
     return ChatPostResponse.of(
         1L,
         MEMBER_ID,
-        "객체지향의 사실과 오해"
+        "객체지향의 사실과 오해",
+        "image.png"
     );
   }
 }

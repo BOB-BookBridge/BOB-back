@@ -111,7 +111,8 @@ class ChatRoomServiceTest {
     ChatPostResponse post = ChatPostResponse.of(
         command.postId(),
         command.buyerId(), // seller == buyer
-        "제목"
+        "제목",
+        "image.png"
     );
 
     given(postPort.readChatPostSummary(command.postId())).willReturn(post);
