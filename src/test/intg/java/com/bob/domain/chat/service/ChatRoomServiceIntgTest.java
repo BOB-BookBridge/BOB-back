@@ -8,6 +8,8 @@ import com.bob.domain.chat.entity.ChatRoomMember;
 import com.bob.domain.chat.repository.ChatRoomMemberRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
+import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
+import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
@@ -109,5 +111,32 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     assertThat(result.chatRoomId()).isEqualTo(created.chatRoomId());
     assertThat(chatRoomRepository.findById(result.chatRoomId())).isNotNull();
     assertThat(chatRoomMemberRepository.findByChatRoomId(result.chatRoomId())).hasSize(2);
+  }
+
+  @Test
+  @DisplayName("채팅방 목록 조회 - 성공 테스트")
+  void 활성화된_채팅방_목록만_반환한다() {
+    // given
+    Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).get();
+    Member buyer = memberRepository.save(MemberFixture.otherMember());
+    Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
+    CreateChatRoomCommand command1 = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    CreateChatRoomResponse response1 = chatRoomService.createChatRoomProcess(command1);
+    CreateChatRoomCommand command2 = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    chatRoomService.createChatRoomProcess(command2);
+
+    ChatRoom enableChatRoom = chatRoomRepository.findById(response1.chatRoomId()).get();
+    enableChatRoom.updateChatRoomStatus(true); // 채팅방 활성화
+
+    // when
+    List<ChatRoomSummaryResponse> result = chatRoomService.readChatRoomListProcess(ReadChatRoomListQuery.of(buyer.getId()));
+
+    // then
+    assertThat(result).hasSize(1);
+    ChatRoomSummaryResponse chatRoomSummary = result.get(0);
+    assertThat(chatRoomSummary.chatroomId()).isEqualTo(enableChatRoom.getId());
+    assertThat(chatRoomSummary.partner().id()).isEqualTo(seller.getId());
+    assertThat(chatRoomSummary.thumbnailUrl()).isNotBlank();
+    assertThat(chatRoomSummary.unreadCount()).isEqualTo(0);
   }
 }
