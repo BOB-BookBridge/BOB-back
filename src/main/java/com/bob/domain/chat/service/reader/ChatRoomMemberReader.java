@@ -1,5 +1,7 @@
 package com.bob.domain.chat.service.reader;
 
+import static com.bob.global.exception.response.ApplicationError.NOT_PARTICIPATED_CHAT_ROOM;
+
 import com.bob.domain.chat.entity.ChatRoomMember;
 import com.bob.domain.chat.repository.ChatRoomMemberRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
@@ -16,6 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatRoomMemberReader {
 
   private final ChatRoomMemberRepository chatRoomMemberRepository;
+
+  public ChatRoomMember readChatRoomMember(Long chatRoomId, UUID memberId) {
+    return chatRoomMemberRepository.findByChatRoomIdAndMemberId(chatRoomId, memberId)
+        .orElseThrow(() -> new ApplicationException(NOT_PARTICIPATED_CHAT_ROOM));
+  }
 
   public UUID readPartnerIdByRequesterId(Long chatRoomId, UUID requesterId) {
     return chatRoomMemberRepository.findPartnerIdByRequesterId(chatRoomId, requesterId)

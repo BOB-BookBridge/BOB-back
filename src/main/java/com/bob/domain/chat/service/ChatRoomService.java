@@ -11,6 +11,7 @@ import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
+import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.response.ChatMemberResponse;
@@ -25,6 +26,7 @@ import com.bob.domain.chat.service.port.out.ChatTradePort;
 import com.bob.domain.chat.service.reader.ChatMessageReader;
 import com.bob.domain.chat.service.reader.ChatRoomMemberReader;
 import com.bob.domain.chat.service.reader.ChatRoomReader;
+import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
@@ -38,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCase {
+public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCase, ChatRoomModifyUseCase {
 
   private final ChatRoomRepository chatRoomRepository;
   private final ChatRoomReader chatRoomReader;
@@ -124,5 +126,11 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     if (!isParticipated) {
       throw new ApplicationException(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM);
     }
+  }
+
+  @Transactional
+  public void exitChatRoomProcess(ExitChatRoomCommand command) {
+    chatRoomMemberService.exitChatRoomMemberProcess(command);
+    // TODO : 메시지 기능 구현 시 시스템 채팅(~님이 퇴장했습니다.) 추가
   }
 }

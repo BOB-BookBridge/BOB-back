@@ -9,6 +9,8 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface ChatRoomMemberRepository extends CrudRepository<ChatRoomMember, Long> {
 
+  Optional<ChatRoomMember> findByChatRoomIdAndMemberId(Long chatRoomId, UUID memberId);
+
   @Query("""
         SELECT crm.memberId
         FROM ChatRoomMember crm
