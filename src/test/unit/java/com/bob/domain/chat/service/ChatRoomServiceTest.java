@@ -11,6 +11,7 @@ import static com.bob.support.fixture.domain.chat.ChatRoomFixture.customChatRoom
 import static com.bob.support.fixture.response.ChatPostResponseFixture.DEFAULT_CHAT_POST_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.OTHER_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_DETAIL_RESPONSE;
+import static com.bob.support.fixture.response.TradeDetailResponseFixture.DEFAULT_TRADE_DETAIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,9 +25,12 @@ import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
+import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
+import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
+import com.bob.domain.chat.service.dto.response.ChatTradeResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.service.port.out.ChatMemberPort;
 import com.bob.domain.chat.service.port.out.ChatPostPort;
@@ -35,6 +39,7 @@ import com.bob.domain.chat.service.reader.ChatMessageReader;
 import com.bob.domain.chat.service.reader.ChatRoomMemberReader;
 import com.bob.domain.chat.service.reader.ChatRoomReader;
 import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -150,13 +155,13 @@ class ChatRoomServiceTest {
   @DisplayName("활성화 된 채팅방 및 상대방 정보 존재가 존재하는 경우 반환 목록에 포함 테스트")
   void 유효한_채팅방_정보를_정상적으로_반환한다() {
     // given
-    ChatRoom chatRoom = DEFAULT_CHAT_ROOM_1;
+    ChatRoom chatRoom = DEFAULT_CHAT_ROOM_1();
     UUID memberId = MEMBER_ID;
     UUID partnerId = OTHER_MEMBER_ID;
 
     given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId)).willReturn(List.of(chatRoom));
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoom.getId(), memberId)).willReturn(partnerId);
-    given(memberPort.readChatMemberProfile(partnerId)).willReturn(OTHER_MEMBER_PROFILE_RESPONSE);
+    given(memberPort.readChatMemberProfile(OTHER_MEMBER_ID)).willReturn(OTHER_MEMBER_PROFILE_RESPONSE);
     given(postPort.readChatPostSummary(chatRoom.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(chatRoom.getPostId()));
     given(chatMessageReader.readUnreadMessageCountOfChatRoom(chatRoom.getId(), memberId)).willReturn(2);
 
@@ -198,10 +203,8 @@ class ChatRoomServiceTest {
   @DisplayName("활성화 되지 않은 채팅방인 경우 반환 목록 제외 테스트")
   void enableStatus가_false면_목록에서_제외된다() {
     // given
-    ChatRoom disabledRoom = DISABLE_CHAT_ROOM_1;
     UUID memberId = MEMBER_ID;
-
-    given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId)).willReturn(List.of(disabledRoom));
+    given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId)).willReturn(List.of(DISABLE_CHAT_ROOM_1()));
 
     // when
     List<ChatRoomSummaryResponse> result = chatRoomService.readChatRoomListProcess(ReadChatRoomListQuery.of(memberId));
@@ -214,17 +217,80 @@ class ChatRoomServiceTest {
   @DisplayName("상대방 정보 조회 실패 시 해당 채팅방은 제외된다")
   void 상대방_정보를_조회할_수_없으면_제외된다() {
     // given
-    ChatRoom chatRoom = DEFAULT_CHAT_ROOM_1;
+    ChatRoom chatRoom = DEFAULT_CHAT_ROOM_1();
     UUID memberId = MEMBER_ID;
 
     given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId)).willReturn(List.of(chatRoom));
-    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoom.getId(), memberId))
-        .willThrow(new ApplicationException(NOT_EXISTS_CHAT_PARTNER));
+    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoom.getId(), memberId)).willThrow(new ApplicationException(NOT_EXISTS_CHAT_PARTNER));
 
     // when
     List<ChatRoomSummaryResponse> result = chatRoomService.readChatRoomListProcess(ReadChatRoomListQuery.of(memberId));
 
     // then
     assertThat(result).isEmpty();
+  }
+
+  @DisplayName("채팅방 상세 조회 - 성공 테스트")
+  @Test
+  void 채팅방_상세정보를_정상적으로_조회할_수_있다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID memberId = MEMBER_ID;
+    UUID partnerId = OTHER_MEMBER_ID;
+
+    ChatRoom chatRoom = customChatRoom(1L, "lastMessage", LocalDateTime.now(), true);
+    ChatPostResponse postResponse = ChatPostResponse.from(DEFAULT_POST_DETAIL_RESPONSE(chatRoom.getPostId()));
+    ChatTradeResponse tradeResponse = ChatTradeResponse.from(DEFAULT_TRADE_DETAIL());
+    List<UUID> participants = List.of(memberId, partnerId);
+
+    given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(chatRoom);
+    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(participants);
+    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, memberId)).willReturn(partnerId);
+    given(postPort.readChatPostSummary(chatRoom.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(chatRoom.getPostId()));
+    given(tradePort.readChatTradeSummary(chatRoomId, memberId)).willReturn(DEFAULT_TRADE_DETAIL());
+    given(memberPort.readChatMemberProfile(partnerId)).willReturn(OTHER_MEMBER_PROFILE_RESPONSE);
+    ReadChatRoomDetailQuery query = ReadChatRoomDetailQuery.of(chatRoomId, memberId);
+
+    // when
+    ChatRoomDetailResponse response = chatRoomService.readChatRoomDetailProcess(query);
+
+    // then
+    assertThat(response.chatroomId()).isEqualTo(chatRoomId);
+    assertThat(response.partner().id()).isEqualTo(partnerId);
+    assertThat(response.post().id()).isEqualTo(postResponse.postId());
+    assertThat(response.trade().status()).isEqualTo(tradeResponse.status());
+
+    then(chatRoomReader).should().readChatRoomById(chatRoomId);
+    then(chatRoomMemberReader).should().readChatRoomMemberIds(chatRoomId);
+    then(chatRoomMemberReader).should().readPartnerIdByRequesterId(chatRoomId, memberId);
+    then(postPort).should().readChatPostSummary(chatRoom.getPostId());
+    then(tradePort).should().readChatTradeSummary(chatRoomId, memberId);
+    then(memberPort).should().readChatMemberProfile(partnerId);
+  }
+
+  @Test
+  @DisplayName("채팅방 상세 조회 - 채팅방에 속하지 않은 경우 예외가 발생한다")
+  void 채팅방에_속하지_않은_회원은_예외가_발생한다() {
+    // given
+    Long chatRoomId = 1L;
+    ChatRoom chatRoom = DEFAULT_CHAT_ROOM_1();
+    List<UUID> participants = List.of(OTHER_MEMBER_ID);
+
+    given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(chatRoom);
+    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(participants);
+
+    ReadChatRoomDetailQuery query = ReadChatRoomDetailQuery.of(chatRoomId, MEMBER_ID);
+
+    // when & then
+    assertThatThrownBy(() -> chatRoomService.readChatRoomDetailProcess(query))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+
+    then(chatRoomReader).should().readChatRoomById(chatRoomId);
+    then(chatRoomMemberReader).should().readChatRoomMemberIds(chatRoomId);
+    then(chatRoomMemberReader).shouldHaveNoMoreInteractions();
+    then(postPort).shouldHaveNoInteractions();
+    then(tradePort).shouldHaveNoInteractions();
+    then(memberPort).shouldHaveNoInteractions();
   }
 }

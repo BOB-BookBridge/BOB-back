@@ -2,9 +2,12 @@ package com.bob.support.fixture.response;
 
 import static com.bob.domain.chat.service.dto.response.CreateChatRoomResponse.of;
 
+import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.service.dto.response.internal.ChatPartnerSummary;
+import com.bob.domain.chat.service.dto.response.internal.ChatPostSummary;
+import com.bob.domain.chat.service.dto.response.internal.ChatTradeSummary;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +17,18 @@ public class ChatRoomResponseFixture {
   public static final Long DEFAULT_CHATROOM_ID = 1L;
 
   public static CreateChatRoomResponse DEFAULT_CREATE_CHATROOM_RESPONSE = of(DEFAULT_CHATROOM_ID);
+
+  public static ChatRoomDetailResponse DEFAULT_CHATROOM_DETAIL = ChatRoomDetailResponse.builder()
+      .chatroomId(DEFAULT_CHATROOM_ID)
+      .title("제목")
+      .trade(new ChatTradeSummary(1L, "READY"))
+      .post(new ChatPostSummary(1L, "책", "image.png", 10000))
+      .partner(new ChatPartnerSummary(
+          UUID.fromString("00000000-0000-0000-0000-00000000003a"),
+          "booklover",
+          "booklover.png"
+      ))
+      .build();
 
   public static ChatRoomSummaryResponse DEFAULT_CHATROOM_SUMMARY_1 = ChatRoomSummaryResponse.builder()
       .chatroomId(DEFAULT_CHATROOM_ID)
