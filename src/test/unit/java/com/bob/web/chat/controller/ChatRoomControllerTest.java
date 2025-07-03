@@ -5,15 +5,18 @@ import static com.bob.support.fixture.request.CreateChatRoomRequestFixture.DEFAU
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_DETAIL;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_SUMMARY_LIST;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CREATE_CHATROOM_RESPONSE;
+import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +42,9 @@ class ChatRoomControllerTest {
 
   @Mock
   private ChatRoomReadUseCase readUseCase;
+
+  @Mock
+  private ChatRoomModifyUseCase memberModifyUseCase;
 
   private MockMvc mvc;
 
@@ -99,5 +105,21 @@ class ChatRoomControllerTest {
         .andExpect(jsonPath("$.trade.status").value("READY"));
 
     then(readUseCase).should(times(1)).readChatRoomDetailProcess(any());
+  }
+
+  @Test
+  @DisplayName("채팅방 나가기 API를 호출할 수 있다")
+  void 채팅방_나가기_API를_호출할_수_있다() throws Exception {
+    // given
+    Long chatRoomId = 1L;
+
+    // when & then
+    mvc.perform(patch("/chatrooms/{chatroomId}", chatRoomId)
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.result").value(UPDATED.name()));
+
+    then(memberModifyUseCase).should(times(1)).exitChatRoomProcess(any());
   }
 }

@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.bob.domain.chat.entity.ChatRoomMember;
 import com.bob.domain.chat.repository.ChatRoomMemberRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
@@ -31,6 +32,43 @@ class ChatRoomMemberReaderTest {
 
   @Mock
   private ChatRoomMemberRepository chatRoomMemberRepository;
+
+  @Test
+  @DisplayName("채팅방 멤버 단건 조회 - 성공 테스트")
+  void 채팅방_멤버가_존재하면_정상적으로_조회된다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID memberId = MEMBER_ID;
+    ChatRoomMember member = CHAT_ROOM_MEMBER_1();
+
+    given(chatRoomMemberRepository.findByChatRoomIdAndMemberId(chatRoomId, memberId))
+        .willReturn(Optional.of(member));
+
+    // when
+    ChatRoomMember result = chatRoomMemberReader.readChatRoomMember(chatRoomId, memberId);
+
+    // then
+    assertThat(result).isEqualTo(member);
+    then(chatRoomMemberRepository).should().findByChatRoomIdAndMemberId(chatRoomId, memberId);
+  }
+
+  @Test
+  @DisplayName("채팅방 멤버 단건 조회 - 실패 테스트 (존재하지 않음)")
+  void 채팅방_멤버가_없으면_예외를_던진다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID memberId = MEMBER_ID;
+
+    given(chatRoomMemberRepository.findByChatRoomIdAndMemberId(chatRoomId, memberId))
+        .willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> chatRoomMemberReader.readChatRoomMember(chatRoomId, memberId))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+
+    then(chatRoomMemberRepository).should().findByChatRoomIdAndMemberId(chatRoomId, memberId);
+  }
 
   @Test
   @DisplayName("상대방 ID 조회 - 성공 테스트")

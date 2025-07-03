@@ -20,11 +20,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
+import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
@@ -292,5 +294,20 @@ class ChatRoomServiceTest {
     then(postPort).shouldHaveNoInteractions();
     then(tradePort).shouldHaveNoInteractions();
     then(memberPort).shouldHaveNoInteractions();
+  }
+
+  @Test
+  @DisplayName("채팅방에서 퇴장 시 ChatRoomMemberService가 호출된다")
+  void 채팅방에서_퇴장하면_채팅방_멤버_서비스가_호출된다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID memberId = UUID.randomUUID();
+    ExitChatRoomCommand command = ExitChatRoomCommand.of(chatRoomId, memberId);
+
+    // when
+    chatRoomService.exitChatRoomProcess(command);
+
+    // then
+    then(chatRoomMemberService).should(times(1)).exitChatRoomMemberProcess(command);
   }
 }

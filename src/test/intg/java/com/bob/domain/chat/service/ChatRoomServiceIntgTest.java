@@ -192,4 +192,6 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
   }
+
+  // TODO: 채팅방 나가기 기능의 통합 테스트 작성
 }
