@@ -3,8 +3,8 @@ package com.bob.support.fixture.response;
 import static com.bob.domain.chat.service.dto.response.CreateChatRoomResponse.of;
 
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
-import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse.PartnerInfo;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
+import com.bob.domain.chat.service.dto.response.internal.ChatPartnerSummary;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +20,7 @@ public class ChatRoomResponseFixture {
       .thumbnailUrl("image")
       .lastMessage("책 아직 남아 있나요?")
       .lastMessageAt(LocalDateTime.of(2024, 3, 30, 15, 0))
-      .partner(new PartnerInfo(
+      .partner(new ChatPartnerSummary(
           UUID.fromString("00000000-0000-0000-0000-00000000003a"),
           "booklover",
           "booklover.png"
@@ -33,7 +33,7 @@ public class ChatRoomResponseFixture {
       .thumbnailUrl("image")
       .lastMessage("넵! 택배로도 가능해요")
       .lastMessageAt(LocalDateTime.of(2024, 3, 30, 16, 55, 20))
-      .partner(new PartnerInfo(
+      .partner(new ChatPartnerSummary(
           UUID.fromString("00000000-0000-0000-0000-00000000003d"),
           "javaboy",
           null
