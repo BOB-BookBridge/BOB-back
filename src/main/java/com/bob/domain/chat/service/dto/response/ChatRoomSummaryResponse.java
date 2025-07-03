@@ -1,8 +1,8 @@
 package com.bob.domain.chat.service.dto.response;
 
 import com.bob.domain.chat.entity.ChatRoom;
+import com.bob.domain.chat.service.dto.response.internal.ChatPartnerSummary;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.Builder;
 
 @Builder
@@ -11,7 +11,7 @@ public record ChatRoomSummaryResponse(
     String thumbnailUrl,
     String lastMessage,
     LocalDateTime lastMessageAt,
-    PartnerInfo partner,
+    ChatPartnerSummary partner,
     int unreadCount
 ) {
 
@@ -25,19 +25,8 @@ public record ChatRoomSummaryResponse(
         .thumbnailUrl(post.thumbnailUrl())
         .lastMessage(chatRoom.getLastChatMessage())
         .lastMessageAt(chatRoom.getLastChatAt())
-        .partner(PartnerInfo.of(partner.memberId(), partner.nickname(), partner.profileImageUrl()))
+        .partner(ChatPartnerSummary.of(partner.memberId(), partner.nickname(), partner.profileImageUrl()))
         .unreadCount(unreadCount)
         .build();
-  }
-
-  public record PartnerInfo(
-      UUID partnerId,
-      String nickname,
-      String profileUrl
-  ) {
-
-    static PartnerInfo of(UUID partnerId, String nickname, String profileUrl) {
-      return new PartnerInfo(partnerId, nickname, profileUrl);
-    }
   }
 }

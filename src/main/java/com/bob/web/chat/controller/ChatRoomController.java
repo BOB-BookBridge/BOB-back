@@ -2,7 +2,9 @@ package com.bob.web.chat.controller;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
+import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
+import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
@@ -15,6 +17,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,5 +43,13 @@ public class ChatRoomController {
   @GetMapping
   public ResponseEntity<List<ChatRoomSummaryResponse>> handleReadChatRoomList(@AuthenticationId UUID memberId) {
     return ResponseEntity.ok().body(readUseCase.readChatRoomListProcess(ReadChatRoomListQuery.of(memberId)));
+  }
+
+  @GetMapping("/{chatroomId}")
+  public ResponseEntity<ChatRoomDetailResponse> handleReadChatRoomDetail(
+      @PathVariable Long chatroomId,
+      @AuthenticationId UUID memberId
+  ) {
+    return ResponseEntity.ok().body(readUseCase.readChatRoomDetailProcess(ReadChatRoomDetailQuery.of(chatroomId, memberId)));
   }
 }

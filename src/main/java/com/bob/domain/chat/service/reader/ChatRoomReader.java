@@ -2,6 +2,8 @@ package com.bob.domain.chat.service.reader;
 
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.repository.ChatRoomRepository;
+import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,6 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatRoomReader {
 
   private final ChatRoomRepository chatRoomRepository;
+
+  public ChatRoom readChatRoomById(Long chatRoomId) {
+    return chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXISTS_CHAT_ROOM));
+  }
 
   public List<ChatRoom> readParticipatingChatRoomsByMemberId(UUID memberId) {
     return chatRoomRepository.findAllByMemberId(memberId);
