@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum ApplicationError {
 
   // 공통 예외
+  AUTHENTICATION_FAILED("E000", "인증할 수 없는 요청입니다.", HttpStatus.UNAUTHORIZED),
   UN_SUPPORTED_TYPE("E001", "지원하지 않는 형식입니다.", HttpStatus.BAD_REQUEST),
   UN_SUPPORTED_CATEGORY("E002", "지원하지 않는 카테고리입니다.", HttpStatus.BAD_REQUEST),
   UN_SUPPORTED_BOOK_STATUS("E003", "지원하지 않는 도서 상태입니다.", HttpStatus.BAD_REQUEST),

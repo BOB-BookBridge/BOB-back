@@ -14,6 +14,7 @@ import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
+import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
 import com.bob.domain.chat.service.dto.response.ChatMemberResponse;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
@@ -116,6 +117,11 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     ChatTradeResponse tradeSummary = from(tradePort.readChatTradeSummary(query.chatroomId(), query.memberId()));
     ChatMemberResponse memberSummary = from(memberPort.readChatMemberProfile(partnerId));
     return ChatRoomDetailResponse.from(chatRoom, postSummary, tradeSummary, memberSummary);
+  }
+
+  @Transactional(readOnly = true)
+  public void validateParticipant(ValidateParticipantQuery query) {
+    verifyParticipating(query.chatRoomId(), query.memberId());
   }
 
   private void verifyParticipating(Long chatRoomId, UUID memberId) {
