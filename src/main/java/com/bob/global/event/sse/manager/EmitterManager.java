@@ -4,6 +4,7 @@ import com.bob.global.event.sse.repository.EmitterRepository;
 import com.bob.global.event.sse.repository.chat.ChatEmitterKey;
 import jakarta.annotation.PostConstruct;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
@@ -52,5 +53,29 @@ public class EmitterManager implements Runnable {
       repository.remove(key);
       log.warn("Failed to send SSE event - key: {}, event: {}, error: {}", key, eventName, e.toString());
     }
+  }
+
+  public SseEmitter subscribeToChat(Long chatRoomId, UUID memberId) {
+    ChatEmitterKey key = new ChatEmitterKey(chatRoomId, memberId);
+    verifyDuplicateEmitter(key, chatEmitterRepository);
+    SseEmitter emitter = new SseEmitter(defaultTimeout);
+    setupEmitter(emitter, key);
+    chatEmitterRepository.save(key, emitter);
+    sendEvent(key, emitter, "connect", "connected", chatEmitterRepository);
+    return emitter;
+  }
+
+  private <T> void verifyDuplicateEmitter(T key, EmitterRepository<T> repository) {
+    SseEmitter existingEmitter = repository.get(key);
+    if (existingEmitter != null) {
+      existingEmitter.complete();
+      repository.remove(key);
+    }
+  }
+
+  private void setupEmitter(SseEmitter emitter, ChatEmitterKey key) {
+    emitter.onCompletion(() -> chatEmitterRepository.remove(key));
+    emitter.onTimeout(() -> chatEmitterRepository.remove(key));
+    emitter.onError((e) -> chatEmitterRepository.remove(key));
   }
 }
