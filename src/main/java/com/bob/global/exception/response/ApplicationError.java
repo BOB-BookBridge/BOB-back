@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum ApplicationError {
 
   // 공통 예외
+  AUTHENTICATION_FAILED("E000", "인증할 수 없는 요청입니다.", HttpStatus.UNAUTHORIZED),
   UN_SUPPORTED_TYPE("E001", "지원하지 않는 형식입니다.", HttpStatus.BAD_REQUEST),
   UN_SUPPORTED_CATEGORY("E002", "지원하지 않는 카테고리입니다.", HttpStatus.BAD_REQUEST),
   UN_SUPPORTED_BOOK_STATUS("E003", "지원하지 않는 도서 상태입니다.", HttpStatus.BAD_REQUEST),
@@ -41,9 +42,16 @@ public enum ApplicationError {
 
   // 채팅 예외
   IS_SAME_CHAT_MEMBER("E401", "자신과의 채팅은 불가능합니다.", HttpStatus.BAD_REQUEST),
+  NOT_EXISTS_CHAT_PARTNER("E402", "상대방을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
+  NOT_EXISTS_CHAT_ROOM("E403", "채팅방을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
+  NOT_PARTICIPATED_CHAT_ROOM("E404", "해당 채팅방에 참여중이지 않습니다.", HttpStatus.BAD_REQUEST),
 
   // 파일 예외
-  FILE_UNAUTHORIZED("E501", "파일을 수정할 권한이 없습니다.", HttpStatus.BAD_REQUEST)
+  FILE_UNAUTHORIZED("E501", "파일을 수정할 권한이 없습니다.", HttpStatus.BAD_REQUEST),
+
+  // 거래 예외
+  NOT_EXISTS_TRADE("E601", "거래를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
+  TRADE_ACCESS_DENIED("E602", "거래에 접근할 권한이 없습니다.", HttpStatus.BAD_REQUEST)
   ;
 
   private String code;

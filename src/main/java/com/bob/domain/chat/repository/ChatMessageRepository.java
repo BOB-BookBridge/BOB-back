@@ -1,0 +1,18 @@
+package com.bob.domain.chat.repository;
+
+import com.bob.domain.chat.entity.ChatMessage;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+
+public interface ChatMessageRepository extends CrudRepository<ChatMessage, Long> {
+
+  @Query("""
+        SELECT COUNT(cm)
+        FROM ChatMessage cm
+        WHERE cm.chatRoomId = :chatRoomId
+          AND cm.senderId <> :senderId
+          AND cm.isRead = false
+      """)
+  int countUnreadMessage(Long chatRoomId, UUID senderId);
+}

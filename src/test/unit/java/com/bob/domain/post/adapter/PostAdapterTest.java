@@ -7,7 +7,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
-import com.bob.domain.chat.service.dto.response.ChatPostResponse;
 import com.bob.web.post.adapter.in.ChatPostAdapter;
 import com.bob.domain.post.service.PostService;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
@@ -37,12 +36,12 @@ class PostAdapterTest {
     given(postService.readPostDetailProcess(any())).willReturn(expect);
 
     // when
-    ChatPostResponse response = postAdapter.readChatPostSummary(postId);
+    PostDetailResponse response = postAdapter.readChatPostSummary(postId);
 
     // then
     assertThat(response.postId()).isEqualTo(expect.postId());
     assertThat(response.sellerId()).isEqualTo(expect.sellerId());
-    assertThat(response.title()).isEqualTo(expect.book().title());
+    assertThat(response.book().title()).isEqualTo(expect.book().title());
     then(postService).should(times(1)).readPostDetailProcess(any());
   }
 }

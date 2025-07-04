@@ -289,7 +289,7 @@ class PostServiceTest {
   void 게시글_작성자와_조회자가_같다면_isOwner는_true이다() {
     // given
     Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
-    ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, post.getId());
+    ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, post.getId(), true);
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_SUMMARY);
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
@@ -312,7 +312,7 @@ class PostServiceTest {
     Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
     UUID otherMemberId = UUID.randomUUID();
 
-    ReadPostDetailQuery query = new ReadPostDetailQuery(otherMemberId, post.getId());
+    ReadPostDetailQuery query = new ReadPostDetailQuery(otherMemberId, post.getId(), true);
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_SUMMARY);
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);

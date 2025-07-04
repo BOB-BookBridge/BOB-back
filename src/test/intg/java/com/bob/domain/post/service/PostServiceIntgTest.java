@@ -392,7 +392,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
 
     // when
-    PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(writerId, post.getId()));
+    PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(writerId, post.getId(), true));
     clearPersistContext();
 
     // then
@@ -412,7 +412,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
 
     // when
-    PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(viewerId, post.getId()));
+    PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(viewerId, post.getId(), true));
 
     // then
     assertThat(result.isOwner()).isFalse();

@@ -1,6 +1,6 @@
 package com.bob.infra.config;
 
-import static jakarta.servlet.http.HttpServletResponse.*;
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 import com.bob.infra.auth.filter.LoginFilter;
 import com.bob.infra.auth.jwt.JwtProvider;
@@ -35,7 +35,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
-      "/auth/**", "/ai/**", "/areas/**", "/members/temp/**", "/sse/**",
+      "/auth/**", "/ai/**", "/areas/**", "/members/temp/**",
+      "/chatrooms/*/subscribe", "/notification/subscribe",
       "/h2-console/**",
       "/error/**",
   };

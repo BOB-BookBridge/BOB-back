@@ -15,7 +15,7 @@ public record CreateChatRoomCommand(
         .tradeId(tradeId)
         .titleSuffix(titleSuffix)
         .enableStatus(false)
-        .lastChatAt(LocalDateTime.now())
+        .lastChatAt(null)
         .build();
   }
 }

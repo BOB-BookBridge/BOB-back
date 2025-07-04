@@ -35,9 +35,17 @@ public class ChatRoom extends BaseTime {
   @Column(length = 100, nullable = false)
   private String titleSuffix;
 
-  @Column(nullable = false)
-  private Boolean enableStatus;
+  @Column
+  private String lastChatMessage;
+
+  @Column
+  private LocalDateTime lastChatAt;
 
   @Column(nullable = false)
-  private LocalDateTime lastChatAt;
+  @Builder.Default
+  private Boolean enableStatus = false;
+
+  public void updateChatRoomStatus(boolean status) {
+    this.enableStatus = status;
+  }
 }

@@ -1,5 +1,6 @@
 package com.bob.global.event.sse.manager;
 
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -75,8 +76,7 @@ class EmitterManagerTest {
   @DisplayName("run() 호출 테스트")
   void run_호출시_sendEvent_호출_확인() {
     // given
-    EmitterManager manager = spy(
-        new EmitterManager(notificationEmitterRepository, chatEmitterRepository, sseHeartbeatScheduler));
+    EmitterManager manager = spy(new EmitterManager(notificationEmitterRepository, chatEmitterRepository, sseHeartbeatScheduler));
     ReflectionTestUtils.setField(manager, "defaultTimeout", 180000L);
     ReflectionTestUtils.setField(manager, "heartbeatInterval", 10L);
 
@@ -88,7 +88,50 @@ class EmitterManagerTest {
     manager.run();
 
     // then
-    verify(manager).sendEvent(eq("member-id"), eq(emitter), eq("heartbeat"), eq("ping"),
-        eq(notificationEmitterRepository));
+    verify(manager).sendEvent(
+        eq("member-id"),
+        eq(emitter),
+        eq("heartbeat"),
+        eq("ping"),
+        eq(notificationEmitterRepository)
+    );
+  }
+
+  @Test
+  @DisplayName("채팅 SSE 구독 - emitter 저장 및 connect 이벤트 전송 테스트")
+  void subscribeToChat_정상_동작한다() {
+    // given
+    EmitterManager manager = spy(new EmitterManager(notificationEmitterRepository, chatEmitterRepository, sseHeartbeatScheduler));
+    ChatEmitterKey expectedKey = new ChatEmitterKey(1L, MEMBER_ID);
+    ReflectionTestUtils.setField(emitterManager, "defaultTimeout", 180_000L);
+
+    // when
+    SseEmitter emitter = manager.subscribeToChat(1L, MEMBER_ID);
+
+    // then
+    then(chatEmitterRepository).should().save(eq(expectedKey), eq(emitter));
+    then(manager).should().sendEvent(
+        eq(expectedKey),
+        eq(emitter),
+        eq("connect"),
+        eq("connected"),
+        eq(chatEmitterRepository)
+    );
+  }
+
+  @Test
+  @DisplayName("중복 emitter 존재가 존재하는 경우 삭제 테스트")
+  void 동일한_emitter_존재시_제거한다() {
+    // given
+    ChatEmitterKey key = new ChatEmitterKey(1L, MEMBER_ID);
+    SseEmitter existingEmitter = mock(SseEmitter.class);
+    given(chatEmitterRepository.get(key)).willReturn(existingEmitter);
+
+    // when
+    ReflectionTestUtils.invokeMethod(emitterManager, "verifyDuplicateEmitter", key, chatEmitterRepository);
+
+    // then
+    then(existingEmitter).should().complete();
+    then(chatEmitterRepository).should().remove(key);
   }
 }

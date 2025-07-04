@@ -1,7 +1,8 @@
 package com.bob.domain.chat.service.port.out;
 
-import com.bob.domain.chat.service.dto.response.ChatPostResponse;
+import com.bob.domain.post.service.dto.response.PostDetailResponse;
 
 public interface ChatPostPort {
-  ChatPostResponse readChatPostSummary(Long postId);
+
+  PostDetailResponse readChatPostSummary(Long postId);
 }

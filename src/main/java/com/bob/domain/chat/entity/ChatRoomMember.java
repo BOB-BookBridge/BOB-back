@@ -33,4 +33,8 @@ public class ChatRoomMember {
   private UUID memberId;
 
   private LocalDateTime exitedAt;
+
+  public void updateExitedAt(LocalDateTime currentTime) {
+    this.exitedAt = currentTime;
+  }
 }
