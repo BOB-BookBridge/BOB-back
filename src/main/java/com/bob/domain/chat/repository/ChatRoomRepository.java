@@ -14,6 +14,7 @@ public interface ChatRoomRepository extends CrudRepository<ChatRoom, Long> {
         FROM ChatRoom cr
           JOIN ChatRoomMember crm ON cr.id = crm.chatRoomId
         WHERE crm.memberId = :memberId
+          AND crm.exitedAt IS NULL
       """)
   List<ChatRoom> findAllByMemberId(UUID memberId);
 

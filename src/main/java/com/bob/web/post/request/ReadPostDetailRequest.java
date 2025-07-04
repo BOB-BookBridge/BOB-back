@@ -8,6 +8,6 @@ public record ReadPostDetailRequest(
 ) {
 
   public static ReadPostDetailQuery toQuery(UUID memberId, Long postId) {
-    return new ReadPostDetailQuery(memberId, postId);
+    return new ReadPostDetailQuery(memberId, postId, true);
   }
 }

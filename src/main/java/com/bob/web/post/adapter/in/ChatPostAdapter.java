@@ -15,6 +15,6 @@ public class ChatPostAdapter implements ChatPostPort {
 
   @Override
   public PostDetailResponse readChatPostSummary(Long postId) {
-    return readUseCase.readPostDetailProcess(ReadPostDetailQuery.of(null, postId));
+    return readUseCase.readPostDetailProcess(ReadPostDetailQuery.of(null, postId, false));
   }
 }

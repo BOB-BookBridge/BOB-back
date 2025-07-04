@@ -106,7 +106,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
 
   @Transactional
   public PostDetailResponse readPostDetailProcess(ReadPostDetailQuery query) {
-    postRepository.increaseViewCount(query.postId());
+    if(query.shouldIncreaseViewCount()) postRepository.increaseViewCount(query.postId());
     Post post = postReader.readPostById(query.postId());
     PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
     PostFileSummaryResponse fileSummary = filePort.readPostFileSummaries(post.getId());
