@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 
 import com.bob.global.event.sse.repository.EmitterRepository;
 import com.bob.global.event.sse.repository.chat.ChatEmitterKey;
+import com.bob.global.event.sse.repository.notification.NotiEmitterKey;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +33,7 @@ class EmitterManagerTest {
   private EmitterManager emitterManager;
 
   @Mock
-  private EmitterRepository<String> notificationEmitterRepository;
+  private EmitterRepository<NotiEmitterKey> notificationEmitterRepository;
 
   @Mock
   private EmitterRepository<ChatEmitterKey> chatEmitterRepository;
@@ -45,7 +46,7 @@ class EmitterManagerTest {
   void sendEvent_정상적으로_보낼_수_있다() throws Exception {
     // given
     SseEmitter emitter = mock(SseEmitter.class);
-    String key = "member-key";
+    NotiEmitterKey key = new NotiEmitterKey(MEMBER_ID);
 
     // when
     emitterManager.sendEvent(key, emitter, "connect", "data", notificationEmitterRepository);
@@ -60,8 +61,7 @@ class EmitterManagerTest {
   void sendEvent_실패하면_emitter_완료_및_제거() throws Exception {
     // given
     SseEmitter emitter = mock(SseEmitter.class);
-    String key = "fail-key";
-
+    NotiEmitterKey key = new NotiEmitterKey(MEMBER_ID);
     willThrow(new RuntimeException("send 실패")).given(emitter).send(any(SseEmitter.SseEventBuilder.class));
 
     // when
@@ -81,7 +81,8 @@ class EmitterManagerTest {
     ReflectionTestUtils.setField(manager, "heartbeatInterval", 10L);
 
     SseEmitter emitter = mock(SseEmitter.class);
-    given(notificationEmitterRepository.findAll()).willReturn(Map.of("member-id", emitter));
+    NotiEmitterKey key = new NotiEmitterKey(MEMBER_ID);
+    given(notificationEmitterRepository.findAll()).willReturn(Map.of(key, emitter));
     given(chatEmitterRepository.findAll()).willReturn(Map.of());
 
     // when
@@ -89,7 +90,7 @@ class EmitterManagerTest {
 
     // then
     verify(manager).sendEvent(
-        eq("member-id"),
+        eq(key),
         eq(emitter),
         eq("heartbeat"),
         eq("ping"),

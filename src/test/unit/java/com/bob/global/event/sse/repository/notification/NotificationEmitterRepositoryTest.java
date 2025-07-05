@@ -22,58 +22,59 @@ class NotificationEmitterRepositoryTest {
   @DisplayName("Emitter 저장 - 성공 테스트")
   void emitter를_저장할_수_있다() {
     // given
-    String memberId = UUID.randomUUID().toString();
+    NotiEmitterKey key = new NotiEmitterKey(UUID.randomUUID());
     SseEmitter emitter = new SseEmitter();
 
     // when
-    repository.save(memberId, emitter);
+    repository.save(key, emitter);
 
     // then
-    assertThat(repository.get(memberId)).isEqualTo(emitter);
+    assertThat(repository.get(key)).isEqualTo(emitter);
   }
 
   @Test
   @DisplayName("Emitter 존재 여부 확인 - 성공 테스트")
   void emitter_존재여부를_확인할_수_있다() {
     // given
-    String memberId = UUID.randomUUID().toString();
+    NotiEmitterKey key = new NotiEmitterKey(UUID.randomUUID());
+    NotiEmitterKey invalid = new NotiEmitterKey(UUID.randomUUID());
     SseEmitter emitter = new SseEmitter();
-    repository.save(memberId, emitter);
+    repository.save(key, emitter);
 
     // when & then
-    assertThat(repository.exists(memberId)).isTrue();
-    assertThat(repository.exists("invalid-id")).isFalse();
+    assertThat(repository.exists(key)).isTrue();
+    assertThat(repository.exists(invalid)).isFalse();
   }
 
   @Test
   @DisplayName("Emitter 전체 조회 - 성공 테스트")
   void emitter_전체를_조회할_수_있다() {
     // given
-    String id1 = UUID.randomUUID().toString();
-    String id2 = UUID.randomUUID().toString();
-    repository.save(id1, new SseEmitter());
-    repository.save(id2, new SseEmitter());
+    NotiEmitterKey key1 = new NotiEmitterKey(UUID.randomUUID());
+    NotiEmitterKey key2 = new NotiEmitterKey(UUID.randomUUID());
+    repository.save(key1, new SseEmitter());
+    repository.save(key2, new SseEmitter());
 
     // when
-    Map<String, SseEmitter> allEmitters = repository.findAll();
+    Map<NotiEmitterKey, SseEmitter> allEmitters = repository.findAll();
 
     // then
     assertThat(allEmitters).hasSize(2)
-        .containsKeys(id1, id2);
+        .containsKeys(key1, key2);
   }
 
   @Test
   @DisplayName("Emitter 삭제 - 성공 테스트")
   void emitter를_삭제할_수_있다() {
     // given
-    String memberId = UUID.randomUUID().toString();
-    repository.save(memberId, new SseEmitter());
+    NotiEmitterKey key = new NotiEmitterKey(UUID.randomUUID());
+    repository.save(key, new SseEmitter());
 
     // when
-    repository.remove(memberId);
+    repository.remove(key);
 
     // then
-    assertThat(repository.exists(memberId)).isFalse();
-    assertThat(repository.get(memberId)).isNull();
+    assertThat(repository.exists(key)).isFalse();
+    assertThat(repository.get(key)).isNull();
   }
 }
