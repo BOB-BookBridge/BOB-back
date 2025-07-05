@@ -32,7 +32,10 @@ public class Notification extends BaseTime {
   private UUID receiverId;
 
   @Column(nullable = false)
-  private String message;
+  private String title;
+
+  @Column(nullable = false)
+  private String content;
 
   @Column(nullable = false)
   @Builder.Default

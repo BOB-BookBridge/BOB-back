@@ -36,7 +36,7 @@ public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
       "/auth/**", "/ai/**", "/areas/**", "/members/temp/**",
-      "/chatrooms/*/subscribe", "/notification/subscribe",
+      "/chatrooms/*/subscribe", "/notifications/subscribe",
       "/h2-console/**",
       "/error/**",
   };

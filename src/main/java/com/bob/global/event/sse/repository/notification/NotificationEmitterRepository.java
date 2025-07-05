@@ -9,33 +9,33 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RequiredArgsConstructor
 @Component
-public class NotificationEmitterRepository implements EmitterRepository<String> {
+public class NotificationEmitterRepository implements EmitterRepository<NotiEmitterKey> {
 
-  private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
+  private final Map<NotiEmitterKey, SseEmitter> emitters = new ConcurrentHashMap<>();
 
   @Override
-  public SseEmitter save(String memberId, SseEmitter emitter) {
-    emitters.put(memberId, emitter);
+  public SseEmitter save(NotiEmitterKey key, SseEmitter emitter) {
+    emitters.put(key, emitter);
     return emitter;
   }
 
   @Override
-  public SseEmitter get(String memberId) {
-    return emitters.get(memberId);
+  public SseEmitter get(NotiEmitterKey key) {
+    return emitters.get(key);
   }
 
   @Override
-  public Map<String, SseEmitter> findAll() {
+  public Map<NotiEmitterKey, SseEmitter> findAll() {
     return emitters;
   }
 
   @Override
-  public void remove(String memberId) {
-    emitters.remove(memberId);
+  public void remove(NotiEmitterKey key) {
+    emitters.remove(key);
   }
 
   @Override
-  public boolean exists(String memberId) {
-    return emitters.containsKey(memberId);
+  public boolean exists(NotiEmitterKey key) {
+    return emitters.containsKey(key);
   }
 }

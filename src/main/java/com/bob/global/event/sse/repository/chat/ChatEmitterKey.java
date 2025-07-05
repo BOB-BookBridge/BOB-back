@@ -9,6 +9,6 @@ public record ChatEmitterKey(
 
   @Override
   public String toString() {
-    return chatRoomId + ":" + memberId;
+    return "chat:" + chatRoomId + ":" + memberId;
   }
 }

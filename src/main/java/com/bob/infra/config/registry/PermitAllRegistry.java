@@ -24,7 +24,7 @@ public class PermitAllRegistry {
       new AntPathRequestMatcher("/members/{memberId:\\d+}", GET.name()),
       new AntPathRequestMatcher("/posts", GET.name()),
       new AntPathRequestMatcher("/chatrooms/*/subscribe", GET.name()),
-      new AntPathRequestMatcher("/notification/subscribe", GET.name())
+      new AntPathRequestMatcher("/notifications/subscribe", GET.name())
   );
 
   public boolean isWhiteList(HttpServletRequest request) {
