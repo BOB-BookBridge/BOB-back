@@ -80,13 +80,13 @@ class FileControllerTest {
         }
         """;
 
-    mvc.perform(get("/files/url")
+    mvc.perform(post("/files/url")
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
         )
         .andExpect(status().isOk());
 
-    verify(readUseCase, times(1)).readFileUploadUrl(any());
+    verify(writeUseCase, times(1)).generateFileUploadUrl(any());
   }
 
   @Test

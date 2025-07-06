@@ -11,15 +11,13 @@ import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
 import com.bob.web.file.request.ChangeFileRequest;
-import com.bob.web.file.request.ReadFileUploadUrlRequest;
+import com.bob.web.file.request.GenerateFileUploadUrlRequest;
 import com.bob.web.file.request.RegisterFileRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,11 +44,11 @@ public class FileController {
     return new CommonResponse<>(true, CREATED);
   }
 
-  @GetMapping("/url")
-  public ResponseEntity<FileUploadUrlResponse> handleReadFileUploadUrl(
-      @Valid @RequestBody ReadFileUploadUrlRequest request
+  @PostMapping("/url")
+  public ResponseEntity<FileUploadUrlResponse> handleGenerateFileUploadUrl(
+      @Valid @RequestBody GenerateFileUploadUrlRequest request
   ) {
-    return ResponseEntity.ok(readUseCase.readFileUploadUrl(request.toQuery()));
+    return ResponseEntity.ok(writeUseCase.generateFileUploadUrl(request.toCommand()));
   }
 
   @PutMapping

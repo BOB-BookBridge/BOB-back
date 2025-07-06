@@ -10,7 +10,7 @@ import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ChangeFileCommand;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
-import com.bob.domain.file.service.dto.query.ReadFileUploadUrlQuery;
+import com.bob.domain.file.service.dto.command.GenerateFileUploadUrlCommand;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.FilesResponse;
@@ -70,9 +70,9 @@ public class FileService implements FileWriteUseCase, FileReadUseCase, FileModif
     });
   }
 
-  public FileUploadUrlResponse readFileUploadUrl(ReadFileUploadUrlQuery query) {
-    List<String> fileNames = generateImageFileNames(from(query.domain()), query.contentTypes());
-    List<String> preSignedUrls = imagePort.generateFileUploadUrlsProcess(fileNames, query.contentTypes());
+  public FileUploadUrlResponse generateFileUploadUrl(GenerateFileUploadUrlCommand command) {
+    List<String> fileNames = generateImageFileNames(from(command.domain()), command.contentTypes());
+    List<String> preSignedUrls = imagePort.generateFileUploadUrlsProcess(fileNames, command.contentTypes());
     return FileUploadUrlResponse.from(fileNames, preSignedUrls);
   }
 }
