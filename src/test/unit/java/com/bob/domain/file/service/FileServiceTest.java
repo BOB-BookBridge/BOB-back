@@ -20,7 +20,7 @@ import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
-import com.bob.domain.file.service.dto.query.ReadFileUploadUrlQuery;
+import com.bob.domain.file.service.dto.command.GenerateFileUploadUrlCommand;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.FilesResponse;
@@ -150,7 +150,7 @@ class FileServiceTest {
   void presigned_url을_발급받을_수_있다() {
     // given
     List<String> contentTypes = List.of("image/png", "image/jpeg");
-    ReadFileUploadUrlQuery query = new ReadFileUploadUrlQuery("post", contentTypes);
+    GenerateFileUploadUrlCommand command = new GenerateFileUploadUrlCommand("post", contentTypes);
 
     List<String> fileNames = List.of("post/uuid1.png", "post/uuid2.jpg");
     List<String> urls = List.of(
@@ -166,7 +166,7 @@ class FileServiceTest {
           .thenReturn(fileNames);
 
       // when
-      FileUploadUrlResponse response = fileService.readFileUploadUrl(query);
+      FileUploadUrlResponse response = fileService.generateFileUploadUrl(command);
 
       // then
       assertThat(response.urls()).hasSize(2);

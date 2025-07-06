@@ -5,21 +5,18 @@ import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 
 import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
 import com.bob.domain.file.usecase.FileModifyUseCase;
-import com.bob.domain.file.usecase.FileReadUseCase;
 import com.bob.domain.file.usecase.FileWriteUseCase;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
 import com.bob.web.file.request.ChangeFileRequest;
-import com.bob.web.file.request.ReadFileUploadUrlRequest;
+import com.bob.web.file.request.GenerateFileUploadUrlRequest;
 import com.bob.web.file.request.RegisterFileRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class FileController {
 
   private final FileWriteUseCase writeUseCase;
-  private final FileReadUseCase readUseCase;
   private final FileModifyUseCase modifyUseCase;
 
   @PostMapping
@@ -46,11 +42,11 @@ public class FileController {
     return new CommonResponse<>(true, CREATED);
   }
 
-  @GetMapping("/url")
-  public ResponseEntity<FileUploadUrlResponse> handleReadFileUploadUrl(
-      @Valid @RequestBody ReadFileUploadUrlRequest request
+  @PostMapping("/urls")
+  public ResponseEntity<FileUploadUrlResponse> handleGenerateFileUploadUrl(
+      @Valid @RequestBody GenerateFileUploadUrlRequest request
   ) {
-    return ResponseEntity.ok(readUseCase.readFileUploadUrl(request.toQuery()));
+    return ResponseEntity.ok(writeUseCase.generateFileUploadUrl(request.toCommand()));
   }
 
   @PutMapping
