@@ -7,8 +7,12 @@ public record ChatEmitterKey(
     UUID memberId
 ) {
 
+  public static ChatEmitterKey of(Long chatRoomId, UUID memberId) {
+    return new ChatEmitterKey(chatRoomId, memberId);
+  }
+
   @Override
   public String toString() {
-    return chatRoomId + ":" + memberId;
+    return "chat:" + chatRoomId + ":" + memberId;
   }
 }

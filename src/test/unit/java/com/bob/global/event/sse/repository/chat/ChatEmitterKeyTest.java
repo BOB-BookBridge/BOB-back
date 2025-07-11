@@ -21,6 +21,6 @@ class ChatEmitterKeyTest {
     String result = key.toString();
 
     // then
-    assertThat(result).isEqualTo("42:123e4567-e89b-12d3-a456-426614174000");
+    assertThat(result).isEqualTo("chat:42:123e4567-e89b-12d3-a456-426614174000");
   }
 }

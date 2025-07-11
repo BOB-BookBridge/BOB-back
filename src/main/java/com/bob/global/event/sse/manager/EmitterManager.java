@@ -1,13 +1,17 @@
 package com.bob.global.event.sse.manager;
 
+import static com.bob.global.event.sse.manager.type.EmitEventType.CONNECT;
+import static com.bob.global.event.sse.manager.type.EmitEventType.HEARTBEAT;
+
+import com.bob.global.event.sse.manager.type.EmitEventType;
+import com.bob.global.event.sse.manager.type.EmitterType;
 import com.bob.global.event.sse.repository.EmitterRepository;
 import com.bob.global.event.sse.repository.chat.ChatEmitterKey;
+import com.bob.global.event.sse.repository.notification.NotiEmitterKey;
 import jakarta.annotation.PostConstruct;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,12 +19,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Slf4j
-@Getter
 @RequiredArgsConstructor
 @Component
 public class EmitterManager implements Runnable {
 
-  private final EmitterRepository<String> notificationEmitterRepository;
+  private final EmitterRepository<NotiEmitterKey> notificationEmitterRepository;
   private final EmitterRepository<ChatEmitterKey> chatEmitterRepository;
   private final ScheduledExecutorService sseHeartbeatScheduler;
 
@@ -35,47 +38,90 @@ public class EmitterManager implements Runnable {
     sseHeartbeatScheduler.scheduleAtFixedRate(this, 10, heartbeatInterval, TimeUnit.SECONDS);
   }
 
-  @Override
-  public void run() {
-    sendHeartbeat(notificationEmitterRepository.findAll(), notificationEmitterRepository);
-    sendHeartbeat(chatEmitterRepository.findAll(), chatEmitterRepository);
-  }
-
-  private <T> void sendHeartbeat(Map<T, SseEmitter> emitters, EmitterRepository<T> repository) {
-    emitters.forEach((key, emitter) -> sendEvent(key, emitter, "heartbeat", "ping", repository));
-  }
-
-  public <T> void sendEvent(T key, SseEmitter emitter, String eventName, Object data, EmitterRepository<T> repository) {
-    try {
-      emitter.send(SseEmitter.event().name(eventName).data(data));
-    } catch (Exception e) {
-      emitter.complete();
-      repository.remove(key);
-      log.warn("Failed to send SSE event - key: {}, event: {}, error: {}", key, eventName, e.toString());
-    }
-  }
-
   public SseEmitter subscribeToChat(Long chatRoomId, UUID memberId) {
-    ChatEmitterKey key = new ChatEmitterKey(chatRoomId, memberId);
-    verifyDuplicateEmitter(key, chatEmitterRepository);
+    return subscribe(EmitterType.CHAT, new ChatEmitterKey(chatRoomId, memberId));
+  }
+
+  public SseEmitter subscribeToNoti(UUID memberId) {
+    return subscribe(EmitterType.NOTIFICATION, new NotiEmitterKey(memberId));
+  }
+
+  private <T> SseEmitter subscribe(EmitterType type, T key) {
+    EmitterRepository<T> repository = getRepository(type);
+    SseEmitter old = repository.get(key);
+    if(old != null) {
+      removeEmitter(old, key, repository);
+    }
+
     SseEmitter emitter = new SseEmitter(defaultTimeout);
-    setupEmitter(emitter, key);
-    chatEmitterRepository.save(key, emitter);
-    sendEvent(key, emitter, "connect", "connected", chatEmitterRepository);
+    setupEmitter(emitter, key, repository);
+    repository.save(key, emitter);
+    sendEvent(type, key, CONNECT, "connected");
     return emitter;
   }
 
-  private <T> void verifyDuplicateEmitter(T key, EmitterRepository<T> repository) {
-    SseEmitter existingEmitter = repository.get(key);
-    if (existingEmitter != null) {
-      existingEmitter.complete();
-      repository.remove(key);
+  @Override
+  public void run() {
+    sendHeartbeatToRepository(notificationEmitterRepository);
+    sendHeartbeatToRepository(chatEmitterRepository);
+  }
+
+  private <T> void sendHeartbeatToRepository(EmitterRepository<T> repository) {
+    repository.findAll().forEach((key, emitter) -> {
+      try {
+        emitter.send(SseEmitter.event().name(HEARTBEAT.name()).data("ping"));
+      } catch (Exception e) {
+        log.debug("Heartbeat failed for key: {}, removing emitter", key);
+        removeEmitter(emitter, key, repository);
+      }
+    });
+  }
+
+  private <T> void setupEmitter(SseEmitter emitter, T key, EmitterRepository<T> repository) {
+    emitter.onCompletion(() -> repository.remove(key));
+    emitter.onTimeout(() -> repository.remove(key));
+    emitter.onError(e -> repository.remove(key));
+  }
+
+  public <T> void sendEvent(EmitterType type, T key, EmitEventType eventType, Object data) {
+    SseEmitter emitter = getEmitter(type, key);
+    if (emitter == null) return;
+
+    try {
+      emitter.send(SseEmitter.event().name(eventType.name()).data(data));
+    } catch (Exception e) {
+      log.warn("Failed to send SSE event - key={}, event={}, error={}", key, eventType.name(), e.toString());
+      removeEmitter(emitter, key, getRepository(type));
     }
   }
 
-  private void setupEmitter(SseEmitter emitter, ChatEmitterKey key) {
-    emitter.onCompletion(() -> chatEmitterRepository.remove(key));
-    emitter.onTimeout(() -> chatEmitterRepository.remove(key));
-    emitter.onError((e) -> chatEmitterRepository.remove(key));
+  private <T> void removeEmitter(SseEmitter emitter, T key, EmitterRepository<T> repository) {
+    try {
+      if (emitter != null) {
+        emitter.complete();
+      }
+      repository.remove(key);
+    } catch (Exception e) {
+      log.debug("Error during emitter cleanup for key: {}", key);
+    }
+  }
+
+  public <T> boolean isExistClientConnection(EmitterType type, T key) {
+    return getEmitter(type, key) != null;
+  }
+
+  private <T> SseEmitter getEmitter(EmitterType type, T key) {
+    return switch (type) {
+      case CHAT -> chatEmitterRepository.get((ChatEmitterKey) key);
+      case NOTIFICATION -> notificationEmitterRepository.get((NotiEmitterKey) key);
+    };
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T> EmitterRepository<T> getRepository(EmitterType type) {
+    return switch (type) {
+      case CHAT -> (EmitterRepository<T>) chatEmitterRepository;
+      case NOTIFICATION -> (EmitterRepository<T>) notificationEmitterRepository;
+    };
   }
 }
