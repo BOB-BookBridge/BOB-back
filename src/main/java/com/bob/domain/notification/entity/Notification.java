@@ -28,20 +28,20 @@ public class Notification extends BaseTime {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private NotificationType type;
+
+  @Column
+  private String referenceId;
+
   @Column(nullable = false)
   private UUID receiverId;
 
   @Column(nullable = false)
-  private String title;
-
-  @Column(nullable = false)
-  private String content;
+  private String body;
 
   @Column(nullable = false)
   @Builder.Default
   private Boolean isRead = false;
-
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private NotificationType type;
 }
