@@ -10,4 +10,8 @@ public record NotiEmitterKey(
   public String toString() {
     return "noti:" + memberId;
   }
+
+  public static NotiEmitterKey of(UUID memberId) {
+    return new NotiEmitterKey(memberId);
+  }
 }
