@@ -73,10 +73,11 @@ CREATE TABLE IF NOT EXISTS post_favorites (
 -- ========================
 CREATE TABLE IF NOT EXISTS notifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    type ENUM('TRADE', 'CHAT', 'LIKE') NOT NULL,
+    reference_id VARCHAR(255) NOT NULL,
     receiver_id BINARY(16) NOT NULL,
-    message VARCHAR(255) NOT NULL,
+    body VARCHAR(255) NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    type ENUM('CHAT', 'SYSTEM', 'ETC') NOT NULL,
     created_at DATETIME,
     FOREIGN KEY (receiver_id) REFERENCES members(id)
 );
