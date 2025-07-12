@@ -55,9 +55,7 @@ public class RedisSubscriber implements MessageListener {
 
   private boolean sendChatMessageNoti(RedisRecord record) {
     ChatEmitterKey chatKey = ChatEmitterKey.of(Long.valueOf(record.refId()), record.receiverId());
-    ChatMessageEmitEvent event = ChatMessageEmitEvent.of(
-        record.normalize() ? "IMAGE" : "TEXT", record.body(), record.sentAt()
-    );
+    ChatMessageEmitEvent event = ChatMessageEmitEvent.of(record.body(), record.fileNames(), record.sentAt());
     boolean sent = notify(EmitterType.CHAT, chatKey, CHAT_MESSAGE, event);
     logResult("NOTI_CHAT_MESSAGE", sent, record.refId(), record.receiverId());
     return sent;

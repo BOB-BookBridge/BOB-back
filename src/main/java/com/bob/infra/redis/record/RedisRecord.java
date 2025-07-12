@@ -1,6 +1,7 @@
 package com.bob.infra.redis.record;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -10,13 +11,14 @@ public record RedisRecord(
     String type,
     String refId,
     String body,
+    List<String> fileNames,
     boolean normalize,
     Sender sender,
     LocalDateTime sentAt
 ) {
 
   public static RedisRecord of(
-      UUID receiverId, String type, String refId, String body,
+      UUID receiverId, String type, String refId, String body, List<String> fileNames,
       boolean normalize, UUID senderId, String senderNickname, String senderProfile
   ) {
     return RedisRecord.builder()
@@ -24,6 +26,7 @@ public record RedisRecord(
         .type(type)
         .refId(refId)
         .body(body)
+        .fileNames(fileNames)
         .normalize(normalize)
         .sender(Sender.of(senderId, senderNickname, senderProfile))
         .sentAt(LocalDateTime.now())
