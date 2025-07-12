@@ -18,20 +18,20 @@ public class PostResponseFixture {
   public static final PostSummary FIRST_POST = PostSummary.builder()
       .postId(1L)
       .postTitle("객체지향의 사실과 오해")
-      .postStatus(TradeStatus.REQUESTED.getStatus())
+      .postStatus(TradeStatus.REQUESTED.name())
       .sellPrice(10000)
       .thumbnailUrl("http://thumbnail1.com")
-      .bookStatus(BookStatus.BEST.getStatus())
+      .bookStatus(BookStatus.BEST.name())
       .createdAt(LocalDateTime.now())
       .build();
 
   public static final PostSummary SECOND_POST = PostSummary.builder()
       .postId(2L)
       .postTitle("오브젝트")
-      .postStatus(TradeStatus.REQUESTED.getStatus())
+      .postStatus(TradeStatus.REQUESTED.name())
       .sellPrice(15000)
       .thumbnailUrl("http://thumbnail2.com")
-      .bookStatus(BookStatus.LOW.getStatus())
+      .bookStatus(BookStatus.LOW.name())
       .createdAt(LocalDateTime.now())
       .build();
 
@@ -41,7 +41,7 @@ public class PostResponseFixture {
         .sellerId(MEMBER_ID)
         .sellPrice(10000)
         .bookStatus("BEST")
-        .postStatus("거래 대기")
+        .postStatus("READY")
         .category(19)
         .book(BookInfo.builder()
             .title("파과")

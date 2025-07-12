@@ -56,7 +56,7 @@ class PostControllerTest {
         {
           "categoryId": 1,
           "sellPrice": 10000,
-          "bookStatus": "최상",
+          "bookStatus": "BEST",
           "postDescription": "Description",
           "book": {
             "isbn": "1111111111111",
@@ -127,8 +127,8 @@ class PostControllerTest {
             .param("emdId", "11010")
             .param("categoryId", "1")
             .param("price", "0")
-            .param("postStatus", "미거래")
-            .param("bookStatus", "최상")
+            .param("postStatus", "READY")
+            .param("bookStatus", "BEST")
             .param("sort", "RECENT")
             .param("page", "0")
             .param("size", "12")
@@ -157,7 +157,7 @@ class PostControllerTest {
         .andExpect(jsonPath("$.postId").value(postId))
         .andExpect(jsonPath("$.sellPrice").value(10000))
         .andExpect(jsonPath("$.bookStatus").value("BEST"))
-        .andExpect(jsonPath("$.postStatus").value("거래 대기"))
+        .andExpect(jsonPath("$.postStatus").value("READY"))
         .andExpect(jsonPath("$.category").value(19))
         .andExpect(jsonPath("$.book.title").value("파과"))
         .andExpect(jsonPath("$.book.author").value("구병모"))
@@ -181,7 +181,7 @@ class PostControllerTest {
     String json = """
         {
           "sellPrice": 12000,
-          "bookStatus": "중",
+          "bookStatus": "MEDIUM",
           "description": "설명이 수정되었습니다."
         }
         """;

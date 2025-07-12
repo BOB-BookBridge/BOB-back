@@ -10,7 +10,7 @@ public class ChangePostCommandFixture {
         postId,
         memberId,
         12000,
-        "중",
+        "MEDIUM",
         "상태 좋음"
     );
   }
