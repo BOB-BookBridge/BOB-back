@@ -41,7 +41,7 @@ public class PostResponseFixture {
         .sellerId(MEMBER_ID)
         .sellPrice(10000)
         .bookStatus("BEST")
-        .postStatus("거래 대기")
+        .postStatus("READY")
         .category(19)
         .book(BookInfo.builder()
             .title("파과")
