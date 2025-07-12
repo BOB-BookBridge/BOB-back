@@ -1,13 +1,17 @@
 package com.bob.domain.chat.service;
 
+import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.otherMember;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.entity.ChatRoomMember;
+import com.bob.domain.chat.repository.ChatMessageRepository;
 import com.bob.domain.chat.repository.ChatRoomMemberRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
+import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
@@ -54,6 +58,9 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
 
   @Autowired
   private TradeRepository tradeRepository;
+
+  @Autowired
+  private ChatMessageRepository chatMessageRepository;
 
   @Test
   @DisplayName("채팅방 생성 - 성공 테스트")
@@ -102,7 +109,6 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     // given
     Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).get();
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).get();
-    ;
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
 
     CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId()); // 최초 생성
@@ -115,6 +121,31 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     assertThat(result.chatRoomId()).isEqualTo(created.chatRoomId());
     assertThat(chatRoomRepository.findById(result.chatRoomId())).isNotNull();
     assertThat(chatRoomMemberRepository.findByChatRoomId(result.chatRoomId())).hasSize(2);
+  }
+
+  @DisplayName("채팅 메시지 전송 - 성공 테스트")
+  @Test
+  void 채팅_메시지를_전송한다() {
+    // given
+    Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
+    Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
+    Post post = postRepository.findAllBySellerId(seller.getId()).get(5);
+    CreateChatRoomResponse chatRoomResponse = chatRoomService.createChatRoomProcess(
+        CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())
+    );
+    Long chatRoomId = chatRoomResponse.chatRoomId();
+    CreateChatMessageCommand command = CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, buyer.getId());
+
+    // when
+    chatRoomService.createChatRoomMessageProcess(command);
+
+    // then
+    List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(chatRoomId);
+    assertThat(messages).hasSize(1);
+
+    ChatMessage saved = messages.get(0);
+    assertThat(saved.getChatMessage()).isEqualTo("message");
+    assertThat(saved.getChatMessageType().name()).isEqualTo("MIX");
   }
 
   @Test
