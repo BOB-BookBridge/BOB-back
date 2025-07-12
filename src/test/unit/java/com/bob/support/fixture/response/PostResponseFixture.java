@@ -21,7 +21,7 @@ public class PostResponseFixture {
       .postStatus(TradeStatus.REQUESTED.name())
       .sellPrice(10000)
       .thumbnailUrl("http://thumbnail1.com")
-      .bookStatus(BookStatus.BEST.getStatus())
+      .bookStatus(BookStatus.BEST.name())
       .createdAt(LocalDateTime.now())
       .build();
 
@@ -31,7 +31,7 @@ public class PostResponseFixture {
       .postStatus(TradeStatus.REQUESTED.name())
       .sellPrice(15000)
       .thumbnailUrl("http://thumbnail2.com")
-      .bookStatus(BookStatus.LOW.getStatus())
+      .bookStatus(BookStatus.LOW.name())
       .createdAt(LocalDateTime.now())
       .build();
 

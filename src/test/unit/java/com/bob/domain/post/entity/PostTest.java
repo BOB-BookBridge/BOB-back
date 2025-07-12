@@ -41,7 +41,7 @@ class PostTest {
     Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
 
     Integer beforePrice = post.getSellPrice();
-    String beforeStatus = post.getBookStatus().getStatus();
+    String beforeStatus = post.getBookStatus().name();
     String beforeDescription = post.getDescription();
 
     // when
@@ -49,7 +49,7 @@ class PostTest {
 
     // then
     assertThat(post.getSellPrice()).isEqualTo(beforePrice);
-    assertThat(post.getBookStatus().getStatus()).isEqualTo(beforeStatus);
+    assertThat(post.getBookStatus().name()).isEqualTo(beforeStatus);
     assertThat(post.getDescription()).isEqualTo(beforeDescription);
   }
 
@@ -60,7 +60,7 @@ class PostTest {
     Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
 
     Integer newSellPrice = 6000;
-    String newBookStatus = "하";
+    String newBookStatus = "LOW";
     String newDescription = "찢어진 페이지 있음";
 
     // when
@@ -68,7 +68,7 @@ class PostTest {
 
     // then
     assertThat(post.getSellPrice()).isEqualTo(newSellPrice);
-    assertThat(post.getBookStatus().getStatus()).isEqualTo(newBookStatus);
+    assertThat(post.getBookStatus().name()).isEqualTo(newBookStatus);
     assertThat(post.getDescription()).isEqualTo(newDescription);
   }
 }

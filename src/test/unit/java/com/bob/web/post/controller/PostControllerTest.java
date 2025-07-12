@@ -56,7 +56,7 @@ class PostControllerTest {
         {
           "categoryId": 1,
           "sellPrice": 10000,
-          "bookStatus": "최상",
+          "bookStatus": "BEST",
           "postDescription": "Description",
           "book": {
             "isbn": "1111111111111",
@@ -128,7 +128,7 @@ class PostControllerTest {
             .param("categoryId", "1")
             .param("price", "0")
             .param("postStatus", "READY")
-            .param("bookStatus", "최상")
+            .param("bookStatus", "BEST")
             .param("sort", "RECENT")
             .param("page", "0")
             .param("size", "12")
@@ -181,7 +181,7 @@ class PostControllerTest {
     String json = """
         {
           "sellPrice": 12000,
-          "bookStatus": "중",
+          "bookStatus": "MEDIUM",
           "description": "설명이 수정되었습니다."
         }
         """;

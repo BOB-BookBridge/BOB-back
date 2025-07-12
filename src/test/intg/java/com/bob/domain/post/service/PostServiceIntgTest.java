@@ -432,7 +432,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     // then
     Post updated = postRepository.findById(post.getId()).orElseThrow();
     assertThat(updated.getSellPrice()).isEqualTo(command.sellPrice());
-    assertThat(updated.getBookStatus().getStatus()).isEqualTo(command.bookStatus());
+    assertThat(updated.getBookStatus().name()).isEqualTo(command.bookStatus());
     assertThat(updated.getDescription()).isEqualTo(command.description());
   }
 
