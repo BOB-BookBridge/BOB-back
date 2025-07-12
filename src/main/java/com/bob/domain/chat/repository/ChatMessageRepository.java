@@ -1,11 +1,14 @@
 package com.bob.domain.chat.repository;
 
 import com.bob.domain.chat.entity.ChatMessage;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 public interface ChatMessageRepository extends CrudRepository<ChatMessage, Long> {
+
+  List<ChatMessage> findAllByChatRoomId(Long chatRoomId);
 
   @Query("""
         SELECT COUNT(cm)

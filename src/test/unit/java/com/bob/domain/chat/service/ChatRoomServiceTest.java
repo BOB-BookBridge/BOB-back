@@ -2,9 +2,13 @@ package com.bob.domain.chat.service;
 
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_CHAT_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_CHAT_PARTNER;
+import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.CUSTOM_CREATE_CHAT_MESSAGE_COMMAND;
+import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.DEFAULT_CREATE_CHAT_MESSAGE_COMMAND;
 import static com.bob.support.fixture.command.CreateChatRoomCommandFixture.DEFAULT_CREATE_CHAT_ROOM_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
+import static com.bob.support.fixture.domain.chat.ChatMessageFixture.DEFAULT_TEXT_CHAT_MESSAGE;
+import static com.bob.support.fixture.domain.chat.ChatMessageFixture.WITH_IMAGE_CHAT_MESSAGE;
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.DEFAULT_CHAT_ROOM_1;
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.DISABLE_CHAT_ROOM_1;
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.customChatRoom;
@@ -16,14 +20,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.repository.ChatRoomRepository;
+import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
@@ -40,6 +48,7 @@ import com.bob.domain.chat.service.port.out.ChatTradePort;
 import com.bob.domain.chat.service.reader.ChatMessageReader;
 import com.bob.domain.chat.service.reader.ChatRoomMemberReader;
 import com.bob.domain.chat.service.reader.ChatRoomReader;
+import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.time.LocalDateTime;
@@ -49,9 +58,11 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("채팅방 서비스 테스트")
@@ -77,6 +88,9 @@ class ChatRoomServiceTest {
   private ChatRoomMemberService chatRoomMemberService;
 
   @Mock
+  private ChatMessageService chatMessageService;
+
+  @Mock
   private ChatPostPort postPort;
 
   @Mock
@@ -84,6 +98,9 @@ class ChatRoomServiceTest {
 
   @Mock
   private ChatMemberPort memberPort;
+
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
 
   @Test
   @DisplayName("채팅방 생성 - 성공 테스트")
@@ -151,6 +168,72 @@ class ChatRoomServiceTest {
     then(tradePort).shouldHaveNoInteractions();
     then(chatRoomRepository).shouldHaveNoInteractions();
     then(chatRoomMemberService).shouldHaveNoInteractions();
+  }
+
+  @DisplayName("채팅 메시지 전송 - 성공 테스트")
+  @Test
+  void 채팅방_참여자라면_채팅_메시지를_전송할_수_있다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID senderId = MEMBER_ID;
+    UUID receiverId = OTHER_MEMBER_ID;
+    CreateChatMessageCommand command = DEFAULT_CREATE_CHAT_MESSAGE_COMMAND();
+    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(List.of(senderId, receiverId));
+    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
+    given(chatMessageService.createChatMessage(command)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
+
+    // when
+    chatRoomService.createChatRoomMessageProcess(command);
+
+    // then
+    then(chatMessageService).should(times(1)).createChatMessage(command);
+    then(chatRoomMemberReader).should(times(1)).readPartnerIdByRequesterId(chatRoomId, senderId);
+    then(eventPublisher).should(times(1)).publishEvent(any(NotiEvent.class));
+  }
+
+  @DisplayName("채팅 메시지 전송 - 메시지 타입이 IMAGE 또는 MIX인 경우 알림 타입이 true로 전달된다")
+  @Test
+  void 채팅_메시지_타입이_IMAGE또는_MIX이면_알림이_전송된다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID memberId = MEMBER_ID;
+    List<UUID> members = List.of(memberId, OTHER_MEMBER_ID);
+
+    CreateChatMessageCommand command = new CreateChatMessageCommand(chatRoomId, memberId, "", List.of("image.jpg"));
+    ChatMessage chatMessage = WITH_IMAGE_CHAT_MESSAGE();
+
+    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(members);
+    given(chatMessageService.createChatMessage(command)).willReturn(chatMessage);
+    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, memberId)).willReturn(OTHER_MEMBER_ID);
+
+    // when
+    chatRoomService.createChatRoomMessageProcess(command);
+
+    // then
+    ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+    Object publishedEvent = eventCaptor.getValue();
+    assertThat(publishedEvent).isInstanceOf(NotiEvent.class);
+    NotiEvent notiEvent = (NotiEvent) publishedEvent;
+    assertThat(notiEvent.normalize()).isTrue();
+  }
+
+  @DisplayName("채팅 메시지 전송 - 실패 테스트(채팅방에 참여하지 않은 경우)")
+  @Test
+  void 채팅방에_참여하지_않은_회원이_메시지를_보내면_예외가_발생한다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID unknown = UUID.randomUUID();
+    CreateChatMessageCommand command = CUSTOM_CREATE_CHAT_MESSAGE_COMMAND(unknown);
+    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(List.of(MEMBER_ID, OTHER_MEMBER_ID));
+
+    // when & then
+    assertThatThrownBy(() -> chatRoomService.createChatRoomMessageProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+
+    then(chatMessageService).shouldHaveNoInteractions();
+    then(eventPublisher).shouldHaveNoInteractions();
   }
 
   @Test
