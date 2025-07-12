@@ -1,0 +1,24 @@
+package com.bob.web.chat.request;
+
+import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
+import com.bob.web.chat.request.validator.ValidChatMessageContent;
+import com.bob.web.file.request.validator.ValidFileNameFormat;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import java.util.List;
+import java.util.UUID;
+
+@ValidChatMessageContent
+public record CreateChatMessageRequest(
+    @Size(max = 500, message = "메시지는 최대 500자까지 입력할 수 있습니다.")
+    String message,
+
+    @Size(max = 5, message = "사진은 최대 5개까지 전송이 가능합니다.")
+    @ValidFileNameFormat
+    List<@NotBlank(message = "사진 이름은 공백일 수 없습니다.") String> fileNames
+) {
+
+  public CreateChatMessageCommand toCommand(Long chatRoomId, UUID memberId) {
+    return new CreateChatMessageCommand(chatRoomId, memberId, message, fileNames);
+  }
+}
