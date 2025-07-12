@@ -41,7 +41,7 @@ class NotiServiceTest {
   @DisplayName("CHAT 알림 - 저장 없이 Redis publish만 수행")
   void createNotificationProcess_CHAT이면_저장없이_redis발행() {
     // given
-    CreateNotiCommand command = CreateNotiCommand.of("CHAT", "1", MEMBER_ID, OTHER_MEMBER_ID, "메시지", false);
+    CreateNotiCommand command = CreateNotiCommand.of("CHAT", "1", MEMBER_ID, OTHER_MEMBER_ID, "메시지", null, false);
     given(memberPort.readNotiMemberProfile(MEMBER_ID)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
     // when
@@ -54,6 +54,7 @@ class NotiServiceTest {
         eq("CHAT"),
         eq("1"),
         eq("메시지"),
+        eq(null),
         eq(false),
         eq(MEMBER_ID),
         eq("tester"),
@@ -65,7 +66,7 @@ class NotiServiceTest {
   @DisplayName("TRADE 알림 - 저장 후 Redis publish가 수행된다")
   void createNotificationProcess_TRADE이면_DB저장_및_redis발행() {
     // given
-    CreateNotiCommand command = CreateNotiCommand.of("TRADE", "1", MEMBER_ID, OTHER_MEMBER_ID, "거래 완료", false);
+    CreateNotiCommand command = CreateNotiCommand.of("TRADE", "1", MEMBER_ID, OTHER_MEMBER_ID, "거래 완료", null, false);
     given(memberPort.readNotiMemberProfile(MEMBER_ID)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
     // when
@@ -78,6 +79,7 @@ class NotiServiceTest {
         eq("TRADE"),
         eq("1"),
         eq("거래 완료"),
+        eq(null),
         eq(false),
         eq(MEMBER_ID),
         eq("tester"),

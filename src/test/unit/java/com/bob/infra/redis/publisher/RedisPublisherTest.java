@@ -57,7 +57,7 @@ class RedisPublisherTest {
     // given
     String invalidType = "UNKNOWN";
     RedisRecord event = RedisRecord.of(
-        MEMBER_ID, invalidType, "id", "유효하지 않은 메시지 타입",false,
+        MEMBER_ID, invalidType, "id", "유효하지 않은 메시지 타입",null, false,
         OTHER_MEMBER_ID, "TESTER", "Profile"
     );
 

@@ -33,7 +33,7 @@ class NotiEventHandlerTest {
     // given
     UUID senderId = UUID.randomUUID();
     UUID receiverId = UUID.randomUUID();
-    NotiEvent event = NotiEvent.of("CHAT", "1", senderId, receiverId, "MESSAGE", false);
+    NotiEvent event = NotiEvent.of("CHAT", "1", senderId, receiverId, "MESSAGE", null, false);
 
     // when
     notiEventHandler.handleNotiEvent(event);
