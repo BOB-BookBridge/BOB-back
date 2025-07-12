@@ -168,7 +168,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     assertThat(response.chatroomId()).isEqualTo(chatRoom.getId());
     assertThat(response.partner().id()).isEqualTo(seller.getId());
     assertThat(response.post().id()).isEqualTo(post.getId());
-    assertThat(response.trade().status()).isEqualTo("거래 요청");
+    assertThat(response.trade().status()).isEqualTo("REQUESTED");
   }
 
   @Test
