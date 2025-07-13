@@ -1,6 +1,7 @@
 package com.bob.domain.chat.service;
 
-import static com.bob.domain.chat.entity.type.ChatMessageType.*;
+import static com.bob.domain.chat.entity.type.ChatMessageType.MESSAGE;
+import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
 import static com.bob.domain.chat.service.dto.response.ChatMemberResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatPostResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatTradeResponse.from;
@@ -10,6 +11,7 @@ import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 
 import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
+import com.bob.domain.chat.repository.ChatMessageRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
@@ -56,7 +58,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   private final ChatRoomMemberReader chatRoomMemberReader;
 
   private final ChatMessageService chatMessageService;
-
+  private final ChatMessageRepository chatMessageRepository;
   private final ChatMessageReader chatMessageReader;
 
   private final ChatPostPort postPort;
@@ -96,6 +98,12 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
         chatRoom.getId(),
         List.of(post.sellerId(), command.buyerId())
     ));
+    if(command.isFar()) {
+      chatMessageRepository.save(
+          CreateChatMessageCommand.of(chatRoom.getId(), command.buyerId(), IS_FAR_MEMBER, null)
+              .toSystemChatMessage()
+      );
+    }
     return CreateChatRoomResponse.of(chatRoom.getId());
   }
 
