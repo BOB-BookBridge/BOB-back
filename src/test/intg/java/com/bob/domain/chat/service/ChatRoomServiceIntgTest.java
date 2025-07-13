@@ -1,5 +1,7 @@
 package com.bob.domain.chat.service;
 
+import static com.bob.domain.chat.entity.type.ChatMessageType.SYSTEM;
+import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
 import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.otherMember;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,7 +71,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     // given
     Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).get();
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).get();
-    ;
+
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
     CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
 
@@ -88,6 +90,30 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Trade trade = tradeRepository.findById(chatRoom.getTradeId()).orElseThrow();
     assertThat(trade.getSellerId()).isEqualTo(seller.getId());
     assertThat(trade.getBuyerId()).isEqualTo(buyer.getId());
+  }
+
+  @Test
+  @DisplayName("채팅방 생성 - 거리가 먼 사용자 SYSTEM 메시지 등록 테스트")
+  void isFar_사용자가_채팅방을_생성하면_SYSTEM_메시지가_자동으로_저장된다() {
+    // given
+    Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
+    Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
+    Post post = postRepository.findAllBySellerId(seller.getId()).get(3);
+    CreateChatRoomCommand command = new CreateChatRoomCommand(post.getId(), buyer.getId(), true);
+
+    // when
+    CreateChatRoomResponse response = chatRoomService.createChatRoomProcess(command);
+    Long chatRoomId = response.chatRoomId();
+
+    // then
+    List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(chatRoomId);
+    assertThat(messages).hasSize(1);
+
+    ChatMessage systemMessage = messages.get(0);
+    assertThat(systemMessage.getChatMessageType()).isEqualTo(SYSTEM);
+    assertThat(systemMessage.getChatMessage()).isEqualTo(IS_FAR_MEMBER);
+    assertThat(systemMessage.getIsRead()).isTrue();
+    assertThat(systemMessage.getSenderId()).isEqualTo(buyer.getId());
   }
 
   @Test
