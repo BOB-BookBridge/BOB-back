@@ -10,7 +10,8 @@ import java.util.UUID;
 
 @ValidChatMessageContent
 public record CreateChatMessageRequest(
-    @Size(max = 500, message = "메시지는 최대 500자까지 입력할 수 있습니다.")
+    @NotBlank
+    @Size(min = 1, max = 500, message = "메시지는 최소 1자, 최대 500자까지 입력할 수 있습니다.")
     String message,
 
     @Size(max = 5, message = "사진은 최대 5개까지 전송이 가능합니다.")

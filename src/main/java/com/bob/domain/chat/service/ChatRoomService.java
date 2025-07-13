@@ -77,19 +77,6 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
         .orElseGet(() -> createNewChatRoom(command, post));
   }
 
-  @Transactional
-  public void createChatRoomMessageProcess(CreateChatMessageCommand command) {
-    verifyParticipating(command.chatRoomId(), command.memberId());
-    UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
-    ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
-    if(!chatRoom.getEnableStatus()) chatRoom.updateChatRoomStatus(true);
-    ChatMessage chatMessage = chatMessageService.createChatMessageProcess(command, partnerId);
-    eventPublisher.publishEvent(NotiEvent.of(
-        "CHAT", command.chatRoomId().toString(), command.memberId(), partnerId,
-        chatMessage.getChatMessage(), command.fileNames(), chatMessage.getChatMessageType() != MESSAGE
-    ));
-  }
-
   private CreateChatRoomResponse createNewChatRoom(CreateChatRoomCommand command, ChatPostResponse post) {
     Long tradeId = tradePort.createTrade(post.postId(), post.sellerId(), command.buyerId());
     ChatRoom chatRoom = command.toChatRoom(tradeId, post.title());
@@ -111,6 +98,20 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     if (Objects.equals(sellerId, buyerId)) {
       throw new ApplicationException(IS_SAME_CHAT_MEMBER);
     }
+  }
+
+  @Transactional
+  public void createChatRoomMessageProcess(CreateChatMessageCommand command) {
+    verifyParticipating(command.chatRoomId(), command.memberId());
+    UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
+    ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
+    if(!chatRoom.getEnableStatus()) chatRoom.updateChatRoomStatus(true);
+    ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
+    chatRoom.updateChatRoomLastMessageInfo(message.getChatMessage(), message.getCreatedAt());
+    eventPublisher.publishEvent(NotiEvent.of(
+        "CHAT", command.chatRoomId().toString(), command.memberId(), partnerId,
+        message.getChatMessage(), command.fileNames(), message.getChatMessageType() != MESSAGE
+    ));
   }
 
   @Transactional(readOnly = true)
