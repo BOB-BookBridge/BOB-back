@@ -6,7 +6,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 
+import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
+import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.global.event.sse.manager.EmitterManager;
 import com.bob.global.exception.exceptions.ApplicationException;
@@ -27,17 +29,25 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @ExtendWith(MockitoExtension.class)
 class ChatStreamControllerTest {
 
-  private final String token = "mock.auth.token";
   @InjectMocks
   private ChatStreamController controller;
+
   @Mock
   private ChatRoomReadUseCase readUseCase;
+
+  @Mock
+  private ChatRoomModifyUseCase modifyUseCase;
+
   @Mock
   private EmitterManager emitterManager;
+
   @Mock
   private JwtProvider jwtProvider;
+
   @Mock
   private HttpServletRequest request;
+
+  private final String token = "mock.auth.token";
 
   @BeforeEach
   void setup() {
@@ -60,6 +70,7 @@ class ChatStreamControllerTest {
     then(jwtProvider).should().isVerified(token);
     then(jwtProvider).should().getMemberId(token);
     then(readUseCase).should().validateParticipant(ValidateParticipantQuery.of(1L, MEMBER_ID));
+    then(modifyUseCase).should().enterChatRoomProcess(EnterChatRoomCommand.of(1L, MEMBER_ID));
     then(emitterManager).should().subscribeToChat(1L, MEMBER_ID);
     assert emitter != null;
   }

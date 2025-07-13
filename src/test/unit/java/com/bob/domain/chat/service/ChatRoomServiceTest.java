@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
@@ -34,6 +33,7 @@ import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
+import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
@@ -180,13 +180,13 @@ class ChatRoomServiceTest {
     CreateChatMessageCommand command = DEFAULT_CREATE_CHAT_MESSAGE_COMMAND();
     given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(List.of(senderId, receiverId));
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
-    given(chatMessageService.createChatMessage(command)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
+    given(chatMessageService.createChatMessageProcess(command, receiverId)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
 
     // when
     chatRoomService.createChatRoomMessageProcess(command);
 
     // then
-    then(chatMessageService).should(times(1)).createChatMessage(command);
+    then(chatMessageService).should(times(1)).createChatMessageProcess(command, receiverId);
     then(chatRoomMemberReader).should(times(1)).readPartnerIdByRequesterId(chatRoomId, senderId);
     then(eventPublisher).should(times(1)).publishEvent(any(NotiEvent.class));
   }
@@ -203,7 +203,7 @@ class ChatRoomServiceTest {
     ChatMessage chatMessage = WITH_IMAGE_CHAT_MESSAGE();
 
     given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(members);
-    given(chatMessageService.createChatMessage(command)).willReturn(chatMessage);
+    given(chatMessageService.createChatMessageProcess(command, OTHER_MEMBER_ID)).willReturn(chatMessage);
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, memberId)).willReturn(OTHER_MEMBER_ID);
 
     // when
@@ -384,13 +384,26 @@ class ChatRoomServiceTest {
   void 채팅방에서_퇴장하면_채팅방_멤버_서비스가_호출된다() {
     // given
     Long chatRoomId = 1L;
-    UUID memberId = UUID.randomUUID();
-    ExitChatRoomCommand command = ExitChatRoomCommand.of(chatRoomId, memberId);
+    ExitChatRoomCommand command = ExitChatRoomCommand.of(chatRoomId, MEMBER_ID);
 
     // when
     chatRoomService.exitChatRoomProcess(command);
 
     // then
     then(chatRoomMemberService).should(times(1)).exitChatRoomMemberProcess(command);
+  }
+
+  @Test
+  @DisplayName("")
+  void 채팅방_입장_시_해당_채팅방의_안_읽은_메시지를_읽음_처리한다() {
+    // given
+    Long chatRoomId = 1L;
+    EnterChatRoomCommand command = EnterChatRoomCommand.of(chatRoomId, MEMBER_ID);
+
+    // when
+    chatRoomService.enterChatRoomProcess(command);
+
+    // then
+    then(chatMessageService).should(times(1)).updateReadStatusProcess(command);
   }
 }
