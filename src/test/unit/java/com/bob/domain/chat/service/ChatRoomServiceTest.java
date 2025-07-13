@@ -178,6 +178,7 @@ class ChatRoomServiceTest {
     UUID senderId = MEMBER_ID;
     UUID receiverId = OTHER_MEMBER_ID;
     CreateChatMessageCommand command = DEFAULT_CREATE_CHAT_MESSAGE_COMMAND();
+    given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(DEFAULT_CHAT_ROOM_1());
     given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(List.of(senderId, receiverId));
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
     given(chatMessageService.createChatMessageProcess(command, receiverId)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
@@ -191,9 +192,9 @@ class ChatRoomServiceTest {
     then(eventPublisher).should(times(1)).publishEvent(any(NotiEvent.class));
   }
 
-  @DisplayName("채팅 메시지 전송 - 메시지 타입이 IMAGE 또는 MIX인 경우 알림 타입이 true로 전달된다")
+  @DisplayName("채팅 메시지 전송 - 메시지 타입이 IMAGE, MIX인 경우 normalize = true 테스트")
   @Test
-  void 채팅_메시지_타입이_IMAGE또는_MIX이면_알림이_전송된다() {
+  void 채팅_메시지_타입이_IMAGE또는_MIX이면_normalize_는_true인_알림이_전송된다() {
     // given
     Long chatRoomId = 1L;
     UUID memberId = MEMBER_ID;
@@ -202,6 +203,7 @@ class ChatRoomServiceTest {
     CreateChatMessageCommand command = new CreateChatMessageCommand(chatRoomId, memberId, "", List.of("image.jpg"));
     ChatMessage chatMessage = WITH_IMAGE_CHAT_MESSAGE();
 
+    given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(DEFAULT_CHAT_ROOM_1());
     given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(members);
     given(chatMessageService.createChatMessageProcess(command, OTHER_MEMBER_ID)).willReturn(chatMessage);
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, memberId)).willReturn(OTHER_MEMBER_ID);
@@ -216,6 +218,30 @@ class ChatRoomServiceTest {
     assertThat(publishedEvent).isInstanceOf(NotiEvent.class);
     NotiEvent notiEvent = (NotiEvent) publishedEvent;
     assertThat(notiEvent.normalize()).isTrue();
+  }
+
+  @DisplayName("채팅 메시지 전송 - 비활성화 채팅방 활성화 테스트")
+  @Test
+  void 비활성화된_채팅방에_첫_메시지를_보내면_채팅방이_활성화된다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID senderId = MEMBER_ID;
+    UUID receiverId = OTHER_MEMBER_ID;
+    CreateChatMessageCommand command = DEFAULT_CREATE_CHAT_MESSAGE_COMMAND();
+    ChatRoom disabledChatRoom = DISABLE_CHAT_ROOM_1();
+
+    given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(disabledChatRoom);
+    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(List.of(senderId, receiverId));
+    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
+    given(chatMessageService.createChatMessageProcess(command, receiverId)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
+
+    // when
+    chatRoomService.createChatRoomMessageProcess(command);
+
+    // then
+    assertThat(disabledChatRoom.getEnableStatus()).isTrue();
+    then(chatMessageService).should().createChatMessageProcess(command, receiverId);
+    then(eventPublisher).should().publishEvent(any(NotiEvent.class));
   }
 
   @DisplayName("채팅 메시지 전송 - 실패 테스트(채팅방에 참여하지 않은 경우)")
@@ -394,7 +420,7 @@ class ChatRoomServiceTest {
   }
 
   @Test
-  @DisplayName("")
+  @DisplayName("채팅방 입장 - 메시지 읽음 처리 테스트")
   void 채팅방_입장_시_해당_채팅방의_안_읽은_메시지를_읽음_처리한다() {
     // given
     Long chatRoomId = 1L;
