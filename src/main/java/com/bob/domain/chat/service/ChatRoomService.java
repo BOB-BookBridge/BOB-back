@@ -10,11 +10,11 @@ import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 
 import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
-import com.bob.domain.chat.entity.type.ChatMessageType;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
+import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
@@ -78,8 +78,8 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   @Transactional
   public void createChatRoomMessageProcess(CreateChatMessageCommand command) {
     verifyParticipating(command.chatRoomId(), command.memberId());
-    ChatMessage chatMessage = chatMessageService.createChatMessage(command);
     UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
+    ChatMessage chatMessage = chatMessageService.createChatMessageProcess(command, partnerId);
     eventPublisher.publishEvent(NotiEvent.of(
         "CHAT", command.chatRoomId().toString(), command.memberId(), partnerId,
         chatMessage.getChatMessage(), command.fileNames(), chatMessage.getChatMessageType() != MESSAGE
@@ -158,5 +158,10 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   @Transactional
   public void exitChatRoomProcess(ExitChatRoomCommand command) {
     chatRoomMemberService.exitChatRoomMemberProcess(command);
+  }
+
+  @Transactional
+  public void enterChatRoomProcess(EnterChatRoomCommand command) {
+    chatMessageService.updateReadStatusProcess(command);
   }
 }

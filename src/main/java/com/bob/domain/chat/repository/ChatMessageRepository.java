@@ -11,6 +11,15 @@ public interface ChatMessageRepository extends CrudRepository<ChatMessage, Long>
   List<ChatMessage> findAllByChatRoomId(Long chatRoomId);
 
   @Query("""
+        SELECT cm
+        FROM ChatMessage cm
+        WHERE cm.chatRoomId = :chatRoomId
+          AND cm.senderId <> :receiverId
+          AND cm.isRead = false
+      """)
+  List<ChatMessage> findUnreadMessages(Long chatRoomId, UUID receiverId);
+
+  @Query("""
         SELECT COUNT(cm)
         FROM ChatMessage cm
         WHERE cm.chatRoomId = :chatRoomId

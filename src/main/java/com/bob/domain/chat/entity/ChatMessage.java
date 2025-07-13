@@ -48,4 +48,8 @@ public class ChatMessage extends BaseTime {
   @Column(nullable = false)
   @Builder.Default
   private Boolean isRead = false;
+
+  public void readMessage() {
+    this.isRead = true;
+  }
 }

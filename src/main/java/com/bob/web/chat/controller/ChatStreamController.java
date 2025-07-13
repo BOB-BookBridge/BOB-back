@@ -2,8 +2,11 @@ package com.bob.web.chat.controller;
 
 import static com.bob.global.utils.web.CookieUtils.getCookie;
 
+import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
+import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
+import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.global.event.sse.manager.EmitterManager;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
@@ -23,6 +26,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class ChatStreamController {
 
   private final ChatRoomReadUseCase readUseCase;
+  private final ChatRoomModifyUseCase modifyUseCase;
 
   private final EmitterManager emitterManager;
   private final JwtProvider jwtProvider;
@@ -34,6 +38,7 @@ public class ChatStreamController {
 
     UUID memberId = jwtProvider.getMemberId(token);
     readUseCase.validateParticipant(ValidateParticipantQuery.of(chatRoomId, memberId));
+    modifyUseCase.enterChatRoomProcess(EnterChatRoomCommand.of(chatRoomId, memberId));
     return emitterManager.subscribeToChat(chatRoomId, memberId);
   }
 
