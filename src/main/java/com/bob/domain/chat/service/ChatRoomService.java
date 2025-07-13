@@ -79,6 +79,8 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   public void createChatRoomMessageProcess(CreateChatMessageCommand command) {
     verifyParticipating(command.chatRoomId(), command.memberId());
     UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
+    ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
+    if(!chatRoom.getEnableStatus()) chatRoom.updateChatRoomStatus(true);
     ChatMessage chatMessage = chatMessageService.createChatMessageProcess(command, partnerId);
     eventPublisher.publishEvent(NotiEvent.of(
         "CHAT", command.chatRoomId().toString(), command.memberId(), partnerId,
