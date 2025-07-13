@@ -1,6 +1,7 @@
 package com.bob.web.chat.request;
 
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
+import com.bob.web.chat.request.validator.NotBlankIfNotNull;
 import com.bob.web.chat.request.validator.ValidChatMessageContent;
 import com.bob.web.file.request.validator.ValidFileNameFormat;
 import jakarta.validation.constraints.NotBlank;
@@ -10,8 +11,8 @@ import java.util.UUID;
 
 @ValidChatMessageContent
 public record CreateChatMessageRequest(
-    @NotBlank
-    @Size(min = 1, max = 500, message = "메시지는 최소 1자, 최대 500자까지 입력할 수 있습니다.")
+    @NotBlankIfNotNull
+    @Size(max = 500, message = "메시지는 최소 1자, 최대 500자까지 입력할 수 있습니다.")
     String message,
 
     @Size(max = 5, message = "사진은 최대 5개까지 전송이 가능합니다.")
