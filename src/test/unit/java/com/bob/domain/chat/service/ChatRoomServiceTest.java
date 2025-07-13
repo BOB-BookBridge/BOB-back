@@ -1,10 +1,13 @@
 package com.bob.domain.chat.service;
 
+import static com.bob.domain.chat.entity.type.ChatMessageType.SYSTEM;
+import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_CHAT_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_CHAT_PARTNER;
 import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.CUSTOM_CREATE_CHAT_MESSAGE_COMMAND;
 import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.DEFAULT_CREATE_CHAT_MESSAGE_COMMAND;
 import static com.bob.support.fixture.command.CreateChatRoomCommandFixture.DEFAULT_CREATE_CHAT_ROOM_COMMAND;
+import static com.bob.support.fixture.command.CreateChatRoomCommandFixture.DEFAULT_CREATE_CHAT_ROOM_COMMAND_WITH_FAR;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.domain.chat.ChatMessageFixture.DEFAULT_TEXT_CHAT_MESSAGE;
@@ -29,6 +32,7 @@ import static org.mockito.Mockito.verify;
 
 import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
+import com.bob.domain.chat.repository.ChatMessageRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
@@ -82,6 +86,9 @@ class ChatRoomServiceTest {
   private ChatRoomMemberReader chatRoomMemberReader;
 
   @Mock
+  private ChatMessageRepository chatMessageRepository;
+
+  @Mock
   private ChatMessageReader chatMessageReader;
 
   @Mock
@@ -127,6 +134,37 @@ class ChatRoomServiceTest {
     then(chatRoomMemberService).should().registerChatRoomMembers(
         CreateChatRoomMembersCommand.of(1L, List.of(post.sellerId(), command.buyerId()))
     );
+  }
+
+  @DisplayName("채팅방 생성 - 거리가 먼 사용자 SYSTEM 메시지 등록 테스트")
+  @Test
+  void isFar_사용자가_채팅방을_생성하면_SYSTEM_메시지가_자동_저장된다() {
+    // given
+    CreateChatRoomCommand command = DEFAULT_CREATE_CHAT_ROOM_COMMAND_WITH_FAR(OTHER_MEMBER_ID);
+    ChatPostResponse post = DEFAULT_CHAT_POST_RESPONSE;
+
+    given(postPort.readChatPostSummary(command.postId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(post.postId()));
+    given(chatRoomReader.readExistingChatRoom(post.postId(), post.sellerId(), command.buyerId())).willReturn(Optional.empty());
+    given(tradePort.createTrade(post.postId(), post.sellerId(), command.buyerId())).willReturn(1L);
+    given(chatRoomRepository.save(any(ChatRoom.class))).willAnswer(invocation -> {
+      ChatRoom chatRoom = invocation.getArgument(0);
+      ReflectionTestUtils.setField(chatRoom, "id", 1L);
+      return chatRoom;
+    });
+
+    // when
+    chatRoomService.createChatRoomProcess(command);
+
+    // then
+    ArgumentCaptor<ChatMessage> captor = ArgumentCaptor.forClass(ChatMessage.class);
+    then(chatMessageRepository).should(times(1)).save(captor.capture());
+
+    ChatMessage savedMessage = captor.getValue();
+    assertThat(savedMessage.getChatRoomId()).isEqualTo(1L);
+    assertThat(savedMessage.getSenderId()).isEqualTo(command.buyerId());
+    assertThat(savedMessage.getChatMessageType()).isEqualTo(SYSTEM);
+    assertThat(savedMessage.getChatMessage()).isEqualTo(IS_FAR_MEMBER);
+    assertThat(savedMessage.getIsRead()).isTrue();
   }
 
   @Test
