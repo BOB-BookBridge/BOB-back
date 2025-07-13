@@ -48,4 +48,12 @@ public class ChatRoom extends BaseTime {
   public void updateChatRoomStatus(boolean status) {
     this.enableStatus = status;
   }
+
+  public void updateChatRoomLastMessageInfo(String lastChatMessage, LocalDateTime lastChatAt) {
+    if (lastChatMessage == null || lastChatMessage.isEmpty() || lastChatMessage.isBlank()) {
+      lastChatMessage = "사진";
+    }
+    this.lastChatMessage = lastChatMessage;
+    this.lastChatAt = lastChatAt;
+  }
 }

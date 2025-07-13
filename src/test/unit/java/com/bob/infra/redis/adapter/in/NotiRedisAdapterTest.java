@@ -32,7 +32,7 @@ class NotiRedisAdapterTest {
 
     // when
     notiRedisAdapter.publish(
-        record.receiverId(), record.type(), record.refId(), record.body(),
+        record.receiverId(), record.type(), record.refId(), record.body(), record.fileNames(),
         record.normalize(), record.sender().id(), record.sender().nickname(), record.sender().profile()
     );
 

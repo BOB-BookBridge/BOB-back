@@ -1,5 +1,7 @@
 package com.bob.domain.chat.service;
 
+import static com.bob.domain.chat.entity.type.ChatMessageType.MESSAGE;
+import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
 import static com.bob.domain.chat.service.dto.response.ChatMemberResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatPostResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatTradeResponse.from;
@@ -7,10 +9,14 @@ import static com.bob.global.exception.response.ApplicationError.IS_SAME_CHAT_ME
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_CHAT_PARTNER;
 import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 
+import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
+import com.bob.domain.chat.repository.ChatMessageRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
+import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
+import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
@@ -30,12 +36,14 @@ import com.bob.domain.chat.service.reader.ChatRoomReader;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
+import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,11 +57,15 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   private final ChatRoomMemberService chatRoomMemberService;
   private final ChatRoomMemberReader chatRoomMemberReader;
 
+  private final ChatMessageService chatMessageService;
+  private final ChatMessageRepository chatMessageRepository;
   private final ChatMessageReader chatMessageReader;
 
   private final ChatPostPort postPort;
   private final ChatTradePort tradePort;
   private final ChatMemberPort memberPort;
+
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public CreateChatRoomResponse createChatRoomProcess(CreateChatRoomCommand command) {
@@ -73,6 +85,12 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
         chatRoom.getId(),
         List.of(post.sellerId(), command.buyerId())
     ));
+    if(command.isFar()) {
+      chatMessageRepository.save(
+          CreateChatMessageCommand.of(chatRoom.getId(), command.buyerId(), IS_FAR_MEMBER, null)
+              .toSystemChatMessage()
+      );
+    }
     return CreateChatRoomResponse.of(chatRoom.getId());
   }
 
@@ -80,6 +98,20 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     if (Objects.equals(sellerId, buyerId)) {
       throw new ApplicationException(IS_SAME_CHAT_MEMBER);
     }
+  }
+
+  @Transactional
+  public void createChatRoomMessageProcess(CreateChatMessageCommand command) {
+    verifyParticipating(command.chatRoomId(), command.memberId());
+    UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
+    ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
+    if(!chatRoom.getEnableStatus()) chatRoom.updateChatRoomStatus(true);
+    ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
+    chatRoom.updateChatRoomLastMessageInfo(message.getChatMessage(), message.getCreatedAt());
+    eventPublisher.publishEvent(NotiEvent.of(
+        "CHAT", command.chatRoomId().toString(), command.memberId(), partnerId,
+        message.getChatMessage(), command.fileNames(), message.getChatMessageType() != MESSAGE
+    ));
   }
 
   @Transactional(readOnly = true)
@@ -137,6 +169,10 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   @Transactional
   public void exitChatRoomProcess(ExitChatRoomCommand command) {
     chatRoomMemberService.exitChatRoomMemberProcess(command);
-    // TODO : 메시지 기능 구현 시 시스템 채팅(~님이 퇴장했습니다.) 추가
+  }
+
+  @Transactional
+  public void enterChatRoomProcess(EnterChatRoomCommand command) {
+    chatMessageService.updateReadStatusProcess(command);
   }
 }

@@ -37,7 +37,7 @@ public class NotiService {
   private void redisPublish(CreateNotiCommand command) {
     NotiMemberResponse sender = from(memberPort.readNotiMemberProfile(command.senderId()));
     redisPort.publish(
-        command.receiverId(), command.type().name(), command.refId(), command.body(),
+        command.receiverId(), command.type().name(), command.refId(), command.body(), command.fileNames(),
         command.normalize(), sender.memberId(), sender.nickname(), sender.profile()
     );
   }

@@ -1,11 +1,23 @@
 package com.bob.domain.chat.repository;
 
 import com.bob.domain.chat.entity.ChatMessage;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 public interface ChatMessageRepository extends CrudRepository<ChatMessage, Long> {
+
+  List<ChatMessage> findAllByChatRoomId(Long chatRoomId);
+
+  @Query("""
+        SELECT cm
+        FROM ChatMessage cm
+        WHERE cm.chatRoomId = :chatRoomId
+          AND cm.senderId <> :receiverId
+          AND cm.isRead = false
+      """)
+  List<ChatMessage> findUnreadMessages(Long chatRoomId, UUID receiverId);
 
   @Query("""
         SELECT COUNT(cm)

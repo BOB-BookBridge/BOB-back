@@ -6,6 +6,7 @@ import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
 import com.bob.infra.redis.record.RedisRecord;
 import com.bob.infra.redis.record.RedisRecord.Sender;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class RedisRecordFixture {
 
@@ -22,7 +23,18 @@ public class RedisRecordFixture {
       .receiverId(OTHER_MEMBER_ID)
       .type("CHAT")
       .refId("1")
-      .body("http://test/image.png")
+      .body(null)
+      .fileNames(List.of("/chat/test.png"))
+      .normalize(true)
+      .sender(Sender.of(MEMBER_ID, "tester", "/profile/1.png"))
+      .build();
+
+  public static final RedisRecord CHAT_MIX_RECORD = RedisRecord.builder()
+      .receiverId(OTHER_MEMBER_ID)
+      .type("CHAT")
+      .refId("1")
+      .body("MIX 테스트 메시지")
+      .fileNames(List.of("/chat/test.png"))
       .normalize(true)
       .sender(Sender.of(MEMBER_ID, "tester", "/profile/1.png"))
       .build();
@@ -32,6 +44,7 @@ public class RedisRecordFixture {
       .type("TRADE")
       .refId("1")
       .body("거래 완료")
+      .fileNames(null)
       .normalize(false)
       .sentAt(LocalDateTime.now())
       .sender(Sender.of(MEMBER_ID, "tester", "/profile/1.png"))

@@ -54,7 +54,7 @@ class ChatRoomControllerTest {
   }
 
   @Test
-  @DisplayName("채팅방 생성 API를 호출할 수 있다")
+  @DisplayName("채팅방 생성 API 호출 테스트")
   void 채팅방_생성_API를_호출할_수_있다() throws Exception {
     // given
     String json = DEFAULT_CREATE_CHAT_ROOM_REQUEST();
@@ -71,8 +71,31 @@ class ChatRoomControllerTest {
     then(writeUseCase).should(times(1)).createChatRoomProcess(any());
   }
 
+  @DisplayName("채팅 메시지 전송 API 호출 테스트")
   @Test
-  @DisplayName("채팅방 목록 조회 API를 호출할 수 있다")
+  void 채팅_메시지_전송_API를_호출할_수_있다() throws Exception {
+    // given
+    String json = """
+      {
+        "message": "안녕하세요, 거래 가능할까요?",
+        "fileNames": []
+      }
+      """;
+
+    // when & then
+    mvc.perform(post("/chatrooms/{chatroomId}/messages", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.result").value("CREATED"));
+
+    then(writeUseCase).should(times(1)).createChatRoomMessageProcess(any());
+  }
+
+  @Test
+  @DisplayName("채팅방 목록 조회 API 호출 테스트")
   void 채팅방_목록_조회_API를_호출할_수_있다() throws Exception {
     // given
     given(readUseCase.readChatRoomListProcess(any())).willReturn(DEFAULT_CHATROOM_SUMMARY_LIST);
@@ -89,7 +112,7 @@ class ChatRoomControllerTest {
   }
 
   @Test
-  @DisplayName("채팅방 상세 조회 API를 호출할 수 있다")
+  @DisplayName("채팅방 상세 조회 API 호출 테스트")
   void 채팅방_상세_조회_API를_호출할_수_있다() throws Exception {
     // given
     Long chatRoomId = 1L;
@@ -108,7 +131,7 @@ class ChatRoomControllerTest {
   }
 
   @Test
-  @DisplayName("채팅방 나가기 API를 호출할 수 있다")
+  @DisplayName("채팅방 나가기 API 호출 테스트")
   void 채팅방_나가기_API를_호출할_수_있다() throws Exception {
     // given
     Long chatRoomId = 1L;

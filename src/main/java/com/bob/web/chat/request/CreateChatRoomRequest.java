@@ -6,10 +6,13 @@ import java.util.UUID;
 
 public record CreateChatRoomRequest(
     @NotNull(message = "게시글 ID는 필수입니다.")
-    Long postId
+    Long postId,
+
+    @NotNull(message = "거리 여부는 필수입니다.")
+    Boolean isFar
 ) {
 
   public CreateChatRoomCommand toCommand(UUID memberId) {
-    return new CreateChatRoomCommand(postId, memberId);
+    return new CreateChatRoomCommand(postId, memberId, isFar);
   }
 }

@@ -2,6 +2,7 @@ package com.bob.domain.notification.service.dto.command;
 
 import com.bob.domain.notification.entity.Notification;
 import com.bob.domain.notification.entity.NotificationType;
+import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -12,16 +13,21 @@ public record CreateNotiCommand(
     UUID senderId,
     UUID receiverId,
     String body,
+    List<String> fileNames,
     boolean normalize
 ) {
 
-  public static CreateNotiCommand of(String type, String refId, UUID senderId, UUID receiverId, String body, boolean normalize) {
+  public static CreateNotiCommand of(
+      String type, String refId, UUID senderId, UUID receiverId,
+      String body, List<String> fileNames, boolean normalize
+  ) {
     return CreateNotiCommand.builder()
         .refId(refId)
         .type(NotificationType.valueOf(type))
         .senderId(senderId)
         .receiverId(receiverId)
         .body(body)
+        .fileNames(fileNames)
         .normalize(normalize)
         .build();
   }

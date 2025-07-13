@@ -12,6 +12,7 @@ import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
+import com.bob.web.chat.request.CreateChatMessageRequest;
 import com.bob.web.chat.request.CreateChatRoomRequest;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -46,6 +48,17 @@ public class ChatRoomController {
   ) {
     CreateChatRoomResponse response = writeUseCase.createChatRoomProcess(request.toCommand(memberId));
     return ResponseEntity.status(CREATED).body(response);
+  }
+
+  @PostMapping("/{chatroomId}/messages")
+  @ResponseStatus(CREATED)
+  public CommonResponse<ResponseSymbol> handleSendMessage(
+      @Valid @RequestBody CreateChatMessageRequest request,
+      @AuthenticationId UUID memberId,
+      @PathVariable Long chatroomId
+  ) {
+    writeUseCase.createChatRoomMessageProcess(request.toCommand(chatroomId, memberId));
+    return new CommonResponse<>(true, ResponseSymbol.CREATED);
   }
 
   @GetMapping

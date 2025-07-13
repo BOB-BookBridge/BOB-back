@@ -5,7 +5,8 @@ public class CreateChatRoomRequestFixture {
   public static String DEFAULT_CREATE_CHAT_ROOM_REQUEST() {
     return """
         {
-          "postId": 1
+          "postId": 1,
+          "isFar": false
         }
         """;
   }

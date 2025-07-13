@@ -1,6 +1,7 @@
 package com.bob.infra.redis.subscriber;
 
 import static com.bob.support.fixture.event.RedisRecordFixture.CHAT_IMAGE_RECORD;
+import static com.bob.support.fixture.event.RedisRecordFixture.CHAT_MIX_RECORD;
 import static com.bob.support.fixture.event.RedisRecordFixture.CHAT_TEXT_RECORD;
 import static com.bob.support.fixture.event.RedisRecordFixture.TRADE_RECORD;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -97,6 +98,24 @@ class RedisSubscriberTest {
 
     then(emitterManager).should().sendEvent(eq(EmitterType.CHAT), eq(chatKey), any(), argThat(event ->
         event.toString().contains("IMAGE")
+    ));
+  }
+
+  @Test
+  @DisplayName("Redis 메시지 수신 - 혼합형 메시지 처리")
+  void 혼합형_메시지_수신_성공() throws Exception {
+    // given
+    RedisRecord record = CHAT_MIX_RECORD;
+    ChatEmitterKey chatKey = ChatEmitterKey.of(Long.valueOf(record.refId()), record.receiverId());
+    given(emitterManager.isExistClientConnection(EmitterType.CHAT, chatKey)).willReturn(true);
+    Message message = mock(Message.class);
+    given(message.getBody()).willReturn(objectMapper.writeValueAsBytes(record));
+
+    // when & then
+    assertThatCode(() -> redisSubscriber.onMessage(message, null)).doesNotThrowAnyException();
+
+    then(emitterManager).should().sendEvent(eq(EmitterType.CHAT), eq(chatKey), any(), argThat(event ->
+        event.toString().contains("MIX")
     ));
   }
 
