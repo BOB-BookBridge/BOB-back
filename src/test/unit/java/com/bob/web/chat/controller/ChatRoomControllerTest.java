@@ -7,6 +7,7 @@ import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_C
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CREATE_CHATROOM_RESPONSE;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -16,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
@@ -109,6 +111,23 @@ class ChatRoomControllerTest {
         .andExpect(jsonPath("$[0].partner.nickname").value("booklover"));
 
     then(readUseCase).should(times(1)).readChatRoomListProcess(any());
+  }
+
+  @Test
+  @DisplayName("읽지 않은 메시지 개수 조회 API 호출 테스트")
+  void 읽지_않은_메시지_개수를_정상적으로_조회할_수_있다() throws Exception {
+    // given
+    int unreadCount = 5;
+    given(readUseCase.countUnreadMessageProcess(any())).willReturn(unreadCount);
+
+    // when & then
+    mvc.perform(get("/chatrooms/messages/unread")
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.unreadCount").value(unreadCount));
+
+    // verify
+    then(readUseCase).should(times(1)).countUnreadMessageProcess(any());
   }
 
   @Test

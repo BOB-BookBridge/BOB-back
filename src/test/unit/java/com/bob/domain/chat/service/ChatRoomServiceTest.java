@@ -42,6 +42,7 @@ import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
+import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
@@ -400,6 +401,29 @@ class ChatRoomServiceTest {
 
     // then
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  @DisplayName("읽지 않은 전체 메시지 개수 조회 - 성공 테스트")
+  void 참여_중인_채팅방이_여러_개일_때_읽지_않은_메시지_수를_정상적으로_합산한다() {
+    // given
+    UUID memberId = MEMBER_ID;
+    ChatRoom room1 = customChatRoom(1L, "message", LocalDateTime.now(), true);
+    ChatRoom room2 = customChatRoom(2L, "message", LocalDateTime.now().minusMinutes(10), true);
+
+    given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId))
+        .willReturn(List.of(room1, room2));
+    given(chatMessageReader.readUnreadMessageCountOfChatRoom(room1.getId(), memberId)).willReturn(3);
+    given(chatMessageReader.readUnreadMessageCountOfChatRoom(room2.getId(), memberId)).willReturn(2);
+
+    // when
+    int result = chatRoomService.countUnreadMessageProcess(ReadUnreadMessageCountQuery.of(memberId));
+
+    // then
+    assertThat(result).isEqualTo(5);
+    then(chatRoomReader).should().readParticipatingChatRoomsByMemberId(memberId);
+    then(chatMessageReader).should().readUnreadMessageCountOfChatRoom(room1.getId(), memberId);
+    then(chatMessageReader).should().readUnreadMessageCountOfChatRoom(room2.getId(), memberId);
   }
 
   @DisplayName("채팅방 상세 조회 - 성공 테스트")
