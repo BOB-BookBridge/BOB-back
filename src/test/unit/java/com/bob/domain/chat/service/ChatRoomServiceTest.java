@@ -39,6 +39,7 @@ import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
 import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
+import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
@@ -131,7 +132,7 @@ class ChatRoomServiceTest {
 
     // then
     assertThat(response.chatRoomId()).isEqualTo(1L);
-    then(chatRoomMemberService).should().registerChatRoomMembers(
+    then(chatRoomMemberService).should().registerChatRoomMembersProcess(
         CreateChatRoomMembersCommand.of(1L, List.of(post.sellerId(), command.buyerId()))
     );
   }
@@ -183,9 +184,31 @@ class ChatRoomServiceTest {
 
     // then
     assertThat(result.chatRoomId()).isEqualTo(existingRoomId);
-    then(chatRoomMemberService).should(never()).registerChatRoomMembers(any());
+    then(chatRoomMemberService).should(never()).registerChatRoomMembersProcess(any());
     then(chatRoomRepository).shouldHaveNoInteractions();
     then(tradePort).shouldHaveNoInteractions();
+  }
+
+  @Test
+  @DisplayName("채팅방 생성 - 재입장 테스트")
+  void 기존_채팅방이_존재하고_재입장하는_경우_채팅방_ID를_반환하고_재입장_처리한다() {
+    // given
+    CreateChatRoomCommand command = DEFAULT_CREATE_CHAT_ROOM_COMMAND(OTHER_MEMBER_ID);
+    ChatPostResponse post = DEFAULT_CHAT_POST_RESPONSE;
+    Long chatRoomId = 1L;
+
+    given(postPort.readChatPostSummary(command.postId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(post.postId()));
+    given(chatRoomReader.readExistingChatRoom(post.postId(), post.sellerId(), command.buyerId())).willReturn(Optional.of(chatRoomId));
+
+    // when
+    CreateChatRoomResponse result = chatRoomService.createChatRoomProcess(command);
+
+    // then
+    assertThat(result.chatRoomId()).isEqualTo(chatRoomId);
+    then(chatRoomMemberService).should(never()).registerChatRoomMembersProcess(any());
+    then(chatRoomRepository).shouldHaveNoInteractions();
+    then(tradePort).shouldHaveNoInteractions();
+    then(chatRoomMemberService).should().reEnterChatRoomMembersProcess(ReEnterChatRoomCommand.of(chatRoomId, OTHER_MEMBER_ID));
   }
 
   @Test

@@ -49,7 +49,7 @@ class ChatRoomMemberServiceTest {
     ArgumentCaptor<List<ChatRoomMember>> captor = ArgumentCaptor.forClass(List.class);
 
     // when
-    chatRoomMemberService.registerChatRoomMembers(command);
+    chatRoomMemberService.registerChatRoomMembersProcess(command);
 
     // then
     then(chatRoomMemberRepository).should(times(1)).saveAll(captor.capture());

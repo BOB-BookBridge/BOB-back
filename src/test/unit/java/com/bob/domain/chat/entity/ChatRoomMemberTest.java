@@ -23,4 +23,21 @@ class ChatRoomMemberTest {
     // then
     assertThat(member.getExitedAt()).isEqualTo(currentTime);
   }
+
+  @Test
+  @DisplayName("채팅방 재입장 테스트")
+  void 채팅방에_재입장하면_입장_시각이_갱신되고_나간_시각은_null이_된다() {
+    // given
+    ChatRoomMember member = CHAT_ROOM_MEMBER_1();
+    LocalDateTime exitedTime = LocalDateTime.now().minusMinutes(5);
+    member.updateExitedAt(exitedTime);
+    LocalDateTime reEnterTime = LocalDateTime.now();
+
+    // when
+    member.reEnterChatRoom(reEnterTime);
+
+    // then
+    assertThat(member.getEnteredAt()).isEqualTo(reEnterTime);
+    assertThat(member.getExitedAt()).isNull();
+  }
 }
