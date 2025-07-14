@@ -25,7 +25,7 @@ public record ChatRoomDetailResponse(
         .chatroomId(chatRoom.getId())
         .title(partner.nickname() + " - [" + post.title() + "]")
         .trade(ChatTradeSummary.of(trade.id(), trade.status()))
-        .post(ChatPostSummary.of(post.postId(), post.title(), post.thumbnailUrl(), post.sellPrice()))
+        .post(ChatPostSummary.of(post.postId(), post.postStatus() ,post.sellerId(), post.title(), post.thumbnailUrl(), post.sellPrice()))
         .partner(ChatPartnerSummary.of(partner.memberId(), partner.nickname(), partner.profileImageUrl()))
         .build();
   }

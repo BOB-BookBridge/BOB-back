@@ -124,8 +124,10 @@ class ChatRoomControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.chatroomId").value(chatRoomId))
         .andExpect(jsonPath("$.partner.nickname").value("booklover"))
-        .andExpect(jsonPath("$.post.title").value("책"))
-        .andExpect(jsonPath("$.trade.status").value("READY"));
+        .andExpect(jsonPath("$.post.status").value("READY"))
+        .andExpect(jsonPath("$.post.sellerId").value(MEMBER_ID.toString()))
+        .andExpect(jsonPath("$.post.title").value("게시글 제목"))
+        .andExpect(jsonPath("$.trade.status").value("REQUESTED"));
 
     then(readUseCase).should(times(1)).readChatRoomDetailProcess(any());
   }
