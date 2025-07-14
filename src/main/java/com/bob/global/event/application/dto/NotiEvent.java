@@ -8,6 +8,7 @@ import lombok.Builder;
 public record NotiEvent(
     String type,
     String refId,
+    String childId,
     UUID senderId,
     UUID receiverId,
     String body,
@@ -15,10 +16,11 @@ public record NotiEvent(
     boolean normalize
 ) {
 
-  public static NotiEvent of(String type, String refId, UUID senderId, UUID receiverId, String body, List<String> fileNames, boolean normalize) {
+  public static NotiEvent of(String type, String refId, String childId, UUID senderId, UUID receiverId, String body, List<String> fileNames, boolean normalize) {
     return NotiEvent.builder()
         .type(type)
         .refId(refId)
+        .childId(childId)
         .senderId(senderId)
         .receiverId(receiverId)
         .body(body)

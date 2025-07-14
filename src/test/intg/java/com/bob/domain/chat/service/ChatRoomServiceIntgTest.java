@@ -111,8 +111,8 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     assertThat(messages).hasSize(1);
 
     ChatMessage systemMessage = messages.get(0);
-    assertThat(systemMessage.getChatMessageType()).isEqualTo(SYSTEM);
-    assertThat(systemMessage.getChatMessage()).isEqualTo(IS_FAR_MEMBER);
+    assertThat(systemMessage.getType()).isEqualTo(SYSTEM);
+    assertThat(systemMessage.getContent()).isEqualTo(IS_FAR_MEMBER);
     assertThat(systemMessage.getIsRead()).isTrue();
     assertThat(systemMessage.getSenderId()).isEqualTo(buyer.getId());
   }
@@ -172,8 +172,8 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     assertThat(messages).hasSize(1);
 
     ChatMessage saved = messages.get(0);
-    assertThat(saved.getChatMessage()).isEqualTo("message");
-    assertThat(saved.getChatMessageType().name()).isEqualTo("MIX");
+    assertThat(saved.getContent()).isEqualTo("message");
+    assertThat(saved.getType().name()).isEqualTo("MIX");
   }
 
   @Test

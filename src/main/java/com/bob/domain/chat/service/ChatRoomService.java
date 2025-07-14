@@ -112,10 +112,10 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
     if (!chatRoom.getEnableStatus()) chatRoom.updateChatRoomStatus(true);
     ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
-    chatRoom.updateChatRoomLastMessageInfo(message.getChatMessage(), message.getCreatedAt());
+    chatRoom.updateChatRoomLastMessageInfo(message.getContent(), message.getCreatedAt());
     eventPublisher.publishEvent(NotiEvent.of(
-        "CHAT", command.chatRoomId().toString(), command.memberId(), partnerId,
-        message.getChatMessage(), command.fileNames(), message.getChatMessageType() != MESSAGE
+        "CHAT", command.chatRoomId().toString(), message.getId().toString(), command.memberId(), partnerId,
+        message.getContent(), command.fileNames(), message.getType() != MESSAGE
     ));
   }
 

@@ -4,18 +4,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record ChatMessageEmitEvent(
-    String messageType,
-    String message,
+    long id,
+    String type,
+    String content,
     List<String> fileNames,
     LocalDateTime sentAt
 ) {
 
-  public static ChatMessageEmitEvent of(String message, List<String> fileNames, LocalDateTime sentAt) {
-    return new ChatMessageEmitEvent(resolveMessageType(message, fileNames), message, fileNames, sentAt);
+  public static ChatMessageEmitEvent of(String id, String content, List<String> fileNames, LocalDateTime sentAt) {
+    return new ChatMessageEmitEvent(Long.parseLong(id), resolveMessageType(content, fileNames), content, fileNames, sentAt);
   }
 
-  private static String resolveMessageType(String message, List<String> fileNames) {
-    boolean hasMessage = message != null && !message.isBlank();
+  private static String resolveMessageType(String content, List<String> fileNames) {
+    boolean hasMessage = content != null && !content.isBlank();
     boolean hasImage = fileNames != null && !fileNames.isEmpty();
 
     if (hasMessage && hasImage) {

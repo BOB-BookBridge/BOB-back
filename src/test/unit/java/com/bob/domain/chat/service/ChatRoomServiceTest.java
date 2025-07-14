@@ -164,8 +164,8 @@ class ChatRoomServiceTest {
     ChatMessage savedMessage = captor.getValue();
     assertThat(savedMessage.getChatRoomId()).isEqualTo(1L);
     assertThat(savedMessage.getSenderId()).isEqualTo(command.buyerId());
-    assertThat(savedMessage.getChatMessageType()).isEqualTo(SYSTEM);
-    assertThat(savedMessage.getChatMessage()).isEqualTo(IS_FAR_MEMBER);
+    assertThat(savedMessage.getType()).isEqualTo(SYSTEM);
+    assertThat(savedMessage.getContent()).isEqualTo(IS_FAR_MEMBER);
     assertThat(savedMessage.getIsRead()).isTrue();
   }
 

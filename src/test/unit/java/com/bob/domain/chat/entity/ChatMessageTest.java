@@ -17,8 +17,8 @@ class ChatMessageTest {
     ChatMessage chatMessage = ChatMessage.builder()
         .chatRoomId(1L)
         .senderId(UUID.randomUUID())
-        .chatMessageType(MESSAGE)
-        .chatMessage("읽지 않은 메시지")
+        .type(MESSAGE)
+        .content("읽지 않은 메시지")
         .isRead(false)
         .build();
 

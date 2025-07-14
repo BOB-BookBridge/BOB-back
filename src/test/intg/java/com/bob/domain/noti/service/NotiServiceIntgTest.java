@@ -54,7 +54,7 @@ class NotiServiceIntgTest extends TestContainerSupport {
     Member receiver = memberRepository.findById(RECEIVER_ID).orElseThrow();
 
     CreateNotiCommand command = new CreateNotiCommand(
-        CHAT, "1", sender.getId(), receiver.getId(), "안녕", null, false
+        CHAT, "1", "1", sender.getId(), receiver.getId(), "안녕", null, false
     );
 
     // when
@@ -74,7 +74,7 @@ class NotiServiceIntgTest extends TestContainerSupport {
     Member receiver = memberRepository.findById(RECEIVER_ID).orElseThrow();
 
     CreateNotiCommand command = new CreateNotiCommand(
-        TRADE, "1", sender.getId(), receiver.getId(), "거래 완료", null, false
+        TRADE, "1", "1", sender.getId(), receiver.getId(), "거래 완료", null, false
     );
 
     // when

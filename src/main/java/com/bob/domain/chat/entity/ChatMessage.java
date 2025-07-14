@@ -37,10 +37,10 @@ public class ChatMessage extends BaseTime {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private ChatMessageType chatMessageType;
+  private ChatMessageType type;
 
   @Column(length = 500)
-  private String chatMessage;
+  private String content;
 
   @Column(nullable = false)
   @Builder.Default
