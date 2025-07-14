@@ -18,6 +18,7 @@ import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
+import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
@@ -228,6 +229,26 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
+  @DisplayName("읽지 않은 전체 메시지 개수 조회 - 성공 테스트")
+  void 사용자가_참여한_채팅방에서_읽지_않은_메시지_수를_정상적으로_합산한다() {
+    // given
+    Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
+    Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
+    Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
+    Long chatRoomId1 = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())).chatRoomId();
+    chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId1, seller.getId()));
+    Long chatRoomId2 = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())).chatRoomId();
+    chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId2, seller.getId()));
+    chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId2, seller.getId()));
+
+    // when
+    int count = chatRoomService.countUnreadMessageProcess(ReadUnreadMessageCountQuery.of(buyer.getId()));
+
+    // then
+    assertThat(count).isEqualTo(3);
+  }
+
+  @Test
   @DisplayName("채팅방 상세 조회 - 성공 테스트")
   void 채팅방_상세정보를_정상적으로_조회할_수_있다() {
     // given
@@ -301,6 +322,4 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     List<ChatMessage> after = chatMessageRepository.findAllByChatRoomId(chatRoomId);
     assertThat(after.get(0).getIsRead()).isTrue();
   }
-
-  // TODO: 채팅방 나가기 기능의 통합 테스트 작성
 }
