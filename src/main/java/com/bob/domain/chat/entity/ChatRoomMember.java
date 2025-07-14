@@ -32,9 +32,17 @@ public class ChatRoomMember {
   @Column(nullable = false)
   private UUID memberId;
 
+  @Column(nullable = false)
+  private LocalDateTime enteredAt;
+
   private LocalDateTime exitedAt;
 
   public void updateExitedAt(LocalDateTime currentTime) {
     this.exitedAt = currentTime;
+  }
+
+  public void reEnterChatRoom(LocalDateTime now) {
+    this.enteredAt = now;
+    this.exitedAt = null;
   }
 }

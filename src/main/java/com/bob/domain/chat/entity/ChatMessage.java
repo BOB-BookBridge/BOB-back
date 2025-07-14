@@ -42,9 +42,6 @@ public class ChatMessage extends BaseTime {
   @Column(length = 500)
   private String chatMessage;
 
-  @Column
-  private String chatImageUrl;
-
   @Column(nullable = false)
   @Builder.Default
   private Boolean isRead = false;

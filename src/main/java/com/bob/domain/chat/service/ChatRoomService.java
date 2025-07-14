@@ -18,6 +18,7 @@ import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
 import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
+import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
@@ -73,7 +74,10 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     verifyBuyer(post.sellerId(), command.buyerId());
 
     return chatRoomReader.readExistingChatRoom(post.postId(), post.sellerId(), command.buyerId())
-        .map(CreateChatRoomResponse::of)
+        .map(chatRoomId -> {
+          chatRoomMemberService.reEnterChatRoomMembersProcess(ReEnterChatRoomCommand.of(chatRoomId, command.buyerId()));
+          return CreateChatRoomResponse.of(chatRoomId);
+        })
         .orElseGet(() -> createNewChatRoom(command, post));
   }
 
@@ -81,7 +85,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     Long tradeId = tradePort.createTrade(post.postId(), post.sellerId(), command.buyerId());
     ChatRoom chatRoom = command.toChatRoom(tradeId, post.title());
     chatRoomRepository.save(chatRoom);
-    chatRoomMemberService.registerChatRoomMembers(CreateChatRoomMembersCommand.of(
+    chatRoomMemberService.registerChatRoomMembersProcess(CreateChatRoomMembersCommand.of(
         chatRoom.getId(),
         List.of(post.sellerId(), command.buyerId())
     ));
@@ -105,7 +109,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     verifyParticipating(command.chatRoomId(), command.memberId());
     UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
     ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
-    if(!chatRoom.getEnableStatus()) chatRoom.updateChatRoomStatus(true);
+    if (!chatRoom.getEnableStatus()) chatRoom.updateChatRoomStatus(true);
     ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
     chatRoom.updateChatRoomLastMessageInfo(message.getChatMessage(), message.getCreatedAt());
     eventPublisher.publishEvent(NotiEvent.of(

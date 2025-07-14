@@ -1,6 +1,7 @@
 package com.bob.domain.chat.service.dto.command;
 
 import com.bob.domain.chat.entity.ChatRoomMember;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +20,7 @@ public record CreateChatRoomMembersCommand(
             .builder()
             .chatRoomId(chatRoomId)
             .memberId(memberId)
+            .enteredAt(LocalDateTime.now())
             .build()
         ).toList();
   }
