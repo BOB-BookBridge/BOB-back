@@ -6,9 +6,11 @@ import static org.springframework.http.HttpStatus.CREATED;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
+import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
+import com.bob.domain.chat.service.dto.response.UnreadMessageCountResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
@@ -64,6 +66,14 @@ public class ChatRoomController {
   @GetMapping
   public ResponseEntity<List<ChatRoomSummaryResponse>> handleReadChatRoomList(@AuthenticationId UUID memberId) {
     return ResponseEntity.ok().body(readUseCase.readChatRoomListProcess(ReadChatRoomListQuery.of(memberId)));
+  }
+
+  @GetMapping("/messages/unread")
+  public ResponseEntity<UnreadMessageCountResponse> handleReadUnreadMessageCount(
+      @AuthenticationId UUID memberId
+  ) {
+    int count = readUseCase.countUnreadMessageProcess(ReadUnreadMessageCountQuery.of(memberId));
+    return ResponseEntity.ok(UnreadMessageCountResponse.of(count));
   }
 
   @GetMapping("/{chatroomId}")

@@ -21,6 +21,7 @@ import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
+import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
 import com.bob.domain.chat.service.dto.response.ChatMemberResponse;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
@@ -142,6 +143,13 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
       }
       throw e;
     }
+  }
+
+  @Transactional(readOnly = true)
+  public int countUnreadMessageProcess(ReadUnreadMessageCountQuery query) {
+    return chatRoomReader.readParticipatingChatRoomsByMemberId(query.memberId()).stream()
+        .mapToInt(room -> chatMessageReader.readUnreadMessageCountOfChatRoom(room.getId(), query.memberId()))
+        .sum();
   }
 
   @Transactional(readOnly = true)
