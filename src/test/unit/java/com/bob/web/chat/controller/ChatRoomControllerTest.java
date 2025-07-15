@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
@@ -82,6 +83,7 @@ class ChatRoomControllerTest {
         "fileNames": []
       }
       """;
+    given(writeUseCase.createChatRoomMessageProcess(any())).willReturn(new ChatMessageSendResponse(false));
 
     // when & then
     mvc.perform(post("/chatrooms/{chatroomId}/messages", 1L)
@@ -89,8 +91,7 @@ class ChatRoomControllerTest {
             .content(json)
             .requestAttr("memberId", MEMBER_ID))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.result").value("CREATED"));
+        .andExpect(jsonPath("$.isRead").value(false));
 
     then(writeUseCase).should(times(1)).createChatRoomMessageProcess(any());
   }

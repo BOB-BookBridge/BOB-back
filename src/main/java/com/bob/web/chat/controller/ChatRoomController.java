@@ -8,6 +8,7 @@ import com.bob.domain.chat.service.dto.query.ReadChatMessagesQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
+import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
@@ -57,13 +58,12 @@ public class ChatRoomController {
 
   @PostMapping("/{chatroomId}/messages")
   @ResponseStatus(CREATED)
-  public CommonResponse<ResponseSymbol> handleSendMessage(
+  public ResponseEntity<ChatMessageSendResponse> handleSendMessage(
       @Valid @RequestBody CreateChatMessageRequest request,
       @AuthenticationId UUID memberId,
       @PathVariable Long chatroomId
   ) {
-    writeUseCase.createChatRoomMessageProcess(request.toCommand(chatroomId, memberId));
-    return new CommonResponse<>(true, ResponseSymbol.CREATED);
+    return ResponseEntity.status(CREATED).body(writeUseCase.createChatRoomMessageProcess(request.toCommand(chatroomId, memberId)));
   }
 
   @GetMapping

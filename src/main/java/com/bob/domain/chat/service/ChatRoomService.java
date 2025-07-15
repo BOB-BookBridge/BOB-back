@@ -26,6 +26,7 @@ import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
 import com.bob.domain.chat.service.dto.response.ChatMemberResponse;
+import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
@@ -113,7 +114,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   }
 
   @Transactional
-  public void createChatRoomMessageProcess(CreateChatMessageCommand command) {
+  public ChatMessageSendResponse createChatRoomMessageProcess(CreateChatMessageCommand command) {
     verifyParticipating(command.chatRoomId(), command.memberId());
     UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
     ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
@@ -126,6 +127,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
         "CHAT", command.chatRoomId().toString(), message.getId().toString(), command.memberId(), partnerId,
         message.getContent(), command.fileNames(), message.getType() != MESSAGE
     ));
+    return ChatMessageSendResponse.of(message.getIsRead());
   }
 
   @Transactional(readOnly = true)
