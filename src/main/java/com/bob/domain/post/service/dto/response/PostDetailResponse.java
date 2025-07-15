@@ -1,7 +1,7 @@
 package com.bob.domain.post.service.dto.response;
 
 import com.bob.domain.post.entity.Post;
-import com.bob.domain.post.service.dto.response.PostFileSummaryResponse.FileSummary;
+import com.bob.domain.post.service.dto.response.PostFileSummaryResponse.PostFileSummary;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +18,7 @@ public record PostDetailResponse(
     Integer category,
     BookInfo book,
     String description,
-    List<FileSummary> images,
+    List<PostFileSummary> images,
     WriterInfo writer,
     Integer scrapCount,
     Integer viewCount,

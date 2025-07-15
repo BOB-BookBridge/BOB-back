@@ -1,11 +1,11 @@
 package com.bob.domain.post.service.port.out;
 
-import com.bob.domain.post.service.dto.response.PostFileSummaryResponse;
+import com.bob.domain.file.service.dto.response.FilesResponse;
 import java.util.List;
 
 public interface PostFilePort {
 
-  PostFileSummaryResponse readPostFileSummaries(Long postId);
+  FilesResponse readPostFileSummaries(Long postId);
 
   void modifyReferenceId(List<String> fileNames, String domainId);
 }

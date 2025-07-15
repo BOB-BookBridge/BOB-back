@@ -18,7 +18,7 @@ import static com.bob.support.fixture.query.PostQueryFixture.defaultReadFiltered
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadMemberFavoritePostsQuery;
 import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
 import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.NOT_VALID_POST_AREA_SUMMARY;
-import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_POST_FILE_SUMMARIES;
+import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static com.bob.support.fixture.response.PostMemberSummaryResponseFixture.DEFAULT_MEMBER_SUMMARY;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_FAVORITE_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -292,7 +292,7 @@ class PostServiceTest {
     ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, post.getId(), true);
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_SUMMARY);
-    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
+    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_READ_FILES_RESPONSE);
     willDoNothing().given(postRepository).increaseViewCount(post.getId());
 
     // when
@@ -315,7 +315,7 @@ class PostServiceTest {
     ReadPostDetailQuery query = new ReadPostDetailQuery(otherMemberId, post.getId(), true);
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_SUMMARY);
-    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
+    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_READ_FILES_RESPONSE);
     willDoNothing().given(postRepository).increaseViewCount(post.getId());
 
     // when

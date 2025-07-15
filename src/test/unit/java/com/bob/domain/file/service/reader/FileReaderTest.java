@@ -1,5 +1,6 @@
 package com.bob.domain.file.service.reader;
 
+import static com.bob.domain.file.entity.type.FileDomain.POST;
 import static com.bob.support.fixture.domain.FileFixture.defaultFile;
 import static com.bob.support.fixture.domain.FileFixture.defaultFiles;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,14 +34,14 @@ class FileReaderTest {
     // given
     String domainId = String.valueOf(1L);
     List<File> files = defaultFiles();
-    given(fileRepository.findByReferenceId(domainId)).willReturn(files);
+    given(fileRepository.findByDomainAndReferenceId(POST, domainId)).willReturn(files);
 
     // when
-    List<File> result = fileReader.readFileByReferenceId(domainId);
+    List<File> result = fileReader.readFileByReferenceId(POST, domainId);
 
     // then
     assertThat(result).containsExactlyElementsOf(files);
-    verify(fileRepository).findByReferenceId(domainId);
+    verify(fileRepository).findByDomainAndReferenceId(POST, domainId);
   }
 
   @Test

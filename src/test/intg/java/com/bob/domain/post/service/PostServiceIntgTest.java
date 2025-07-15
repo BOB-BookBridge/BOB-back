@@ -20,7 +20,7 @@ import static com.bob.support.fixture.query.PostQueryFixture.searchTitleQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTradeStatusQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchUnder5000PriceQuery;
 import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
-import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_POST_FILE_SUMMARIES;
+import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -69,25 +69,34 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 class PostServiceIntgTest extends TestContainerSupport {
 
-  private final PageRequest pageable = PageRequest.of(0, 12);
   @Autowired
   private PostService postService;
+
   @Autowired
   private PostRepository postRepository;
+
   @Autowired
   private PostFavoriteService postFavoriteService;
+
   @Autowired
   private PostFavoriteRepository postFavoriteRepository;
+
   @Autowired
   private CategoryRepository categoryRepository;
+
   @Autowired
   private BookRepository bookRepository;
+
   @MockitoBean
   private PostAreaPort areaPort;
+
   @MockitoBean
   private PostFilePort filePort;
+
   @PersistenceContext
   private EntityManager em;
+
+  private PageRequest pageable = PageRequest.of(0, 12);
 
   @Test
   @DisplayName("게시글 등록 - 성공 테스트")
@@ -389,7 +398,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     Post post = postRepository.findAllBySellerId(writerId).get(0); // 더미 데이터의 첫 번째 게시글
     int beforeViewCount = post.getViewCount();
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
-    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
+    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_READ_FILES_RESPONSE);
 
     // when
     PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(writerId, post.getId(), true));
@@ -409,7 +418,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Post post = postRepository.findAllBySellerId(writerId).get(0);
     given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
-    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_POST_FILE_SUMMARIES);
+    given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_READ_FILES_RESPONSE);
 
     // when
     PostDetailResponse result = postService.readPostDetailProcess(new ReadPostDetailQuery(viewerId, post.getId(), true));

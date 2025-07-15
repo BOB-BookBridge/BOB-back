@@ -16,6 +16,7 @@ import com.bob.domain.chat.entity.ChatRoomMember;
 import com.bob.domain.chat.repository.ChatRoomMemberRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
+import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
 import com.bob.domain.chat.service.reader.ChatRoomMemberReader;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,7 +50,7 @@ class ChatRoomMemberServiceTest {
     ArgumentCaptor<List<ChatRoomMember>> captor = ArgumentCaptor.forClass(List.class);
 
     // when
-    chatRoomMemberService.registerChatRoomMembers(command);
+    chatRoomMemberService.registerChatRoomMembersProcess(command);
 
     // then
     then(chatRoomMemberRepository).should(times(1)).saveAll(captor.capture());
@@ -59,6 +60,42 @@ class ChatRoomMemberServiceTest {
     assertThat(savedMembers).allSatisfy(member ->
         assertThat(command.memberIds()).contains(member.getMemberId())
     );
+  }
+
+  @Test
+  @DisplayName("채팅방 재입장 - 나가기 한 채팅방 테스트")
+  void 채팅방을_나간_경우_재입장이_정상적으로_처리된다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID buyerId = MEMBER_ID;
+    ChatRoomMember member = CHAT_ROOM_MEMBER_1();
+    member.updateExitedAt(LocalDateTime.now().minusDays(1));
+
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, buyerId)).willReturn(member);
+
+    // when
+    chatRoomMemberService.reEnterChatRoomMembersProcess(ReEnterChatRoomCommand.of(chatRoomId, buyerId));
+
+    // then
+    assertThat(member.getExitedAt()).isNull();
+    then(chatRoomMemberReader).should(times(1)).readChatRoomMember(chatRoomId, buyerId);
+  }
+
+  @Test
+  @DisplayName("채팅방 재입장 - 나가지 않은 채팅방 테스트")
+  void 채팅방을_나가지_않은_경우_재입장이_수행되지_않는다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID buyerId = MEMBER_ID;
+    ChatRoomMember member = CHAT_ROOM_MEMBER_1();
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, buyerId)).willReturn(member);
+
+    // when
+    chatRoomMemberService.reEnterChatRoomMembersProcess(ReEnterChatRoomCommand.of(chatRoomId, buyerId));
+
+    // then
+    assertThat(member.getExitedAt()).isNull();
+    then(chatRoomMemberReader).should(times(1)).readChatRoomMember(chatRoomId, buyerId);
   }
 
   @Test

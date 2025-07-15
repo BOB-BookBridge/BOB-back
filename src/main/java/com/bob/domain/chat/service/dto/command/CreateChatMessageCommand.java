@@ -15,17 +15,17 @@ import lombok.Builder;
 public record CreateChatMessageCommand(
     Long chatRoomId,
     UUID memberId,
-    String message,
+    String content,
     List<String> fileNames
 ) {
 
   public static final String IS_FAR_MEMBER = "거리가 먼 사용자와의 채팅입니다.";
 
-  public static CreateChatMessageCommand of(Long chatRoomId, UUID memberId, String message, List<String> fileNames) {
+  public static CreateChatMessageCommand of(Long chatRoomId, UUID memberId, String content, List<String> fileNames) {
     return CreateChatMessageCommand.builder()
         .chatRoomId(chatRoomId)
         .memberId(memberId)
-        .message(message)
+        .content(content)
         .fileNames(fileNames)
         .build();
   }
@@ -34,8 +34,8 @@ public record CreateChatMessageCommand(
     return ChatMessage.builder()
         .chatRoomId(chatRoomId)
         .senderId(memberId)
-        .chatMessage(message)
-        .chatMessageType(resolveMessageType())
+        .content(content)
+        .type(resolveMessageType())
         .build();
   }
 
@@ -43,14 +43,14 @@ public record CreateChatMessageCommand(
     return ChatMessage.builder()
         .chatRoomId(chatRoomId)
         .senderId(memberId)
-        .chatMessage(message)
-        .chatMessageType(SYSTEM)
+        .content(content)
+        .type(SYSTEM)
         .isRead(true)
         .build();
   }
 
   private ChatMessageType resolveMessageType() {
-    boolean hasMessage = message != null && !message.isBlank();
+    boolean hasMessage = content != null && !content.isBlank();
     boolean hasImage = fileNames != null && !fileNames.isEmpty();
 
     if (hasMessage && hasImage) {

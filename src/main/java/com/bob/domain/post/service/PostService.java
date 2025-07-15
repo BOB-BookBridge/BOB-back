@@ -1,5 +1,7 @@
 package com.bob.domain.post.service;
 
+import static com.bob.domain.post.service.dto.response.PostFileSummaryResponse.from;
+
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.service.BookService;
 import com.bob.domain.category.entity.Category;
@@ -109,7 +111,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     if(query.shouldIncreaseViewCount()) postRepository.increaseViewCount(query.postId());
     Post post = postReader.readPostById(query.postId());
     PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
-    PostFileSummaryResponse fileSummary = filePort.readPostFileSummaries(post.getId());
+    PostFileSummaryResponse fileSummary = from(filePort.readPostFileSummaries(post.getId()));
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
     return PostDetailResponse.from(post, memberSummary, fileSummary, isFavorite, isOwner);

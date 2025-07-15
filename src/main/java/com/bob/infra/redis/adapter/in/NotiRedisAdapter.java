@@ -16,9 +16,9 @@ public class NotiRedisAdapter implements NotiRedisPort {
 
   @Override
   public void publish(
-      UUID rId, String type, String refId, String body, List<String> fileNames,
+      UUID rId, String type, String refId, String childId, String body, List<String> fileNames,
       boolean normalize, UUID sId, String sNickname, String sProfile
   ) {
-    publisher.publish(RedisRecord.of(rId, type, refId, body, fileNames, normalize, sId, sNickname, sProfile));
+    publisher.publish(RedisRecord.of(rId, type, refId, childId, body, fileNames, normalize, sId, sNickname, sProfile));
   }
 }

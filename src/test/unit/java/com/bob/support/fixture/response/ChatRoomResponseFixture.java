@@ -1,6 +1,7 @@
 package com.bob.support.fixture.response;
 
 import static com.bob.domain.chat.service.dto.response.CreateChatRoomResponse.of;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
@@ -21,8 +22,8 @@ public class ChatRoomResponseFixture {
   public static ChatRoomDetailResponse DEFAULT_CHATROOM_DETAIL = ChatRoomDetailResponse.builder()
       .chatroomId(DEFAULT_CHATROOM_ID)
       .title("제목")
-      .trade(new ChatTradeSummary(1L, "READY"))
-      .post(new ChatPostSummary(1L, "책", "image.png", 10000))
+      .trade(new ChatTradeSummary(1L, "REQUESTED"))
+      .post(new ChatPostSummary(1L, "READY", MEMBER_ID, "게시글 제목", "image.png", 10000))
       .partner(new ChatPartnerSummary(
           UUID.fromString("00000000-0000-0000-0000-00000000003a"),
           "booklover",

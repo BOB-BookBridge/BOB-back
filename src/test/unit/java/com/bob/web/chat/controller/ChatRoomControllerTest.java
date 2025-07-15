@@ -2,6 +2,7 @@ package com.bob.web.chat.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.request.CreateChatRoomRequestFixture.DEFAULT_CREATE_CHAT_ROOM_REQUEST;
+import static com.bob.support.fixture.response.ChatMessagesResponseFixture.DEFAULT_CHAT_MESSAGES_RESPONSE;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_DETAIL;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_SUMMARY_LIST;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CREATE_CHATROOM_RESPONSE;
@@ -16,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
@@ -81,6 +83,7 @@ class ChatRoomControllerTest {
         "fileNames": []
       }
       """;
+    given(writeUseCase.createChatRoomMessageProcess(any())).willReturn(new ChatMessageSendResponse(false));
 
     // when & then
     mvc.perform(post("/chatrooms/{chatroomId}/messages", 1L)
@@ -88,8 +91,7 @@ class ChatRoomControllerTest {
             .content(json)
             .requestAttr("memberId", MEMBER_ID))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.result").value("CREATED"));
+        .andExpect(jsonPath("$.isRead").value(false));
 
     then(writeUseCase).should(times(1)).createChatRoomMessageProcess(any());
   }
@@ -112,6 +114,23 @@ class ChatRoomControllerTest {
   }
 
   @Test
+  @DisplayName("읽지 않은 메시지 개수 조회 API 호출 테스트")
+  void 읽지_않은_메시지_개수를_정상적으로_조회할_수_있다() throws Exception {
+    // given
+    int unreadCount = 5;
+    given(readUseCase.countUnreadMessageProcess(any())).willReturn(unreadCount);
+
+    // when & then
+    mvc.perform(get("/chatrooms/messages/unread")
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.unreadCount").value(unreadCount));
+
+    // verify
+    then(readUseCase).should(times(1)).countUnreadMessageProcess(any());
+  }
+
+  @Test
   @DisplayName("채팅방 상세 조회 API 호출 테스트")
   void 채팅방_상세_조회_API를_호출할_수_있다() throws Exception {
     // given
@@ -124,10 +143,37 @@ class ChatRoomControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.chatroomId").value(chatRoomId))
         .andExpect(jsonPath("$.partner.nickname").value("booklover"))
-        .andExpect(jsonPath("$.post.title").value("책"))
-        .andExpect(jsonPath("$.trade.status").value("READY"));
+        .andExpect(jsonPath("$.post.status").value("READY"))
+        .andExpect(jsonPath("$.post.sellerId").value(MEMBER_ID.toString()))
+        .andExpect(jsonPath("$.post.title").value("게시글 제목"))
+        .andExpect(jsonPath("$.trade.status").value("REQUESTED"));
 
     then(readUseCase).should(times(1)).readChatRoomDetailProcess(any());
+  }
+
+  @Test
+  @DisplayName("채팅 메시지 목록 조회 API 호출 테스트")
+  void 채팅_메시지_목록_조회_API를_호출할_수_있다() throws Exception {
+    // given
+    Long chatRoomId = 1L;
+    Long beforeMessageId = 100L;
+    int size = 10;
+
+    given(readUseCase.readChatMessagesProcess(any())).willReturn(DEFAULT_CHAT_MESSAGES_RESPONSE);
+
+    // when & then
+    mvc.perform(get("/chatrooms/{chatRoomId}/messages", chatRoomId)
+            .param("beforeMessageId", beforeMessageId.toString())
+            .param("size", String.valueOf(size))
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.messages.length()").value(2))
+        .andExpect(jsonPath("$.messages[0].id").value(1))
+        .andExpect(jsonPath("$.messages[0].content").value("메시지"))
+        .andExpect(jsonPath("$.messages[0].isMine").value(true))
+        .andExpect(jsonPath("$.hasNext").value(true));
+
+    then(readUseCase).should(times(1)).readChatMessagesProcess(any());
   }
 
   @Test

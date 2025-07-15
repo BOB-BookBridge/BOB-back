@@ -1,5 +1,6 @@
 package com.bob.domain.file.service;
 
+import static com.bob.domain.file.entity.type.FileDomain.*;
 import static com.bob.global.exception.response.ApplicationError.FILE_UNAUTHORIZED;
 import static com.bob.support.fixture.command.ChangeFileCommandFixture.DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
 import com.bob.domain.file.entity.File;
+import com.bob.domain.file.entity.type.FileDomain;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
@@ -73,17 +75,17 @@ class FileServiceTest {
     // given
     String referenceId = "post-1234";
     List<File> files = defaultFiles();
-    given(fileReader.readFileByReferenceId(referenceId)).willReturn(files);
+    given(fileReader.readFileByReferenceId(POST, referenceId)).willReturn(files);
 
     // when
-    FilesResponse response = fileService.readFilesByDomainId(new ReadFilesWithDomainIdQuery(referenceId));
+    FilesResponse response = fileService.readFilesByDomainId(new ReadFilesWithDomainIdQuery(POST, referenceId));
 
     // then
     assertThat(response.summaries()).hasSize(files.size());
     assertThat(response.summaries())
         .extracting("fileName")
         .containsExactlyElementsOf(files.stream().map(File::getFileName).toList());
-    then(fileReader).should().readFileByReferenceId(referenceId);
+    then(fileReader).should().readFileByReferenceId(POST, referenceId);
   }
 
   @DisplayName("파일 변경 - 성공 테스트")
@@ -92,7 +94,7 @@ class FileServiceTest {
     // given
     String referenceId = "1";
     List<File> existingFiles = defaultFiles();
-    given(fileReader.readFileByReferenceId(referenceId)).willReturn(existingFiles);
+    given(fileReader.readFileByReferenceId(POST, referenceId)).willReturn(existingFiles);
 
     // when
     fileService.changeFileProcess(DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1);
@@ -107,7 +109,7 @@ class FileServiceTest {
   void 파일을_수정할_때_권한이_없으면_예외가_발생한다() {
     // given
     String referenceId = "1";
-    given(fileReader.readFileByReferenceId(referenceId)).willReturn(otherFiles());
+    given(fileReader.readFileByReferenceId(POST, referenceId)).willReturn(otherFiles());
 
     // when & then
     assertThatThrownBy(() -> fileService.changeFileProcess(DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1))

@@ -9,19 +9,21 @@ public class ChatMessageFixture {
 
   public static ChatMessage DEFAULT_TEXT_CHAT_MESSAGE() {
     return ChatMessage.builder()
+        .id(1L)
         .chatRoomId(1L)
         .senderId(MEMBER_ID)
-        .chatMessage("안녕하세요")
-        .chatMessageType(ChatMessageType.MESSAGE)
+        .content("안녕하세요")
+        .type(ChatMessageType.MESSAGE)
         .build();
   }
 
   public static ChatMessage WITH_IMAGE_CHAT_MESSAGE() {
     return ChatMessage.builder()
+        .id(1L)
         .chatRoomId(1L)
         .senderId(MEMBER_ID)
-        .chatMessage("사진 포함 채팅")
-        .chatMessageType(ChatMessageType.MIX)
+        .content("사진 포함 채팅")
+        .type(ChatMessageType.MIX)
         .build();
   }
 }

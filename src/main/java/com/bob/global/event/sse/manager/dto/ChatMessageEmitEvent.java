@@ -1,21 +1,25 @@
 package com.bob.global.event.sse.manager.dto;
 
+import static com.bob.global.utils.stream.StreamUtils.forEachWithIndex;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public record ChatMessageEmitEvent(
-    String messageType,
-    String message,
-    List<String> fileNames,
+    long id,
+    String type,
+    String content,
+    List<ChatImage> images,
     LocalDateTime sentAt
 ) {
 
-  public static ChatMessageEmitEvent of(String message, List<String> fileNames, LocalDateTime sentAt) {
-    return new ChatMessageEmitEvent(resolveMessageType(message, fileNames), message, fileNames, sentAt);
+  public static ChatMessageEmitEvent of(String id, String content, List<String> fileNames, LocalDateTime sentAt) {
+    return new ChatMessageEmitEvent(Long.parseLong(id), resolveMessageType(content, fileNames), content, withSequence(fileNames), sentAt);
   }
 
-  private static String resolveMessageType(String message, List<String> fileNames) {
-    boolean hasMessage = message != null && !message.isBlank();
+  private static String resolveMessageType(String content, List<String> fileNames) {
+    boolean hasMessage = content != null && !content.isBlank();
     boolean hasImage = fileNames != null && !fileNames.isEmpty();
 
     if (hasMessage && hasImage) {
@@ -26,4 +30,15 @@ public record ChatMessageEmitEvent(
     }
     return "IMAGE";
   }
+
+  private static List<ChatImage> withSequence(List<String> fileNames) {
+    if (fileNames == null || fileNames.isEmpty()) {
+      return List.of();
+    }
+    List<ChatImage> result = new ArrayList<>();
+    forEachWithIndex(fileNames, (i, name) -> result.add(new ChatImage(i, name)));
+    return result;
+  }
+
+  public record ChatImage(int sequence, String fileName) {}
 }

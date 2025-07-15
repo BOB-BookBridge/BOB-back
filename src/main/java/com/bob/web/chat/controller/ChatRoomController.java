@@ -4,11 +4,16 @@ import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
+import com.bob.domain.chat.service.dto.query.ReadChatMessagesQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
+import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
+import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
+import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
+import com.bob.domain.chat.service.dto.response.UnreadMessageCountResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
@@ -28,6 +33,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,18 +58,25 @@ public class ChatRoomController {
 
   @PostMapping("/{chatroomId}/messages")
   @ResponseStatus(CREATED)
-  public CommonResponse<ResponseSymbol> handleSendMessage(
+  public ResponseEntity<ChatMessageSendResponse> handleSendMessage(
       @Valid @RequestBody CreateChatMessageRequest request,
       @AuthenticationId UUID memberId,
       @PathVariable Long chatroomId
   ) {
-    writeUseCase.createChatRoomMessageProcess(request.toCommand(chatroomId, memberId));
-    return new CommonResponse<>(true, ResponseSymbol.CREATED);
+    return ResponseEntity.status(CREATED).body(writeUseCase.createChatRoomMessageProcess(request.toCommand(chatroomId, memberId)));
   }
 
   @GetMapping
   public ResponseEntity<List<ChatRoomSummaryResponse>> handleReadChatRoomList(@AuthenticationId UUID memberId) {
     return ResponseEntity.ok().body(readUseCase.readChatRoomListProcess(ReadChatRoomListQuery.of(memberId)));
+  }
+
+  @GetMapping("/messages/unread")
+  public ResponseEntity<UnreadMessageCountResponse> handleReadUnreadMessageCount(
+      @AuthenticationId UUID memberId
+  ) {
+    int count = readUseCase.countUnreadMessageProcess(ReadUnreadMessageCountQuery.of(memberId));
+    return ResponseEntity.ok(UnreadMessageCountResponse.of(count));
   }
 
   @GetMapping("/{chatroomId}")
@@ -72,6 +85,16 @@ public class ChatRoomController {
       @AuthenticationId UUID memberId
   ) {
     return ResponseEntity.ok().body(readUseCase.readChatRoomDetailProcess(ReadChatRoomDetailQuery.of(chatroomId, memberId)));
+  }
+
+  @GetMapping("/{chatRoomId}/messages")
+  public ResponseEntity<ChatMessagesResponse> readChatMessages(
+      @PathVariable Long chatRoomId,
+      @RequestParam(required = false) Long beforeMessageId,
+      @RequestParam(defaultValue = "20") Integer size,
+      @AuthenticationId UUID memberId
+  ) {
+    return ResponseEntity.ok(readUseCase.readChatMessagesProcess(ReadChatMessagesQuery.of(memberId, chatRoomId, beforeMessageId, size)));
   }
 
   @PatchMapping("/{chatroomId}")

@@ -10,6 +10,7 @@ import lombok.Builder;
 public record CreateNotiCommand(
     NotificationType type,
     String refId,
+    String childId,
     UUID senderId,
     UUID receiverId,
     String body,
@@ -18,11 +19,12 @@ public record CreateNotiCommand(
 ) {
 
   public static CreateNotiCommand of(
-      String type, String refId, UUID senderId, UUID receiverId,
+      String type, String refId, String childId, UUID senderId, UUID receiverId,
       String body, List<String> fileNames, boolean normalize
   ) {
     return CreateNotiCommand.builder()
         .refId(refId)
+        .childId(childId)
         .type(NotificationType.valueOf(type))
         .senderId(senderId)
         .receiverId(receiverId)

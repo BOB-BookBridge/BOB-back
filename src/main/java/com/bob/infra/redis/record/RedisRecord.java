@@ -10,6 +10,7 @@ public record RedisRecord(
     UUID receiverId,
     String type,
     String refId,
+    String childId,
     String body,
     List<String> fileNames,
     boolean normalize,
@@ -18,13 +19,14 @@ public record RedisRecord(
 ) {
 
   public static RedisRecord of(
-      UUID receiverId, String type, String refId, String body, List<String> fileNames,
+      UUID receiverId, String type, String refId, String childId, String body, List<String> fileNames,
       boolean normalize, UUID senderId, String senderNickname, String senderProfile
   ) {
     return RedisRecord.builder()
         .receiverId(receiverId)
         .type(type)
         .refId(refId)
+        .childId(childId)
         .body(body)
         .fileNames(fileNames)
         .normalize(normalize)

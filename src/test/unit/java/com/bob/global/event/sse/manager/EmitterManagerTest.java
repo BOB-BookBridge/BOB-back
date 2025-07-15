@@ -12,10 +12,12 @@ import static org.mockito.BDDMockito.mock;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.spy;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 import com.bob.global.event.sse.repository.EmitterRepository;
 import com.bob.global.event.sse.repository.chat.ChatEmitterKey;
 import com.bob.global.event.sse.repository.notification.NotiEmitterKey;
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter.SseEventBuilder;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("EmitterManager 테스트")
@@ -143,8 +146,8 @@ class EmitterManagerTest {
   }
 
   @Test
-  @DisplayName("emitter 존재 여부 검사 - 존재 시 true 반환")
-  void isExistClientConnection_검사() {
+  @DisplayName("emitter 존재 여부 검사 - 정상 작동중인 emitter의 경우 true 반환")
+  void 정상_작동중인_Emitter는_true를_반환한다() {
     // given
     NotiEmitterKey key = new NotiEmitterKey(MEMBER_ID);
     SseEmitter emitter = mock(SseEmitter.class);
@@ -155,6 +158,23 @@ class EmitterManagerTest {
 
     // then
     assertThat(exists).isTrue();
+  }
+
+  @Test
+  @DisplayName("emitter 존재 여부 검사 - 존재하지만 event 발송 실패 시 false 반환")
+  void Emitter가_존재하지만_이벤트를_보낼_수_없는_경우_false를_반환하고_emitter를_삭제한다() throws IOException {
+    // given
+    NotiEmitterKey key = new NotiEmitterKey(MEMBER_ID);
+    SseEmitter emitter = mock(SseEmitter.class);
+    given(notificationEmitterRepository.get(key)).willReturn(emitter);
+    doThrow(new RuntimeException("send 실패")).when(emitter).send(any(SseEmitter.SseEventBuilder.class));
+
+    // when
+    boolean exists = emitterManager.isExistClientConnection(NOTIFICATION, key);
+
+    // then
+    assertThat(exists).isFalse();
+    then(notificationEmitterRepository).should(times(1)).remove(key);
   }
 
   @Test

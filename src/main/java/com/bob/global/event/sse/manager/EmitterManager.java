@@ -95,6 +95,17 @@ public class EmitterManager implements Runnable {
     }
   }
 
+  public <T> boolean isExistClientConnection(EmitterType type, T key) {
+    SseEmitter emitter = getEmitter(type, key);
+    try {
+      emitter.send(SseEmitter.event().name(HEARTBEAT.name()).data("ping"));
+      return true;
+    } catch (Exception e) {
+      removeEmitter(emitter, key, getRepository(type));
+      return false;
+    }
+  }
+
   private <T> void removeEmitter(SseEmitter emitter, T key, EmitterRepository<T> repository) {
     try {
       if (emitter != null) {
@@ -104,10 +115,6 @@ public class EmitterManager implements Runnable {
     } catch (Exception e) {
       log.debug("Error during emitter cleanup for key: {}", key);
     }
-  }
-
-  public <T> boolean isExistClientConnection(EmitterType type, T key) {
-    return getEmitter(type, key) != null;
   }
 
   private <T> SseEmitter getEmitter(EmitterType type, T key) {

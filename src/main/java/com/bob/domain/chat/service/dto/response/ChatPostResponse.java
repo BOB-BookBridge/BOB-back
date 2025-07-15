@@ -7,6 +7,7 @@ import lombok.Builder;
 @Builder
 public record ChatPostResponse(
     Long postId,
+    String postStatus,
     UUID sellerId,
     String title,
     String thumbnailUrl,
@@ -16,6 +17,7 @@ public record ChatPostResponse(
   public static ChatPostResponse from(PostDetailResponse response) {
     return ChatPostResponse.builder()
         .postId(response.postId())
+        .postStatus(response.postStatus())
         .sellerId(response.sellerId())
         .title(response.book().title())
         .thumbnailUrl(response.thumbnailUrl())
