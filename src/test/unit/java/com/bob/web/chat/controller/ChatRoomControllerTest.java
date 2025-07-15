@@ -2,12 +2,12 @@ package com.bob.web.chat.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.request.CreateChatRoomRequestFixture.DEFAULT_CREATE_CHAT_ROOM_REQUEST;
+import static com.bob.support.fixture.response.ChatMessagesResponseFixture.DEFAULT_CHAT_MESSAGES_RESPONSE;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_DETAIL;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_SUMMARY_LIST;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CREATE_CHATROOM_RESPONSE;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -17,7 +17,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
@@ -149,6 +148,31 @@ class ChatRoomControllerTest {
         .andExpect(jsonPath("$.trade.status").value("REQUESTED"));
 
     then(readUseCase).should(times(1)).readChatRoomDetailProcess(any());
+  }
+
+  @Test
+  @DisplayName("채팅 메시지 목록 조회 API 호출 테스트")
+  void 채팅_메시지_목록_조회_API를_호출할_수_있다() throws Exception {
+    // given
+    Long chatRoomId = 1L;
+    Long beforeMessageId = 100L;
+    int size = 10;
+
+    given(readUseCase.readChatMessagesProcess(any())).willReturn(DEFAULT_CHAT_MESSAGES_RESPONSE);
+
+    // when & then
+    mvc.perform(get("/chatrooms/{chatRoomId}/messages", chatRoomId)
+            .param("beforeMessageId", beforeMessageId.toString())
+            .param("size", String.valueOf(size))
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.messages.length()").value(2))
+        .andExpect(jsonPath("$.messages[0].id").value(1))
+        .andExpect(jsonPath("$.messages[0].content").value("메시지"))
+        .andExpect(jsonPath("$.messages[0].isMine").value(true))
+        .andExpect(jsonPath("$.hasNext").value(true));
+
+    then(readUseCase).should(times(1)).readChatMessagesProcess(any());
   }
 
   @Test

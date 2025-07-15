@@ -15,6 +15,8 @@ import static com.bob.support.fixture.domain.chat.ChatMessageFixture.WITH_IMAGE_
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.DEFAULT_CHAT_ROOM_1;
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.DISABLE_CHAT_ROOM_1;
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.customChatRoom;
+import static com.bob.support.fixture.domain.chat.ChatRoomMemberFixture.CHAT_ROOM_MEMBER_1;
+import static com.bob.support.fixture.response.ChatFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static com.bob.support.fixture.response.ChatPostResponseFixture.DEFAULT_CHAT_POST_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.OTHER_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_DETAIL_RESPONSE;
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.verify;
 
 import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
+import com.bob.domain.chat.entity.ChatRoomMember;
 import com.bob.domain.chat.repository.ChatMessageRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
@@ -40,14 +43,17 @@ import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
 import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
+import com.bob.domain.chat.service.dto.query.ReadChatMessagesQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
+import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.ChatTradeResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
+import com.bob.domain.chat.service.port.out.ChatFilePort;
 import com.bob.domain.chat.service.port.out.ChatMemberPort;
 import com.bob.domain.chat.service.port.out.ChatPostPort;
 import com.bob.domain.chat.service.port.out.ChatTradePort;
@@ -101,6 +107,9 @@ class ChatRoomServiceTest {
 
   @Mock
   private ChatPostPort postPort;
+
+  @Mock
+  private ChatFilePort filePort;
 
   @Mock
   private ChatTradePort tradePort;
@@ -241,7 +250,7 @@ class ChatRoomServiceTest {
     UUID receiverId = OTHER_MEMBER_ID;
     CreateChatMessageCommand command = DEFAULT_CREATE_CHAT_MESSAGE_COMMAND();
     given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(DEFAULT_CHAT_ROOM_1());
-    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(List.of(senderId, receiverId));
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_1());
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
     given(chatMessageService.createChatMessageProcess(command, receiverId)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
 
@@ -250,6 +259,7 @@ class ChatRoomServiceTest {
 
     // then
     then(chatMessageService).should(times(1)).createChatMessageProcess(command, receiverId);
+    then(chatRoomMemberReader).should(times(1)).readChatRoomMember(chatRoomId, MEMBER_ID);
     then(chatRoomMemberReader).should(times(1)).readPartnerIdByRequesterId(chatRoomId, senderId);
     then(eventPublisher).should(times(1)).publishEvent(any(NotiEvent.class));
   }
@@ -266,7 +276,7 @@ class ChatRoomServiceTest {
     ChatMessage chatMessage = WITH_IMAGE_CHAT_MESSAGE();
 
     given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(DEFAULT_CHAT_ROOM_1());
-    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(members);
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_1());
     given(chatMessageService.createChatMessageProcess(command, OTHER_MEMBER_ID)).willReturn(chatMessage);
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, memberId)).willReturn(OTHER_MEMBER_ID);
 
@@ -293,7 +303,7 @@ class ChatRoomServiceTest {
     ChatRoom disabledChatRoom = DISABLE_CHAT_ROOM_1();
 
     given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(disabledChatRoom);
-    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(List.of(senderId, receiverId));
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_1());
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
     given(chatMessageService.createChatMessageProcess(command, receiverId)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
 
@@ -313,7 +323,8 @@ class ChatRoomServiceTest {
     Long chatRoomId = 1L;
     UUID unknown = UUID.randomUUID();
     CreateChatMessageCommand command = CUSTOM_CREATE_CHAT_MESSAGE_COMMAND(unknown);
-    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(List.of(MEMBER_ID, OTHER_MEMBER_ID));
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, unknown))
+        .willThrow(new ApplicationException(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM));
 
     // when & then
     assertThatThrownBy(() -> chatRoomService.createChatRoomMessageProcess(command))
@@ -394,7 +405,8 @@ class ChatRoomServiceTest {
     UUID memberId = MEMBER_ID;
 
     given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId)).willReturn(List.of(chatRoom));
-    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoom.getId(), memberId)).willThrow(new ApplicationException(NOT_EXISTS_CHAT_PARTNER));
+    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoom.getId(), memberId))
+        .willThrow(new ApplicationException(NOT_EXISTS_CHAT_PARTNER));
 
     // when
     List<ChatRoomSummaryResponse> result = chatRoomService.readChatRoomListProcess(ReadChatRoomListQuery.of(memberId));
@@ -437,10 +449,9 @@ class ChatRoomServiceTest {
     ChatRoom chatRoom = customChatRoom(1L, "lastMessage", LocalDateTime.now(), true);
     ChatPostResponse postResponse = ChatPostResponse.from(DEFAULT_POST_DETAIL_RESPONSE(chatRoom.getPostId()));
     ChatTradeResponse tradeResponse = ChatTradeResponse.from(DEFAULT_TRADE_DETAIL());
-    List<UUID> participants = List.of(memberId, partnerId);
 
     given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(chatRoom);
-    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(participants);
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_1());
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, memberId)).willReturn(partnerId);
     given(postPort.readChatPostSummary(chatRoom.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(chatRoom.getPostId()));
     given(tradePort.readChatTradeSummary(chatRoomId, memberId)).willReturn(DEFAULT_TRADE_DETAIL());
@@ -457,7 +468,7 @@ class ChatRoomServiceTest {
     assertThat(response.trade().status()).isEqualTo(tradeResponse.status());
 
     then(chatRoomReader).should().readChatRoomById(chatRoomId);
-    then(chatRoomMemberReader).should().readChatRoomMemberIds(chatRoomId);
+    then(chatRoomMemberReader).should().readChatRoomMember(chatRoomId, MEMBER_ID);
     then(chatRoomMemberReader).should().readPartnerIdByRequesterId(chatRoomId, memberId);
     then(postPort).should().readChatPostSummary(chatRoom.getPostId());
     then(tradePort).should().readChatTradeSummary(chatRoomId, memberId);
@@ -470,10 +481,10 @@ class ChatRoomServiceTest {
     // given
     Long chatRoomId = 1L;
     ChatRoom chatRoom = DEFAULT_CHAT_ROOM_1();
-    List<UUID> participants = List.of(OTHER_MEMBER_ID);
 
     given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(chatRoom);
-    given(chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)).willReturn(participants);
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID))
+        .willThrow(new ApplicationException(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM));
 
     ReadChatRoomDetailQuery query = ReadChatRoomDetailQuery.of(chatRoomId, MEMBER_ID);
 
@@ -483,11 +494,56 @@ class ChatRoomServiceTest {
         .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
 
     then(chatRoomReader).should().readChatRoomById(chatRoomId);
-    then(chatRoomMemberReader).should().readChatRoomMemberIds(chatRoomId);
+    then(chatRoomMemberReader).should().readChatRoomMember(chatRoomId, MEMBER_ID);
     then(chatRoomMemberReader).shouldHaveNoMoreInteractions();
     then(postPort).shouldHaveNoInteractions();
     then(tradePort).shouldHaveNoInteractions();
     then(memberPort).shouldHaveNoInteractions();
+  }
+
+  @DisplayName("채팅 내역 조회 - 성공 테스트")
+  @Test
+  void 채팅_내역을_정상적으로_조회할_수_있다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID memberId = MEMBER_ID;
+    ChatRoomMember member = CHAT_ROOM_MEMBER_1();
+    int size = 2; // hasNext 테스트 용 size 정의
+
+    ChatMessage message1 = DEFAULT_TEXT_CHAT_MESSAGE();
+    ChatMessage message2 = WITH_IMAGE_CHAT_MESSAGE();
+
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, memberId)).willReturn(member);
+    given(filePort.readChatFileSummaries(chatRoomId)).willReturn(DEFAULT_READ_FILES_RESPONSE);
+    given(chatMessageReader.readRecentMessages(chatRoomId, member.getEnteredAt(), size)).willReturn(List.of(message1, message2));
+
+    // when
+    ChatMessagesResponse response = chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(memberId, chatRoomId, null, size));
+
+    // then
+    assertThat(response.messages()).hasSize(2);
+    assertThat(response.hasNext()).isTrue();
+    assertThat(response.messages().get(0).id()).isEqualTo(message1.getId());
+    assertThat(response.messages().get(0).isMine()).isTrue();
+  }
+
+  @DisplayName("채팅 내역 조회 - 실패 테스트 (채팅방 미참여)")
+  @Test
+  void 채팅방에_참여하지_않은_회원이면_예외가_발생한다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID memberId = MEMBER_ID;
+
+    ChatRoomMember exitedMember = CHAT_ROOM_MEMBER_1();
+    exitedMember.updateExitedAt(LocalDateTime.now());
+
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, memberId)).willReturn(exitedMember);
+
+    // when & then
+    assertThatThrownBy(() -> chatRoomService.readChatMessagesProcess(
+        ReadChatMessagesQuery.of(memberId, chatRoomId, null, 20)))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
   }
 
   @Test
