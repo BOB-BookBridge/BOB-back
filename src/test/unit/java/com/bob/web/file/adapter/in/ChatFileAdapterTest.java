@@ -1,5 +1,6 @@
 package com.bob.web.file.adapter.in;
 
+import static com.bob.domain.file.entity.type.FileDomain.*;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.response.ChatFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,6 +9,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.bob.domain.file.entity.type.FileDomain;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.response.FilesResponse;
@@ -39,7 +41,7 @@ class ChatFileAdapterTest {
     // given
     Long chatRoomId = 1L;
     FilesResponse fileSummary = DEFAULT_READ_FILES_RESPONSE;
-    ReadFilesWithDomainIdQuery query = new ReadFilesWithDomainIdQuery(chatRoomId.toString());
+    ReadFilesWithDomainIdQuery query = new ReadFilesWithDomainIdQuery(CHAT, chatRoomId.toString());
 
     given(readUseCase.readFilesByDomainId(query)).willReturn(fileSummary);
 
@@ -48,7 +50,7 @@ class ChatFileAdapterTest {
 
     // then
     assertThat(actual).isEqualTo(fileSummary);
-    verify(readUseCase, times(1)).readFilesByDomainId(new ReadFilesWithDomainIdQuery(chatRoomId.toString()));
+    verify(readUseCase, times(1)).readFilesByDomainId(query);
   }
 
   @Test

@@ -13,7 +13,6 @@ import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.response.FilesResponse;
 import com.bob.domain.file.usecase.FileModifyUseCase;
 import com.bob.domain.file.usecase.FileReadUseCase;
-import com.bob.domain.post.service.dto.response.PostFileSummaryResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,14 +52,13 @@ class PostFileAdapterTest {
     // given
     Long postId = 1L;
     FilesResponse mockResponse = DEFAULT_READ_FILES_RESPONSE;
-    given(fileReadUseCase.readFilesByDomainId(any(ReadFilesWithDomainIdQuery.class)))
-        .willReturn(mockResponse);
+    given(fileReadUseCase.readFilesByDomainId(any(ReadFilesWithDomainIdQuery.class))).willReturn(mockResponse);
 
     // when
-    PostFileSummaryResponse result = adapter.readPostFileSummaries(postId);
+    FilesResponse result = adapter.readPostFileSummaries(postId);
 
     // then
-    assertThat(result.images()).hasSize(mockResponse.summaries().size());
-    assertThat(result.images().get(0).fileName()).isEqualTo(mockResponse.summaries().get(0).fileName());
+    assertThat(result.summaries()).hasSize(mockResponse.summaries().size());
+    assertThat(result.summaries().get(0).fileName()).isEqualTo(mockResponse.summaries().get(0).fileName());
   }
 }

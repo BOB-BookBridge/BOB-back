@@ -1,7 +1,7 @@
 package com.bob.domain.file.service;
 
+import static com.bob.domain.file.entity.type.FileDomain.POST;
 import static com.bob.global.exception.response.ApplicationError.FILE_UNAUTHORIZED;
-import static com.bob.global.utils.image.ImageDirectory.POST;
 import static com.bob.support.fixture.command.ChangeFileCommandFixture.DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1;
 import static com.bob.support.fixture.command.ChangeFileCommandFixture.DEFAULT_CHANGE_FILE_COMMAND_REF_ID_2;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
@@ -24,6 +24,7 @@ import com.bob.domain.file.service.dto.response.FilesResponse;
 import com.bob.domain.file.service.port.FileImagePort;
 import com.bob.domain.file.service.reader.FileReader;
 import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.utils.image.ImageDirectory;
 import com.bob.global.utils.image.ImageUtils;
 import com.bob.support.TestContainerSupport;
 import java.util.List;
@@ -82,7 +83,7 @@ class FileServiceIntgTest extends TestContainerSupport {
     fileRepository.saveAll(files);
 
     // when
-    FilesResponse response = fileService.readFilesByDomainId(new ReadFilesWithDomainIdQuery(referenceId));
+    FilesResponse response = fileService.readFilesByDomainId(new ReadFilesWithDomainIdQuery(POST, referenceId));
 
     // then
     assertThat(response.summaries()).hasSize(files.size());
@@ -106,7 +107,7 @@ class FileServiceIntgTest extends TestContainerSupport {
     fileService.changeFileProcess(DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1);
 
     // then
-    List<File> newFiles = fileReader.readFileByReferenceId(referenceId);
+    List<File> newFiles = fileReader.readFileByReferenceId(POST, referenceId);
     assertThat(newFiles).hasSize(2);
     assertThat(newFiles)
         .extracting(File::getFileName)
@@ -129,7 +130,7 @@ class FileServiceIntgTest extends TestContainerSupport {
         .isInstanceOf(ApplicationException.class)
         .hasMessage(FILE_UNAUTHORIZED.getMessage());
 
-    List<File> result = fileReader.readFileByReferenceId(referenceId);
+    List<File> result = fileReader.readFileByReferenceId(POST, referenceId);
     assertThat(result).hasSize(files.size());
   }
 
@@ -147,7 +148,7 @@ class FileServiceIntgTest extends TestContainerSupport {
     fileService.modifyReferenceIdProcess(command);
 
     // then
-    List<File> updated = fileReader.readFileByReferenceId(newReferenceId.toString());
+    List<File> updated = fileReader.readFileByReferenceId(POST, newReferenceId.toString());
     assertThat(updated)
         .extracting(File::getReferenceId)
         .containsOnly(newReferenceId.toString());
@@ -169,7 +170,7 @@ class FileServiceIntgTest extends TestContainerSupport {
     given(imagePort.generateFileUploadUrlsProcess(fileNames, contentTypes)).willReturn(urls);
 
     try (MockedStatic<ImageUtils> utils = org.mockito.Mockito.mockStatic(ImageUtils.class)) {
-      utils.when(() -> ImageUtils.generateImageFileNames(POST, contentTypes)).thenReturn(fileNames);
+      utils.when(() -> ImageUtils.generateImageFileNames(ImageDirectory.POST, contentTypes)).thenReturn(fileNames);
 
       // when
       FileUploadUrlResponse response = fileService.generateFileUploadUrl(command);
