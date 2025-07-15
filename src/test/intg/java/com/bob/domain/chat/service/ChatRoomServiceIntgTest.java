@@ -16,9 +16,11 @@ import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
+import com.bob.domain.chat.service.dto.query.ReadChatMessagesQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
+import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
@@ -32,6 +34,7 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
 import com.bob.support.fixture.command.CreateChatRoomCommandFixture;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -293,6 +296,49 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
 
     // when & then
     assertThatThrownBy(() -> chatRoomService.readChatRoomDetailProcess(query))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+  }
+
+  @Test
+  @DisplayName("채팅 내역 조회 - 성공 테스트")
+  void 채팅_내역을_정상적으로_조회할_수_있다() throws InterruptedException {
+    // given
+    Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
+    Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
+    Post post = postRepository.findAllBySellerId(seller.getId()).get(6);
+    Long chatRoomId = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())).chatRoomId();
+    Thread.sleep(10);
+    chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, buyer.getId()));
+    chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, seller.getId()));
+
+    // when
+    ChatMessagesResponse response = chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(buyer.getId(), chatRoomId, null, 20));
+
+    // then
+    assertThat(response.messages()).hasSize(2);
+    assertThat(response.hasNext()).isFalse();
+    assertThat(response.messages().get(0).isMine()).isFalse(); // seller가 보낸 메시지
+    assertThat(response.messages().get(1).isMine()).isTrue(); // buyer가 보낸 메시지
+  }
+
+  @Test
+  @DisplayName("채팅 내역 조회 - 실패 테스트 (채팅방 미참여)")
+  void 채팅방에_참여하지_않은_회원이면_예외가_발생한다() {
+    // given
+    Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
+    Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
+    Member stranger = memberRepository.save(otherMember());
+
+    Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
+    Long chatRoomId = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId()))
+        .chatRoomId();
+
+    ChatRoomMember exited = chatRoomMemberRepository.findByChatRoomIdAndMemberId(chatRoomId, buyer.getId()).orElseThrow();
+    exited.updateExitedAt(LocalDateTime.now());
+
+    // when & then
+    assertThatThrownBy(() -> chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(buyer.getId(), chatRoomId, null, 20)))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
   }
