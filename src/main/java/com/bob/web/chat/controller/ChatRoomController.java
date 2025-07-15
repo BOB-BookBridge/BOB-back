@@ -4,9 +4,11 @@ import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
+import com.bob.domain.chat.service.dto.query.ReadChatMessagesQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
+import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -82,6 +85,16 @@ public class ChatRoomController {
       @AuthenticationId UUID memberId
   ) {
     return ResponseEntity.ok().body(readUseCase.readChatRoomDetailProcess(ReadChatRoomDetailQuery.of(chatroomId, memberId)));
+  }
+
+  @GetMapping("/{chatRoomId}/messages")
+  public ResponseEntity<ChatMessagesResponse> readChatMessages(
+      @PathVariable Long chatRoomId,
+      @RequestParam(required = false) Long beforeMessageId,
+      @RequestParam(defaultValue = "20") Integer size,
+      @AuthenticationId UUID memberId
+  ) {
+    return ResponseEntity.ok(readUseCase.readChatMessagesProcess(ReadChatMessagesQuery.of(memberId, chatRoomId, beforeMessageId, size)));
   }
 
   @PatchMapping("/{chatroomId}")

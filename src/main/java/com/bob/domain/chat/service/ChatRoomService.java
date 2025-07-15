@@ -11,6 +11,7 @@ import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 
 import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
+import com.bob.domain.chat.entity.ChatRoomMember;
 import com.bob.domain.chat.repository.ChatMessageRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
@@ -19,16 +20,21 @@ import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
 import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
+import com.bob.domain.chat.service.dto.query.ReadChatMessagesQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
 import com.bob.domain.chat.service.dto.response.ChatMemberResponse;
+import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.ChatTradeResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
+import com.bob.domain.chat.service.dto.response.internal.ChatFileSummary;
+import com.bob.domain.chat.service.dto.response.internal.MessageSummary;
+import com.bob.domain.chat.service.port.out.ChatFilePort;
 import com.bob.domain.chat.service.port.out.ChatMemberPort;
 import com.bob.domain.chat.service.port.out.ChatPostPort;
 import com.bob.domain.chat.service.port.out.ChatTradePort;
@@ -41,6 +47,7 @@ import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -64,6 +71,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   private final ChatMessageReader chatMessageReader;
 
   private final ChatPostPort postPort;
+  private final ChatFilePort filePort;
   private final ChatTradePort tradePort;
   private final ChatMemberPort memberPort;
 
@@ -90,10 +98,9 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
         chatRoom.getId(),
         List.of(post.sellerId(), command.buyerId())
     ));
-    if(command.isFar()) {
-      chatMessageRepository.save(
-          CreateChatMessageCommand.of(chatRoom.getId(), command.buyerId(), IS_FAR_MEMBER, null)
-              .toSystemChatMessage()
+    if (command.isFar()) {
+      chatMessageRepository.save(CreateChatMessageCommand.of(
+          chatRoom.getId(), command.buyerId(), IS_FAR_MEMBER, null).toSystemChatMessage()
       );
     }
     return CreateChatRoomResponse.of(chatRoom.getId());
@@ -110,7 +117,9 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     verifyParticipating(command.chatRoomId(), command.memberId());
     UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
     ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
-    if (!chatRoom.getEnableStatus()) chatRoom.updateChatRoomStatus(true);
+    if (!chatRoom.getEnableStatus()) {
+      chatRoom.updateChatRoomStatus(true);
+    }
     ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
     chatRoom.updateChatRoomLastMessageInfo(message.getContent(), message.getCreatedAt());
     eventPublisher.publishEvent(NotiEvent.of(
@@ -164,16 +173,36 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   }
 
   @Transactional(readOnly = true)
+  public ChatMessagesResponse readChatMessagesProcess(ReadChatMessagesQuery query) {
+    verifyParticipating(query.chatRoomId(), query.memberId());
+    ChatRoomMember member = chatRoomMemberReader.readChatRoomMember(query.chatRoomId(), query.memberId());
+    List<ChatMessage> messages = readChatMessages(query, member.getEnteredAt());
+    List<MessageSummary> messageResponses = messages.stream()
+        .map(message -> MessageSummary.from(message, query.memberId(), readChatFiles(message)))
+        .toList();
+    return new ChatMessagesResponse(messageResponses, messages.size() == query.size());
+  }
+
+  private List<ChatMessage> readChatMessages(ReadChatMessagesQuery query, LocalDateTime enteredAt) {
+    return query.beforeMessageId() == null
+        ? chatMessageReader.readRecentMessages(query.chatRoomId(), enteredAt, query.size())
+        : chatMessageReader.readPreviousMessages(query.chatRoomId(), query.beforeMessageId(), enteredAt, query.size());
+  }
+
+  private List<ChatFileSummary> readChatFiles(ChatMessage message) {
+    return !message.getType().hasFile()
+        ? List.of()
+        : ChatFileSummary.convertFrom(filePort.readChatFileSummaries(message.getId()));
+  }
+
+  @Transactional(readOnly = true)
   public void validateParticipant(ValidateParticipantQuery query) {
     verifyParticipating(query.chatRoomId(), query.memberId());
   }
 
   private void verifyParticipating(Long chatRoomId, UUID memberId) {
-    boolean isParticipated = chatRoomMemberReader.readChatRoomMemberIds(chatRoomId)
-        .stream()
-        .anyMatch(participantId -> participantId.equals(memberId));
-
-    if (!isParticipated) {
+    ChatRoomMember member = chatRoomMemberReader.readChatRoomMember(chatRoomId, memberId);
+    if (member.getExitedAt() != null) {
       throw new ApplicationException(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM);
     }
   }
