@@ -308,7 +308,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(6);
     Long chatRoomId = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())).chatRoomId();
-    Thread.sleep(10);
+    Thread.sleep(100);
     chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, buyer.getId()));
     chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, seller.getId()));
 

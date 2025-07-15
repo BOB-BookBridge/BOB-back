@@ -1,6 +1,7 @@
 package com.bob.domain.file.service.reader;
 
 import com.bob.domain.file.entity.File;
+import com.bob.domain.file.entity.type.FileDomain;
 import com.bob.domain.file.repository.FileRepository;
 import java.util.List;
 import java.util.Optional;
@@ -15,8 +16,8 @@ public class FileReader {
 
   private final FileRepository fileRepository;
 
-  public List<File> readFileByReferenceId(String refId) {
-    return fileRepository.findByReferenceId(refId);
+  public List<File> readFileByReferenceId(FileDomain domain, String refId) {
+    return fileRepository.findByDomainAndReferenceId(domain, refId);
   }
 
   public Optional<File> readFileByFileName(String fileName) {

@@ -32,6 +32,9 @@ public record ChatMessageEmitEvent(
   }
 
   private static List<ChatImage> withSequence(List<String> fileNames) {
+    if (fileNames == null || fileNames.isEmpty()) {
+      return List.of();
+    }
     List<ChatImage> result = new ArrayList<>();
     forEachWithIndex(fileNames, (i, name) -> result.add(new ChatImage(i, name)));
     return result;

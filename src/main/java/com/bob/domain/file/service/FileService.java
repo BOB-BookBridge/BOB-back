@@ -6,6 +6,7 @@ import static com.bob.global.utils.image.ImageUtils.generateImageFileNames;
 import static com.bob.global.utils.stream.StreamUtils.forEachWithIndex;
 
 import com.bob.domain.file.entity.File;
+import com.bob.domain.file.entity.type.FileDomain;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ChangeFileCommand;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
@@ -44,13 +45,13 @@ public class FileService implements FileWriteUseCase, FileReadUseCase, FileModif
 
   @Transactional(readOnly = true)
   public FilesResponse readFilesByDomainId(ReadFilesWithDomainIdQuery query) {
-    List<File> files = fileReader.readFileByReferenceId(query.domainId());
+    List<File> files = fileReader.readFileByReferenceId(query.domain(), query.domainId());
     return new FilesResponse(FileSummaryResponse.from(files));
   }
 
   @Transactional
   public void changeFileProcess(ChangeFileCommand command) {
-    List<File> oldFiles = fileReader.readFileByReferenceId(command.referenceId());
+    List<File> oldFiles = fileReader.readFileByReferenceId(FileDomain.from(command.domain()), command.referenceId());
     verifyOwner(oldFiles, command.memberId());
     fileRepository.deleteAll(oldFiles);
     fileRepository.saveAll(command.toEntities());

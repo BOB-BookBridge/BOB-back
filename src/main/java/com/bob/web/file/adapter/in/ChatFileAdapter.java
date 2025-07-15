@@ -1,6 +1,7 @@
 package com.bob.web.file.adapter.in;
 
 import com.bob.domain.chat.service.port.out.ChatFilePort;
+import com.bob.domain.file.entity.type.FileDomain;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.response.FilesResponse;
@@ -19,7 +20,7 @@ public class ChatFileAdapter implements ChatFilePort {
 
   @Override
   public FilesResponse readChatFileSummaries(Long chatRoomId) {
-    ReadFilesWithDomainIdQuery query = new ReadFilesWithDomainIdQuery(chatRoomId.toString());
+    ReadFilesWithDomainIdQuery query = new ReadFilesWithDomainIdQuery(FileDomain.CHAT, chatRoomId.toString());
     return readUseCase.readFilesByDomainId(query);
   }
 
