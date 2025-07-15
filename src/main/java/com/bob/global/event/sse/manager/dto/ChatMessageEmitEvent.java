@@ -1,18 +1,21 @@
 package com.bob.global.event.sse.manager.dto;
 
+import static com.bob.global.utils.stream.StreamUtils.forEachWithIndex;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public record ChatMessageEmitEvent(
     long id,
     String type,
     String content,
-    List<String> fileNames,
+    List<ChatImage> images,
     LocalDateTime sentAt
 ) {
 
   public static ChatMessageEmitEvent of(String id, String content, List<String> fileNames, LocalDateTime sentAt) {
-    return new ChatMessageEmitEvent(Long.parseLong(id), resolveMessageType(content, fileNames), content, fileNames, sentAt);
+    return new ChatMessageEmitEvent(Long.parseLong(id), resolveMessageType(content, fileNames), content, withSequence(fileNames), sentAt);
   }
 
   private static String resolveMessageType(String content, List<String> fileNames) {
@@ -27,4 +30,12 @@ public record ChatMessageEmitEvent(
     }
     return "IMAGE";
   }
+
+  private static List<ChatImage> withSequence(List<String> fileNames) {
+    List<ChatImage> result = new ArrayList<>();
+    forEachWithIndex(fileNames, (i, name) -> result.add(new ChatImage(i, name)));
+    return result;
+  }
+
+  public record ChatImage(int sequence, String fileName) {}
 }

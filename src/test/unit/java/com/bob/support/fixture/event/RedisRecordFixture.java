@@ -16,6 +16,7 @@ public class RedisRecordFixture {
       .refId("1")
       .childId("1")
       .body("안녕")
+      .fileNames(List.of())
       .normalize(false)
       .sender(Sender.of(MEMBER_ID, "tester", "/profile/1.png"))
       .build();
@@ -48,7 +49,7 @@ public class RedisRecordFixture {
       .refId("1")
       .childId("1")
       .body("거래 완료")
-      .fileNames(null)
+      .fileNames(List.of())
       .normalize(false)
       .sentAt(LocalDateTime.now())
       .sender(Sender.of(MEMBER_ID, "tester", "/profile/1.png"))

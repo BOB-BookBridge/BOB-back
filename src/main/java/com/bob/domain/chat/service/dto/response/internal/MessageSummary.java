@@ -9,7 +9,7 @@ public record MessageSummary(
     Long id,
     String type,
     String content,
-    List<ChatFileSummary> fileNames,
+    List<ChatFileSummary> images,
     LocalDateTime sentAt,
     boolean isRead,
     boolean isMine
