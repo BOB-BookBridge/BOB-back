@@ -547,8 +547,8 @@ class ChatRoomServiceTest {
   }
 
   @Test
-  @DisplayName("채팅방에서 퇴장 시 ChatRoomMemberService가 호출된다")
-  void 채팅방에서_퇴장하면_채팅방_멤버_서비스가_호출된다() {
+  @DisplayName("채팅방 나기기 - 성공 테스트")
+  void 채팅방을_나가면_상태를_업데이트하고_채팅들을_읽음_처리한다() {
     // given
     Long chatRoomId = 1L;
     ExitChatRoomCommand command = ExitChatRoomCommand.of(chatRoomId, MEMBER_ID);
@@ -558,6 +558,7 @@ class ChatRoomServiceTest {
 
     // then
     then(chatRoomMemberService).should(times(1)).exitChatRoomMemberProcess(command);
+    then(chatMessageService).should(times(1)).updateReadStatusProcess(EnterChatRoomCommand.of(command.chatRoomId(), command.memberId()));
   }
 
   @Test

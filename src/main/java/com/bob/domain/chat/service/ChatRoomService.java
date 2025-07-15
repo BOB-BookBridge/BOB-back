@@ -212,6 +212,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   @Transactional
   public void exitChatRoomProcess(ExitChatRoomCommand command) {
     chatRoomMemberService.exitChatRoomMemberProcess(command);
+    chatMessageService.updateReadStatusProcess(EnterChatRoomCommand.of(command.chatRoomId(), command.memberId()));
   }
 
   @Transactional
