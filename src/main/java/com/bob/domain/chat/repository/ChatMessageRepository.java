@@ -16,7 +16,7 @@ public interface ChatMessageRepository extends CrudRepository<ChatMessage, Long>
         SELECT m FROM ChatMessage m
         WHERE m.chatRoomId = :chatRoomId
           AND m.createdAt >= :enteredAt
-        ORDER BY m.id DESC
+        ORDER BY m.id ASC
       """)
   List<ChatMessage> findRecentMessages(Long chatRoomId, LocalDateTime enteredAt, Pageable pageable);
 
@@ -25,7 +25,7 @@ public interface ChatMessageRepository extends CrudRepository<ChatMessage, Long>
         WHERE m.chatRoomId = :chatRoomId
           AND m.id < :beforeMessageId
           AND m.createdAt >= :enteredAt
-        ORDER BY m.id DESC
+        ORDER BY m.id ASC
       """)
   List<ChatMessage> findMessagesBeforeId(Long chatRoomId, Long beforeMessageId, LocalDateTime enteredAt, Pageable pageable);
 

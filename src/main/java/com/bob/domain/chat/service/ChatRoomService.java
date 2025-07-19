@@ -1,6 +1,6 @@
 package com.bob.domain.chat.service;
 
-import static com.bob.domain.chat.entity.type.ChatMessageType.MESSAGE;
+import static com.bob.domain.chat.entity.type.ChatMessageType.TEXT;
 import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
 import static com.bob.domain.chat.service.dto.response.ChatMemberResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatPostResponse.from;
@@ -125,7 +125,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     chatRoom.updateChatRoomLastMessageInfo(message.getContent(), message.getCreatedAt());
     eventPublisher.publishEvent(NotiEvent.of(
         "CHAT", command.chatRoomId().toString(), message.getId().toString(), command.memberId(), partnerId,
-        message.getContent(), command.fileNames(), message.getType() != MESSAGE
+        message.getContent(), command.fileNames(), message.getType() != TEXT
     ));
     return ChatMessageSendResponse.of(message.getIsRead());
   }
