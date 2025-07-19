@@ -1,7 +1,7 @@
 package com.bob.domain.chat.service.dto.command;
 
 import static com.bob.domain.chat.entity.type.ChatMessageType.IMAGE;
-import static com.bob.domain.chat.entity.type.ChatMessageType.MESSAGE;
+import static com.bob.domain.chat.entity.type.ChatMessageType.TEXT;
 import static com.bob.domain.chat.entity.type.ChatMessageType.MIX;
 import static com.bob.domain.chat.entity.type.ChatMessageType.SYSTEM;
 
@@ -57,7 +57,7 @@ public record CreateChatMessageCommand(
       return MIX;
     }
     if (hasMessage) {
-      return MESSAGE;
+      return TEXT;
     }
     return IMAGE;
   }

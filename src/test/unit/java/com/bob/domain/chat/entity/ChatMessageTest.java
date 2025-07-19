@@ -1,6 +1,6 @@
 package com.bob.domain.chat.entity;
 
-import static com.bob.domain.chat.entity.type.ChatMessageType.MESSAGE;
+import static com.bob.domain.chat.entity.type.ChatMessageType.TEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
@@ -17,7 +17,7 @@ class ChatMessageTest {
     ChatMessage chatMessage = ChatMessage.builder()
         .chatRoomId(1L)
         .senderId(UUID.randomUUID())
-        .type(MESSAGE)
+        .type(TEXT)
         .content("읽지 않은 메시지")
         .isRead(false)
         .build();

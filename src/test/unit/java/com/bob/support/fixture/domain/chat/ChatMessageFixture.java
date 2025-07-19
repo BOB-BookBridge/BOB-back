@@ -13,7 +13,7 @@ public class ChatMessageFixture {
         .chatRoomId(1L)
         .senderId(MEMBER_ID)
         .content("안녕하세요")
-        .type(ChatMessageType.MESSAGE)
+        .type(ChatMessageType.TEXT)
         .build();
   }
 

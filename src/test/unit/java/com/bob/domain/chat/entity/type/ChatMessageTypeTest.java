@@ -12,7 +12,7 @@ class ChatMessageTypeTest {
   @DisplayName("hasFile - MESSAGE, SYSTEM 테스트")
   void hasFile은_MESSAGE와_SYSTEM에_대해_false를_반환한다() {
     // when & then
-    assertThat(ChatMessageType.MESSAGE.hasFile()).isFalse();
+    assertThat(ChatMessageType.TEXT.hasFile()).isFalse();
     assertThat(ChatMessageType.SYSTEM.hasFile()).isFalse();
   }
 
