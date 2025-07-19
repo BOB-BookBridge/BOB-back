@@ -315,11 +315,11 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     // when
     ChatMessagesResponse response = chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(buyer.getId(), chatRoomId, null, 20));
 
-    // then
+    // then, 메시지 내역 조회 = 오래된 순서
     assertThat(response.messages()).hasSize(2);
     assertThat(response.hasNext()).isFalse();
-    assertThat(response.messages().get(0).isMine()).isFalse(); // seller가 보낸 메시지
-    assertThat(response.messages().get(1).isMine()).isTrue(); // buyer가 보낸 메시지
+    assertThat(response.messages().get(0).isMine()).isTrue(); // buyer가 보낸 메시지
+    assertThat(response.messages().get(1).isMine()).isFalse(); // seller가 보낸 메시지
   }
 
   @Test
