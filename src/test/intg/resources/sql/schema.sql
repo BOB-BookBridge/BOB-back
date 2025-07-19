@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS trades (
     post_id BIGINT NOT NULL,
     seller_id BINARY(16) NOT NULL,
     buyer_id BINARY(16) NOT NULL,
-    trade_status ENUM('REQUESTED', 'CANCELED', 'COMPLETED') NOT NULL,
+    trade_status ENUM('REQUESTED', 'RESERVED', 'CANCELED', 'COMPLETED') NOT NULL,
     updated_at DATETIME NOT NULL,
     created_at DATETIME,
     FOREIGN KEY (post_id) REFERENCES posts(id),
