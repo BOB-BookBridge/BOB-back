@@ -5,6 +5,7 @@ import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
 
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class MemberProfileResponseFixture {
 
@@ -23,4 +24,14 @@ public class MemberProfileResponseFixture {
           .profileImageUrl("http://image.url")
           .area(new MemberProfileResponse.Area(1, true, LocalDate.now()))
           .build();
+
+  public static MemberProfileResponse CUSTOM_MEMBER_PROFILE_RESPONSE(UUID memberId) {
+    return MemberProfileResponse.builder()
+        .memberId(memberId)
+        .nickname("custom")
+        .profileImageUrl("http://image.url")
+        .area(new MemberProfileResponse.Area(1, true, LocalDate.now()))
+        .build();
+  }
+
 }

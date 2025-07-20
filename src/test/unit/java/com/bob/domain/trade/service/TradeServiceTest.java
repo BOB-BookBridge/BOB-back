@@ -1,7 +1,10 @@
 package com.bob.domain.trade.service;
 
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_ID_TRADE;
+import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
+import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -13,9 +16,14 @@ import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.trade.service.dto.response.TradesResponse;
+import com.bob.domain.trade.service.port.out.TradeMemberPort;
+import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
 import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +45,12 @@ class TradeServiceTest {
   @Mock
   private TradeReader tradeReader;
 
+  @Mock
+  private TradeMemberPort memberPort;
+
+  @Mock
+  private TradePostPort postPort;
+
   @Test
   @DisplayName("거래 생성 시 ID가 반환된다")
   void 거래가_생성되면_거래_ID를_반환한다() {
@@ -52,6 +66,49 @@ class TradeServiceTest {
     // then
     assertThat(tradeId).isEqualTo(1L);
     then(tradeRepository).should(times(1)).save(any(Trade.class));
+  }
+
+  @Test
+  @DisplayName("거래 목록 조회 - 성공 테스트")
+  void 게시글_소유자는_거래_목록을_정상_조회할_수_있다() {
+    // given
+    UUID requesterId = MEMBER_ID;
+    Long postId = 1L;
+    ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
+    given(postPort.readTradePostOwnerId(postId)).willReturn(MEMBER_ID);
+    given(tradeReader.readTradesByPostId(postId)).willReturn(DEFAULT_TRADES());
+    given(memberPort.readTradeMemberProfile(any(UUID.class)))
+        .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
+
+    // when
+    TradesResponse response = tradeService.readTradesProcess(query);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.trades()).hasSize(3);
+    then(postPort).should(times(1)).readTradePostOwnerId(postId);
+    then(tradeReader).should(times(1)).readTradesByPostId(postId);
+    then(memberPort).should(times(3)).readTradeMemberProfile(any(UUID.class));
+  }
+
+  @Test
+  @DisplayName("거래 목록 조회 - 실패 테스트 (게시글 소유자가 아님)")
+  void 게시글_소유자가_아니면_거래_목록_조회_시_예외가_발생한다() {
+    // given
+    UUID postOwnerId = MEMBER_ID;
+    UUID requesterId = UUID.randomUUID();
+    Long postId = 1L;
+    ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
+    given(postPort.readTradePostOwnerId(postId)).willReturn(postOwnerId);
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.readTradesProcess(query))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.TRADE_ACCESS_DENIED.getMessage());
+
+    then(postPort).should(times(1)).readTradePostOwnerId(postId);
+    then(tradeReader).shouldHaveNoInteractions();
+    then(memberPort).shouldHaveNoInteractions();
   }
 
   @Test
@@ -105,7 +162,7 @@ class TradeServiceTest {
 
     ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, nonParticipantId);
 
-    // expect
+    // when & then
     assertThatThrownBy(() -> tradeService.readTradeDetailProcess(query))
         .isInstanceOf(ApplicationException.class)
         .hasMessageContaining("거래에 접근할 권한이 없습니다");
