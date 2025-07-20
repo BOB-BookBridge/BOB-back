@@ -4,6 +4,7 @@ import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class TradeReader {
 
   private final TradeRepository tradeRepository;
+
+  public List<Trade> readTradesByPostId(Long postId) {
+    return tradeRepository.findAllByPostId(postId);
+  }
 
   public Trade readTradeById(Long id) {
     return tradeRepository.findById(id)
