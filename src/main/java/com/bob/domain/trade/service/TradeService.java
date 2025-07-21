@@ -1,9 +1,16 @@
 package com.bob.domain.trade.service;
 
+import static com.bob.domain.trade.entity.status.TradeStatus.CANCELED;
+import static com.bob.domain.trade.entity.status.TradeStatus.valueOf;
 import static com.bob.domain.trade.service.dto.response.TradesResponse.of;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
+import static java.time.LocalDateTime.now;
 
 import com.bob.domain.trade.entity.Trade;
+import com.bob.domain.trade.entity.status.TradeStatus;
 import com.bob.domain.trade.repository.TradeRepository;
+import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
@@ -14,24 +21,28 @@ import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
+import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.domain.trade.usecase.TradeWriteUseCase;
+import com.bob.global.event.application.dto.SystemChatMessageEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class TradeService implements TradeWriteUseCase, TradeReadUseCase {
+public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeModifyUseCase {
 
   private final TradeRepository tradeRepository;
   private final TradeReader tradeReader;
 
   private final TradeMemberPort memberPort;
   private final TradePostPort postPort;
+
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public Long createTradeProcess(CreateTradeCommand command) {
@@ -48,12 +59,6 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase {
     ).toList());
   }
 
-  private void verifyTradeOwner(UUID ownerId, UUID memberId) {
-    if (!ownerId.equals(memberId)) {
-      throw new ApplicationException(ApplicationError.TRADE_ACCESS_DENIED);
-    }
-  }
-
   @Transactional(readOnly = true)
   public TradeDetailResponse readTradeDetailProcess(ReadTradeDetailQuery query) {
     Trade trade = tradeReader.readTradeById(query.tradeId());
@@ -66,7 +71,32 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase {
     UUID buyerId = trade.getBuyerId();
 
     if (!memberId.equals(sellerId) && !memberId.equals(buyerId)) {
-      throw new ApplicationException(ApplicationError.TRADE_ACCESS_DENIED);
+      throw new ApplicationException(TRADE_ACCESS_DENIED);
+    }
+  }
+
+  @Transactional
+  public void changeTradeStatusProcess(ChangeTradeStatusCommand command) {
+    Trade trade = tradeReader.readTradeById(command.tradeId());
+    verifyRequestedOnly(trade.getPostId(), command.status());
+    verifyTradeOwner(postPort.readTradePostOwnerId(trade.getPostId()), command.memberId());
+    TradeStatus status = valueOf(command.status());
+    trade.updateTradeStatus(status, now());
+  }
+
+  private void verifyRequestedOnly(Long postId, String status) {
+    if (valueOf(status) == CANCELED) return;
+    tradeReader.readTradesByPostId(postId).stream()
+        .filter(t -> t.getTradeStatus().isProcessed())
+        .findAny()
+        .ifPresent(t -> {
+          throw new ApplicationException(TRADE_ALREADY_PROCESSED);
+        });
+  }
+
+  private void verifyTradeOwner(UUID ownerId, UUID memberId) {
+    if (!ownerId.equals(memberId)) {
+      throw new ApplicationException(TRADE_ACCESS_DENIED);
     }
   }
 }

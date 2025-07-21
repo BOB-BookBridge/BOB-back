@@ -16,12 +16,12 @@ public class TradeReader {
 
   private final TradeRepository tradeRepository;
 
-  public List<Trade> readTradesByPostId(Long postId) {
-    return tradeRepository.findAllByPostId(postId);
-  }
-
   public Trade readTradeById(Long id) {
     return tradeRepository.findById(id)
         .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXISTS_TRADE));
+  }
+
+  public List<Trade> readTradesByPostId(Long postId) {
+    return tradeRepository.findAllByPostId(postId);
   }
 }
