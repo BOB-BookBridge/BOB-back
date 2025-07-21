@@ -1,6 +1,7 @@
 package com.bob.domain.chat.service;
 
 import static com.bob.domain.chat.entity.type.ChatMessageType.TEXT;
+import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.*;
 import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
 import static com.bob.domain.chat.service.dto.response.ChatMemberResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatPostResponse.from;
@@ -12,11 +13,11 @@ import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.entity.ChatRoomMember;
-import com.bob.domain.chat.repository.ChatMessageRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
+import com.bob.domain.chat.service.dto.command.CreateSystemMessageCommand;
 import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
@@ -68,7 +69,6 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   private final ChatRoomMemberReader chatRoomMemberReader;
 
   private final ChatMessageService chatMessageService;
-  private final ChatMessageRepository chatMessageRepository;
   private final ChatMessageReader chatMessageReader;
 
   private final ChatPostPort postPort;
@@ -100,8 +100,8 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
         List.of(post.sellerId(), command.buyerId())
     ));
     if (command.isFar()) {
-      chatMessageRepository.save(CreateChatMessageCommand.of(
-          chatRoom.getId(), command.buyerId(), IS_FAR_MEMBER, null).toSystemChatMessage()
+      chatMessageService.createSystemChatMessageProcess(
+          of(chatRoom.getId(), command.buyerId(), IS_FAR_MEMBER, null)
       );
     }
     return CreateChatRoomResponse.of(chatRoom.getId());
@@ -128,6 +128,17 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
         message.getContent(), command.fileNames(), message.getType() != TEXT
     ));
     return ChatMessageSendResponse.of(message.getIsRead());
+  }
+
+  @Transactional
+  public void createChatRoomSystemMessageProcess(CreateSystemMessageCommand command) {
+    Long postId = Long.valueOf(command.refId());
+    Long chatRoomId = chatRoomReader.readExistingChatRoom(postId, command.senderId(), command.partnerId()).get();
+    ChatMessage message = chatMessageService.createSystemChatMessageProcess(of(chatRoomId, command.senderId(), command.body(), null));
+    eventPublisher.publishEvent(NotiEvent.toTradeNotiEvent(
+        "CHAT", chatRoomId.toString(),
+        message.getId().toString(), command.senderId(), command.partnerId(), message.getContent()
+    ));
   }
 
   @Transactional(readOnly = true)

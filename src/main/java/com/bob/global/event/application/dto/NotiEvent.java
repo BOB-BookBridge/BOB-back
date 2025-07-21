@@ -13,6 +13,7 @@ public record NotiEvent(
     UUID receiverId,
     String body,
     List<String> fileNames,
+    boolean isSystem,
     boolean normalize
 ) {
 
@@ -29,15 +30,16 @@ public record NotiEvent(
         .build();
   }
 
-  public static NotiEvent toTradeNotiEvent(String type, String refId, UUID senderId, UUID receiverId, String body) {
+  public static NotiEvent toTradeNotiEvent(String type, String refId, String childId, UUID senderId, UUID receiverId, String body) {
     return NotiEvent.builder()
         .type(type)
         .refId(refId)
-        .childId(null)
+        .childId(childId)
         .senderId(senderId)
         .receiverId(receiverId)
         .body(body)
-        .fileNames(null)
+        .fileNames(List.of())
+        .isSystem(true)
         .normalize(false)
         .build();
   }

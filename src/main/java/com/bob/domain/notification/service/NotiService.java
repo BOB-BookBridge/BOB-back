@@ -35,13 +35,13 @@ public class NotiService {
   }
 
   private boolean isChatNoti(NotificationType type) {
-    return type != CHAT;
+    return type == CHAT;
   }
 
   private void redisPublish(CreateNotiCommand command, NotiMemberResponse sender) {
     redisPort.publish(
         command.receiverId(), command.type().name(), command.refId(), command.childId(), command.body(), command.fileNames(),
-        command.normalize(), sender.memberId(), sender.nickname(), sender.profile()
+        command.isSystem(), command.normalize(), sender.memberId(), sender.nickname(), sender.profile()
     );
   }
 }

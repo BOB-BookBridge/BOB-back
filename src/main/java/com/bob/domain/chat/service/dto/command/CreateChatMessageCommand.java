@@ -1,9 +1,9 @@
 package com.bob.domain.chat.service.dto.command;
 
 import static com.bob.domain.chat.entity.type.ChatMessageType.IMAGE;
-import static com.bob.domain.chat.entity.type.ChatMessageType.TEXT;
 import static com.bob.domain.chat.entity.type.ChatMessageType.MIX;
 import static com.bob.domain.chat.entity.type.ChatMessageType.SYSTEM;
+import static com.bob.domain.chat.entity.type.ChatMessageType.TEXT;
 
 import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.type.ChatMessageType;
@@ -20,6 +20,8 @@ public record CreateChatMessageCommand(
 ) {
 
   public static final String IS_FAR_MEMBER = "거리가 먼 사용자와의 채팅입니다.";
+  public static final String CHANGED_TRADE_STATUS_PREFIX = "거래 상태가 ";
+  public static final String CHANGED_TRADE_STATUS_SUFFIX = " 상태로 변경되었습니다.";
 
   public static CreateChatMessageCommand of(Long chatRoomId, UUID memberId, String content, List<String> fileNames) {
     return CreateChatMessageCommand.builder()
@@ -28,6 +30,10 @@ public record CreateChatMessageCommand(
         .content(content)
         .fileNames(fileNames)
         .build();
+  }
+
+  public static String changedTradeStatusMessage(String tradeStatus) {
+    return CHANGED_TRADE_STATUS_PREFIX + tradeStatus + CHANGED_TRADE_STATUS_SUFFIX;
   }
 
   public ChatMessage toChatMessage() {
@@ -43,7 +49,7 @@ public record CreateChatMessageCommand(
     return ChatMessage.builder()
         .chatRoomId(chatRoomId)
         .senderId(memberId)
-        .content(content)
+        .content(changedTradeStatusMessage(content))
         .type(SYSTEM)
         .isRead(true)
         .build();

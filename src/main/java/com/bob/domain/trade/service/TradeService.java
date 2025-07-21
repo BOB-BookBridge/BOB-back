@@ -1,6 +1,7 @@
 package com.bob.domain.trade.service;
 
 import static com.bob.domain.trade.entity.status.TradeStatus.CANCELED;
+import static com.bob.domain.trade.entity.status.TradeStatus.REQUESTED;
 import static com.bob.domain.trade.entity.status.TradeStatus.valueOf;
 import static com.bob.domain.trade.service.dto.response.TradesResponse.of;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
@@ -25,6 +26,7 @@ import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.domain.trade.usecase.TradeWriteUseCase;
 import com.bob.global.event.application.dto.NotiEvent;
+import com.bob.global.event.application.dto.SystemChatMessageEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -83,16 +85,22 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     TradeStatus status = valueOf(command.status());
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
-    sendTradeNotification(trade.getPostId(), status.toValue(), trade.getSellerId(), trade.getBuyerId());
+    sendTradeNotification(trade.getPostId(), status.value(), trade.getSellerId(), trade.getBuyerId());
+    publishSystemMessageEvent(trade.getPostId(), command.memberId(), command.buyerId(), status.value());
   }
 
-  private void sendTradeNotification(Long postId, String body, UUID sellerId, UUID buyerId) {
-    NotiEvent event = NotiEvent.toTradeNotiEvent("TRADE", String.valueOf(postId), sellerId, buyerId, body);
+  private void sendTradeNotification(Long postId, String body, UUID memberId, UUID buyerId) {
+    NotiEvent event = NotiEvent.toTradeNotiEvent("TRADE", String.valueOf(postId), null, memberId, buyerId, body);
+    eventPublisher.publishEvent(event);
+  }
+
+  private void publishSystemMessageEvent(Long postId, UUID memberId, UUID buyerId, String body) {
+    SystemChatMessageEvent event = SystemChatMessageEvent.of("TRADE", postId.toString(), memberId, buyerId, body);
     eventPublisher.publishEvent(event);
   }
 
   private void verifyRequestedOnly(Long postId, String status) {
-    if (valueOf(status) == CANCELED) {
+    if (valueOf(status) == CANCELED || valueOf(status) == REQUESTED) {
       return;
     }
     tradeReader.readTradesByPostId(postId).stream()

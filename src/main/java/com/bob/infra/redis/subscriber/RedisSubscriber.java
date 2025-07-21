@@ -47,15 +47,15 @@ public class RedisSubscriber implements MessageListener {
   }
 
   private void handleChatEvent(RedisRecord record) {
-    if (sendChatMessageNoti(record)) {
+    if (sendChatMessage(record)) {
       return;
     }
     sendChatNoti(record);
   }
 
-  private boolean sendChatMessageNoti(RedisRecord record) {
+  private boolean sendChatMessage(RedisRecord record) {
     ChatEmitterKey chatKey = ChatEmitterKey.of(Long.valueOf(record.refId()), record.receiverId());
-    ChatMessageEmitEvent event = ChatMessageEmitEvent.of(record.childId(), record.body(), record.fileNames(), record.sentAt());
+    ChatMessageEmitEvent event = ChatMessageEmitEvent.of(record.isSystem(), record.childId(), record.body(), record.fileNames(), record.sentAt());
     boolean sent = notify(EmitterType.CHAT, chatKey, CHAT_MESSAGE, event);
     logResult("NOTI_CHAT_MESSAGE", sent, record.refId(), record.receiverId());
     return sent;
@@ -74,7 +74,7 @@ public class RedisSubscriber implements MessageListener {
 
   private void handleTradeEvent(RedisRecord record) {
     NotiEmitterKey notiKey = NotiEmitterKey.of(record.receiverId());
-    String body = record.sender().nickname() + "님 과의 거래 상태가 '" + record.body() + "'상태로 변경되었습니다.";
+    String body = record.sender().nickname() + "님과의 거래 상태가 '" + record.body() + "'상태로 변경되었습니다.";
     NotiEmitEvent event = NotiEmitEvent.of(record.type(), record.refId(), body, null, record.sentAt());
     boolean sent = notify(EmitterType.NOTIFICATION, notiKey, NOTIFICATION, event);
     logResult("NOTI_TRADE", sent, record.refId(), record.receiverId());

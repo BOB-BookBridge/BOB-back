@@ -13,6 +13,7 @@ public record RedisRecord(
     String childId,
     String body,
     List<String> fileNames,
+    boolean isSystem,
     boolean normalize,
     Sender sender,
     LocalDateTime sentAt
@@ -20,7 +21,7 @@ public record RedisRecord(
 
   public static RedisRecord of(
       UUID receiverId, String type, String refId, String childId, String body, List<String> fileNames,
-      boolean normalize, UUID senderId, String senderNickname, String senderProfile
+      boolean isSystem, boolean normalize, UUID senderId, String senderNickname, String senderProfile
   ) {
     return RedisRecord.builder()
         .receiverId(receiverId)
@@ -29,6 +30,7 @@ public record RedisRecord(
         .childId(childId)
         .body(body)
         .fileNames(fileNames)
+        .isSystem(isSystem)
         .normalize(normalize)
         .sender(Sender.of(senderId, senderNickname, senderProfile))
         .sentAt(LocalDateTime.now())

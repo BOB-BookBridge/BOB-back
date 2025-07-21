@@ -41,6 +41,11 @@ public class ChatMessageService {
   }
 
   @Transactional
+  public ChatMessage createSystemChatMessageProcess(CreateChatMessageCommand command) {
+    return chatMessageRepository.save(command.toSystemChatMessage());
+  }
+
+  @Transactional
   public void updateReadStatusProcess(EnterChatRoomCommand command) {
     List<ChatMessage> messages = chatMessageRepository.findUnreadMessages(command.chatRoomId(), command.memberId());
     for (ChatMessage message : messages) {

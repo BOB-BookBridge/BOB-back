@@ -15,12 +15,13 @@ public record CreateNotiCommand(
     UUID receiverId,
     String body,
     List<String> fileNames,
+    boolean isSystem,
     boolean normalize
 ) {
 
   public static CreateNotiCommand of(
       String type, String refId, String childId, UUID senderId, UUID receiverId,
-      String body, List<String> fileNames, boolean normalize
+      String body, List<String> fileNames, boolean isSystem, boolean normalize
   ) {
     return CreateNotiCommand.builder()
         .refId(refId)
@@ -30,6 +31,7 @@ public record CreateNotiCommand(
         .receiverId(receiverId)
         .body(body)
         .fileNames(fileNames)
+        .isSystem(isSystem)
         .normalize(normalize)
         .build();
   }
@@ -39,7 +41,7 @@ public record CreateNotiCommand(
         .referenceId(refId)
         .type(type)
         .receiverId(receiverId)
-        .body(sender + "님 과의 거래 상태가 '" + body + "'상태로 변경되었습니다.")
+        .body(sender + "님과의 거래 상태가 '" + body + "'상태로 변경되었습니다.")
         .build();
   }
 }
