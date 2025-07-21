@@ -34,12 +34,12 @@ public record CreateNotiCommand(
         .build();
   }
 
-  public Notification toEntity() {
+  public Notification toTradeNotiEntity(String sender) {
     return Notification.builder()
         .referenceId(refId)
         .type(type)
         .receiverId(receiverId)
-        .body(body)
+        .body(sender + "님 과의 거래 상태가 '" + body + "'상태로 변경되었습니다.")
         .build();
   }
 }

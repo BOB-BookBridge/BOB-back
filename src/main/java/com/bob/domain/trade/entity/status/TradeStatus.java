@@ -1,7 +1,5 @@
 package com.bob.domain.trade.entity.status;
 
-import java.util.Optional;
-
 public enum TradeStatus {
   REQUESTED,
   RESERVED,
@@ -20,7 +18,7 @@ public enum TradeStatus {
     };
   }
 
-  public String toSystemMessage() {
+  public String toValue() {
     return switch (this) {
       case REQUESTED -> "대기";
       case RESERVED -> "예약";

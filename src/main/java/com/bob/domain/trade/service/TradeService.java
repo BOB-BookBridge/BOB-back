@@ -24,7 +24,7 @@ import com.bob.domain.trade.service.reader.TradeReader;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.domain.trade.usecase.TradeWriteUseCase;
-import com.bob.global.event.application.dto.SystemChatMessageEvent;
+import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -83,10 +83,18 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     TradeStatus status = valueOf(command.status());
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
+    sendTradeNotification(trade.getPostId(), status.toValue(), trade.getSellerId(), trade.getBuyerId());
+  }
+
+  private void sendTradeNotification(Long postId, String body, UUID sellerId, UUID buyerId) {
+    NotiEvent event = NotiEvent.toTradeNotiEvent("TRADE", String.valueOf(postId), sellerId, buyerId, body);
+    eventPublisher.publishEvent(event);
   }
 
   private void verifyRequestedOnly(Long postId, String status) {
-    if (valueOf(status) == CANCELED) return;
+    if (valueOf(status) == CANCELED) {
+      return;
+    }
     tradeReader.readTradesByPostId(postId).stream()
         .filter(t -> t.getTradeStatus().isProcessed())
         .findAny()

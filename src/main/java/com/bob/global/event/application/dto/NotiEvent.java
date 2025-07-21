@@ -28,4 +28,17 @@ public record NotiEvent(
         .normalize(normalize)
         .build();
   }
+
+  public static NotiEvent toTradeNotiEvent(String type, String refId, UUID senderId, UUID receiverId, String body) {
+    return NotiEvent.builder()
+        .type(type)
+        .refId(refId)
+        .childId(null)
+        .senderId(senderId)
+        .receiverId(receiverId)
+        .body(body)
+        .fileNames(null)
+        .normalize(false)
+        .build();
+  }
 }

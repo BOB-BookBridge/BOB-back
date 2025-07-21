@@ -4,6 +4,7 @@ import static com.bob.domain.notification.entity.NotificationType.CHAT;
 import static com.bob.domain.notification.service.dto.response.NotiMemberResponse.from;
 
 import com.bob.domain.notification.entity.Notification;
+import com.bob.domain.notification.entity.NotificationType;
 import com.bob.domain.notification.repository.NotiRepository;
 import com.bob.domain.notification.service.dto.command.CreateNotiCommand;
 import com.bob.domain.notification.service.dto.response.NotiMemberResponse;
@@ -25,17 +26,19 @@ public class NotiService {
 
   @Transactional
   public void createNotificationProcess(CreateNotiCommand command) {
-    if (command.type() == CHAT) {
-      redisPublish(command);
-      return;
+    NotiMemberResponse sender = from(memberPort.readNotiMemberProfile(command.senderId()));
+    if (!isChatNoti(command.type())) {
+      Notification notification = command.toTradeNotiEntity(sender.nickname());
+      notiRepository.save(notification);
     }
-    Notification notification = command.toEntity();
-    notiRepository.save(notification);
-    redisPublish(command);
+    redisPublish(command, sender);
   }
 
-  private void redisPublish(CreateNotiCommand command) {
-    NotiMemberResponse sender = from(memberPort.readNotiMemberProfile(command.senderId()));
+  private boolean isChatNoti(NotificationType type) {
+    return type != CHAT;
+  }
+
+  private void redisPublish(CreateNotiCommand command, NotiMemberResponse sender) {
     redisPort.publish(
         command.receiverId(), command.type().name(), command.refId(), command.childId(), command.body(), command.fileNames(),
         command.normalize(), sender.memberId(), sender.nickname(), sender.profile()

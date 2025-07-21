@@ -74,7 +74,8 @@ public class RedisSubscriber implements MessageListener {
 
   private void handleTradeEvent(RedisRecord record) {
     NotiEmitterKey notiKey = NotiEmitterKey.of(record.receiverId());
-    NotiEmitEvent event = NotiEmitEvent.of("TRADE", record.refId(), record.body(), null, record.sentAt());
+    String body = record.sender().nickname() + "님 과의 거래 상태가 '" + record.body() + "'상태로 변경되었습니다.";
+    NotiEmitEvent event = NotiEmitEvent.of(record.type(), record.refId(), body, null, record.sentAt());
     boolean sent = notify(EmitterType.NOTIFICATION, notiKey, NOTIFICATION, event);
     logResult("NOTI_TRADE", sent, record.refId(), record.receiverId());
   }
