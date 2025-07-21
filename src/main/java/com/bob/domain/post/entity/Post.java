@@ -80,4 +80,8 @@ public class Post extends BaseTime {
     Optional.ofNullable(bookStatus).ifPresent(b -> this.bookStatus = BookStatus.from(b));
     Optional.ofNullable(description).ifPresent(d -> this.description = d);
   }
+
+  public void updatePostStatus(PostStatus status) {
+    this.postStatus = status;
+  }
 }

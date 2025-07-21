@@ -82,6 +82,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     verifyTradeOwner(postPort.readTradePostOwnerId(trade.getPostId()), command.memberId());
     TradeStatus status = valueOf(command.status());
     trade.updateTradeStatus(status, now());
+    postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
   }
 
   private void verifyRequestedOnly(Long postId, String status) {
