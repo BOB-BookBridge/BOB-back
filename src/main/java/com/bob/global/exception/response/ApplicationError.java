@@ -51,7 +51,8 @@ public enum ApplicationError {
 
   // 거래 예외
   NOT_EXISTS_TRADE("E601", "거래를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
-  TRADE_ACCESS_DENIED("E602", "거래에 접근할 권한이 없습니다.", HttpStatus.BAD_REQUEST)
+  TRADE_ACCESS_DENIED("E602", "거래에 접근할 권한이 없습니다.", HttpStatus.BAD_REQUEST),
+  TRADE_ALREADY_PROCESSED("E603", "다른 회원과 거래가 진행중이거나 완료된 상태입니다.", HttpStatus.CONFLICT),
   ;
 
   private String code;

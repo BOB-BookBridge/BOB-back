@@ -1,5 +1,6 @@
 package com.bob.domain.post.service;
 
+import static com.bob.domain.post.entity.status.PostStatus.*;
 import static com.bob.domain.post.service.dto.response.PostFileSummaryResponse.from;
 
 import com.bob.domain.book.entity.Book;
@@ -7,8 +8,10 @@ import com.bob.domain.book.service.BookService;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.service.reader.CategoryReader;
 import com.bob.domain.post.entity.Post;
+import com.bob.domain.post.entity.status.PostStatus;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
+import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
@@ -122,6 +125,12 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     Post post = postReader.readPostById(command.postId());
     verifyPostOwner(command.memberId(), post.getSellerId());
     post.updateOptionalFields(command.sellPrice(), command.bookStatus(), command.description());
+  }
+
+  @Transactional
+  public void changePostStatusProcess(ChangePostStatusCommand command) {
+    Post post = postReader.readPostById(command.postId());
+    post.updatePostStatus(valueOf(command.status()));
   }
 
   @Transactional

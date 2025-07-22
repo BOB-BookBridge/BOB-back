@@ -45,4 +45,9 @@ public class Trade extends BaseTime {
 
   @Column(nullable = false)
   private LocalDateTime updatedAt;
+
+  public void updateTradeStatus(TradeStatus status, LocalDateTime now) {
+    this.tradeStatus = status;
+    this.updatedAt = now;
+  }
 }

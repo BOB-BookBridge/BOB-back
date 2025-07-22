@@ -2,6 +2,7 @@ package com.bob.domain.trade.service.reader;
 
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_ID_TRADE;
+import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -12,6 +13,7 @@ import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,5 +63,20 @@ class TradeReaderTest {
         .hasMessage(ApplicationError.NOT_EXISTS_TRADE.getMessage());
 
     verify(tradeRepository, times(1)).findById(tradeId);
+  }
+
+  @Test
+  @DisplayName("거래 목록 조회 (조회 조건: postId) - 성공 테스트")
+  void 게시글ID로_거래_목록을_조회한다() {
+    // given
+    Long postId = 1L;
+    given(tradeRepository.findAllByPostId(postId)).willReturn(DEFAULT_TRADES());
+
+    // when
+    List<Trade> result = tradeReader.readTradesByPostId(postId);
+
+    // then
+    assertThat(result).hasSize(3);
+    verify(tradeRepository, times(1)).findAllByPostId(postId);
   }
 }

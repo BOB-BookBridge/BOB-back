@@ -19,7 +19,7 @@ public class NotiEventHandler {
   public void handleNotiEvent(NotiEvent event) {
     CreateNotiCommand command = CreateNotiCommand.of(
         event.type(), event.refId(), event.childId(),
-        event.senderId(), event.receiverId(), event.body(), event.fileNames(), event.normalize()
+        event.senderId(), event.receiverId(), event.body(), event.fileNames(), event.isSystem(), event.normalize()
     );
     notiService.createNotificationProcess(command);
   }

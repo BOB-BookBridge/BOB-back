@@ -32,9 +32,11 @@ import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.repository.CategoryRepository;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.PostFavorite;
+import com.bob.domain.post.entity.status.PostStatus;
 import com.bob.domain.post.repository.PostFavoriteRepository;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
+import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
@@ -428,7 +430,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("게시글 수정 - 성공 케이스")
+  @DisplayName("게시글 수정 - 성공 테스트")
   void 게시글_정보를_성공적으로_수정할_수_있다() {
     // given
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
@@ -458,6 +460,22 @@ class PostServiceIntgTest extends TestContainerSupport {
         .isInstanceOf(ApplicationException.class)
         .hasMessageContaining(NOT_POST_OWNER.getMessage());
   }
+
+  @Test
+  @DisplayName("게시글 상태 수정 - 성공 테스트")
+  void 게시글_상태를_성공적으로_수정할_수_있다() {
+    // given
+    Post post = postRepository.findAll().iterator().next();
+    ChangePostStatusCommand command = new ChangePostStatusCommand(post.getId(), "IN_PROGRESS");
+
+    // when
+    postService.changePostStatusProcess(command);
+
+    // then
+    Post updated = postRepository.findById(post.getId()).orElseThrow();
+    assertThat(updated.getPostStatus()).isEqualTo(PostStatus.IN_PROGRESS);
+  }
+
 
   @Test
   @DisplayName("게시글 삭제 - 작성자 본인이 삭제하면 게시글과 좋아요가 모두 삭제된다")

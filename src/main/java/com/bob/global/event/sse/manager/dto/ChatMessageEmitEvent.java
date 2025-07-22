@@ -14,11 +14,15 @@ public record ChatMessageEmitEvent(
     LocalDateTime sentAt
 ) {
 
-  public static ChatMessageEmitEvent of(String id, String content, List<String> fileNames, LocalDateTime sentAt) {
-    return new ChatMessageEmitEvent(Long.parseLong(id), resolveMessageType(content, fileNames), content, withSequence(fileNames), sentAt);
+  public static ChatMessageEmitEvent of(boolean isSystem, String id, String content, List<String> fileNames, LocalDateTime sentAt) {
+    return new ChatMessageEmitEvent(Long.parseLong(id), resolveMessageType(isSystem, content, fileNames), content, withSequence(fileNames), sentAt);
   }
 
-  private static String resolveMessageType(String content, List<String> fileNames) {
+  private static String resolveMessageType(boolean isSystem, String content, List<String> fileNames) {
+    if (isSystem) {
+      return "SYSTEM";
+    }
+
     boolean hasMessage = content != null && !content.isBlank();
     boolean hasImage = fileNames != null && !fileNames.isEmpty();
 

@@ -7,6 +7,6 @@ public interface NotiRedisPort {
 
   void publish(
       UUID receiverId, String type, String refId, String childId, String body, List<String> fileNames,
-      boolean normalize, UUID sId, String sNickname, String sProfile
+      boolean isSystem, boolean normalize, UUID sId, String sNickname, String sProfile
   );
 }

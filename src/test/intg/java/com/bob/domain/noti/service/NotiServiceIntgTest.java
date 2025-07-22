@@ -1,8 +1,10 @@
 package com.bob.domain.noti.service;
 
-import static com.bob.domain.notification.entity.NotificationType.CHAT;
 import static com.bob.domain.notification.entity.NotificationType.TRADE;
+import static com.bob.support.fixture.command.CreateNotiCommandFixture.DEFAULT_TEXT_CHAT_NOTI;
+import static com.bob.support.fixture.command.CreateNotiCommandFixture.DEFAULT_TRADE_NOTI;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
@@ -52,18 +54,14 @@ class NotiServiceIntgTest extends TestContainerSupport {
     // given
     Member sender = memberRepository.findById(SENDER_ID).orElseThrow();
     Member receiver = memberRepository.findById(RECEIVER_ID).orElseThrow();
-
-    CreateNotiCommand command = new CreateNotiCommand(
-        CHAT, "1", "1", sender.getId(), receiver.getId(), "안녕", null, false
-    );
+    CreateNotiCommand command = DEFAULT_TEXT_CHAT_NOTI(sender.getId(), receiver.getId());
 
     // when
     notiService.createNotificationProcess(command);
 
     // then
     assertThat(notiRepository.findAll()).isEmpty();
-    verify(redisSubscriber, timeout(2000).times(1))
-        .onMessage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    verify(redisSubscriber, timeout(2000).times(1)).onMessage(any(), any());
   }
 
   @Test
@@ -72,10 +70,7 @@ class NotiServiceIntgTest extends TestContainerSupport {
     // given
     Member sender = memberRepository.findById(SENDER_ID).orElseThrow();
     Member receiver = memberRepository.findById(RECEIVER_ID).orElseThrow();
-
-    CreateNotiCommand command = new CreateNotiCommand(
-        TRADE, "1", "1", sender.getId(), receiver.getId(), "거래 완료", null, false
-    );
+    CreateNotiCommand command = DEFAULT_TRADE_NOTI(sender.getId(), receiver.getId());
 
     // when
     notiService.createNotificationProcess(command);
@@ -85,7 +80,8 @@ class NotiServiceIntgTest extends TestContainerSupport {
     assertThat(saved.getType()).isEqualTo(TRADE);
     assertThat(saved.getReferenceId()).isEqualTo("1");
     assertThat(saved.getReceiverId()).isEqualTo(RECEIVER_ID);
-    verify(redisSubscriber, timeout(2000).times(1))
-        .onMessage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    String expectedBody = sender.getNickname() + "님과의 거래 상태가 '" + command.body() + "'상태로 변경되었습니다.";
+    assertThat(saved.getBody()).isEqualTo(expectedBody);
+    verify(redisSubscriber, timeout(2000).times(1)).onMessage(any(), any());
   }
 }
