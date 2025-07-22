@@ -135,6 +135,31 @@ class RedisSubscriberTest {
   }
 
   @Test
+  @DisplayName("Redis 메시지 수신 - READ_ACK 메시지의 경우 시스템 알림 전송 X")
+  void READ_ACK_메시지는_알림을_전송하지_않는다() throws Exception {
+    // given
+    RedisRecord record = RedisRecord.builder()
+        .type("CHAT")
+        .refId("123")
+        .childId("READ_ACK")
+        .receiverId(UUID.randomUUID())
+        .sender(RedisRecord.Sender.of(UUID.randomUUID(), "상대방", null))
+        .sentAt(LocalDateTime.now())
+        .build();
+
+    ChatEmitterKey chatKey = ChatEmitterKey.of(Long.valueOf(record.refId()), record.receiverId());
+    given(emitterManager.isExistClientConnection(EmitterType.CHAT, chatKey)).willReturn(false);
+
+    Message message = mock(Message.class);
+    given(message.getBody()).willReturn(objectMapper.writeValueAsBytes(record));
+
+    // when & then
+    assertThatCode(() -> redisSubscriber.onMessage(message, null)).doesNotThrowAnyException();
+    then(emitterManager).shouldHaveNoMoreInteractions();
+  }
+
+
+  @Test
   @DisplayName("Redis 메시지 수신 - 역직렬화 실패")
   void 역직렬화_실패() {
     // given
