@@ -5,9 +5,12 @@ import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
+import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
+import com.bob.domain.post.usecase.PostModifyUseCase;
 import com.bob.domain.post.usecase.PostReadUseCase;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -27,8 +30,11 @@ class TradePostAdapterTest {
   @Mock
   private PostReadUseCase readUseCase;
 
+  @Mock
+  private PostModifyUseCase modifyUseCase;
+
   @Test
-  @DisplayName("게시글 ID를 통한 게시글 작성자 ID 조회 호출 테스트")
+  @DisplayName("게시글 ID를 통한 게시글 작성자 ID 조회 기능 호출 테스트")
   void 게시글_작성자의_ID를_조회한다() {
     // given
     Long postId = 1L;
@@ -40,5 +46,20 @@ class TradePostAdapterTest {
 
     // then
     assertThat(result).isEqualTo(MEMBER_ID);
+  }
+
+  @Test
+  @DisplayName("게시글 상태 변경 기능 호출 테스트")
+  void 게시글_상태를_변경할_수_있다() {
+    // given
+    Long postId = 1L;
+    String status = "COMPLETED";
+
+    // when
+    tradePostAdapter.changePostStatus(postId, status);
+
+    // then
+    ChangePostStatusCommand expectedCommand = new ChangePostStatusCommand(postId, status);
+    then(modifyUseCase).should().changePostStatusProcess(expectedCommand);
   }
 }

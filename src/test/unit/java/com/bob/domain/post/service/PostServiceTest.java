@@ -34,8 +34,10 @@ import com.bob.domain.book.service.BookService;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.service.reader.CategoryReader;
 import com.bob.domain.post.entity.Post;
+import com.bob.domain.post.entity.status.PostStatus;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
+import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
@@ -359,6 +361,22 @@ class PostServiceTest {
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.NOT_POST_OWNER.getMessage());
 
+    then(postReader).should().readPostById(post.getId());
+  }
+
+  @DisplayName("게시글 상태 수정 - 성공 테스트")
+  @Test
+  void 게시글_상태를_수정할_수_있다() {
+    // given
+    Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
+    ChangePostStatusCommand command = new ChangePostStatusCommand(post.getId(), "IN_PROGRESS");
+    given(postReader.readPostById(post.getId())).willReturn(post);
+
+    // when
+    postService.changePostStatusProcess(command);
+
+    // then
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.IN_PROGRESS);
     then(postReader).should().readPostById(post.getId());
   }
 
