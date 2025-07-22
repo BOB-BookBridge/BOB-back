@@ -4,6 +4,7 @@ import static com.bob.domain.trade.entity.status.TradeStatus.CANCELED;
 import static com.bob.domain.trade.entity.status.TradeStatus.REQUESTED;
 import static com.bob.domain.trade.entity.status.TradeStatus.valueOf;
 import static com.bob.domain.trade.service.dto.response.TradesResponse.of;
+import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static java.time.LocalDateTime.now;
@@ -80,8 +81,8 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   @Transactional
   public void changeTradeStatusProcess(ChangeTradeStatusCommand command) {
     Trade trade = tradeReader.readTradeById(command.tradeId());
-    verifyRequestedOnly(trade.getPostId(), command.status());
     verifyTradeOwner(postPort.readTradePostOwnerId(trade.getPostId()), command.memberId());
+    verifyRequestedOnly(trade.getPostId(), command.status());
     TradeStatus status = valueOf(command.status());
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
@@ -90,7 +91,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   }
 
   private void sendTradeNotification(Long postId, String body, UUID memberId, UUID buyerId) {
-    NotiEvent event = NotiEvent.toTradeNotiEvent("TRADE", String.valueOf(postId), null, memberId, buyerId, body);
+    NotiEvent event = NotiEvent.toSystemNotiEvent(TRADE, String.valueOf(postId), "SYSTEM", memberId, buyerId, body);
     eventPublisher.publishEvent(event);
   }
 

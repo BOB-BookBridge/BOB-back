@@ -1,7 +1,6 @@
 package com.bob.domain.chat.service;
 
-import static com.bob.domain.chat.entity.type.ChatMessageType.SYSTEM;
-import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
+import static com.bob.global.event.application.dto.type.NotiEventType.CHAT;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_CHAT_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_CHAT_PARTNER;
 import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.CUSTOM_CREATE_CHAT_MESSAGE_COMMAND;
@@ -35,7 +34,6 @@ import static org.mockito.Mockito.verify;
 import com.bob.domain.chat.entity.ChatMessage;
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.entity.ChatRoomMember;
-import com.bob.domain.chat.repository.ChatMessageRepository;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
@@ -92,9 +90,6 @@ class ChatRoomServiceTest {
 
   @Mock
   private ChatRoomMemberReader chatRoomMemberReader;
-
-  @Mock
-  private ChatMessageRepository chatMessageRepository;
 
   @Mock
   private ChatMessageReader chatMessageReader;
@@ -500,21 +495,19 @@ class ChatRoomServiceTest {
     Long chatRoomId = 1L;
     UUID memberId = MEMBER_ID;
     ChatRoomMember member = CHAT_ROOM_MEMBER_1();
-    int size = 2; // hasNext 테스트 용 size 정의
 
     ChatMessage message1 = DEFAULT_TEXT_CHAT_MESSAGE();
     ChatMessage message2 = WITH_IMAGE_CHAT_MESSAGE();
 
     given(chatRoomMemberReader.readChatRoomMember(chatRoomId, memberId)).willReturn(member);
     given(filePort.readChatFileSummaries(chatRoomId)).willReturn(DEFAULT_READ_FILES_RESPONSE);
-    given(chatMessageReader.readRecentMessages(chatRoomId, member.getEnteredAt(), size)).willReturn(List.of(message1, message2));
+    given(chatMessageReader.readMessagesOfChatRoom(chatRoomId, member.getEnteredAt())).willReturn(List.of(message1, message2));
 
     // when
-    ChatMessagesResponse response = chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(memberId, chatRoomId, null, size));
+    ChatMessagesResponse response = chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(memberId, chatRoomId));
 
     // then
     assertThat(response.messages()).hasSize(2);
-    assertThat(response.hasNext()).isTrue();
     assertThat(response.messages().get(0).id()).isEqualTo(message1.getId());
     assertThat(response.messages().get(0).isMine()).isTrue();
   }
@@ -533,13 +526,13 @@ class ChatRoomServiceTest {
 
     // when & then
     assertThatThrownBy(() -> chatRoomService.readChatMessagesProcess(
-        ReadChatMessagesQuery.of(memberId, chatRoomId, null, 20)))
+        ReadChatMessagesQuery.of(memberId, chatRoomId)))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
   }
 
   @Test
-  @DisplayName("채팅방 나기기 - 성공 테스트")
+  @DisplayName("채팅방 나가기 - 성공 테스트")
   void 채팅방을_나가면_상태를_업데이트하고_채팅들을_읽음_처리한다() {
     // given
     Long chatRoomId = 1L;
@@ -553,17 +546,29 @@ class ChatRoomServiceTest {
     then(chatMessageService).should(times(1)).updateReadStatusProcess(EnterChatRoomCommand.of(command.chatRoomId(), command.memberId()));
   }
 
+  @DisplayName("채팅방 입장 - 메시지 읽음 처리 및 READ_ACK 알림 발송 테스트")
   @Test
-  @DisplayName("채팅방 입장 - 메시지 읽음 처리 테스트")
-  void 채팅방_입장_시_해당_채팅방의_안_읽은_메시지를_읽음_처리한다() {
+  void 채팅방_입장_시_안읽은_메시지_읽음처리와_READ_ACK_알림을_발송한다() {
     // given
     Long chatRoomId = 1L;
+    UUID partnerId = UUID.randomUUID();
     EnterChatRoomCommand command = EnterChatRoomCommand.of(chatRoomId, MEMBER_ID);
+    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, MEMBER_ID)).willReturn(partnerId);
+    ArgumentCaptor<NotiEvent> captor = ArgumentCaptor.forClass(NotiEvent.class);
 
     // when
     chatRoomService.enterChatRoomProcess(command);
 
     // then
-    then(chatMessageService).should(times(1)).updateReadStatusProcess(command);
+    then(chatMessageService).should().updateReadStatusProcess(command);
+    then(eventPublisher).should().publishEvent(captor.capture());
+
+    NotiEvent noti = captor.getValue();
+    assertThat(noti.type()).isEqualTo(CHAT);
+    assertThat(noti.refId()).isEqualTo(chatRoomId.toString());
+    assertThat(noti.childId()).isEqualTo("READ_ACK");
+    assertThat(noti.senderId()).isEqualTo(MEMBER_ID);
+    assertThat(noti.receiverId()).isEqualTo(partnerId);
+    assertThat(noti.body()).isNull();
   }
 }

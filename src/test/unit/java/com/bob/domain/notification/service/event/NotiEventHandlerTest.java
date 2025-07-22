@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import com.bob.domain.notification.service.NotiService;
 import com.bob.domain.notification.service.dto.command.CreateNotiCommand;
 import com.bob.global.event.application.dto.NotiEvent;
+import com.bob.global.event.application.dto.type.NotiEventType;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class NotiEventHandlerTest {
     // given
     UUID senderId = UUID.randomUUID();
     UUID receiverId = UUID.randomUUID();
-    NotiEvent event = NotiEvent.of("CHAT", "1", "1", senderId, receiverId, "MESSAGE", null, false);
+    NotiEvent event = NotiEvent.of(NotiEventType.CHAT, "1", "1", senderId, receiverId, "MESSAGE", null, false);
 
     // when
     notiEventHandler.handleNotiEvent(event);

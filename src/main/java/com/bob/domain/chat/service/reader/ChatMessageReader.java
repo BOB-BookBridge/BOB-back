@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,12 +16,8 @@ public class ChatMessageReader {
 
   private final ChatMessageRepository chatMessageRepository;
 
-  public List<ChatMessage> readRecentMessages(Long chatRoomId, LocalDateTime enteredAt, int size) {
-    return chatMessageRepository.findRecentMessages(chatRoomId, enteredAt, PageRequest.of(0, size));
-  }
-
-  public List<ChatMessage> readPreviousMessages(Long chatRoomId, Long id, LocalDateTime enteredAt, int size) {
-    return chatMessageRepository.findMessagesBeforeId(chatRoomId, id, enteredAt, PageRequest.of(0, size));
+  public List<ChatMessage> readMessagesOfChatRoom(Long chatRoomId, LocalDateTime enteredAt) {
+    return chatMessageRepository.findAllByChatRoomIDAfterEnteredAt(chatRoomId, enteredAt);
   }
 
   public int readUnreadMessageCountOfChatRoom(Long chatRoomId, UUID receiverId) {

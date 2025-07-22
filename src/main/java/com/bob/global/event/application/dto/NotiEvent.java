@@ -1,12 +1,13 @@
 package com.bob.global.event.application.dto;
 
+import com.bob.global.event.application.dto.type.NotiEventType;
 import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 
 @Builder
 public record NotiEvent(
-    String type,
+    NotiEventType type,
     String refId,
     String childId,
     UUID senderId,
@@ -17,7 +18,7 @@ public record NotiEvent(
     boolean normalize
 ) {
 
-  public static NotiEvent of(String type, String refId, String childId, UUID senderId, UUID receiverId, String body, List<String> fileNames, boolean normalize) {
+  public static NotiEvent of(NotiEventType type, String refId, String childId, UUID senderId, UUID receiverId, String body, List<String> fileNames, boolean normalize) {
     return NotiEvent.builder()
         .type(type)
         .refId(refId)
@@ -30,7 +31,7 @@ public record NotiEvent(
         .build();
   }
 
-  public static NotiEvent toTradeNotiEvent(String type, String refId, String childId, UUID senderId, UUID receiverId, String body) {
+  public static NotiEvent toSystemNotiEvent(NotiEventType type, String refId, String childId, UUID senderId, UUID receiverId, String body) {
     return NotiEvent.builder()
         .type(type)
         .refId(refId)
@@ -38,7 +39,7 @@ public record NotiEvent(
         .senderId(senderId)
         .receiverId(receiverId)
         .body(body)
-        .fileNames(List.of())
+        .fileNames(null)
         .isSystem(true)
         .normalize(false)
         .build();

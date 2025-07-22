@@ -205,6 +205,7 @@ class TradeServiceTest {
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
 
+    given(postPort.readTradePostOwnerId(requestTrade.getPostId())).willReturn(MEMBER_ID);
     given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
     given(tradeReader.readTradesByPostId(requestTrade.getPostId())).willReturn(DEFAULT_TRADES()); // 예약된 거래 존재
 

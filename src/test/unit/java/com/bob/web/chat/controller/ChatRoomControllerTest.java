@@ -170,8 +170,7 @@ class ChatRoomControllerTest {
         .andExpect(jsonPath("$.messages.length()").value(2))
         .andExpect(jsonPath("$.messages[0].id").value(1))
         .andExpect(jsonPath("$.messages[0].content").value("메시지"))
-        .andExpect(jsonPath("$.messages[0].isMine").value(true))
-        .andExpect(jsonPath("$.hasNext").value(true));
+        .andExpect(jsonPath("$.messages[0].isMine").value(true));
 
     then(readUseCase).should(times(1)).readChatMessagesProcess(any());
   }

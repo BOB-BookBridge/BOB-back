@@ -2,6 +2,7 @@ package com.bob.domain.notification.service.dto.command;
 
 import com.bob.domain.notification.entity.Notification;
 import com.bob.domain.notification.entity.NotificationType;
+import com.bob.global.event.application.dto.NotiEvent;
 import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
@@ -33,6 +34,20 @@ public record CreateNotiCommand(
         .fileNames(fileNames)
         .isSystem(isSystem)
         .normalize(normalize)
+        .build();
+  }
+
+  public static CreateNotiCommand fromEvent(NotiEvent event) {
+    return CreateNotiCommand.builder()
+        .refId(event.refId())
+        .childId(event.childId())
+        .type(NotificationType.valueOf(event.type().name()))
+        .senderId(event.senderId())
+        .receiverId(event.receiverId())
+        .body(event.body())
+        .fileNames(event.fileNames())
+        .isSystem(event.isSystem())
+        .normalize(event.normalize())
         .build();
   }
 
