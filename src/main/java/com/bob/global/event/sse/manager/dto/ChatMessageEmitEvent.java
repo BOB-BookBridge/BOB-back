@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public record ChatMessageEmitEvent(
-    long id,
+    Long id,
     String type,
     String content,
     List<ChatImage> images,
@@ -15,25 +15,46 @@ public record ChatMessageEmitEvent(
 ) {
 
   public static ChatMessageEmitEvent of(boolean isSystem, String id, String content, List<String> fileNames, LocalDateTime sentAt) {
-    return new ChatMessageEmitEvent(Long.parseLong(id), resolveMessageType(isSystem, content, fileNames), content, withSequence(fileNames), sentAt);
+    Long messageId = parseMessageIdOrNull(id);
+    return new ChatMessageEmitEvent(messageId, resolveMessageType(isSystem, id, content, fileNames), content, withSequence(fileNames), sentAt);
   }
 
-  private static String resolveMessageType(boolean isSystem, String content, List<String> fileNames) {
+  private static Long parseMessageIdOrNull(String id) {
+    try {
+      return Long.parseLong(id);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  private static String resolveMessageType(boolean isSystem, String childId, String content, List<String> fileNames) {
+    if (isReadAck(childId)) {
+      return "READ_ACK";
+    }
     if (isSystem) {
       return "SYSTEM";
     }
-
-    boolean hasMessage = content != null && !content.isBlank();
-    boolean hasImage = fileNames != null && !fileNames.isEmpty();
-
-    if (hasMessage && hasImage) {
+    if (hasText(content) && hasFiles(fileNames)) {
       return "MIX";
     }
-    if (hasMessage) {
+    if (hasText(content)) {
       return "TEXT";
     }
     return "IMAGE";
   }
+
+  private static boolean isReadAck(String childId) {
+    return "READ_ACK".equals(childId);
+  }
+
+  private static boolean hasText(String content) {
+    return content != null && !content.isBlank();
+  }
+
+  private static boolean hasFiles(List<String> fileNames) {
+    return fileNames != null && !fileNames.isEmpty();
+  }
+
 
   private static List<ChatImage> withSequence(List<String> fileNames) {
     if (fileNames == null || fileNames.isEmpty()) {

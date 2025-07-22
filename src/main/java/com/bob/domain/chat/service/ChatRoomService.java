@@ -132,7 +132,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     Long postId = Long.valueOf(command.refId());
     Long chatRoomId = chatRoomReader.readExistingChatRoom(postId, command.senderId(), command.partnerId()).get();
     ChatMessage message = chatMessageService.createSystemChatMessageProcess(of(chatRoomId, command.senderId(), command.body(), null));
-    publishSystemChatEvent(chatRoomId, command.senderId(), command.partnerId(), message.getContent());
+    publishSystemChatEvent(chatRoomId, "SYSTEM", command.senderId(), command.partnerId(), message.getContent());
   }
 
   @Transactional(readOnly = true)
@@ -216,6 +216,8 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   @Transactional
   public void enterChatRoomProcess(EnterChatRoomCommand command) {
     chatMessageService.updateReadStatusProcess(command);
+    UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
+    publishSystemChatEvent(command.chatRoomId(), "READ_ACK", command.memberId(), partnerId, null);
   }
 
   private void publishChatMessageEvent(CreateChatMessageCommand command, ChatMessage message, UUID partnerId) {
@@ -231,11 +233,11 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     ));
   }
 
-  private void publishSystemChatEvent(Long chatRoomId, UUID senderId, UUID receiverId, String content) {
+  private void publishSystemChatEvent(Long chatRoomId, String childId, UUID senderId, UUID receiverId, String content) {
     eventPublisher.publishEvent(NotiEvent.toSystemNotiEvent(
         CHAT,
         chatRoomId.toString(),
-        "SYSTEM",
+        childId,
         senderId,
         receiverId,
         content

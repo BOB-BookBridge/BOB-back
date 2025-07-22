@@ -47,7 +47,8 @@ public class RedisSubscriber implements MessageListener {
   }
 
   private void handleChatEvent(RedisRecord record) {
-    if (sendChatMessage(record)) {
+    boolean success = sendChatMessage(record);
+    if (success || "READ_ACK".equals(record.childId())) {
       return;
     }
     sendChatNoti(record);
