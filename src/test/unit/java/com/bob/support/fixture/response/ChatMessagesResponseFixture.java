@@ -31,8 +31,5 @@ public class ChatMessagesResponseFixture {
       );
 
   public static final ChatMessagesResponse DEFAULT_CHAT_MESSAGES_RESPONSE =
-      new ChatMessagesResponse(
-          List.of(DEFAULT_CHAT_MESSAGE_SUMMARY, DEFAULT_CHAT_IMAGE_SUMMARY),
-          true
-      );
+      new ChatMessagesResponse(List.of(DEFAULT_CHAT_MESSAGE_SUMMARY, DEFAULT_CHAT_IMAGE_SUMMARY));
 }

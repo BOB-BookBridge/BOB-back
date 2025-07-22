@@ -313,11 +313,10 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, seller.getId()));
 
     // when
-    ChatMessagesResponse response = chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(buyer.getId(), chatRoomId, null, 20));
+    ChatMessagesResponse response = chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(buyer.getId(), chatRoomId));
 
-    // then, 메시지 내역 조회 = 오래된 순서
+    // then
     assertThat(response.messages()).hasSize(2);
-    assertThat(response.hasNext()).isFalse();
     assertThat(response.messages().get(0).isMine()).isTrue(); // buyer가 보낸 메시지
     assertThat(response.messages().get(1).isMine()).isFalse(); // seller가 보낸 메시지
   }
@@ -338,7 +337,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     exited.updateExitedAt(LocalDateTime.now());
 
     // when & then
-    assertThatThrownBy(() -> chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(buyer.getId(), chatRoomId, null, 20)))
+    assertThatThrownBy(() -> chatRoomService.readChatMessagesProcess(ReadChatMessagesQuery.of(buyer.getId(), chatRoomId)))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
   }

@@ -1,8 +1,8 @@
 package com.bob.domain.chat.service;
 
 import static com.bob.domain.chat.entity.type.ChatMessageType.TEXT;
-import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.*;
 import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
+import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.of;
 import static com.bob.domain.chat.service.dto.response.ChatMemberResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatPostResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatTradeResponse.from;
@@ -49,7 +49,6 @@ import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -189,17 +188,11 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   public ChatMessagesResponse readChatMessagesProcess(ReadChatMessagesQuery query) {
     verifyParticipating(query.chatRoomId(), query.memberId());
     ChatRoomMember member = chatRoomMemberReader.readChatRoomMember(query.chatRoomId(), query.memberId());
-    List<ChatMessage> messages = readChatMessages(query, member.getEnteredAt());
+    List<ChatMessage> messages = chatMessageReader.readMessagesOfChatRoom(query.chatRoomId(), member.getEnteredAt());
     List<MessageSummary> messageResponses = messages.stream()
         .map(message -> MessageSummary.from(message, query.memberId(), readChatFiles(message)))
         .toList();
-    return new ChatMessagesResponse(messageResponses, messages.size() == query.size());
-  }
-
-  private List<ChatMessage> readChatMessages(ReadChatMessagesQuery query, LocalDateTime enteredAt) {
-    return query.beforeMessageId() == null
-        ? chatMessageReader.readRecentMessages(query.chatRoomId(), enteredAt, query.size())
-        : chatMessageReader.readPreviousMessages(query.chatRoomId(), query.beforeMessageId(), enteredAt, query.size());
+    return new ChatMessagesResponse(messageResponses);
   }
 
   private List<ChatFileSummary> readChatFiles(ChatMessage message) {
