@@ -80,8 +80,8 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   @Transactional
   public void changeTradeStatusProcess(ChangeTradeStatusCommand command) {
     Trade trade = tradeReader.readTradeById(command.tradeId());
-    verifyRequestedOnly(trade.getPostId(), command.status());
     verifyTradeOwner(postPort.readTradePostOwnerId(trade.getPostId()), command.memberId());
+    verifyRequestedOnly(trade.getPostId(), command.status());
     TradeStatus status = valueOf(command.status());
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
