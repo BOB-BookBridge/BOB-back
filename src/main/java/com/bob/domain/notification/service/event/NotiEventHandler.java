@@ -17,10 +17,7 @@ public class NotiEventHandler {
   @Async
   @EventListener
   public void handleNotiEvent(NotiEvent event) {
-    CreateNotiCommand command = CreateNotiCommand.of(
-        event.type(), event.refId(), event.childId(),
-        event.senderId(), event.receiverId(), event.body(), event.fileNames(), event.isSystem(), event.normalize()
-    );
+    CreateNotiCommand command = CreateNotiCommand.fromEvent(event);
     notiService.createNotificationProcess(command);
   }
 }

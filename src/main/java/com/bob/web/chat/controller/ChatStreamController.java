@@ -6,7 +6,6 @@ import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
-import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.global.event.sse.manager.EmitterManager;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
