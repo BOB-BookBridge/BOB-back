@@ -83,7 +83,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     Trade trade = tradeReader.readTradeById(command.tradeId());
     TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
     verifyTradeOwner(post.sellerId(), command.memberId());
-    verifyRequestedOnly(trade.getPostId(), command.status());
+    verifyRequestedOnly(trade.getId(), trade.getPostId(), command.status());
     TradeStatus status = valueOf(command.status());
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
@@ -103,11 +103,12 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     eventPublisher.publishEvent(event);
   }
 
-  private void verifyRequestedOnly(Long postId, String status) {
+  private void verifyRequestedOnly(Long requestId, Long postId, String status) {
     if (valueOf(status) == CANCELED || valueOf(status) == REQUESTED) {
       return;
     }
     tradeReader.readTradesByPostId(postId).stream()
+        .filter(t -> !t.getId().equals(requestId))
         .filter(t -> t.getTradeStatus().isProcessed())
         .findAny()
         .ifPresent(t -> {

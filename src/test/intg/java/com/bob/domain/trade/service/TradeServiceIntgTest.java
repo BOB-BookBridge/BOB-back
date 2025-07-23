@@ -28,6 +28,7 @@ import com.bob.domain.trade.service.reader.TradeReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
+import com.bob.support.redis.RedisContainerConfig;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -36,9 +37,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
+@Import(RedisContainerConfig.class)
 @DisplayName("거래 서비스 통합 테스트")
 @Transactional
 @SpringBootTest
@@ -180,7 +183,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   @DisplayName("거래 상태 변경 - 실패 테스트 (이미 처리된 거래 존재)")
   void 거래_상태_변경시_이미_처리된_거래가_있으면_예외가_발생한다() {
     // given
-    Trade trade = tradeRepository.findAllByPostId(postId).get(0);
+    Trade trade = testTrade;
     given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "RESERVED");
 
@@ -195,7 +198,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   void 거래_상태_변경시_게시글_소유자가_아니면_예외가_발생한다() {
     // given
     tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now()));
-    Trade trade = tradeRepository.findAllByPostId(postId).get(0);
+    Trade trade = testTrade;
     UUID otherUserId = UUID.fromString("0197365f-8074-7d24-a332-999999999999");
     given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(otherUserId, trade.getId(), "RESERVED");
