@@ -1,4 +1,4 @@
-package com.bob.web.notification.contoller;
+package com.bob.web.notification.controller;
 
 import static com.bob.global.utils.web.CookieUtils.getCookie;
 
