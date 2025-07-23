@@ -12,6 +12,8 @@ import static org.mockito.BDDMockito.given;
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.reader.ChatRoomReader;
+import com.bob.domain.post.service.dto.response.PostDetailResponse;
+import com.bob.domain.post.service.dto.response.PostDetailResponse.BookInfo;
 import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.entity.status.TradeStatus;
 import com.bob.domain.trade.repository.TradeRepository;
@@ -94,7 +96,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     // given
     ReadTradesQuery query = new ReadTradesQuery(postId, sellerId);
 
-    given(postPort.readTradePostOwnerId(postId)).willReturn(sellerId);
+    given(postPort.readTradePostSummary(postId)).willReturn(mockPostResponse());
     given(memberPort.readTradeMemberProfile(any(UUID.class)))
         .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
 
@@ -113,7 +115,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     UUID otherUser = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
     ReadTradesQuery query = new ReadTradesQuery(postId, otherUser);
 
-    given(postPort.readTradePostOwnerId(postId)).willReturn(sellerId);
+    given(postPort.readTradePostSummary(postId)).willReturn(mockPostResponse());
 
     // when & then
     assertThatThrownBy(() -> tradeService.readTradesProcess(query))
@@ -162,7 +164,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     // given
     tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now())); // 대기 상태로 변경
     Trade trade = testTrade;
-    given(postPort.readTradePostOwnerId(trade.getPostId())).willReturn(sellerId);
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
     given(chatRoomReader.readExistingChatRoom(postId, sellerId, buyerId1)).willReturn(Optional.of(chatRoom.getId()));
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "RESERVED");
 
@@ -179,7 +181,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   void 거래_상태_변경시_이미_처리된_거래가_있으면_예외가_발생한다() {
     // given
     Trade trade = tradeRepository.findAllByPostId(postId).get(0);
-    given(postPort.readTradePostOwnerId(trade.getPostId())).willReturn(sellerId);
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "RESERVED");
 
     // when & then
@@ -195,7 +197,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now()));
     Trade trade = tradeRepository.findAllByPostId(postId).get(0);
     UUID otherUserId = UUID.fromString("0197365f-8074-7d24-a332-999999999999");
-    given(postPort.readTradePostOwnerId(trade.getPostId())).willReturn(sellerId);
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(otherUserId, trade.getId(), "RESERVED");
 
     // when & then
@@ -219,6 +221,14 @@ class TradeServiceIntgTest extends TestContainerSupport {
         .postId(trade.getPostId())
         .tradeId(trade.getId())
         .titleSuffix("test")
+        .build();
+  }
+
+  private PostDetailResponse mockPostResponse() {
+    return PostDetailResponse.builder()
+        .postId(postId)
+        .sellerId(sellerId)
+        .book(BookInfo.builder().title("자바의 정석").build())
         .build();
   }
 }

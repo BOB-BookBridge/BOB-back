@@ -28,7 +28,7 @@ public class NotiService {
   public void createNotificationProcess(CreateNotiCommand command) {
     NotiMemberResponse sender = from(memberPort.readNotiMemberProfile(command.senderId()));
     if (!isChatNoti(command.type())) {
-      Notification notification = command.toTradeNotiEntity(sender.nickname());
+      Notification notification = command.toTradeNotiEntity();
       notiRepository.save(notification);
     }
     redisPublish(command, sender);

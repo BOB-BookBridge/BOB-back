@@ -51,12 +51,12 @@ public record CreateNotiCommand(
         .build();
   }
 
-  public Notification toTradeNotiEntity(String sender) {
+  public Notification toTradeNotiEntity() {
     return Notification.builder()
         .referenceId(refId)
         .type(type)
         .receiverId(receiverId)
-        .body(sender + "님과의 거래 상태가 '" + body + "'상태로 변경되었습니다.")
+        .body(body)
         .build();
   }
 }

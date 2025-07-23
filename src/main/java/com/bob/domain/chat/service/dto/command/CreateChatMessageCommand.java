@@ -32,13 +32,6 @@ public record CreateChatMessageCommand(
         .build();
   }
 
-  public static String convertSystemMessage(String body) {
-    if (body.equals(IS_FAR_MEMBER)) {
-      return body;
-    }
-    return CHANGED_TRADE_STATUS_PREFIX + body + CHANGED_TRADE_STATUS_SUFFIX;
-  }
-
   public ChatMessage toChatMessage() {
     return ChatMessage.builder()
         .chatRoomId(chatRoomId)
@@ -52,7 +45,7 @@ public record CreateChatMessageCommand(
     return ChatMessage.builder()
         .chatRoomId(chatRoomId)
         .senderId(memberId)
-        .content(convertSystemMessage(content))
+        .content(content)
         .type(SYSTEM)
         .isRead(true)
         .build();

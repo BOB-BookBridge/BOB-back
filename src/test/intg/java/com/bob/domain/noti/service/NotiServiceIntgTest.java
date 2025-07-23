@@ -80,8 +80,7 @@ class NotiServiceIntgTest extends TestContainerSupport {
     assertThat(saved.getType()).isEqualTo(TRADE);
     assertThat(saved.getReferenceId()).isEqualTo("1");
     assertThat(saved.getReceiverId()).isEqualTo(RECEIVER_ID);
-    String expectedBody = sender.getNickname() + "님과의 거래 상태가 '" + command.body() + "'상태로 변경되었습니다.";
-    assertThat(saved.getBody()).isEqualTo(expectedBody);
+    assertThat(saved.getBody()).isEqualTo(command.body());
     verify(redisSubscriber, timeout(2000).times(1)).onMessage(any(), any());
   }
 }

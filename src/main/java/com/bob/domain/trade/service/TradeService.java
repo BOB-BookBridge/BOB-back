@@ -18,6 +18,7 @@ import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
+import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
@@ -54,7 +55,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
 
   @Transactional(readOnly = true)
   public TradesResponse readTradesProcess(ReadTradesQuery query) {
-    UUID ownerId = postPort.readTradePostOwnerId(query.postId());
+    UUID ownerId = postPort.readTradePostSummary(query.postId()).sellerId();
     verifyTradeOwner(ownerId, query.memberId());
     return TradesResponse.of(tradeReader.readTradesByPostId(query.postId()).stream()
         .map(trade -> TradeSummary.from(trade, from(memberPort.readTradeMemberProfile(trade.getBuyerId()))))
@@ -80,22 +81,25 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   @Transactional
   public void changeTradeStatusProcess(ChangeTradeStatusCommand command) {
     Trade trade = tradeReader.readTradeById(command.tradeId());
-    verifyTradeOwner(postPort.readTradePostOwnerId(trade.getPostId()), command.memberId());
+    TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
+    verifyTradeOwner(post.sellerId(), command.memberId());
     verifyRequestedOnly(trade.getPostId(), command.status());
     TradeStatus status = valueOf(command.status());
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
-    sendTradeNotification(trade.getPostId(), status.value(), trade.getSellerId(), trade.getBuyerId());
-    publishSystemMessageEvent(trade.getPostId(), command.memberId(), trade.getBuyerId(), status.value());
+    sendTradeNotification(post, trade.getSellerId(), trade.getBuyerId(), status.value());
+    publishSystemMessageEvent(post, command.memberId(), trade.getBuyerId(), status.value());
   }
 
-  private void sendTradeNotification(Long postId, String body, UUID memberId, UUID buyerId) {
-    NotiEvent event = NotiEvent.toSystemNotiEvent(TRADE, String.valueOf(postId), "SYSTEM", memberId, buyerId, body);
+  private void sendTradeNotification(TradePostSummary post, UUID memberId, UUID buyerId, String status) {
+    String body = String.format("[%s]의 거래 상태가 '%s'(으)로 변경되었습니다.", post.title(), status);
+    NotiEvent event = NotiEvent.toSystemNotiEvent(TRADE, String.valueOf(post.postId()), "SYSTEM", memberId, buyerId, body);
     eventPublisher.publishEvent(event);
   }
 
-  private void publishSystemMessageEvent(Long postId, UUID memberId, UUID buyerId, String body) {
-    SystemChatMessageEvent event = SystemChatMessageEvent.of("TRADE", postId.toString(), memberId, buyerId, body);
+  private void publishSystemMessageEvent(TradePostSummary post, UUID memberId, UUID buyerId, String status) {
+    String body = String.format("거래 상태가 '%s'(으)로 변경되었습니다.", status);
+    SystemChatMessageEvent event = SystemChatMessageEvent.of("TRADE", post.postId().toString(), memberId, buyerId, body);
     eventPublisher.publishEvent(event);
   }
 
