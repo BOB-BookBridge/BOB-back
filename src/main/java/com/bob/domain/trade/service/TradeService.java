@@ -3,7 +3,7 @@ package com.bob.domain.trade.service;
 import static com.bob.domain.trade.entity.status.TradeStatus.CANCELED;
 import static com.bob.domain.trade.entity.status.TradeStatus.REQUESTED;
 import static com.bob.domain.trade.entity.status.TradeStatus.valueOf;
-import static com.bob.domain.trade.service.dto.response.TradesResponse.of;
+import static com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary.from;
 import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
@@ -18,7 +18,6 @@ import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
-import com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
@@ -57,9 +56,9 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   public TradesResponse readTradesProcess(ReadTradesQuery query) {
     UUID ownerId = postPort.readTradePostOwnerId(query.postId());
     verifyTradeOwner(ownerId, query.memberId());
-    return of(tradeReader.readTradesByPostId(query.postId()).stream().map(trade -> TradeSummary
-        .from(trade, TradeMemberSummary.from(memberPort.readTradeMemberProfile(trade.getBuyerId())))
-    ).toList());
+    return TradesResponse.of(tradeReader.readTradesByPostId(query.postId()).stream()
+        .map(trade -> TradeSummary.from(trade, from(memberPort.readTradeMemberProfile(trade.getBuyerId()))))
+        .toList());
   }
 
   @Transactional(readOnly = true)
@@ -87,7 +86,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
     sendTradeNotification(trade.getPostId(), status.value(), trade.getSellerId(), trade.getBuyerId());
-    publishSystemMessageEvent(trade.getPostId(), command.memberId(), command.buyerId(), status.value());
+    publishSystemMessageEvent(trade.getPostId(), command.memberId(), trade.getBuyerId(), status.value());
   }
 
   private void sendTradeNotification(Long postId, String body, UUID memberId, UUID buyerId) {

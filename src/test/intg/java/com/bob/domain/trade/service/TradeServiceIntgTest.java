@@ -164,7 +164,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     Trade trade = testTrade;
     given(postPort.readTradePostOwnerId(trade.getPostId())).willReturn(sellerId);
     given(chatRoomReader.readExistingChatRoom(postId, sellerId, buyerId1)).willReturn(Optional.of(chatRoom.getId()));
-    ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), buyerId1, "RESERVED");
+    ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "RESERVED");
 
     // when
     tradeService.changeTradeStatusProcess(command);
@@ -180,7 +180,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     // given
     Trade trade = tradeRepository.findAllByPostId(postId).get(0);
     given(postPort.readTradePostOwnerId(trade.getPostId())).willReturn(sellerId);
-    ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), buyerId1, "RESERVED");
+    ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "RESERVED");
 
     // when & then
     assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
@@ -196,7 +196,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     Trade trade = tradeRepository.findAllByPostId(postId).get(0);
     UUID otherUserId = UUID.fromString("0197365f-8074-7d24-a332-999999999999");
     given(postPort.readTradePostOwnerId(trade.getPostId())).willReturn(sellerId);
-    ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(otherUserId, trade.getId(), buyerId1, "RESERVED");
+    ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(otherUserId, trade.getId(), "RESERVED");
 
     // when & then
     assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
