@@ -2,16 +2,22 @@ package com.bob.domain.notification.service;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
+import static com.bob.support.fixture.domain.noti.NotificationFixture.DEFAULT_NOTIFICATIONS;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.verify;
 
 import com.bob.domain.notification.entity.Notification;
+import com.bob.domain.notification.reader.NotiReader;
 import com.bob.domain.notification.repository.NotiRepository;
 import com.bob.domain.notification.service.dto.command.CreateNotiCommand;
+import com.bob.domain.notification.service.dto.query.ReadNotificationsQuery;
+import com.bob.domain.notification.service.dto.response.NotificationsResponse;
 import com.bob.domain.notification.service.port.NotiMemberPort;
 import com.bob.domain.notification.service.port.NotiRedisPort;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +36,9 @@ class NotiServiceTest {
 
   @Mock
   private NotiRepository notiRepository;
+
+  @Mock
+  private NotiReader notiReader;
 
   @Mock
   private NotiMemberPort memberPort;
@@ -93,5 +102,21 @@ class NotiServiceTest {
         eq("tester"),
         eq("http://image.url")
     );
+  }
+
+  @Test
+  @DisplayName("알림 목록 조회 테스트")
+  void 알림_정상_조회_테스트() {
+    // given
+    ReadNotificationsQuery query = ReadNotificationsQuery.of(MEMBER_ID);
+    given(notiReader.readNotifications(MEMBER_ID)).willReturn(DEFAULT_NOTIFICATIONS());
+
+    // when
+    NotificationsResponse response = notiService.readNotificationsProcess(query);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.notifications()).hasSize(2);
+    then(notiReader).should().readNotifications(MEMBER_ID);
   }
 }
