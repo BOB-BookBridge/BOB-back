@@ -7,20 +7,25 @@ import com.bob.domain.notification.entity.Notification;
 import com.bob.domain.notification.entity.NotificationType;
 import com.bob.domain.notification.reader.NotiReader;
 import com.bob.domain.notification.repository.NotiRepository;
+import com.bob.domain.notification.service.dto.command.ChangeNotificationReadStatusCommand;
 import com.bob.domain.notification.service.dto.command.CreateNotiCommand;
 import com.bob.domain.notification.service.dto.query.ReadNotificationsQuery;
 import com.bob.domain.notification.service.dto.response.NotiMemberResponse;
 import com.bob.domain.notification.service.dto.response.NotificationsResponse;
 import com.bob.domain.notification.service.port.NotiMemberPort;
 import com.bob.domain.notification.service.port.NotiRedisPort;
+import com.bob.domain.notification.usecase.NotiModifyUseCase;
 import com.bob.domain.notification.usecase.NotiReadUseCase;
+import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class NotiService implements NotiReadUseCase {
+public class NotiService implements NotiReadUseCase, NotiModifyUseCase {
 
   private final NotiRepository notiRepository;
   private final NotiReader notiReader;
@@ -52,5 +57,18 @@ public class NotiService implements NotiReadUseCase {
   @Transactional(readOnly = true)
   public NotificationsResponse readNotificationsProcess(ReadNotificationsQuery query) {
     return NotificationsResponse.from(notiReader.readNotifications(query.memberId()));
+  }
+
+  @Transactional
+  public void changeNotificationReadStatusProcess(ChangeNotificationReadStatusCommand command) {
+    Notification notification = notiReader.readNotificationById(command.notificationId());
+    verifyNotificationOwner(command.memberId(), notification.getReceiverId());
+    notification.updateReadStatus(true);
+  }
+
+  private void verifyNotificationOwner(UUID requestId, UUID ownerId) {
+    if (!ownerId.equals(requestId)) {
+      throw new ApplicationException(ApplicationError.NOTIFICATION_ACCESS_DENIED);
+    }
   }
 }
