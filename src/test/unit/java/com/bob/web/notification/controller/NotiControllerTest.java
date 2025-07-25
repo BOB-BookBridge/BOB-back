@@ -2,14 +2,18 @@ package com.bob.web.notification.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.response.NotificationsResponseFixture.FILTERING_NOTIFICATIONS_RESPONSE;
+import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.bob.domain.notification.service.dto.query.ReadNotificationsQuery;
+import com.bob.domain.notification.usecase.NotiModifyUseCase;
 import com.bob.domain.notification.usecase.NotiReadUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +34,9 @@ class NotiControllerTest {
 
   @Mock
   private NotiReadUseCase readUseCase;
+
+  @Mock
+  private NotiModifyUseCase modifyUseCase;
 
   private MockMvc mvc;
 
@@ -52,5 +59,22 @@ class NotiControllerTest {
 
     // verify
     verify(readUseCase, times(1)).readNotificationsProcess(any(ReadNotificationsQuery.class));
+  }
+
+  @Test
+  @DisplayName("알림 읽음 처리 API 호출 테스트")
+  void 알림을_읽음처리_할_수_있다() throws Exception {
+    // given
+    Long notificationId = 1L;
+
+    // when & then
+    mvc.perform(patch("/notifications/{notificationId}", notificationId)
+            .requestAttr("memberId", MEMBER_ID)
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.result").value("UPDATED"));
+
+    verify(modifyUseCase, times(1)).changeNotificationReadStatusProcess(any());
   }
 }

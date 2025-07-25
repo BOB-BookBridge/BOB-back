@@ -2,9 +2,13 @@ package com.bob.domain.notification.service;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
+import static com.bob.support.fixture.domain.noti.NotificationFixture.CUSTOM_NOTIFICATION;
 import static com.bob.support.fixture.domain.noti.NotificationFixture.DEFAULT_NOTIFICATIONS;
+import static com.bob.support.fixture.domain.noti.NotificationFixture.DEFAULT_NOTIFICATION_1;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
@@ -15,11 +19,14 @@ import static org.mockito.BDDMockito.verify;
 import com.bob.domain.notification.entity.Notification;
 import com.bob.domain.notification.reader.NotiReader;
 import com.bob.domain.notification.repository.NotiRepository;
+import com.bob.domain.notification.service.dto.command.ChangeNotificationReadStatusCommand;
 import com.bob.domain.notification.service.dto.command.CreateNotiCommand;
 import com.bob.domain.notification.service.dto.query.ReadNotificationsQuery;
 import com.bob.domain.notification.service.dto.response.NotificationsResponse;
 import com.bob.domain.notification.service.port.NotiMemberPort;
 import com.bob.domain.notification.service.port.NotiRedisPort;
+import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -118,5 +125,37 @@ class NotiServiceTest {
     assertThat(response).isNotNull();
     assertThat(response.notifications()).hasSize(2);
     then(notiReader).should().readNotifications(MEMBER_ID);
+  }
+
+  @Test
+  @DisplayName("알림 읽음 처리 - 성공 테스트")
+  void 알림_소유자는_읽음처리를_할_수_있다() {
+    // given
+    Notification notification = DEFAULT_NOTIFICATION_1();
+    given(notiReader.readNotificationById(1L)).willReturn(notification);
+
+    ChangeNotificationReadStatusCommand command = ChangeNotificationReadStatusCommand.of(MEMBER_ID, 1L);
+
+    // when
+    notiService.changeNotificationReadStatusProcess(command);
+
+    // then
+    assertThat(notification.getIsRead()).isTrue();
+    verify(notiReader).readNotificationById(1L);
+  }
+
+  @Test
+  @DisplayName("알림 읽음 처리 - 실패 테스트 (소유자 X)")
+  void 알림_읽음처리는_본인이_아니면_예외가_발생한다() {
+    // given
+    Notification notification = CUSTOM_NOTIFICATION("1", MEMBER_ID, "body", false);
+    given(notiReader.readNotificationById(1L)).willReturn(notification);
+
+    ChangeNotificationReadStatusCommand command = ChangeNotificationReadStatusCommand.of(OTHER_MEMBER_ID, 1L);
+
+    // when & then
+    assertThatThrownBy(() -> notiService.changeNotificationReadStatusProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.NOTIFICATION_ACCESS_DENIED.getMessage());
   }
 }

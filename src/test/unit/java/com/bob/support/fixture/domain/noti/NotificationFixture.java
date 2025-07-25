@@ -33,7 +33,7 @@ public class NotificationFixture {
         .build();
   }
 
-  public static Notification CUSTOM_TRADE_NOTIFICATION(String refId, UUID receiverId, String body, boolean isRead) {
+  public static Notification CUSTOM_NOTIFICATION(String refId, UUID receiverId, String body, boolean isRead) {
     return Notification.builder()
         .type(NotificationType.TRADE)
         .referenceId(refId)
