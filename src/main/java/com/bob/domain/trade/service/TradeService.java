@@ -3,7 +3,7 @@ package com.bob.domain.trade.service;
 import static com.bob.domain.trade.entity.status.TradeStatus.CANCELED;
 import static com.bob.domain.trade.entity.status.TradeStatus.REQUESTED;
 import static com.bob.domain.trade.entity.status.TradeStatus.valueOf;
-import static com.bob.domain.trade.service.dto.response.TradesResponse.of;
+import static com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary.from;
 import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
@@ -18,7 +18,7 @@ import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
-import com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary;
+import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
@@ -55,11 +55,11 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
 
   @Transactional(readOnly = true)
   public TradesResponse readTradesProcess(ReadTradesQuery query) {
-    UUID ownerId = postPort.readTradePostOwnerId(query.postId());
+    UUID ownerId = postPort.readTradePostSummary(query.postId()).sellerId();
     verifyTradeOwner(ownerId, query.memberId());
-    return of(tradeReader.readTradesByPostId(query.postId()).stream().map(trade -> TradeSummary
-        .from(trade, TradeMemberSummary.from(memberPort.readTradeMemberProfile(trade.getBuyerId())))
-    ).toList());
+    return TradesResponse.of(tradeReader.readTradesByPostId(query.postId()).stream()
+        .map(trade -> TradeSummary.from(trade, from(memberPort.readTradeMemberProfile(trade.getBuyerId()))))
+        .toList());
   }
 
   @Transactional(readOnly = true)
@@ -81,30 +81,34 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   @Transactional
   public void changeTradeStatusProcess(ChangeTradeStatusCommand command) {
     Trade trade = tradeReader.readTradeById(command.tradeId());
-    verifyTradeOwner(postPort.readTradePostOwnerId(trade.getPostId()), command.memberId());
-    verifyRequestedOnly(trade.getPostId(), command.status());
+    TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
+    verifyTradeOwner(post.sellerId(), command.memberId());
+    verifyRequestedOnly(trade.getId(), trade.getPostId(), command.status());
     TradeStatus status = valueOf(command.status());
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
-    sendTradeNotification(trade.getPostId(), status.value(), trade.getSellerId(), trade.getBuyerId());
-    publishSystemMessageEvent(trade.getPostId(), command.memberId(), command.buyerId(), status.value());
+    sendTradeNotification(post, trade.getSellerId(), trade.getBuyerId(), status.value());
+    publishSystemMessageEvent(post, command.memberId(), trade.getBuyerId(), status.value());
   }
 
-  private void sendTradeNotification(Long postId, String body, UUID memberId, UUID buyerId) {
-    NotiEvent event = NotiEvent.toSystemNotiEvent(TRADE, String.valueOf(postId), "SYSTEM", memberId, buyerId, body);
+  private void sendTradeNotification(TradePostSummary post, UUID memberId, UUID buyerId, String status) {
+    String body = String.format("[%s]의 거래 상태가 '%s'(으)로 변경되었습니다.", post.title(), status);
+    NotiEvent event = NotiEvent.toSystemNotiEvent(TRADE, String.valueOf(post.postId()), "SYSTEM", memberId, buyerId, body);
     eventPublisher.publishEvent(event);
   }
 
-  private void publishSystemMessageEvent(Long postId, UUID memberId, UUID buyerId, String body) {
-    SystemChatMessageEvent event = SystemChatMessageEvent.of("TRADE", postId.toString(), memberId, buyerId, body);
+  private void publishSystemMessageEvent(TradePostSummary post, UUID memberId, UUID buyerId, String status) {
+    String body = String.format("거래 상태가 '%s'(으)로 변경되었습니다.", status);
+    SystemChatMessageEvent event = SystemChatMessageEvent.of("TRADE", post.postId().toString(), memberId, buyerId, body);
     eventPublisher.publishEvent(event);
   }
 
-  private void verifyRequestedOnly(Long postId, String status) {
+  private void verifyRequestedOnly(Long requestId, Long postId, String status) {
     if (valueOf(status) == CANCELED || valueOf(status) == REQUESTED) {
       return;
     }
     tradeReader.readTradesByPostId(postId).stream()
+        .filter(t -> !t.getId().equals(requestId))
         .filter(t -> t.getTradeStatus().isProcessed())
         .findAny()
         .ifPresent(t -> {

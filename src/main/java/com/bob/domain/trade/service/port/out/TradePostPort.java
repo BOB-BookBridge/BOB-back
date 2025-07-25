@@ -1,10 +1,10 @@
 package com.bob.domain.trade.service.port.out;
 
-import java.util.UUID;
+import com.bob.domain.post.service.dto.response.PostDetailResponse;
 
 public interface TradePostPort {
 
-  UUID readTradePostOwnerId(Long postId);
+  PostDetailResponse readTradePostSummary(Long postId);
 
   void changePostStatus(Long postId, String status);
 }

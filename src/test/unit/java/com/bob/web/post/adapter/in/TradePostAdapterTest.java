@@ -12,7 +12,6 @@ import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.usecase.PostModifyUseCase;
 import com.bob.domain.post.usecase.PostReadUseCase;
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,18 +33,18 @@ class TradePostAdapterTest {
   private PostModifyUseCase modifyUseCase;
 
   @Test
-  @DisplayName("게시글 ID를 통한 게시글 작성자 ID 조회 기능 호출 테스트")
-  void 게시글_작성자의_ID를_조회한다() {
+  @DisplayName("게시글 ID를 통한 게시글 상세 조회 기능 호출 테스트")
+  void 게시글의_상세_정보를_조회한다() {
     // given
     Long postId = 1L;
     PostDetailResponse expect = DEFAULT_POST_DETAIL_RESPONSE(postId);
     given(readUseCase.readPostDetailProcess(any(ReadPostDetailQuery.class))).willReturn(expect);
 
     // when
-    UUID result = tradePostAdapter.readTradePostOwnerId(postId);
+    PostDetailResponse result = tradePostAdapter.readTradePostSummary(postId);
 
     // then
-    assertThat(result).isEqualTo(MEMBER_ID);
+    assertThat(result.sellerId()).isEqualTo(MEMBER_ID);
   }
 
   @Test

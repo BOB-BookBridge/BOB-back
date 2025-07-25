@@ -6,7 +6,6 @@ import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.usecase.PostModifyUseCase;
 import com.bob.domain.post.usecase.PostReadUseCase;
 import com.bob.domain.trade.service.port.out.TradePostPort;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +17,8 @@ public class TradePostAdapter implements TradePostPort {
   private final PostModifyUseCase modifyUseCase;
 
   @Override
-  public UUID readTradePostOwnerId(Long postId) {
-    PostDetailResponse response = readUseCase.readPostDetailProcess(ReadPostDetailQuery.of(null, postId, false));
-    return response.sellerId();
+  public PostDetailResponse readTradePostSummary(Long postId) {
+    return readUseCase.readPostDetailProcess(ReadPostDetailQuery.of(null, postId, false));
   }
 
   @Override

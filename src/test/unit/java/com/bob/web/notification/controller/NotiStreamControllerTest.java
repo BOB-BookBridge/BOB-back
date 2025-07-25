@@ -1,4 +1,4 @@
-package com.bob.web.notification.contoller;
+package com.bob.web.notification.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

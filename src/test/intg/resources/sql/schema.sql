@@ -328,3 +328,12 @@ INSERT INTO posts (book_id, seller_id, category_id, book_status, post_status, se
 INSERT INTO post_favorites (member_id, post_id, created_at) VALUES
 (UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, NOW()),
 (UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 3, NOW());
+
+-- 최근 2주 이내 알림
+INSERT INTO notifications (type, reference_id, receiver_id, body, is_read, created_at) VALUES
+('TRADE', '1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), '최근 알림1', TRUE, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+('TRADE', '1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), '최근 알림2', FALSE, DATE_SUB(NOW(), INTERVAL 10 DAY));
+
+-- 15일 이전 알림
+INSERT INTO notifications (type, reference_id, receiver_id, body, is_read, created_at)
+VALUES ('TRADE', '1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), '오래된 알림', TRUE, DATE_SUB(NOW(), INTERVAL 15 DAY));

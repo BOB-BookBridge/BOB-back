@@ -44,4 +44,8 @@ public class Notification extends BaseTime {
   @Column(nullable = false)
   @Builder.Default
   private Boolean isRead = false;
+
+  public void updateReadStatus(boolean status) {
+    this.isRead = status;
+  }
 }

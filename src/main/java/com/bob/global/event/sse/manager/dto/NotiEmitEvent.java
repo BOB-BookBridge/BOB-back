@@ -12,9 +12,6 @@ public record NotiEmitEvent(
 ) {
 
   public static NotiEmitEvent of(String type, String refId, String body, Sender sender, LocalDateTime sentAt) {
-    if ("TRADE".equals(type)) {
-      body = sender.nickname + "님과의 거래 상태가 '" + body + "'상태로 변경되었습니다.";
-    }
     return new NotiEmitEvent(type, refId, body, sender, sentAt);
   }
 

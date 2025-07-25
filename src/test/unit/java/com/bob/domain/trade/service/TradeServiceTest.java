@@ -7,6 +7,8 @@ import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_ID_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
 import static com.bob.support.fixture.domain.TradeFixture.REQUESTED_TRADE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
+import static com.bob.support.fixture.response.PostResponseFixture.CUSTOM_POST_DETAIL_RESPONSE;
+import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_DETAIL_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -83,7 +85,7 @@ class TradeServiceTest {
     UUID requesterId = MEMBER_ID;
     Long postId = 1L;
     ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
-    given(postPort.readTradePostOwnerId(postId)).willReturn(MEMBER_ID);
+    given(postPort.readTradePostSummary(postId)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
     given(tradeReader.readTradesByPostId(postId)).willReturn(DEFAULT_TRADES());
     given(memberPort.readTradeMemberProfile(any(UUID.class)))
         .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
@@ -94,7 +96,7 @@ class TradeServiceTest {
     // then
     assertThat(response).isNotNull();
     assertThat(response.trades()).hasSize(3);
-    then(postPort).should(times(1)).readTradePostOwnerId(postId);
+    then(postPort).should(times(1)).readTradePostSummary(postId);
     then(tradeReader).should(times(1)).readTradesByPostId(postId);
     then(memberPort).should(times(3)).readTradeMemberProfile(any(UUID.class));
   }
@@ -107,14 +109,14 @@ class TradeServiceTest {
     UUID requesterId = UUID.randomUUID();
     Long postId = 1L;
     ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
-    given(postPort.readTradePostOwnerId(postId)).willReturn(postOwnerId);
+    given(postPort.readTradePostSummary(postId)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
 
     // when & then
     assertThatThrownBy(() -> tradeService.readTradesProcess(query))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.TRADE_ACCESS_DENIED.getMessage());
 
-    then(postPort).should(times(1)).readTradePostOwnerId(postId);
+    then(postPort).should(times(1)).readTradePostSummary(postId);
     then(tradeReader).shouldHaveNoInteractions();
     then(memberPort).shouldHaveNoInteractions();
   }
@@ -185,7 +187,7 @@ class TradeServiceTest {
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
     given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
-    given(postPort.readTradePostOwnerId(requestTrade.getPostId())).willReturn(command.memberId());
+    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
     given(tradeReader.readTradesByPostId(requestTrade.getPostId()))
         .willReturn(List.of(REQUESTED_TRADE(1L,1L), REQUESTED_TRADE(2L,1L))); // 대기중인 거래만 존재
 
@@ -194,7 +196,7 @@ class TradeServiceTest {
 
     // then
     then(tradeReader).should().readTradeById(command.tradeId());
-    then(postPort).should().readTradePostOwnerId(requestTrade.getPostId());
+    then(postPort).should().readTradePostSummary(requestTrade.getPostId());
     then(postPort).should().changePostStatus(requestTrade.getPostId(), "IN_PROGRESS");
   }
 
@@ -205,7 +207,7 @@ class TradeServiceTest {
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
 
-    given(postPort.readTradePostOwnerId(requestTrade.getPostId())).willReturn(MEMBER_ID);
+    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
     given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
     given(tradeReader.readTradesByPostId(requestTrade.getPostId())).willReturn(DEFAULT_TRADES()); // 예약된 거래 존재
 
@@ -226,7 +228,7 @@ class TradeServiceTest {
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
 
     given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
-    given(postPort.readTradePostOwnerId(requestTrade.getPostId())).willReturn(UUID.randomUUID());
+    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(CUSTOM_POST_DETAIL_RESPONSE(1L, UUID.randomUUID()));
 
     // when & then
     assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
@@ -234,6 +236,6 @@ class TradeServiceTest {
         .hasMessageContaining("거래에 접근할 권한이 없습니다");
 
     then(tradeReader).should().readTradeById(command.tradeId());
-    then(postPort).should().readTradePostOwnerId(requestTrade.getPostId());
+    then(postPort).should().readTradePostSummary(requestTrade.getPostId());
   }
 }
