@@ -7,6 +7,7 @@ public class ChatRoomFixture {
 
   public static ChatRoom DEFAULT_CHAT_ROOM_1() {
     return ChatRoom.builder()
+        .id(1L)
         .postId(1L)
         .tradeId(1L)
         .titleSuffix("제목")
@@ -30,6 +31,7 @@ public class ChatRoomFixture {
 
   public static ChatRoom DISABLE_CHAT_ROOM_1() {
     return ChatRoom.builder()
+        .id(1L)
         .postId(1L)
         .tradeId(3L)
         .titleSuffix("제목")
