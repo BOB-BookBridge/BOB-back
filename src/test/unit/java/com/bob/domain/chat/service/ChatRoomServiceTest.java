@@ -15,11 +15,14 @@ import static com.bob.support.fixture.domain.chat.ChatRoomFixture.DEFAULT_CHAT_R
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.DISABLE_CHAT_ROOM_1;
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.customChatRoom;
 import static com.bob.support.fixture.domain.chat.ChatRoomMemberFixture.CHAT_ROOM_MEMBER_1;
+import static com.bob.support.fixture.domain.chat.ChatRoomMemberFixture.CHAT_ROOM_MEMBER_2;
+import static com.bob.support.fixture.domain.chat.ChatRoomMemberFixture.EXITED_CHAT_ROOM_MEMBER;
 import static com.bob.support.fixture.response.ChatFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static com.bob.support.fixture.response.ChatPostResponseFixture.DEFAULT_CHAT_POST_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.OTHER_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_DETAIL_RESPONSE;
 import static com.bob.support.fixture.response.TradeDetailResponseFixture.DEFAULT_TRADE_DETAIL;
+import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -61,7 +64,6 @@ import com.bob.domain.chat.service.reader.ChatRoomReader;
 import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -239,6 +241,7 @@ class ChatRoomServiceTest {
     given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(DEFAULT_CHAT_ROOM_1());
     given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_1());
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, receiverId)).willReturn(CHAT_ROOM_MEMBER_2());
     given(chatMessageService.createChatMessageProcess(command, receiverId)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
 
     // when
@@ -249,6 +252,32 @@ class ChatRoomServiceTest {
     then(chatRoomMemberReader).should(times(1)).readChatRoomMember(chatRoomId, MEMBER_ID);
     then(chatRoomMemberReader).should(times(1)).readPartnerIdByRequesterId(chatRoomId, senderId);
     then(eventPublisher).should(times(1)).publishEvent(any(NotiEvent.class));
+  }
+
+  @DisplayName("채팅 메시지 전송 - 성공 테스트 (상대방이 채팅방을 나간 경우)")
+  @Test
+  void 채팅_메시지를_전송했을_때_상대방이_나간_경우_채팅방_재입장_처리를_한다() {
+    // given
+    Long chatRoomId = 1L;
+    UUID senderId = MEMBER_ID;
+    UUID receiverId = OTHER_MEMBER_ID;
+    CreateChatMessageCommand command = DEFAULT_CREATE_CHAT_MESSAGE_COMMAND();
+
+    ChatRoomMember sender = CHAT_ROOM_MEMBER_1();
+    ChatRoomMember receiver = EXITED_CHAT_ROOM_MEMBER();
+
+    given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(DEFAULT_CHAT_ROOM_1());
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, senderId)).willReturn(sender);
+    given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, receiverId)).willReturn(receiver);
+    given(chatMessageService.createChatMessageProcess(command, receiverId)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
+
+    // when
+    chatRoomService.createChatRoomMessageProcess(command);
+
+    // then
+    then(chatRoomMemberReader).should(times(1)).readChatRoomMember(chatRoomId, receiverId);
+    assertThat(receiver.getExitedAt()).isNull(); // 채팅방 입장 여부는 나간 시각의 null 여부로 판단 (null = 입장 상태)
   }
 
   @DisplayName("채팅 메시지 전송 - 메시지 타입이 IMAGE, MIX인 경우 normalize = true 테스트")
@@ -266,6 +295,7 @@ class ChatRoomServiceTest {
     given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_1());
     given(chatMessageService.createChatMessageProcess(command, OTHER_MEMBER_ID)).willReturn(chatMessage);
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, memberId)).willReturn(OTHER_MEMBER_ID);
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, OTHER_MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_2());
 
     // when
     chatRoomService.createChatRoomMessageProcess(command);
@@ -293,6 +323,7 @@ class ChatRoomServiceTest {
     given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_1());
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, senderId)).willReturn(receiverId);
     given(chatMessageService.createChatMessageProcess(command, receiverId)).willReturn(DEFAULT_TEXT_CHAT_MESSAGE());
+    given(chatRoomMemberReader.readChatRoomMember(chatRoomId, OTHER_MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_2());
 
     // when
     chatRoomService.createChatRoomMessageProcess(command);
@@ -352,8 +383,8 @@ class ChatRoomServiceTest {
     UUID memberId = MEMBER_ID;
     UUID partnerId = OTHER_MEMBER_ID;
 
-    ChatRoom recentRoom = customChatRoom(1L, "최신 메시지", LocalDateTime.now(), true);
-    ChatRoom oldRoom = customChatRoom(2L, "오래된 메시지", LocalDateTime.now().minusHours(1), true);
+    ChatRoom recentRoom = customChatRoom(1L, "최신 메시지", now(), true);
+    ChatRoom oldRoom = customChatRoom(2L, "오래된 메시지", now().minusHours(1), true);
 
     given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId)).willReturn(List.of(oldRoom, recentRoom));
     given(chatRoomMemberReader.readPartnerIdByRequesterId(anyLong(), eq(memberId))).willReturn(partnerId);
@@ -407,8 +438,8 @@ class ChatRoomServiceTest {
   void 참여_중인_채팅방이_여러_개일_때_읽지_않은_메시지_수를_정상적으로_합산한다() {
     // given
     UUID memberId = MEMBER_ID;
-    ChatRoom room1 = customChatRoom(1L, "message", LocalDateTime.now(), true);
-    ChatRoom room2 = customChatRoom(2L, "message", LocalDateTime.now().minusMinutes(10), true);
+    ChatRoom room1 = customChatRoom(1L, "message", now(), true);
+    ChatRoom room2 = customChatRoom(2L, "message", now().minusMinutes(10), true);
 
     given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId))
         .willReturn(List.of(room1, room2));
@@ -433,7 +464,7 @@ class ChatRoomServiceTest {
     UUID memberId = MEMBER_ID;
     UUID partnerId = OTHER_MEMBER_ID;
 
-    ChatRoom chatRoom = customChatRoom(1L, "lastMessage", LocalDateTime.now(), true);
+    ChatRoom chatRoom = customChatRoom(1L, "lastMessage", now(), true);
     ChatPostResponse postResponse = ChatPostResponse.from(DEFAULT_POST_DETAIL_RESPONSE(chatRoom.getPostId()));
     ChatTradeResponse tradeResponse = ChatTradeResponse.from(DEFAULT_TRADE_DETAIL());
 
@@ -520,7 +551,7 @@ class ChatRoomServiceTest {
     UUID memberId = MEMBER_ID;
 
     ChatRoomMember exitedMember = CHAT_ROOM_MEMBER_1();
-    exitedMember.updateExitedAt(LocalDateTime.now());
+    exitedMember.updateExitedAt(now());
 
     given(chatRoomMemberReader.readChatRoomMember(chatRoomId, memberId)).willReturn(exitedMember);
 

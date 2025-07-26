@@ -3,6 +3,7 @@ package com.bob.domain.chat.service;
 import static com.bob.domain.chat.entity.type.ChatMessageType.SYSTEM;
 import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.IS_FAR_MEMBER;
 import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND;
+import static com.bob.support.fixture.command.CreateChatRoomCommandFixture.of;
 import static com.bob.support.fixture.domain.MemberFixture.otherMember;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,7 +34,6 @@ import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
-import com.bob.support.fixture.command.CreateChatRoomCommandFixture;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -77,7 +77,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).get();
 
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
-    CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    CreateChatRoomCommand command = of(post.getId(), buyer.getId());
 
     // when
     CreateChatRoomResponse response = chatRoomService.createChatRoomProcess(command);
@@ -126,7 +126,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     // given
     Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).get();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
-    CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), seller.getId());
+    CreateChatRoomCommand command = of(post.getId(), seller.getId());
 
     // when & then
     assertThatThrownBy(() -> chatRoomService.createChatRoomProcess(command))
@@ -142,7 +142,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).get();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
 
-    CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId()); // 최초 생성
+    CreateChatRoomCommand command = of(post.getId(), buyer.getId()); // 최초 생성
     CreateChatRoomResponse created = chatRoomService.createChatRoomProcess(command);
 
     // when
@@ -162,7 +162,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(5);
     CreateChatRoomResponse chatRoomResponse = chatRoomService.createChatRoomProcess(
-        CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())
+        of(post.getId(), buyer.getId())
     );
     Long chatRoomId = chatRoomResponse.chatRoomId();
     CreateChatMessageCommand command = CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, buyer.getId());
@@ -179,6 +179,27 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     assertThat(saved.getType().name()).isEqualTo("MIX");
   }
 
+  @DisplayName("채팅 메시지 전송 - 성공 테스트 (상대방이 채팅방을 나간 경우)")
+  @Test
+  void 채팅_메시지_전송_시_상대방이_채팅방을_나간_경우_자동으로_채팅방_재입장_처리를_한다() {
+    // given
+    Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
+    Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
+    Post post = postRepository.findAllBySellerId(seller.getId()).get(5);
+    CreateChatRoomResponse chatRoomResponse = chatRoomService.createChatRoomProcess(of(post.getId(), buyer.getId()));
+    Long chatRoomId = chatRoomResponse.chatRoomId();
+    ChatRoomMember partner = chatRoomMemberRepository.findByChatRoomIdAndMemberId(chatRoomId, seller.getId()).get();
+    partner.updateExitedAt(LocalDateTime.now()); // 상대방 채팅방 나가기
+
+    CreateChatMessageCommand command = CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, buyer.getId());
+
+    // when
+    chatRoomService.createChatRoomMessageProcess(command); // 상대방이 채팅방을 나간 경우 채팅방 재입장 처리
+
+    // then
+    assertThat(partner.getExitedAt()).isNull(); // 채팅방 입장 여부는 나간 시각의 null 여부로 판단 (null = 입장 상태)
+  }
+
   @Test
   @DisplayName("채팅 메시지 전송 - 비활성화 된 채팅방 활성화 테스트")
   void 비활성화된_채팅방에_첫_메시지를_보내면_채팅방이_활성화된다() {
@@ -187,7 +208,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(4);
 
-    CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    CreateChatRoomCommand command = of(post.getId(), buyer.getId());
     CreateChatRoomResponse response = chatRoomService.createChatRoomProcess(command);
     Long chatRoomId = response.chatRoomId();
 
@@ -211,9 +232,9 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).get();
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).get();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
-    CreateChatRoomCommand command1 = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    CreateChatRoomCommand command1 = of(post.getId(), buyer.getId());
     CreateChatRoomResponse response1 = chatRoomService.createChatRoomProcess(command1);
-    CreateChatRoomCommand command2 = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    CreateChatRoomCommand command2 = of(post.getId(), buyer.getId());
     chatRoomService.createChatRoomProcess(command2);
 
     ChatRoom enableChatRoom = chatRoomRepository.findById(response1.chatRoomId()).get();
@@ -238,9 +259,9 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
-    Long chatRoomId1 = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())).chatRoomId();
+    Long chatRoomId1 = chatRoomService.createChatRoomProcess(of(post.getId(), buyer.getId())).chatRoomId();
     chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId1, seller.getId()));
-    Long chatRoomId2 = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())).chatRoomId();
+    Long chatRoomId2 = chatRoomService.createChatRoomProcess(of(post.getId(), buyer.getId())).chatRoomId();
     chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId2, seller.getId()));
     chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId2, seller.getId()));
 
@@ -260,7 +281,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
 
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
 
-    CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    CreateChatRoomCommand command = of(post.getId(), buyer.getId());
     CreateChatRoomResponse created = chatRoomService.createChatRoomProcess(command);
 
     ChatRoom chatRoom = chatRoomRepository.findById(created.chatRoomId()).orElseThrow();
@@ -287,7 +308,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member stranger = memberRepository.save(otherMember()); // 제3자
 
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
-    CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    CreateChatRoomCommand command = of(post.getId(), buyer.getId());
     CreateChatRoomResponse created = chatRoomService.createChatRoomProcess(command);
 
     ChatRoom chatRoom = chatRoomRepository.findById(created.chatRoomId()).orElseThrow();
@@ -307,7 +328,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(6);
-    Long chatRoomId = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId())).chatRoomId();
+    Long chatRoomId = chatRoomService.createChatRoomProcess(of(post.getId(), buyer.getId())).chatRoomId();
     Thread.sleep(1000);
     chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, buyer.getId()));
     chatRoomService.createChatRoomMessageProcess(CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, seller.getId()));
@@ -330,7 +351,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member stranger = memberRepository.save(otherMember());
 
     Post post = postRepository.findAllBySellerId(seller.getId()).get(0);
-    Long chatRoomId = chatRoomService.createChatRoomProcess(CreateChatRoomCommandFixture.of(post.getId(), buyer.getId()))
+    Long chatRoomId = chatRoomService.createChatRoomProcess(of(post.getId(), buyer.getId()))
         .chatRoomId();
 
     ChatRoomMember exited = chatRoomMemberRepository.findByChatRoomIdAndMemberId(chatRoomId, buyer.getId()).orElseThrow();
@@ -349,7 +370,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     Member seller = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0")).orElseThrow();
     Member buyer = memberRepository.findById(UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59")).orElseThrow();
     Post post = postRepository.findAllBySellerId(seller.getId()).get(2);
-    CreateChatRoomCommand command = CreateChatRoomCommandFixture.of(post.getId(), buyer.getId());
+    CreateChatRoomCommand command = of(post.getId(), buyer.getId());
     CreateChatRoomResponse chatRoom = chatRoomService.createChatRoomProcess(command);
     Long chatRoomId = chatRoom.chatRoomId();
     CreateChatMessageCommand messageCommand = CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, seller.getId());

@@ -50,6 +50,7 @@ import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -115,6 +116,7 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
     ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
     enableChatRoomIfDisabled(chatRoom);
+    reEnterChatRoomIfPartnerExited(chatRoom.getId(), partnerId);
     ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
     chatRoom.updateChatRoomLastMessageInfo(message.getContent(), message.getCreatedAt());
     publishChatMessageEvent(command, message, partnerId);
@@ -125,6 +127,12 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     if (!chatRoom.getEnableStatus()) {
       chatRoom.updateChatRoomStatus(true);
     }
+  }
+
+  private void reEnterChatRoomIfPartnerExited(Long chatRoomId, UUID partnerId) {
+    ChatRoomMember partner = chatRoomMemberReader.readChatRoomMember(chatRoomId, partnerId);
+    if (partner.getExitedAt() == null) return;
+    partner.reEnterChatRoom(LocalDateTime.now());
   }
 
   @Transactional
