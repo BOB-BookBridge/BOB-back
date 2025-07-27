@@ -4,6 +4,8 @@ import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.condition.SearchKey;
 import com.bob.domain.post.service.dto.query.condition.SearchPrice;
 import com.bob.domain.post.service.dto.query.condition.SortKey;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public record ReadFilteredPostsRequest(
@@ -24,7 +26,7 @@ public record ReadFilteredPostsRequest(
         .keyword(keyword)
         .memberId(memberId)
         .emdId(emdId)
-        .categoryId(categoryId)
+        .categoryIds(categoryId != null ? new ArrayList<>(List.of(categoryId)) : null)
         .price(SearchPrice.fromIndex(price).orElse(null))
         .postStatus(postStatus)
         .bookStatus(bookStatus)

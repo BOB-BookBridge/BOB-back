@@ -1,6 +1,6 @@
 package com.bob.domain.post.service;
 
-import static com.bob.domain.post.entity.status.PostStatus.*;
+import static com.bob.domain.post.entity.status.PostStatus.valueOf;
 import static com.bob.domain.post.service.dto.response.PostFileSummaryResponse.from;
 
 import com.bob.domain.book.entity.Book;
@@ -8,7 +8,6 @@ import com.bob.domain.book.service.BookService;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.service.reader.CategoryReader;
 import com.bob.domain.post.entity.Post;
-import com.bob.domain.post.entity.status.PostStatus;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
 import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
@@ -98,9 +97,16 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
 
   @Transactional(readOnly = true)
   public PostsResponse readFilteredPostsProcess(ReadFilteredPostsQuery query, Pageable pageable) {
+    addChildCategoryIds(query);
     List<Post> posts = postReader.readFilteredPosts(query, pageable);
     Long totalCount = postRepository.countFilteredPosts(query);
     return PostsResponse.of(totalCount, posts);
+  }
+
+  private void addChildCategoryIds(ReadFilteredPostsQuery query) {
+    if (query.categoryIds() == null || query.categoryIds().isEmpty()) return;
+    List<Integer> categoryIds = categoryReader.readChildCategoryIds(query.categoryIds().get(0));
+    query.updateCategoryIds(categoryIds);
   }
 
   @Transactional(readOnly = true)
