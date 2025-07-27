@@ -16,6 +16,7 @@ import static com.bob.support.fixture.domain.PostFixture.defaultIdPost;
 import static com.bob.support.fixture.domain.PostFixture.defaultPost;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadFilteredPostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadMemberFavoritePostsQuery;
+import static com.bob.support.fixture.query.PostQueryFixture.searchCategoryQuery;
 import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
 import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.NOT_VALID_POST_AREA_SUMMARY;
 import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
@@ -268,6 +269,27 @@ class PostServiceTest {
     assertThat(response.totalCount()).isEqualTo(2L);
     then(postReader).should(times(1)).readFilteredPosts(query, pageable);
     then(postRepository).should(times(1)).countFilteredPosts(query);
+  }
+
+  @DisplayName("게시글 목록 조회 테스트 - 부모 카테고리 조회")
+  @Test
+  void 카테고리를_통한_게시글_목록_조회_시_자식_카테고리_게시글을_포함한다() {
+    // given
+    ReadFilteredPostsQuery query = searchCategoryQuery(); // categoryId = 1, 1의 자식 = 12, 13, 14, 15, 16
+    given(categoryReader.readChildCategoryIds(query.categoryIds().get(0))).willReturn(List.of(12, 13, 14, 15, 16));
+    given(postReader.readFilteredPosts(query, pageable)).willReturn(DEFAULT_MOCK_POSTS());
+    given(postRepository.countFilteredPosts(query)).willReturn(2L);
+
+    // when
+    PostsResponse response = postService.readFilteredPostsProcess(query, pageable);
+
+    // then
+    then(categoryReader).should(times(1)).readChildCategoryIds(query.categoryIds().get(0));
+    assertThat(query.categoryIds()).contains(12, 13, 14, 15, 16); // 서비스 단에서 게시글 목록 조회 전 자식 카테고리를 조회 후 카테고리 조건에 추가
+
+    then(postReader).should(times(1)).readFilteredPosts(query, pageable);
+    then(postRepository).should(times(1)).countFilteredPosts(query);
+    assertThat(response.totalCount()).isEqualTo(2L);
   }
 
   @Test

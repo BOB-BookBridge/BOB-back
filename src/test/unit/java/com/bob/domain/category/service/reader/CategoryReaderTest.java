@@ -10,6 +10,7 @@ import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.repository.CategoryRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,5 +57,35 @@ class CategoryReaderTest {
         .hasMessage(ApplicationError.UN_SUPPORTED_CATEGORY.getMessage());
 
     verify(categoryRepository).findById(categoryId);
+  }
+
+  @Test
+  @DisplayName("자식 카테고리 ID 조회 - 자식이 존재하는 경우")
+  void 부모_카테고리ID로_자식_카테고리ID_리스트를_조회할_수_있다() {
+    // given
+    Integer parentId = 1;
+    given(categoryRepository.findChildCategoryIds(parentId)).willReturn(List.of(12, 13, 14, 15, 16));
+
+    // when
+    List<Integer> result = categoryReader.readChildCategoryIds(parentId);
+
+    // then
+    assertThat(result).containsExactly(12, 13, 14, 15, 16);
+    verify(categoryRepository).findChildCategoryIds(parentId);
+  }
+
+  @Test
+  @DisplayName("자식 카테고리 ID 조회 - 자식이 없는 경우 빈 리스트 반환")
+  void 최하위_카테고리인_경우_빈_리스트를_반환한다() {
+    // given
+    Integer parentId = 60;
+    given(categoryRepository.findChildCategoryIds(parentId)).willReturn(List.of());
+
+    // when
+    List<Integer> result = categoryReader.readChildCategoryIds(parentId);
+
+    // then
+    assertThat(result).isEmpty();
+    verify(categoryRepository).findChildCategoryIds(parentId);
   }
 }

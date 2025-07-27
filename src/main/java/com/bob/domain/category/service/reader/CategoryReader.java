@@ -4,6 +4,7 @@ import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.repository.CategoryRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,5 +19,9 @@ public class CategoryReader {
   public Category readCategoryById(Integer categoryId) {
     return categoryRepository.findById(categoryId)
         .orElseThrow(() -> new ApplicationException(ApplicationError.UN_SUPPORTED_CATEGORY));
+  }
+
+  public List<Integer> readChildCategoryIds(Integer parentCategoryId) {
+    return categoryRepository.findChildCategoryIds(parentCategoryId);
   }
 }

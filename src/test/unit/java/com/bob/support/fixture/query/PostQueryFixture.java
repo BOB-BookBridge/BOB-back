@@ -5,6 +5,8 @@ import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
 import com.bob.domain.post.service.dto.query.condition.SearchKey;
 import com.bob.domain.post.service.dto.query.condition.SearchPrice;
 import com.bob.domain.post.service.dto.query.condition.SortKey;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class PostQueryFixture {
@@ -14,7 +16,7 @@ public class PostQueryFixture {
         .key(SearchKey.ALL)
         .keyword(null)
         .emdId(null)
-        .categoryId(null)
+        .categoryIds(new ArrayList<>())
         .price(null)
         .postStatus(null)
         .bookStatus(null)
@@ -58,7 +60,7 @@ public class PostQueryFixture {
 
   public static ReadFilteredPostsQuery searchCategoryQuery() {
     return ReadFilteredPostsQuery.builder()
-        .categoryId(1)
+        .categoryIds(new ArrayList<>(List.of(1)))
         .sortKey(SortKey.RECENT)
         .build();
   }

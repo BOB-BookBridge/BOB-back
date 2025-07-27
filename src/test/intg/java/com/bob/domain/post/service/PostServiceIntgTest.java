@@ -313,9 +313,10 @@ class PostServiceIntgTest extends TestContainerSupport {
     ReadFilteredPostsQuery query = searchCategoryQuery();
     PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
 
+    assertThat(query.categoryIds()).contains(1, 12, 13, 14, 15, 16); // 1의 자식 카테고리는 12, 13, 14, 15, 16
     assertThat(result.posts())
         .extracting(PostSummary::categoryId)
-        .containsOnly(1);
+        .contains(1);
   }
 
   @Test

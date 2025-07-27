@@ -33,7 +33,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             keywordCondition(query.key(), query.keyword()),
             memberIdCondition(query.memberId()),
             emdCondition(query.emdId()),
-            categoryCondition(query.categoryId()),
+            categoryCondition(query.categoryIds()),
             priceCondition(query.price()),
             tradeStatusCondition(query.postStatus()),
             bookStatusCondition(query.bookStatus())
@@ -53,7 +53,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             keywordCondition(query.key(), query.keyword()),
             memberIdCondition(query.memberId()),
             emdCondition(query.emdId()),
-            categoryCondition(query.categoryId()),
+            categoryCondition(query.categoryIds()),
             priceCondition(query.price()),
             tradeStatusCondition(query.postStatus()),
             bookStatusCondition(query.bookStatus())
@@ -81,8 +81,11 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     return emdId == null ? null : post.registrationAreaId.eq(emdId);
   }
 
-  private BooleanExpression categoryCondition(Integer category) {
-    return category == null ? null : post.category.id.eq(category);
+  private BooleanExpression categoryCondition(List<Integer> categoryIds) {
+    if (categoryIds == null || categoryIds.isEmpty()) {
+      return null;
+    }
+    return post.category.id.in(categoryIds);
   }
 
   private BooleanExpression priceCondition(SearchPrice price) {
