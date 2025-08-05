@@ -23,4 +23,8 @@ public class RedisRepository {
   public void delete(String key) {
     redisTemplate.delete(key);
   }
+
+  public boolean isExist(String key) {
+    return redisTemplate.hasKey(key);
+  }
 }
