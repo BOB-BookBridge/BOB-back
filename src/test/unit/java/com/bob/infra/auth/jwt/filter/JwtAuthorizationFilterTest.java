@@ -1,10 +1,7 @@
 package com.bob.infra.auth.jwt.filter;
 
-import static com.bob.global.exception.response.AuthenticationError.FAILED_VERIFY_TOKEN;
-import static com.bob.global.exception.response.AuthenticationError.IS_EXPIRED_TOKEN;
-import static com.bob.global.exception.response.AuthenticationError.IS_NOT_EXIST_TOKEN;
+import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_VALUE;
-import static com.bob.support.fixture.auth.CookieFixture.AUTH_COOKIE_NAME;
 import static com.bob.support.fixture.auth.CookieFixture.defaultAuthCookie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,7 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("JWT 토큰 인증 필터 테스트")
 @ExtendWith(MockitoExtension.class)
@@ -69,7 +65,6 @@ class JwtAuthorizationFilterTest {
 
   @BeforeEach
   void setUp() {
-    ReflectionTestUtils.setField(jwtAuthorizationFilter, "COOKIE_NAME", AUTH_COOKIE_NAME);
     given(permitAllRegistry.isWhiteList(any(HttpServletRequest.class))).willReturn(false);
   }
 
@@ -93,8 +88,7 @@ class JwtAuthorizationFilterTest {
     // then
     assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
     assertThat(SecurityContextHolder.getContext().getAuthentication().isAuthenticated()).isTrue();
-    assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal())
-        .isInstanceOf(MemberDetails.class);
+    assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isInstanceOf(MemberDetails.class);
     then(filterChain).should().doFilter(request, response);
   }
 
@@ -108,12 +102,9 @@ class JwtAuthorizationFilterTest {
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
     // then
-    then(jwtAuthenticationEntryPoint).should()
-        .commence(eq(request), eq(response),
-            argThat(
-                e -> ((ApplicationAuthenticationException) e).getError() == IS_NOT_EXIST_TOKEN
-            )
-        );
+    then(jwtAuthenticationEntryPoint).should().commence(eq(request), eq(response),
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION)
+    );
   }
 
   @Test
@@ -128,12 +119,9 @@ class JwtAuthorizationFilterTest {
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
     // then
-    then(jwtAuthenticationEntryPoint).should()
-        .commence(eq(request), eq(response),
-            argThat(e ->
-                ((ApplicationAuthenticationException) e).getError() == FAILED_VERIFY_TOKEN
-            )
-        );
+    then(jwtAuthenticationEntryPoint).should().commence(eq(request), eq(response),
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION)
+    );
   }
 
   @Test
@@ -149,12 +137,9 @@ class JwtAuthorizationFilterTest {
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
     // then
-    then(jwtAuthenticationEntryPoint).should()
-        .commence(eq(request), eq(response),
-            argThat(
-                e -> ((ApplicationAuthenticationException) e).getError() == IS_EXPIRED_TOKEN
-            )
-        );
+    then(jwtAuthenticationEntryPoint).should().commence(eq(request), eq(response),
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION)
+    );
   }
 
   @Test
