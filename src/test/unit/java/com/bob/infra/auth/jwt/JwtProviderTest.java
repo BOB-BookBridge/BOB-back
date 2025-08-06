@@ -22,7 +22,6 @@ class JwtProviderTest {
     jwtProvider = new JwtProvider();
     ReflectionTestUtils.setField(jwtProvider, "key", SECRET_KEY);
     ReflectionTestUtils.setField(jwtProvider, "accessExpireTime", 60L);
-    ReflectionTestUtils.setField(jwtProvider, "refreshExpireTime", 120L);
   }
 
   @Test
@@ -30,16 +29,6 @@ class JwtProviderTest {
   void AccessToken을_생성할_수_있다() {
     // when
     String token = jwtProvider.generateAccessToken(MEMBER_ID.toString());
-
-    // then
-    assertThat(token).isNotBlank();
-  }
-
-  @Test
-  @DisplayName("Refresh Token 생성 - 성공 테스트")
-  void RefreshToken을_생성할_수_있다() {
-    // when
-    String token = jwtProvider.generateRefreshToken(MEMBER_ID.toString());
 
     // then
     assertThat(token).isNotBlank();
@@ -92,6 +81,32 @@ class JwtProviderTest {
 
     // when
     boolean isExpired = jwtProvider.isExpired(token);
+
+    // then
+    assertThat(isExpired).isTrue();
+  }
+
+  @Test
+  @DisplayName("Token 서명 검증 - 실패 테스트(서명 불일치)")
+  void 서명이_조작된_토큰이면_false를_반환한다() {
+    // given
+    String tamperedToken = validToken(MEMBER_ID.toString()) + "tampered";
+
+    // when
+    boolean isVerified = jwtProvider.isVerified(tamperedToken);
+
+    // then
+    assertThat(isVerified).isFalse();
+  }
+
+  @Test
+  @DisplayName("Token 만료 여부 확인 - 실패 테스트(서명 불일치)")
+  void 서명이_조작된_토큰이면_true를_반환한다() {
+    // given
+    String tamperedToken = validToken(MEMBER_ID.toString()) + "tampered";
+
+    // when
+    boolean isExpired = jwtProvider.isExpired(tamperedToken);
 
     // then
     assertThat(isExpired).isTrue();

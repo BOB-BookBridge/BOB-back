@@ -3,6 +3,7 @@ package com.bob.infra.config;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 import com.bob.infra.auth.filter.LoginFilter;
+import com.bob.infra.auth.filter.port.AuthRedisPort;
 import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.jwt.filter.JwtAuthorizationFilter;
 import com.bob.infra.auth.jwt.handler.JwtAuthenticationEntryPoint;
@@ -40,9 +41,11 @@ public class SecurityConfig {
       "/h2-console/**",
       "/error/**",
   };
+
   private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
   private final JwtAuthorizationFilter jwtAuthorizationFilter;
   private final MemberDetailsService memberDetailsService;
+  private final AuthRedisPort redisPort;
   private final JwtProvider jwtProvider;
   private final ObjectMapper objectMapper;
 
@@ -58,7 +61,7 @@ public class SecurityConfig {
             .logoutUrl("/auth/logout")
             .logoutSuccessHandler((req, res, auth) -> res.setStatus(SC_OK))
             .addLogoutHandler((req, res, auth) -> req.getSession().invalidate())
-            .deleteCookies("JSESSIONID", "AUTHORIZATION", "REFRESH")
+            .deleteCookies("JSESSIONID", "AUTHORIZATION", "REFRESH_KEY")
         )
         .sessionManagement(m -> m.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
@@ -110,6 +113,7 @@ public class SecurityConfig {
     LoginFilter loginFilter = new LoginFilter(
         authenticationManager,
         jwtAuthenticationEntryPoint,
+        redisPort,
         jwtProvider,
         objectMapper
     );

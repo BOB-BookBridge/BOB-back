@@ -1,10 +1,8 @@
 package com.bob.infra.auth.jwt.filter;
 
-import static com.bob.global.exception.response.AuthenticationError.FAILED_VERIFY_TOKEN;
+import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
 import static com.bob.global.exception.response.AuthenticationError.IS_EXPIRED_TOKEN;
-import static com.bob.global.exception.response.AuthenticationError.IS_NOT_EXIST_TOKEN;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_VALUE;
-import static com.bob.support.fixture.auth.CookieFixture.AUTH_COOKIE_NAME;
 import static com.bob.support.fixture.auth.CookieFixture.defaultAuthCookie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,7 +12,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
-import com.bob.global.utils.web.CookieUtils;
 import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.jwt.handler.JwtAuthenticationEntryPoint;
 import com.bob.infra.auth.response.MemberDetails;
@@ -34,7 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("JWT 토큰 인증 필터 테스트")
 @ExtendWith(MockitoExtension.class)
@@ -59,9 +55,6 @@ class JwtAuthorizationFilterTest {
   private FilterChain filterChain;
 
   @Mock
-  private CookieUtils cookieUtils;
-
-  @Mock
   private PermitAllRegistry permitAllRegistry;
 
   @Mock
@@ -69,7 +62,6 @@ class JwtAuthorizationFilterTest {
 
   @BeforeEach
   void setUp() {
-    ReflectionTestUtils.setField(jwtAuthorizationFilter, "COOKIE_NAME", AUTH_COOKIE_NAME);
     given(permitAllRegistry.isWhiteList(any(HttpServletRequest.class))).willReturn(false);
   }
 
@@ -85,7 +77,7 @@ class JwtAuthorizationFilterTest {
     given(request.getCookies()).willReturn(new Cookie[]{defaultAuthCookie()});
     given(jwtProvider.isVerified(ACCESS_VALUE)).willReturn(true);
     given(jwtProvider.isExpired(ACCESS_VALUE)).willReturn(false);
-    given(jwtProvider.getMemberId(ACCESS_VALUE)).willReturn(any(UUID.class));
+    given(jwtProvider.getMemberId(ACCESS_VALUE)).willReturn(UUID.randomUUID());
 
     // when
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
@@ -93,8 +85,7 @@ class JwtAuthorizationFilterTest {
     // then
     assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
     assertThat(SecurityContextHolder.getContext().getAuthentication().isAuthenticated()).isTrue();
-    assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal())
-        .isInstanceOf(MemberDetails.class);
+    assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isInstanceOf(MemberDetails.class);
     then(filterChain).should().doFilter(request, response);
   }
 
@@ -108,12 +99,9 @@ class JwtAuthorizationFilterTest {
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
     // then
-    then(jwtAuthenticationEntryPoint).should()
-        .commence(eq(request), eq(response),
-            argThat(
-                e -> ((ApplicationAuthenticationException) e).getError() == IS_NOT_EXIST_TOKEN
-            )
-        );
+    then(jwtAuthenticationEntryPoint).should().commence(eq(request), eq(response),
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION)
+    );
   }
 
   @Test
@@ -128,12 +116,9 @@ class JwtAuthorizationFilterTest {
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
     // then
-    then(jwtAuthenticationEntryPoint).should()
-        .commence(eq(request), eq(response),
-            argThat(e ->
-                ((ApplicationAuthenticationException) e).getError() == FAILED_VERIFY_TOKEN
-            )
-        );
+    then(jwtAuthenticationEntryPoint).should().commence(eq(request), eq(response),
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION)
+    );
   }
 
   @Test
@@ -149,12 +134,9 @@ class JwtAuthorizationFilterTest {
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
     // then
-    then(jwtAuthenticationEntryPoint).should()
-        .commence(eq(request), eq(response),
-            argThat(
-                e -> ((ApplicationAuthenticationException) e).getError() == IS_EXPIRED_TOKEN
-            )
-        );
+    then(jwtAuthenticationEntryPoint).should().commence(eq(request), eq(response),
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == IS_EXPIRED_TOKEN)
+    );
   }
 
   @Test
@@ -171,7 +153,7 @@ class JwtAuthorizationFilterTest {
   }
 
   @Test
-  @DisplayName("선택적 인증 요청 테스트")
+  @DisplayName("선택적 인증 요청 테스트 - 쿠키 없음")
   void 선택적_인증이고_쿠키가_없으면_필터를_우회한다() throws Exception {
     // given
     given(optionalRegistry.isOptionalAuth(request)).willReturn(true);
@@ -181,6 +163,28 @@ class JwtAuthorizationFilterTest {
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
     // then
+    then(filterChain).should().doFilter(request, response);
+  }
+
+  @Test
+  @DisplayName("선택적 인증 요청 테스트 - 유효하지 않은 토큰이면 쿠키를 제거하고 필터를 우회한다")
+  void 선택적_인증이고_토큰이_유효하지_않으면_쿠키를_제거하고_필터를_우회한다() throws Exception {
+    // given
+    Cookie cookie = defaultAuthCookie();
+    given(request.getCookies()).willReturn(new Cookie[]{cookie});
+    given(optionalRegistry.isOptionalAuth(request)).willReturn(true);
+    given(jwtProvider.isVerified(ACCESS_VALUE)).willReturn(false);
+
+    // when
+    jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
+
+    // then
+    then(response).should().addHeader(eq("Set-Cookie"), argThat(value ->
+        value.contains("AUTHORIZATION=") && value.contains("Max-Age=0")
+    ));
+    then(response).should().addHeader(eq("Set-Cookie"), argThat(value ->
+        value.contains("REFRESH_KEY=") && value.contains("Max-Age=0")
+    ));
     then(filterChain).should().doFilter(request, response);
   }
 }

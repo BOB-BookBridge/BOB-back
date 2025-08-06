@@ -51,6 +51,7 @@ class RedisRepositoryTest {
     String key = "test-key";
     String value = "test-value";
     given(redisTemplate.opsForValue()).willReturn(valueOperations);
+    given(redisTemplate.hasKey(key)).willReturn(true);
     given(valueOperations.get(key)).willReturn(value);
 
     // when
@@ -58,6 +59,21 @@ class RedisRepositoryTest {
 
     // then
     assertThat(result).contains("test-value");
+  }
+
+  @Test
+  @DisplayName("Redis 값 조회 - 존재하지 않는 key면 빈 Optional을 반환한다")
+  void redis에_key가_없으면_optional_empty를_반환한다() {
+    // given
+    String key = "missing-key";
+    given(redisTemplate.hasKey(key)).willReturn(false);
+
+    // when
+    Optional<String> result = redisRepository.getValue(key);
+
+    // then
+    assertThat(result).isEmpty();
+    then(redisTemplate).should().hasKey(key);
   }
 
   @Test
@@ -71,5 +87,35 @@ class RedisRepositoryTest {
 
     // then
     then(redisTemplate).should().delete(key);
+  }
+
+  @Test
+  @DisplayName("key 존재 여부 반환 테스트")
+  void redis에_key가_존재하는지_확인할_수_있다() {
+    // given
+    String key = "exist-key";
+    given(redisTemplate.hasKey(key)).willReturn(true);
+
+    // when
+    boolean result = redisRepository.isExist(key);
+
+    // then
+    assertThat(result).isTrue();
+    then(redisTemplate).should().hasKey(key);
+  }
+
+  @Test
+  @DisplayName("key 존재 여부 반환 테스트 - 존재하지 않는 경우")
+  void redis에_key가_없으면_false를_반환한다() {
+    // given
+    String key = "missing-key";
+    given(redisTemplate.hasKey(key)).willReturn(false);
+
+    // when
+    boolean result = redisRepository.isExist(key);
+
+    // then
+    assertThat(result).isFalse();
+    then(redisTemplate).should().hasKey(key);
   }
 }
