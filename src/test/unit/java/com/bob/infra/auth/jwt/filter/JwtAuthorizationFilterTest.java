@@ -1,6 +1,7 @@
 package com.bob.infra.auth.jwt.filter;
 
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
+import static com.bob.global.exception.response.AuthenticationError.IS_EXPIRED_TOKEN;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_VALUE;
 import static com.bob.support.fixture.auth.CookieFixture.defaultAuthCookie;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,7 +12,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
-import com.bob.global.utils.web.CookieUtils;
 import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.jwt.handler.JwtAuthenticationEntryPoint;
 import com.bob.infra.auth.response.MemberDetails;
@@ -53,9 +53,6 @@ class JwtAuthorizationFilterTest {
 
   @Mock
   private FilterChain filterChain;
-
-  @Mock
-  private CookieUtils cookieUtils;
 
   @Mock
   private PermitAllRegistry permitAllRegistry;
@@ -138,7 +135,7 @@ class JwtAuthorizationFilterTest {
 
     // then
     then(jwtAuthenticationEntryPoint).should().commence(eq(request), eq(response),
-        argThat(e -> ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION)
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == IS_EXPIRED_TOKEN)
     );
   }
 

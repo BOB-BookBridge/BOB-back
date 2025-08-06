@@ -1,6 +1,7 @@
 package com.bob.infra.auth.jwt.filter;
 
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
+import static com.bob.global.exception.response.AuthenticationError.IS_EXPIRED_TOKEN;
 import static com.bob.global.utils.web.CookieUtils.getCookie;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
@@ -47,7 +48,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     }
 
     if (!isAuthentication(accessToken)) {
-      jwtAuthEntryPoint.commence(request, response, new ApplicationAuthenticationException(FAILED_AUTHENTICATION));
+      setErroneousAuthenticationExceptionBody(request, response, accessToken);
       return;
     }
 
@@ -63,5 +64,18 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     return accessToken != null
            && jwtProvider.isVerified(accessToken)
            && !jwtProvider.isExpired(accessToken);
+  }
+
+  private void setErroneousAuthenticationExceptionBody(HttpServletRequest request, HttpServletResponse response, String accessToken) throws IOException {
+    // 토큰이 존재하지 않거나 유효하지 않은 토큰
+    if (accessToken == null || !jwtProvider.isVerified(accessToken)) {
+      jwtAuthEntryPoint.commence(request, response, new ApplicationAuthenticationException(FAILED_AUTHENTICATION));
+      return;
+    }
+
+    // 유효한 토큰이 존재하지만 만료된 토큰
+    if (jwtProvider.isExpired(accessToken)) {
+      jwtAuthEntryPoint.commence(request, response, new ApplicationAuthenticationException(IS_EXPIRED_TOKEN));
+    }
   }
 }

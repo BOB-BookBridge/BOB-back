@@ -1,5 +1,7 @@
 package com.bob.infra.auth.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.util.Date;
@@ -44,10 +46,13 @@ public class JwtProvider {
   public boolean isVerified(String token) {
     try {
       Jwts.parserBuilder()
+          .setSigningKey(getSecretKey(key))
           .build()
-          .isSigned(token);
+          .parseClaimsJws(token);
       return true;
-    } catch (Exception e) {
+    } catch (ExpiredJwtException e) {
+      return true;
+    } catch (JwtException e) {
       return false;
     }
   }
