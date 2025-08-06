@@ -3,6 +3,7 @@ package com.bob.infra.auth.jwt.filter;
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
 import static com.bob.global.exception.response.AuthenticationError.IS_EXPIRED_TOKEN;
 import static com.bob.global.utils.web.CookieUtils.getCookie;
+import static com.bob.global.utils.web.CookieUtils.removeCookie;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.infra.auth.jwt.JwtProvider;
@@ -27,6 +28,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
   private static final String ACCESS_COOKIE_NAME = "AUTHORIZATION";
+  private static final String REFRESH_COOKIE_NAME = "REFRESH_KEY";
 
   private final JwtAuthenticationEntryPoint jwtAuthEntryPoint;
   private final PermitAllRegistry registry;
@@ -42,8 +44,14 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     String accessToken = getCookie(request, ACCESS_COOKIE_NAME);
 
-    if (optionalRegistry.isOptionalAuth(request) && accessToken == null) {
-      filterChain.doFilter(request, response);
+    if (optionalRegistry.isOptionalAuth(request)) {
+      if (accessToken == null) {
+        filterChain.doFilter(request, response);
+      } else if (!isAuthentication(accessToken)) {
+        removeCookie(response, ACCESS_COOKIE_NAME);
+        removeCookie(response, REFRESH_COOKIE_NAME);
+        filterChain.doFilter(request, response);
+      }
       return;
     }
 
@@ -62,11 +70,12 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
   private boolean isAuthentication(String accessToken) {
     return accessToken != null
-           && jwtProvider.isVerified(accessToken)
-           && !jwtProvider.isExpired(accessToken);
+        && jwtProvider.isVerified(accessToken)
+        && !jwtProvider.isExpired(accessToken);
   }
 
-  private void setErroneousAuthenticationExceptionBody(HttpServletRequest request, HttpServletResponse response, String accessToken) throws IOException {
+  private void setErroneousAuthenticationExceptionBody(HttpServletRequest request, HttpServletResponse response,
+      String accessToken) throws IOException {
     // 토큰이 존재하지 않거나 유효하지 않은 토큰
     if (accessToken == null || !jwtProvider.isVerified(accessToken)) {
       jwtAuthEntryPoint.commence(request, response, new ApplicationAuthenticationException(FAILED_AUTHENTICATION));
