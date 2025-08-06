@@ -53,7 +53,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     UUID memberId = principal.id();
     String accessToken = jwtProvider.generateAccessToken(memberId.toString());
     String refreshKey = generateCode(32);
-    redisPort.updateRefreshKey(getCookie(request, REFRESH_COOKIE_NAME), refreshKey, memberId.toString(), 14);
+    redisPort.updateRefreshKey(getCookie(request, REFRESH_COOKIE_NAME), refreshKey, memberId.toString());
     addCookie(response, ACCESS_COOKIE_NAME, accessToken, 7200);
     addCookie(response, REFRESH_COOKIE_NAME, refreshKey, 1209600);
     response.setStatus(HttpStatus.OK.value());

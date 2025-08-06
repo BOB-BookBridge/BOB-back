@@ -51,6 +51,7 @@ class RedisRepositoryTest {
     String key = "test-key";
     String value = "test-value";
     given(redisTemplate.opsForValue()).willReturn(valueOperations);
+    given(redisTemplate.hasKey(key)).willReturn(true);
     given(valueOperations.get(key)).willReturn(value);
 
     // when

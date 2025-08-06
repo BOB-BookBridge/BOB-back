@@ -1,5 +1,8 @@
 package com.bob.infra.redis.adapter.in;
 
+import static com.bob.global.exception.response.AuthenticationError.FAILED_GET_AUTHENTICATION_INFORMATION;
+
+import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.infra.auth.filter.port.AuthRedisPort;
 import com.bob.infra.redis.repository.RedisRepository;
 import java.time.Duration;
@@ -10,16 +13,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuthRedisAdapter implements AuthRedisPort {
 
-  private static final String KEY_PREFIX = "refresh:";
-
   private final RedisRepository redisRepository;
 
+  private static final String KEY_PREFIX = "refresh:";
+
   @Override
-  public void updateRefreshKey(String oldKey, String newKey, String value, int expireDays) {
+  public String updateRefreshKey(String oldKey, String newKey, String value) {
     if (oldKey != null && isExistKey(oldKey)) {
+      value = getValue(oldKey);
       removeKey(oldKey);
     }
-    redisRepository.setValue(KEY_PREFIX + newKey, value, Duration.ofDays(expireDays));
+    checkValue(value);
+    redisRepository.setValue(KEY_PREFIX + newKey, value, Duration.ofDays(14));
+    return value;
   }
 
   @Override
@@ -35,5 +41,16 @@ public class AuthRedisAdapter implements AuthRedisPort {
 
   private void removeKey(String key) {
     redisRepository.delete(KEY_PREFIX + key);
+  }
+
+  private String getValue(String key) {
+    return redisRepository.getValue(KEY_PREFIX + key)
+        .orElseThrow(() -> new ApplicationAuthenticationException(FAILED_GET_AUTHENTICATION_INFORMATION));
+  }
+
+  private static void checkValue(String value) {
+    if (value == null) {
+      throw new ApplicationAuthenticationException(FAILED_GET_AUTHENTICATION_INFORMATION);
+    }
   }
 }

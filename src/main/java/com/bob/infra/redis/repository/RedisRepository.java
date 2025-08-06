@@ -17,7 +17,9 @@ public class RedisRepository {
   }
 
   public Optional<String> getValue(String key) {
-    return Optional.of(redisTemplate.opsForValue().get(key));
+    return isExist(key)
+        ? Optional.ofNullable(redisTemplate.opsForValue().get(key))
+        : Optional.empty();
   }
 
   public void delete(String key) {
@@ -25,6 +27,6 @@ public class RedisRepository {
   }
 
   public boolean isExist(String key) {
-    return redisTemplate.hasKey(key);
+    return Boolean.TRUE.equals(redisTemplate.hasKey(key));
   }
 }

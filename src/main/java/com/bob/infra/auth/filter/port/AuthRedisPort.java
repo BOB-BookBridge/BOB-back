@@ -2,7 +2,7 @@ package com.bob.infra.auth.filter.port;
 
 public interface AuthRedisPort {
 
-  void updateRefreshKey(String oldKey, String newKey, String value, int expireDays);
+  String updateRefreshKey(String oldKey, String newKey, String value);
 
   void removeRefreshKey(String key);
 }

@@ -116,7 +116,7 @@ class LoginFilterTest {
     verify(response, times(1)).addHeader(eq(SET_COOKIE_HEADER), contains(AUTH_COOKIE));
     verify(response).setStatus(HttpStatus.OK.value());
     assertThat(authentication.getPrincipal()).isInstanceOf(MemberDetails.class);
-    then(redisPort).should(times(1)).updateRefreshKey(any(), any(), any(), eq(14));
+    then(redisPort).should(times(1)).updateRefreshKey(any(), any(), any());
   }
 
   @Test
