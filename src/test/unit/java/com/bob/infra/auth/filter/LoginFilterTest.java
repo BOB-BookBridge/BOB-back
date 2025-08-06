@@ -3,7 +3,6 @@ package com.bob.infra.auth.filter;
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_VALUE;
 import static com.bob.support.fixture.auth.CookieFixture.AUTH_COOKIE;
-import static com.bob.support.fixture.auth.CookieFixture.REFRESH_VALUE;
 import static com.bob.support.fixture.auth.CookieFixture.SET_COOKIE_HEADER;
 import static com.bob.support.fixture.request.LoginRequestFixture.defaultLoginRequest;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
+import com.bob.infra.auth.filter.port.AuthRedisPort;
 import com.bob.infra.auth.filter.request.LoginRequest;
 import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.response.MemberDetails;
@@ -47,23 +47,31 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 class LoginFilterTest {
 
-  private static final ObjectMapper objectMapper = new ObjectMapper();
-  @Mock
-  HttpServletResponse response;
-
-  @Mock
-  Authentication authentication;
-
-  @Mock
-  HttpServletRequest request;
   @InjectMocks
   private LoginFilter loginFilter;
+
   @Mock
   private AuthenticationManager authManager;
+
   @Mock
   private AuthenticationEntryPoint authenticationEntryPoint;
+
   @Mock
   private JwtProvider jwtProvider;
+
+  @Mock
+  private AuthRedisPort redisPort;
+
+  @Mock
+  private Authentication authentication;
+
+  @Mock
+  private HttpServletResponse response;
+
+  @Mock
+  private HttpServletRequest request;
+
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
   @BeforeEach
   void setUp() {
@@ -100,7 +108,6 @@ class LoginFilterTest {
         memberDetails, null, memberDetails.getAuthorities()
     );
     given(jwtProvider.generateAccessToken(any(String.class))).willReturn(ACCESS_VALUE);
-    given(jwtProvider.generateRefreshToken(any(String.class))).willReturn(REFRESH_VALUE);
 
     // when
     loginFilter.successfulAuthentication(request, response, filterChain, authentication);
@@ -109,6 +116,7 @@ class LoginFilterTest {
     verify(response, times(1)).addHeader(eq(SET_COOKIE_HEADER), contains(AUTH_COOKIE));
     verify(response).setStatus(HttpStatus.OK.value());
     assertThat(authentication.getPrincipal()).isInstanceOf(MemberDetails.class);
+    then(redisPort).should(times(1)).updateRefreshKey(any(), any(), any(), eq(14));
   }
 
   @Test
@@ -121,11 +129,9 @@ class LoginFilterTest {
     loginFilter.unsuccessfulAuthentication(request, response, failed);
 
     // then
-    then(authenticationEntryPoint).should()
-        .commence(eq(request), eq(response),
-            argThat(e ->
-                ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION
-            )
-        );
+    then(authenticationEntryPoint).should().commence(eq(request), eq(response),
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION)
+    );
+    then(redisPort).shouldHaveNoInteractions();
   }
 }

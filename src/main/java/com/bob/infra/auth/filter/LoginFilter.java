@@ -1,6 +1,14 @@
 package com.bob.infra.auth.filter;
 
+import static com.bob.global.utils.random.RandomUtils.generateCode;
+import static com.bob.global.utils.web.CookieUtils.addCookie;
+import static com.bob.global.utils.web.CookieUtils.getCookie;
+
+import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
+import com.bob.global.exception.response.AuthenticationError;
+import com.bob.infra.auth.filter.port.AuthRedisPort;
 import com.bob.infra.auth.filter.request.LoginRequest;
+import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.response.MemberDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -17,16 +25,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
-import com.bob.global.exception.response.AuthenticationError;
-import com.bob.infra.auth.jwt.JwtProvider;
-import com.bob.global.utils.web.CookieUtils;
 
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
+  private static final String ACCESS_COOKIE_NAME = "AUTHORIZATION";
+  private static final String REFRESH_COOKIE_NAME = "REFRESH_KEY";
+
   private final AuthenticationManager authenticationManager;
   private final AuthenticationEntryPoint authenticationEntryPoint;
+
+  private final AuthRedisPort redisPort;
+
   private final JwtProvider jwtProvider;
   private final ObjectMapper objectMapper;
 
@@ -42,9 +52,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     MemberDetails principal = (MemberDetails) authentication.getPrincipal();
     UUID memberId = principal.id();
     String accessToken = jwtProvider.generateAccessToken(memberId.toString());
-    String refreshToken = jwtProvider.generateRefreshToken(memberId.toString());
-    CookieUtils.addCookie(response, "AUTHORIZATION", accessToken, 216000);
-    CookieUtils.addCookie(response, "REFRESH", refreshToken, 216000);
+    String refreshKey = generateCode(32);
+    redisPort.updateRefreshKey(getCookie(request, REFRESH_COOKIE_NAME), refreshKey, memberId.toString(), 14);
+    addCookie(response, ACCESS_COOKIE_NAME, accessToken, 7200);
+    addCookie(response, REFRESH_COOKIE_NAME, refreshKey, 1209600);
     response.setStatus(HttpStatus.OK.value());
   }
 
