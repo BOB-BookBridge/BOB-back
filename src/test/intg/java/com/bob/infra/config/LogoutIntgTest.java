@@ -35,6 +35,6 @@ class LogoutIntgTest extends TestContainerSupport {
         .andExpect(status().isOk())
         .andExpect(cookie().maxAge("JSESSIONID", 0))
         .andExpect(cookie().maxAge("AUTHORIZATION", 0))
-        .andExpect(cookie().maxAge("REFRESH", 0));
+        .andExpect(cookie().maxAge("REFRESH_KEY", 0));
   }
 }

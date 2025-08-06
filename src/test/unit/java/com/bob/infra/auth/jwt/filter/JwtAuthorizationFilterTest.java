@@ -77,7 +77,7 @@ class JwtAuthorizationFilterTest {
     given(request.getCookies()).willReturn(new Cookie[]{defaultAuthCookie()});
     given(jwtProvider.isVerified(ACCESS_VALUE)).willReturn(true);
     given(jwtProvider.isExpired(ACCESS_VALUE)).willReturn(false);
-    given(jwtProvider.getMemberId(ACCESS_VALUE)).willReturn(any(UUID.class));
+    given(jwtProvider.getMemberId(ACCESS_VALUE)).willReturn(UUID.randomUUID());
 
     // when
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
@@ -153,7 +153,7 @@ class JwtAuthorizationFilterTest {
   }
 
   @Test
-  @DisplayName("선택적 인증 요청 테스트")
+  @DisplayName("선택적 인증 요청 테스트 - 쿠키 없음")
   void 선택적_인증이고_쿠키가_없으면_필터를_우회한다() throws Exception {
     // given
     given(optionalRegistry.isOptionalAuth(request)).willReturn(true);
@@ -163,6 +163,28 @@ class JwtAuthorizationFilterTest {
     jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
     // then
+    then(filterChain).should().doFilter(request, response);
+  }
+
+  @Test
+  @DisplayName("선택적 인증 요청 테스트 - 유효하지 않은 토큰이면 쿠키를 제거하고 필터를 우회한다")
+  void 선택적_인증이고_토큰이_유효하지_않으면_쿠키를_제거하고_필터를_우회한다() throws Exception {
+    // given
+    Cookie cookie = defaultAuthCookie();
+    given(request.getCookies()).willReturn(new Cookie[]{cookie});
+    given(optionalRegistry.isOptionalAuth(request)).willReturn(true);
+    given(jwtProvider.isVerified(ACCESS_VALUE)).willReturn(false);
+
+    // when
+    jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
+
+    // then
+    then(response).should().addHeader(eq("Set-Cookie"), argThat(value ->
+        value.contains("AUTHORIZATION=") && value.contains("Max-Age=0")
+    ));
+    then(response).should().addHeader(eq("Set-Cookie"), argThat(value ->
+        value.contains("REFRESH_KEY=") && value.contains("Max-Age=0")
+    ));
     then(filterChain).should().doFilter(request, response);
   }
 }

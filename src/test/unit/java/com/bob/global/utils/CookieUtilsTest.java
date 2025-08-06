@@ -77,4 +77,18 @@ class CookieUtilsTest {
     // then
     then(response).should().addHeader(eq(SET_COOKIE_HEADER), contains(AUTH_COOKIE));
   }
+
+  @Test
+  @DisplayName("Cookie 제거 - 성공 테스트")
+  void 쿠키를_응답에서_제거할_수_있다() {
+    // given
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    // when
+    CookieUtils.removeCookie(response, AUTH_COOKIE_NAME);
+
+    // then
+    then(response).should().addHeader(eq(SET_COOKIE_HEADER), contains(AUTH_COOKIE_NAME + "="));
+    then(response).should().addHeader(eq(SET_COOKIE_HEADER), contains("Max-Age=0"));
+  }
 }
