@@ -62,6 +62,21 @@ class RedisRepositoryTest {
   }
 
   @Test
+  @DisplayName("Redis 값 조회 - 존재하지 않는 key면 빈 Optional을 반환한다")
+  void redis에_key가_없으면_optional_empty를_반환한다() {
+    // given
+    String key = "missing-key";
+    given(redisTemplate.hasKey(key)).willReturn(false);
+
+    // when
+    Optional<String> result = redisRepository.getValue(key);
+
+    // then
+    assertThat(result).isEmpty();
+    then(redisTemplate).should().hasKey(key);
+  }
+
+  @Test
   @DisplayName("Redis 값 삭제 - 성공 테스트")
   void redis에서_값을_삭제할_수_있다() {
     // given

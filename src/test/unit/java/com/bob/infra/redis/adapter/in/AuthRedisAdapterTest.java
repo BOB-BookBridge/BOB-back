@@ -1,11 +1,17 @@
 package com.bob.infra.redis.adapter.in;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.verify;
 
+import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
+import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
+import com.bob.global.exception.response.AuthenticationError;
 import com.bob.infra.redis.repository.RedisRepository;
 import java.time.Duration;
 import java.util.Optional;
@@ -69,6 +75,27 @@ class AuthRedisAdapterTest {
     // then
     verify(redisRepository, never()).delete("refresh:" + OLD_KEY);
     verify(redisRepository).setValue(eq("refresh:" + NEW_KEY), eq(VALUE), eq(Duration.ofDays(EXPIRE_DAYS)));
+  }
+
+  @Test
+  @DisplayName("refresh key 업데이트 테스트 - key가 존재하지만 조작된 경우 예외 발생")
+  void key가_존재하지만_조작된_경우_예외가_발생한다() {
+    // given
+    given(redisRepository.isExist("refresh:" + OLD_KEY)).willReturn(false);
+
+    // when & then
+    assertThatThrownBy(() -> authRedisAdapter.updateRefreshKey(OLD_KEY, NEW_KEY, null))
+        .isInstanceOf(ApplicationAuthenticationException.class)
+        .hasMessage(AuthenticationError.FAILED_GET_AUTHENTICATION_INFORMATION.getMessage());
+  }
+
+  @Test
+  @DisplayName("refresh key 업데이트 테스트 - 새로운 key의 value가 null이면 예외 발생")
+  void 새로운_key의_value가_null이면_예외가_발생한다() {
+    // when & then
+    assertThatThrownBy(() -> authRedisAdapter.updateRefreshKey(null, NEW_KEY, null))
+        .isInstanceOf(ApplicationAuthenticationException.class)
+        .hasMessage(AuthenticationError.FAILED_GET_AUTHENTICATION_INFORMATION.getMessage());
   }
 
   @Test
