@@ -21,9 +21,6 @@ public class JwtProvider {
   @Value("${jwt.access-token-expire-time}")
   private Long accessExpireTime;
 
-  @Value("${jwt.refresh-token-expire-time}")
-  private Long refreshExpireTime;
-
   public String generateAccessToken(String memberId) {
     return Jwts.builder()
         .setIssuer(ISSUER)
@@ -31,17 +28,6 @@ public class JwtProvider {
         .claim("memberId", memberId)
         .setIssuedAt(new Date(System.currentTimeMillis()))
         .setExpiration(new Date(System.currentTimeMillis() + accessExpireTime * 1000))
-        .signWith(getSecretKey(key))
-        .compact();
-  }
-
-  public String generateRefreshToken(String memberId) {
-    return Jwts.builder()
-        .setIssuer(ISSUER)
-        .setSubject("refresh-token")
-        .claim("memberId", memberId)
-        .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setExpiration(new Date(System.currentTimeMillis() + refreshExpireTime * 1000))
         .signWith(getSecretKey(key))
         .compact();
   }

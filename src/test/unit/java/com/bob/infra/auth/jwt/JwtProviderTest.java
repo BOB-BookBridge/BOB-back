@@ -22,7 +22,6 @@ class JwtProviderTest {
     jwtProvider = new JwtProvider();
     ReflectionTestUtils.setField(jwtProvider, "key", SECRET_KEY);
     ReflectionTestUtils.setField(jwtProvider, "accessExpireTime", 60L);
-    ReflectionTestUtils.setField(jwtProvider, "refreshExpireTime", 120L);
   }
 
   @Test
@@ -30,16 +29,6 @@ class JwtProviderTest {
   void AccessToken을_생성할_수_있다() {
     // when
     String token = jwtProvider.generateAccessToken(MEMBER_ID.toString());
-
-    // then
-    assertThat(token).isNotBlank();
-  }
-
-  @Test
-  @DisplayName("Refresh Token 생성 - 성공 테스트")
-  void RefreshToken을_생성할_수_있다() {
-    // when
-    String token = jwtProvider.generateRefreshToken(MEMBER_ID.toString());
 
     // then
     assertThat(token).isNotBlank();
