@@ -10,5 +10,7 @@ public interface FileRepository extends CrudRepository<File, Long> {
 
   List<File> findByDomainAndReferenceId(FileDomain domain, String referenceId);
 
+  List<File> findByReferenceIdIsNull();
+
   Optional<File> findByFileName(String fileName);
 }

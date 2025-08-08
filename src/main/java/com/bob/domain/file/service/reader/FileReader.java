@@ -20,6 +20,10 @@ public class FileReader {
     return fileRepository.findByDomainAndReferenceId(domain, refId);
   }
 
+  public List<File> readUnusedFiles() {
+    return fileRepository.findByReferenceIdIsNull();
+  }
+
   public Optional<File> readFileByFileName(String fileName) {
     return fileRepository.findByFileName(fileName);
   }

@@ -16,7 +16,7 @@ import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.FilesResponse;
 import com.bob.domain.file.service.dto.response.internal.FileSummaryResponse;
-import com.bob.domain.file.service.port.FileImagePort;
+import com.bob.domain.file.service.port.FileS3Port;
 import com.bob.domain.file.service.reader.FileReader;
 import com.bob.domain.file.usecase.FileModifyUseCase;
 import com.bob.domain.file.usecase.FileReadUseCase;
@@ -36,7 +36,7 @@ public class FileService implements FileWriteUseCase, FileReadUseCase, FileModif
   private final FileRepository fileRepository;
   private final FileReader fileReader;
 
-  private final FileImagePort imagePort;
+  private final FileS3Port imagePort;
 
   @Transactional
   public void registerFileProcess(RegisterFileCommand command) {
@@ -69,6 +69,13 @@ public class FileService implements FileWriteUseCase, FileReadUseCase, FileModif
       fileReader.readFileByFileName(fileName)
           .ifPresent(file -> file.mappingDomainId(index, String.valueOf(command.domainId())));
     });
+  }
+
+  @Transactional
+  public void removeUnusedFilesProcess() {
+    List<File> files = fileReader.readUnusedFiles();
+    fileRepository.deleteAll(files);
+    imagePort.removeUnusedFilesProcess(files.stream().map(File::getFileName).toList());
   }
 
   public FileUploadUrlResponse generateFileUploadUrl(GenerateFileUploadUrlCommand command) {
