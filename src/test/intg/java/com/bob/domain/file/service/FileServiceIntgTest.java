@@ -7,11 +7,13 @@ import static com.bob.support.fixture.command.ChangeFileCommandFixture.DEFAULT_C
 import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.command.RegisterFileCommandFixture.defaultRegisterFileCommand;
 import static com.bob.support.fixture.domain.FileFixture.customRefIdFiles;
+import static com.bob.support.fixture.domain.FileFixture.defaultFile;
 import static com.bob.support.fixture.domain.FileFixture.defaultFiles;
 import static com.bob.support.fixture.domain.FileFixture.otherFiles;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.bob.domain.file.entity.File;
 import com.bob.domain.file.repository.FileRepository;
@@ -21,7 +23,7 @@ import com.bob.domain.file.service.dto.command.GenerateFileUploadUrlCommand;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.FilesResponse;
-import com.bob.domain.file.service.port.FileImagePort;
+import com.bob.domain.file.service.port.FileS3Port;
 import com.bob.domain.file.service.reader.FileReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.utils.image.ImageDirectory;
@@ -51,7 +53,7 @@ class FileServiceIntgTest extends TestContainerSupport {
   private FileReader fileReader;
 
   @MockitoBean
-  private FileImagePort imagePort;
+  private FileS3Port imagePort;
 
   @DisplayName("파일 등록 테스트")
   @Test
@@ -184,5 +186,24 @@ class FileServiceIntgTest extends TestContainerSupport {
           .extracting("fileUploadUrl")
           .containsExactlyElementsOf(urls);
     }
+  }
+
+  @DisplayName("미참조 파일 삭제 테스트")
+  @Test
+  void 참조되지_않은_파일들을_삭제할_수_있다() {
+    // given
+    fileRepository.saveAll(List.of(
+            defaultFile("unusedFile1.png", 0, null),
+            defaultFile("unusedFile2.png", 0, null)
+        )
+    );
+    assertThat(fileRepository.findByReferenceIdIsNull()).hasSize(2);
+
+    // when
+    fileService.removeUnusedFilesProcess();
+
+    // then
+    then(imagePort).should().removeUnusedFilesProcess(List.of("unusedFile1.png", "unusedFile2.png"));
+    assertThat(fileRepository.findByReferenceIdIsNull()).hasSize(0);
   }
 }

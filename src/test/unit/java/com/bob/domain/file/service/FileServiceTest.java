@@ -5,6 +5,7 @@ import static com.bob.global.exception.response.ApplicationError.FILE_UNAUTHORIZ
 import static com.bob.support.fixture.command.ChangeFileCommandFixture.DEFAULT_CHANGE_FILE_COMMAND_REF_ID_1;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.command.RegisterFileCommandFixture.defaultRegisterFileCommand;
+import static com.bob.support.fixture.domain.FileFixture.defaultFile;
 import static com.bob.support.fixture.domain.FileFixture.defaultFiles;
 import static com.bob.support.fixture.domain.FileFixture.otherFiles;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,7 +19,6 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
 import com.bob.domain.file.entity.File;
-import com.bob.domain.file.entity.type.FileDomain;
 import com.bob.domain.file.repository.FileRepository;
 import com.bob.domain.file.service.dto.command.ModifyReferenceIdCommand;
 import com.bob.domain.file.service.dto.command.RegisterFileCommand;
@@ -26,7 +26,7 @@ import com.bob.domain.file.service.dto.command.GenerateFileUploadUrlCommand;
 import com.bob.domain.file.service.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.domain.file.service.dto.response.FileUploadUrlResponse;
 import com.bob.domain.file.service.dto.response.FilesResponse;
-import com.bob.domain.file.service.port.FileImagePort;
+import com.bob.domain.file.service.port.FileS3Port;
 import com.bob.domain.file.service.reader.FileReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.utils.image.ImageUtils;
@@ -54,7 +54,7 @@ class FileServiceTest {
   private FileReader fileReader;
 
   @Mock
-  private FileImagePort imagePort;
+  private FileS3Port imagePort;
 
   @DisplayName("파일 등록 - 성공 테스트")
   @Test
@@ -181,5 +181,24 @@ class FileServiceTest {
 
       then(imagePort).should().generateFileUploadUrlsProcess(fileNames, contentTypes);
     }
+  }
+
+  @DisplayName("참조되지 않는 파일 삭제 테스트")
+  @Test
+  void 사용되지_않은_파일들을_삭제할_수_있다() {
+    // given
+    List<File> unusedFiles = List.of(
+        defaultFile("unusedFile1.png", 0, null),
+        defaultFile("unusedFile2.png", 0, null)
+    );
+    given(fileReader.readUnusedFiles()).willReturn(unusedFiles);
+
+    // when
+    fileService.removeUnusedFilesProcess();
+
+    // then
+    then(fileReader).should().readUnusedFiles();
+    then(fileRepository).should().deleteAll(unusedFiles);
+    then(imagePort).should().removeUnusedFilesProcess(List.of("unusedFile1.png", "unusedFile2.png"));
   }
 }

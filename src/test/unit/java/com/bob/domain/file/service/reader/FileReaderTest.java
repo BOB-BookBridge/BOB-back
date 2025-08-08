@@ -45,6 +45,24 @@ class FileReaderTest {
   }
 
   @Test
+  @DisplayName("참조되지 않은 파일 목록 조회 테스트")
+  void 참조되지_않은_파일_목록을_조회한다() {
+    // given
+    List<File> unusedFiles = List.of(
+        defaultFile("file1.png", 0, null),
+        defaultFile("file2.png", 0, null)
+    );
+    given(fileRepository.findByReferenceIdIsNull()).willReturn(unusedFiles);
+
+    // when
+    List<File> result = fileReader.readUnusedFiles();
+
+    // then
+    assertThat(result).containsExactlyElementsOf(unusedFiles);
+    verify(fileRepository).findByReferenceIdIsNull();
+  }
+
+  @Test
   @DisplayName("파일 이름을 통한 파일 조회 테스트")
   void referenceId로_파일_목록을_조회한다() {
     // given
