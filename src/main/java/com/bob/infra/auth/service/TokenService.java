@@ -11,6 +11,7 @@ import com.bob.infra.auth.jwt.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -21,20 +22,27 @@ public class TokenService {
 
   private final AuthRedisPort redisPort;
 
-  private static final String ACCESS_COOKIE_NAME = "AUTHORIZATION";
-  private static final String REFRESH_COOKIE_NAME = "REFRESH_KEY";
+  @Value("${jwt.access-name}")
+  private String accessName;
+
+  @Value("${jwt.refresh-name}")
+  private String refreshName;
+
+  @Value("${jwt.refresh-token-expire-time}")
+  private Long refreshExpireTime;
 
   public void reIssueTokenProcess(HttpServletRequest request, HttpServletResponse response) {
-    String oldKey = getCookie(request, REFRESH_COOKIE_NAME);
+    final String oldKey = getCookie(request, refreshName);
+    final String newRefreshKey = generateCode(32);
     verifyKey(oldKey);
-    String newRefreshKey = generateCode(32);
-    String id = redisPort.updateRefreshKey(oldKey, newRefreshKey, null);
-    String newAccessToken = jwtProvider.generateAccessToken(id);
-    addCookie(response, ACCESS_COOKIE_NAME, newAccessToken, 7200);
-    addCookie(response, REFRESH_COOKIE_NAME, newRefreshKey, 1209600);
+
+    final String id = redisPort.updateRefreshKey(oldKey, newRefreshKey, null);
+    final String newAccessToken = jwtProvider.generateAccessToken(id);
+    addCookie(response, accessName, newAccessToken, refreshExpireTime.intValue());
+    addCookie(response, refreshName, newRefreshKey, refreshExpireTime.intValue());
   }
 
-  private void verifyKey(String key) {
+  private static void verifyKey(String key) {
     if (key == null) {
       throw new ApplicationAuthenticationException(AuthenticationError.FAILED_GET_AUTHENTICATION_INFORMATION);
     }

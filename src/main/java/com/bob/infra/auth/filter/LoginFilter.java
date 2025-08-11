@@ -10,6 +10,7 @@ import com.bob.infra.auth.filter.port.AuthRedisPort;
 import com.bob.infra.auth.filter.request.LoginRequest;
 import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.response.MemberDetails;
+import com.bob.infra.config.props.JwtProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,15 +30,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
-  private static final String ACCESS_COOKIE_NAME = "AUTHORIZATION";
-  private static final String REFRESH_COOKIE_NAME = "REFRESH_KEY";
-
   private final AuthenticationManager authenticationManager;
   private final AuthenticationEntryPoint authenticationEntryPoint;
-
   private final AuthRedisPort redisPort;
-
   private final JwtProvider jwtProvider;
+  private final JwtProperties jwtProps;
   private final ObjectMapper objectMapper;
 
   @Override
@@ -53,9 +50,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     UUID memberId = principal.id();
     String accessToken = jwtProvider.generateAccessToken(memberId.toString());
     String refreshKey = generateCode(32);
-    redisPort.updateRefreshKey(getCookie(request, REFRESH_COOKIE_NAME), refreshKey, memberId.toString());
-    addCookie(response, ACCESS_COOKIE_NAME, accessToken, 7200);
-    addCookie(response, REFRESH_COOKIE_NAME, refreshKey, 1209600);
+    redisPort.updateRefreshKey(getCookie(request, jwtProps.refreshName()), refreshKey, memberId.toString());
+    addCookie(response, jwtProps.accessName(), accessToken, jwtProps.refreshTokenExpireTime());
+    addCookie(response, jwtProps.refreshName(), refreshKey, jwtProps.refreshTokenExpireTime());
     response.setStatus(HttpStatus.OK.value());
   }
 

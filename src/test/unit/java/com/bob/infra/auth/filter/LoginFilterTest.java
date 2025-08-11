@@ -21,6 +21,7 @@ import com.bob.infra.auth.filter.port.AuthRedisPort;
 import com.bob.infra.auth.filter.request.LoginRequest;
 import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.response.MemberDetails;
+import com.bob.infra.config.props.JwtProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,6 +61,9 @@ class LoginFilterTest {
   private JwtProvider jwtProvider;
 
   @Mock
+  private JwtProperties jwtProps;
+
+  @Mock
   private AuthRedisPort redisPort;
 
   @Mock
@@ -85,8 +89,7 @@ class LoginFilterTest {
     LoginRequest loginRequest = defaultLoginRequest();
     byte[] loginRequestBytes = objectMapper.writeValueAsBytes(loginRequest);
 
-    given(request.getInputStream()).willReturn(
-        new DelegatingServletInputStream(new ByteArrayInputStream(loginRequestBytes)));
+    given(request.getInputStream()).willReturn(new DelegatingServletInputStream(new ByteArrayInputStream(loginRequestBytes)));
     given(authManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).willReturn(authentication);
 
     // when
@@ -102,12 +105,14 @@ class LoginFilterTest {
   void 인증에_성공하면_토큰을_발급하고_Security_Context에_정보를_저장한다() {
     // given
     FilterChain filterChain = mock(FilterChain.class);
-
     MemberDetails memberDetails = new MemberDetails(UUID.randomUUID());
     Authentication authentication = new UsernamePasswordAuthenticationToken(
         memberDetails, null, memberDetails.getAuthorities()
     );
     given(jwtProvider.generateAccessToken(any(String.class))).willReturn(ACCESS_VALUE);
+    given(jwtProps.refreshName()).willReturn("REFRESH_COOKIE_NAME");
+    given(jwtProps.accessName()).willReturn("AUTHORIZATION");
+    given(jwtProps.refreshTokenExpireTime()).willReturn(600);
 
     // when
     loginFilter.successfulAuthentication(request, response, filterChain, authentication);

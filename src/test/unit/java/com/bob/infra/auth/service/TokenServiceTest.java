@@ -1,5 +1,7 @@
 package com.bob.infra.auth.service;
 
+import static com.bob.support.fixture.auth.CookieFixture.AUTH_COOKIE_NAME;
+import static com.bob.support.fixture.auth.CookieFixture.REFRESH_COOKIE_NAME;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -7,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.global.exception.response.AuthenticationError;
@@ -42,16 +45,18 @@ class TokenServiceTest {
   @Mock
   private HttpServletResponse response;
 
-  private static final String REFRESH_COOKIE_NAME = "REFRESH_KEY";
   private static final String NEW_ACCESS_TOKEN = "new-access-token";
   private static final String OLD_REFRESH_KEY = "old-refresh-key";
 
   @BeforeEach
   void setupRequestCookie() {
-    Cookie[] cookies = new Cookie[]{
+    final Cookie[] cookies = {
         new Cookie(REFRESH_COOKIE_NAME, OLD_REFRESH_KEY)
     };
     given(request.getCookies()).willReturn(cookies);
+    setField(tokenService, "accessName", AUTH_COOKIE_NAME);
+    setField(tokenService, "refreshName", REFRESH_COOKIE_NAME);
+    setField(tokenService, "refreshExpireTime", 600L);
   }
 
   @Test
@@ -70,8 +75,6 @@ class TokenServiceTest {
     verify(jwtProvider).generateAccessToken(MEMBER_ID.toString());
     verify(response, times(2)).addHeader(eq("Set-Cookie"), anyString());
   }
-
-
 
   @Test
   @DisplayName("토큰 재발급 실패 테스트 - 쿠키 없음")

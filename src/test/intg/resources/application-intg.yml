@@ -29,9 +29,10 @@ spring:
 
 jwt:
   secret-key: secret
+  access-name: AUTHORIZATION
+  refresh-name: REFRESH_KEY
   access-token-expire-time: 1
   refresh-token-expire-time: 1
-  cookie-name: cname
 
 sse:
   heartbeat-interval: 10

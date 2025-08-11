@@ -8,9 +8,11 @@ import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.jwt.filter.JwtAuthorizationFilter;
 import com.bob.infra.auth.jwt.handler.JwtAuthenticationEntryPoint;
 import com.bob.infra.auth.service.MemberDetailsService;
+import com.bob.infra.config.props.JwtProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,6 +35,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 @EnableWebSecurity
 @Configuration
+@EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
@@ -48,6 +51,8 @@ public class SecurityConfig {
   private final AuthRedisPort redisPort;
   private final JwtProvider jwtProvider;
   private final ObjectMapper objectMapper;
+
+  private final JwtProperties jwtProperties;
 
   @Bean
   public SecurityFilterChain configure(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
@@ -110,13 +115,7 @@ public class SecurityConfig {
   }
 
   private LoginFilter loginFilter(AuthenticationManager authenticationManager) {
-    LoginFilter loginFilter = new LoginFilter(
-        authenticationManager,
-        jwtAuthenticationEntryPoint,
-        redisPort,
-        jwtProvider,
-        objectMapper
-    );
+    LoginFilter loginFilter = new LoginFilter(authenticationManager, jwtAuthenticationEntryPoint, redisPort, jwtProvider, jwtProperties, objectMapper);
     loginFilter.setFilterProcessesUrl("/auth/login");
     loginFilter.setPostOnly(true);
     return loginFilter;
