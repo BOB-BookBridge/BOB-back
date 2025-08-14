@@ -1,6 +1,7 @@
 package com.bob.support;
 
 import static com.bob.support.mysql.MySQLContainerProvider.MYSQL_CONTAINER;
+import static com.bob.support.redis.RedisContainerProvider.REDIS_CONTAINER;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -16,7 +17,8 @@ public abstract class TestContainerSupport {
     registry.add("spring.datasource.driver-class-name", MYSQL_CONTAINER::getDriverClassName);
 
     // Redis
-    registry.add("spring.data.redis.host", () -> "localhost");
-    registry.add("spring.data.redis.port", () -> 6380);
+    registry.add("spring.data.redis.host", REDIS_CONTAINER::getHost);
+    registry.add("spring.data.redis.password", () -> "password");
+    registry.add("spring.data.redis.port", REDIS_CONTAINER::getFirstMappedPort);
   }
 }
