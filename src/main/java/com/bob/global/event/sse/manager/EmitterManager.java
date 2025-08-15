@@ -71,7 +71,7 @@ public class EmitterManager implements Runnable {
       try {
         emitter.send(SseEmitter.event().name(HEARTBEAT.name()).data("ping"));
       } catch (Exception e) {
-        log.debug("Heartbeat failed for key: {}, removing emitter", key);
+        log.debug("Failed to send heartbeat for key: {}, removing emitter", key);
         removeEmitter(emitter, key, repository);
       }
     });
