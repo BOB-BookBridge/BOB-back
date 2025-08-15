@@ -36,13 +36,18 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
   private final JwtProvider jwtProvider;
 
   @Override
+  protected boolean shouldNotFilterAsyncDispatch() {
+    return false;
+  }
+
+  @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
     if (registry.isWhiteList(request)) {
       filterChain.doFilter(request, response);
       return;
     }
 
-    String accessToken = getCookie(request, ACCESS_COOKIE_NAME);
+    final String accessToken = getCookie(request, ACCESS_COOKIE_NAME);
 
     if (optionalRegistry.isOptionalAuth(request)) {
       if (accessToken == null) {
@@ -61,8 +66,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
       return;
     }
 
-    MemberDetails memberDetails = new MemberDetails(jwtProvider.getMemberId(accessToken));
-    Authentication authentication = new UsernamePasswordAuthenticationToken(
+    final MemberDetails memberDetails = new MemberDetails(jwtProvider.getMemberId(accessToken));
+    final Authentication authentication = new UsernamePasswordAuthenticationToken(
         memberDetails, null, memberDetails.getAuthorities()
     );
     SecurityContextHolder.getContext().setAuthentication(authentication);
