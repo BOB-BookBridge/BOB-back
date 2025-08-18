@@ -7,6 +7,7 @@ import com.bob.infra.auth.service.port.AuthMemberPort;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SocialAuthService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-  private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2userService;
+  private final DefaultOAuth2UserService oAuth2UserService = new DefaultOAuth2UserService();
   private final AuthMemberPort memberPort;
 
   @Override
@@ -27,7 +28,7 @@ public class SocialAuthService implements OAuth2UserService<OAuth2UserRequest, O
     final String provider = userRequest.getClientRegistration().getRegistrationId();
     verifyProvider(provider);
 
-    final OAuth2User oAuth2User = oAuth2userService.loadUser(userRequest);
+    final OAuth2User oAuth2User = oAuth2UserService.loadUser(userRequest);
     final Map<String, Object> attrs = oAuth2User.getAttributes();
     final SocialProvider profile = switch (provider) {
       case "google" -> GoogleProfile.from(attrs);

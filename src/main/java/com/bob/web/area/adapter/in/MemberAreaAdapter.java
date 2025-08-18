@@ -24,6 +24,11 @@ public class MemberAreaAdapter implements MemberAreaPort {
   }
 
   @Override
+  public void createNonAuthenticatedActivityArea(UUID memberId, Integer emdId) {
+    writeUseCase.createNonAuthenticatedActivityAreaProcess(CreateAreaCommand.of(memberId, emdId));
+  }
+
+  @Override
   public MemberAreaSummaryResponse readMemberAreaSummary(UUID memberId) {
     AreaSummaryResponse response = readUseCase.readAreaSummaryProcess(ReadAreaQuery.of(memberId));
     return MemberAreaSummaryResponse.of(response.emdId(), response.validity(), response.authenticatedAt());

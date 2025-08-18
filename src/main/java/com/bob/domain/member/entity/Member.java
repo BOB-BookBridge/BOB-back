@@ -4,6 +4,8 @@ import com.bob.global.audit.BaseTime;
 import com.bob.global.utils.uuid.GeneratedUuidV7;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.Objects;
@@ -25,6 +27,10 @@ public class Member extends BaseTime {
   @Id
   @GeneratedUuidV7
   private UUID id;
+
+  @Enumerated(EnumType.STRING)
+  @Column
+  private SocialProvider provider;
 
   @Column(unique = true, length = 50, nullable = false)
   private String email;
