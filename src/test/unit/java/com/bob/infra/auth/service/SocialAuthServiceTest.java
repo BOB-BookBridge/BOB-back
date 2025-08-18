@@ -12,6 +12,7 @@ import static org.springframework.security.oauth2.core.OAuth2AccessToken.TokenTy
 import com.bob.infra.auth.service.port.AuthMemberPort;
 import java.time.Instant;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,13 +20,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("소셜 로그인 인증 서비스 테스트")
 @ExtendWith(MockitoExtension.class)
@@ -35,10 +37,15 @@ class SocialAuthServiceTest {
   SocialAuthService socialAuthService;
 
   @Mock
-  OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate;
+  DefaultOAuth2UserService oAuth2UserService;
 
   @Mock
   AuthMemberPort memberPort;
+
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(socialAuthService, "oAuth2UserService", oAuth2UserService);
+  }
 
   @Test
   @DisplayName("구글 로그인 테스트")
@@ -48,7 +55,7 @@ class SocialAuthServiceTest {
     OAuth2UserRequest request = requestOf(registration);
     Map<String, Object> attrs = Map.of("sub", "1", "email", "test@google.com", "name", "foo");
     OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "sub");
-    given(delegate.loadUser(request)).willReturn(loadedUser);
+    given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
     given(memberPort.socialLoginProcess(eq("GOOGLE"), eq("test@google.com"), eq("foo"))).willReturn(MEMBER_ID);
 
     // when
@@ -69,7 +76,7 @@ class SocialAuthServiceTest {
     Map<String, Object> response = Map.of("id", "1", "email", "test@naver.com", "nickname", "foo");
     Map<String, Object> attrs = Map.of("response", response);
     OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "response");
-    given(delegate.loadUser(request)).willReturn(loadedUser);
+    given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
     given(memberPort.socialLoginProcess(eq("NAVER"), eq("test@naver.com"), eq("foo"))).willReturn(MEMBER_ID);
 
     // when
@@ -130,7 +137,7 @@ class SocialAuthServiceTest {
         .tokenUri("https://nid.naver.com/oauth2.0/token")
         .userInfoUri("https://openapi.naver.com/v1/nid/me")
         .userNameAttributeName("response")
-        .scope("name", "email", "nickname")
+        .scope("email", "nickname")
         .build();
   }
 
