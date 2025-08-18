@@ -1,4 +1,15 @@
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: id
+            client-secret: secret
+            scope: profile
+            redirect-uri: redirect
+            client-authentication-method: method
+            authorization-grant-type: grant
   main:
     allow-bean-definition-overriding: true
 
@@ -37,3 +48,6 @@ jwt:
 sse:
   heartbeat-interval: 10
   default-timeout: 60000
+
+app:
+  base-url: "https://base"

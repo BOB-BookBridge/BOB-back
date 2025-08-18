@@ -20,4 +20,11 @@ public record CreateAreaCommand(
         .authenticationAt(LocalDate.now())
         .build();
   }
+
+  public ActivityArea toNonAuthenticatedActivityArea() {
+    return ActivityArea.builder()
+        .id(new ActivityAreaId(memberId, emdId))
+        .authenticationAt(LocalDate.EPOCH)
+        .build();
+  }
 }

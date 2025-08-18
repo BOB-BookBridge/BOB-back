@@ -5,4 +5,6 @@ import com.bob.domain.area.service.dto.command.CreateAreaCommand;
 public interface AreaWriteUseCase {
 
   void createActivityAreaProcess(CreateAreaCommand command);
+
+  void createNonAuthenticatedActivityAreaProcess(CreateAreaCommand command);
 }

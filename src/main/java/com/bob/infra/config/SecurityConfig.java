@@ -7,7 +7,10 @@ import com.bob.infra.auth.filter.port.AuthRedisPort;
 import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.jwt.filter.JwtAuthorizationFilter;
 import com.bob.infra.auth.jwt.handler.JwtAuthenticationEntryPoint;
+import com.bob.infra.auth.oauth.handler.SocialAuthFailureHandler;
+import com.bob.infra.auth.oauth.handler.SocialAuthSuccessHandler;
 import com.bob.infra.auth.service.MemberDetailsService;
+import com.bob.infra.auth.service.SocialAuthService;
 import com.bob.infra.config.props.JwtProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -24,7 +27,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -39,19 +41,25 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
-      "/auth/**", "/ai/**", "/areas/**", "/members/temp/**",
-      "/h2-console/**",
-      "/error/**",
+      "/auth/**", "/oauth2/**", "/login/oauth2/**",
+      "/ai/**", "/areas/**", "/members/temp/**",
+      "/h2-console/**", "/error/**",
   };
+
+  private final MemberDetailsService memberDetailsService;
+  private final SocialAuthService socialAuthService;
+  private final SocialAuthSuccessHandler socialAuthSuccessHandler;
+  private final SocialAuthFailureHandler socialAuthFailureHandler;
 
   private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
   private final JwtAuthorizationFilter jwtAuthorizationFilter;
-  private final MemberDetailsService memberDetailsService;
-  private final AuthRedisPort redisPort;
-  private final JwtProvider jwtProvider;
-  private final ObjectMapper objectMapper;
-
   private final JwtProperties jwtProperties;
+  private final JwtProvider jwtProvider;
+
+  private final AuthRedisPort redisPort;
+
+  private final PasswordEncoder passwordEncoder;
+  private final ObjectMapper objectMapper;
 
   @Bean
   public SecurityFilterChain configure(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
@@ -61,6 +69,13 @@ public class SecurityConfig {
         .anonymous(AbstractHttpConfigurer::disable)
         .httpBasic(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable)
+        .oauth2Login(oauth -> oauth
+            .authorizationEndpoint(p -> p.baseUri("/oauth2/authorization"))
+            .redirectionEndpoint(p -> p.baseUri("/login/oauth2/code/*"))
+            .userInfoEndpoint(p -> p.userService(socialAuthService))
+            .successHandler(socialAuthSuccessHandler)
+            .failureHandler(socialAuthFailureHandler)
+        )
         .logout(filter -> filter
             .logoutUrl("/auth/logout")
             .logoutSuccessHandler((req, res, auth) -> res.setStatus(SC_OK))
@@ -87,14 +102,8 @@ public class SecurityConfig {
   @Bean
   public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
     AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
-    builder.userDetailsService(memberDetailsService)
-        .passwordEncoder(passwordEncoder());
+    builder.userDetailsService(memberDetailsService).passwordEncoder(passwordEncoder);
     return builder.build();
-  }
-
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return PasswordEncoderFactories.createDelegatingPasswordEncoder();
   }
 
   @Bean

@@ -13,6 +13,7 @@ import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberAreaSummaryResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
@@ -24,6 +25,7 @@ import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.member.usecase.MemberWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -45,8 +47,7 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   @Transactional
   public void signupProcess(CreateMemberCommand command) {
     verifyEmail(command.email());
-    String encodedPassword = encoder.encode(command.password());
-    Member member = command.toMember(encodedPassword);
+    Member member = command.toMember(encoder.encode(command.password()));
     memberRepository.save(member);
     areaPort.createMemberActivityArea(member.getId(), command.emdId());
   }
@@ -67,6 +68,17 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
     if (!redisPort.isVerified(email)) {
       throw new ApplicationException(UNVERIFIED_EMAIL);
     }
+  }
+
+  @Transactional
+  public UUID socialLoginProcess(SocialLoginCommand command) {
+    return memberRepository.findByEmail(command.email())
+        .map(Member::getId)
+        .orElseGet(() -> {
+          Member member = memberRepository.save(command.toMember(encoder.encode(generateCode(12))));
+          areaPort.createNonAuthenticatedActivityArea(member.getId(), command.emdId());
+          return member.getId();
+        });
   }
 
   @Transactional(readOnly = true)

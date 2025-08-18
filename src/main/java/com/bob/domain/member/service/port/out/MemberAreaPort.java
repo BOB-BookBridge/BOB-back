@@ -7,5 +7,7 @@ public interface MemberAreaPort {
 
   void createMemberActivityArea(UUID memberId, Integer emdId);
 
+  void createNonAuthenticatedActivityArea(UUID memberId, Integer emdId);
+
   MemberAreaSummaryResponse readMemberAreaSummary(UUID memberId);
 }

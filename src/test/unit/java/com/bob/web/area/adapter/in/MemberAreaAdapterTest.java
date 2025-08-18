@@ -35,8 +35,8 @@ class MemberAreaAdapterTest {
   private AreaReadUseCase readUseCase;
 
   @Test
-  @DisplayName("회원 활동 지역 생성 기능 호출 테스트")
-  void 회원_활동_지역을_생성한다() {
+  @DisplayName("인증 활동 지역 생성 기능 호출 테스트")
+  void 인증_상태의_활동_지역을_생성한다() {
     // given
     UUID memberId = MEMBER_ID;
     Integer emdId = EMD_AREA_ID;
@@ -47,6 +47,21 @@ class MemberAreaAdapterTest {
 
     // then
     then(writeUseCase).should().createActivityAreaProcess(command);
+  }
+
+  @Test
+  @DisplayName("미인증 활동 지역 생성 기능 호출 테스트")
+  void 미인증_상태의_활동_지역을_생성한다() {
+    // given
+    UUID memberId = MEMBER_ID;
+    Integer emdId = EMD_AREA_ID;
+    CreateAreaCommand command = CreateAreaCommand.of(memberId, emdId);
+
+    // when
+    memberAreaAdapter.createNonAuthenticatedActivityArea(memberId, emdId);
+
+    // then
+    then(writeUseCase).should().createNonAuthenticatedActivityAreaProcess(command);
   }
 
   @Test

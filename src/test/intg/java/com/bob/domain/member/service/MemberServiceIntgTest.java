@@ -12,7 +12,11 @@ import static com.bob.support.fixture.domain.MemberFixture.encryptPasswordMember
 import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
@@ -21,6 +25,7 @@ import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
@@ -29,6 +34,7 @@ import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +54,9 @@ class MemberServiceIntgTest extends TestContainerSupport {
   @Autowired
   private MemberRepository memberRepository;
 
+  @Autowired
+  private PasswordEncoder passwordEncoder;
+
   @MockitoBean
   private MemberAreaPort areaPort;
 
@@ -56,9 +65,6 @@ class MemberServiceIntgTest extends TestContainerSupport {
 
   @MockitoBean
   private MemberMailPort mailPort;
-
-  @Autowired
-  private PasswordEncoder passwordEncoder;
 
   @Test
   @DisplayName("회원가입 - 성공 테스트")
@@ -105,6 +111,41 @@ class MemberServiceIntgTest extends TestContainerSupport {
     assertThatThrownBy(() -> memberService.signupProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.ALREADY_EXISTS_EMAIL.getMessage());
+  }
+
+  @Test
+  @DisplayName("소셜 로그인 - 존재하지 않는 회원의 회원가입 테스트")
+  void 동일한_이메일을_가진_회원이_존재하지_않는_경우_회원가입을_진행하고_미인증_활동지역을_생성한다() {
+    // given
+    String email = "test@naver.com";
+    String nickname = "foo";
+    SocialLoginCommand command = SocialLoginCommand.of("NAVER", email, nickname);
+
+    // when
+    UUID result = memberService.socialLoginProcess(command);
+
+    // then
+    Member saved = memberRepository.findByEmail(email).orElseThrow();
+    assertThat(saved.getEmail()).isEqualTo(email);
+    assertThat(saved.getNickname()).isEqualTo(nickname);
+    assertThat(result).isEqualTo(saved.getId());
+    then(areaPort).should(times(1)).createNonAuthenticatedActivityArea(saved.getId(), command.emdId());
+  }
+
+  @Test
+  @DisplayName("소셜 로그인 - 존재하는 회원의 로그인 테스트")
+  void 동일한_이메일을_가진_회원이_존재하는_경우_회원_ID를_반환한다() {
+    // given
+    String email = "test@google.com";
+    Member existing = memberRepository.save(customEmailMember(email));
+    SocialLoginCommand command = SocialLoginCommand.of("GOOGLE", email, "foo");
+
+    // when
+    UUID result = memberService.socialLoginProcess(command);
+
+    // then
+    assertThat(result).isEqualTo(existing.getId());
+    then(areaPort).should(never()).createNonAuthenticatedActivityArea(any(), any());
   }
 
   @Test

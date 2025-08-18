@@ -18,9 +18,11 @@ import static com.bob.support.fixture.query.MemberQueryFixture.defaultReadProfil
 import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.bob.domain.member.entity.Member;
@@ -29,6 +31,7 @@ import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
@@ -36,6 +39,8 @@ import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
 import com.bob.global.exception.exceptions.ApplicationException;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -118,6 +123,48 @@ class MemberServiceTest {
     assertThatThrownBy(() -> memberService.signupProcess(command))
         .isInstanceOf(RuntimeException.class)
         .hasMessage(ALREADY_EXISTS_EMAIL.getMessage());
+  }
+
+  @Test
+  @DisplayName("소셜 로그인 - 존재하지 않는 회원의 회원가입 테스트")
+  void 동일한_이메일을_가진_회원이_존재하지_않는_경우_회원가입을_진행한다() {
+    // given
+    SocialLoginCommand command = SocialLoginCommand.of("NAVER", "test@naver.com", "foo");
+    given(memberRepository.findByEmail("test@naver.com")).willReturn(Optional.empty());
+    given(encoder.encode(anyString())).willReturn("$2a$encodedDummy");
+
+    Member saved = defaultIdMember();
+    given(memberRepository.save(any(Member.class))).willReturn(saved);
+
+    // when
+    UUID result = memberService.socialLoginProcess(command);
+
+    // then
+    ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
+    then(memberRepository).should(times(1)).save(captor.capture());
+
+    Member toSave = captor.getValue();
+    assertThat(toSave.getEmail()).isEqualTo("test@naver.com");
+    assertThat(toSave.getNickname()).isEqualTo("foo");
+    assertThat(toSave.getPassword()).isEqualTo("$2a$encodedDummy");
+    then(areaPort).should(times(1)).createNonAuthenticatedActivityArea(saved.getId(), command.emdId());
+    assertThat(result).isEqualTo(saved.getId());
+  }
+
+  @Test
+  @DisplayName("소셜 로그인 - 존재하는 회원의 로그인 테스트")
+  void 동일한_이메일을_가진_회원이_존재하는_경우_회원_ID를_반환한다() {
+    // given
+    SocialLoginCommand command = SocialLoginCommand.of("GOOGLE", "test@google.com", "foo");
+    given(memberRepository.findByEmail("test@google.com")).willReturn(Optional.of(defaultIdMember()));
+
+    // when
+    UUID result = memberService.socialLoginProcess(command);
+
+    // then
+    assertThat(result).isEqualTo(defaultIdMember().getId());
+    then(memberRepository).should(never()).save(any(Member.class));
+    then(areaPort).should(never()).createNonAuthenticatedActivityArea(any(), any());
   }
 
   @Test
