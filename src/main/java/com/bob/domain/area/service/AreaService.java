@@ -36,8 +36,12 @@ public class AreaService implements AreaWriteUseCase, AreaReadUseCase, AreaModif
 
   @Transactional
   public void createActivityAreaProcess(CreateAreaCommand command) {
-    ActivityArea activityArea = command.toActivityArea();
-    activityAreaRepository.save(activityArea);
+    activityAreaRepository.save(command.toActivityArea());
+  }
+
+  @Transactional
+  public void createNonAuthenticatedActivityAreaProcess(CreateAreaCommand command) {
+    activityAreaRepository.save(command.toNonAuthenticatedActivityArea());
   }
 
   @Transactional

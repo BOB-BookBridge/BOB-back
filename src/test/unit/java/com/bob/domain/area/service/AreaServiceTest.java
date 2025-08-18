@@ -63,6 +63,8 @@ class AreaServiceTest {
   @Mock
   private Geometry geometry;
 
+  // TODO: 테스트 커버리지 미충족 시 인증, 미인증 상태의 활동 지역 생성 테스트 작성 필요
+
   @Test
   @DisplayName("회원가입 시 행정구역 안에 있는 경우 - 성공 테스트")
   void 요청한_위치에_사용자의_위치가_포함되는_경우_좌표_인증에_성공한다() {
