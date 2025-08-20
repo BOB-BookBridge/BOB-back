@@ -4,9 +4,14 @@ import static com.bob.domain.trade.entity.status.TradeStatus.CANCELED;
 import static com.bob.domain.trade.entity.status.TradeStatus.REQUESTED;
 import static com.bob.domain.trade.entity.status.TradeStatus.valueOf;
 import static com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary.from;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.CHAT_CANCELED_WITH_REASON;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.CHAT_DEFAULT;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.NOTI_CANCELED_WITH_REASON;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.NOTI_DEFAULT;
 import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
 import static java.time.LocalDateTime.now;
 
 import com.bob.domain.trade.entity.Trade;
@@ -84,23 +89,34 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
     verifyTradeOwner(post.sellerId(), command.memberId());
     verifyRequestedOnly(trade.getId(), trade.getPostId(), command.status());
-    TradeStatus status = valueOf(command.status());
+
+    final TradeStatus status = valueOf(command.status());
+    verifyIsSameRequest(trade.getTradeStatus(), status);
     trade.updateTradeStatus(status, now());
     postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
-    sendTradeNotification(post, trade.getSellerId(), trade.getBuyerId(), status.value());
-    publishSystemMessageEvent(post, command.memberId(), trade.getBuyerId(), status.value());
+
+    final String notificationBody = buildNotificationBody(post.title(), status, command.reason());
+    final String chatMessageBody = buildChatMessageBody(status, command.reason());
+    sendTradeNotification(post, trade.getSellerId(), trade.getBuyerId(), notificationBody);
+    publishSystemMessageEvent(post, command.memberId(), trade.getBuyerId(), chatMessageBody);
   }
 
-  private void sendTradeNotification(TradePostSummary post, UUID memberId, UUID buyerId, String status) {
-    String body = String.format("[%s]의 거래 상태가 '%s'(으)로 변경되었습니다.", post.title(), status);
+  private void sendTradeNotification(TradePostSummary post, UUID memberId, UUID buyerId, String body) {
     NotiEvent event = NotiEvent.toSystemNotiEvent(TRADE, String.valueOf(post.postId()), "SYSTEM", memberId, buyerId, body);
     eventPublisher.publishEvent(event);
+    System.out.println("good1");
   }
 
-  private void publishSystemMessageEvent(TradePostSummary post, UUID memberId, UUID buyerId, String status) {
-    String body = String.format("거래 상태가 '%s'(으)로 변경되었습니다.", status);
+  private void publishSystemMessageEvent(TradePostSummary post, UUID memberId, UUID buyerId, String body) {
     SystemChatMessageEvent event = SystemChatMessageEvent.of("TRADE", post.postId().toString(), memberId, buyerId, body);
     eventPublisher.publishEvent(event);
+    System.out.println("good2");
+  }
+
+  private static void verifyTradeOwner(UUID ownerId, UUID memberId) {
+    if (!ownerId.equals(memberId)) {
+      throw new ApplicationException(TRADE_ACCESS_DENIED);
+    }
   }
 
   private void verifyRequestedOnly(Long requestId, Long postId, String status) {
@@ -116,9 +132,34 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
         });
   }
 
-  private void verifyTradeOwner(UUID ownerId, UUID memberId) {
-    if (!ownerId.equals(memberId)) {
-      throw new ApplicationException(TRADE_ACCESS_DENIED);
+  private static void verifyIsSameRequest(TradeStatus s1, TradeStatus s2) {
+    if (s1 == s2) {
+      throw new ApplicationException(TRADE_STATUS_UNCHANGED);
     }
+  }
+
+  private static String buildNotificationBody(String title, TradeStatus status, String reason) {
+    if (status == CANCELED) {
+      return normalizeReason(reason) != null
+          ? NOTI_CANCELED_WITH_REASON.format(title, CANCELED.value(), normalizeReason(reason))
+          : NOTI_DEFAULT.format(title, CANCELED);
+    }
+    return NOTI_DEFAULT.format(title, status);
+  }
+
+  private static String buildChatMessageBody(TradeStatus status, String reason) {
+    if (status == CANCELED) {
+      return normalizeReason(reason) != null
+          ? CHAT_CANCELED_WITH_REASON.format(normalizeReason(reason))
+          : CHAT_DEFAULT.format();
+    }
+    return CHAT_DEFAULT.format(status);
+  }
+
+  private static String normalizeReason(String reason) {
+    if (reason == null || reason.trim().isEmpty()) {
+      return null;
+    }
+    return reason.trim();
   }
 }

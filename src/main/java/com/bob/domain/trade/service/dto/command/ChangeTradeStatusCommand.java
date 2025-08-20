@@ -7,7 +7,8 @@ import lombok.Builder;
 public record ChangeTradeStatusCommand(
     UUID memberId,
     Long tradeId,
-    String status
+    String status,
+    String reason
 ) {
 
 }
