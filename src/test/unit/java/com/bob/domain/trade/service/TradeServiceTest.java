@@ -1,11 +1,15 @@
 package com.bob.domain.trade.service;
 
+import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND;
+import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND_WITH_REASON;
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_ID_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
 import static com.bob.support.fixture.domain.TradeFixture.REQUESTED_TRADE;
+import static com.bob.support.fixture.domain.TradeFixture.RESERVED_TRADE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.CUSTOM_POST_DETAIL_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_DETAIL_RESPONSE;
@@ -29,11 +33,13 @@ import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -114,7 +120,7 @@ class TradeServiceTest {
     // when & then
     assertThatThrownBy(() -> tradeService.readTradesProcess(query))
         .isInstanceOf(ApplicationException.class)
-        .hasMessage(ApplicationError.TRADE_ACCESS_DENIED.getMessage());
+        .hasMessage(TRADE_ACCESS_DENIED.getMessage());
 
     then(postPort).should(times(1)).readTradePostSummary(postId);
     then(tradeReader).shouldHaveNoInteractions();
@@ -175,7 +181,7 @@ class TradeServiceTest {
     // when & then
     assertThatThrownBy(() -> tradeService.readTradeDetailProcess(query))
         .isInstanceOf(ApplicationException.class)
-        .hasMessageContaining("거래에 접근할 권한이 없습니다");
+        .hasMessageContaining(TRADE_ACCESS_DENIED.getMessage());
 
     then(tradeReader).should(times(1)).readTradeById(tradeId);
   }
@@ -200,6 +206,33 @@ class TradeServiceTest {
     then(postPort).should().changePostStatus(requestTrade.getPostId(), "IN_PROGRESS");
   }
 
+  @Test
+  @DisplayName("거래 상태 변경 - 성공 테스트 (취소 사유 입력)")
+  void 거래_상태를_취소로_변경_시_사유가_본문에_포함된다() {
+    // given
+    String reason = "cancel reason";
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND_WITH_REASON("CANCELED", reason);
+
+    Trade requestTrade = RESERVED_TRADE(1L, 1L);
+    given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
+    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+
+    final ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+
+    // when
+    tradeService.changeTradeStatusProcess(command);
+
+    // then
+    then(postPort).should().changePostStatus(requestTrade.getPostId(), "READY");
+    then(eventPublisher).should(times(2)).publishEvent(eventCaptor.capture());
+
+    // 채팅, 알림 이벤트 발행 시 body의 거래 취소 사유 포함 여부 검증
+    final List<Object> events = eventCaptor.getAllValues();
+    assertThat(events).hasSize(2);
+    assertThat(events).allMatch(e -> extractEventBody(e).contains(reason));
+    then(eventPublisher).shouldHaveNoMoreInteractions();
+  }
+
   @DisplayName("거래 상태 변경 - 실패 테스트 (이미 처리된 거래 존재)")
   @Test
   void 거래_상태_변경시_이미_처리된_거래가_있으면_예외가_발생한다() {
@@ -214,7 +247,7 @@ class TradeServiceTest {
     // when & then
     assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
         .isInstanceOf(ApplicationException.class)
-        .hasMessageContaining("다른 회원과 거래가 진행중이거나 완료된 상태입니다.");
+        .hasMessageContaining(TRADE_ALREADY_PROCESSED.getMessage());
 
     then(tradeReader).should().readTradeById(command.tradeId());
     then(tradeReader).should().readTradesByPostId(requestTrade.getPostId());
@@ -233,9 +266,46 @@ class TradeServiceTest {
     // when & then
     assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
         .isInstanceOf(ApplicationException.class)
-        .hasMessageContaining("거래에 접근할 권한이 없습니다");
+        .hasMessageContaining(TRADE_ACCESS_DENIED.getMessage());
 
     then(tradeReader).should().readTradeById(command.tradeId());
     then(postPort).should().readTradePostSummary(requestTrade.getPostId());
+  }
+
+  @DisplayName("거래 상태 변경 - 실패 테스트 (동일한 상태 변경 요청)")
+  @Test
+  void 거래_상태_변경시_현재_상태와_요청_상태가_동일하면_예외가_발생한다() {
+    // given
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
+    Trade requestTrade = RESERVED_TRADE(1L, 1L);
+
+    given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
+    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(ApplicationError.TRADE_STATUS_UNCHANGED.getMessage());
+
+    then(tradeReader).should().readTradeById(command.tradeId());
+    then(postPort).should().readTradePostSummary(requestTrade.getPostId());
+  }
+
+  private static String extractEventBody(Object event) {
+    try {
+      Method m1 = event.getClass().getMethod("getBody");
+      Object o1 = m1.invoke(event);
+      return String.valueOf(o1);
+    } catch (NoSuchMethodException e1) {
+      try {
+        Method m2 = event.getClass().getMethod("body");
+        Object o2 = m2.invoke(event);
+        return String.valueOf(o2);
+      } catch (Exception e2) {
+        return String.valueOf(event);
+      }
+    } catch (Exception e) {
+      return String.valueOf(event);
+    }
   }
 }
