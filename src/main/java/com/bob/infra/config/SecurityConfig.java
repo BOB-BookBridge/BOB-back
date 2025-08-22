@@ -7,6 +7,7 @@ import com.bob.infra.auth.filter.port.AuthRedisPort;
 import com.bob.infra.auth.jwt.JwtProvider;
 import com.bob.infra.auth.jwt.filter.JwtAuthorizationFilter;
 import com.bob.infra.auth.jwt.handler.JwtAuthenticationEntryPoint;
+import com.bob.infra.auth.oauth.filter.SocialProviderValidationFilter;
 import com.bob.infra.auth.oauth.handler.SocialAuthFailureHandler;
 import com.bob.infra.auth.oauth.handler.SocialAuthSuccessHandler;
 import com.bob.infra.auth.service.MemberDetailsService;
@@ -28,6 +29,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -50,6 +52,7 @@ public class SecurityConfig {
   private final SocialAuthService socialAuthService;
   private final SocialAuthSuccessHandler socialAuthSuccessHandler;
   private final SocialAuthFailureHandler socialAuthFailureHandler;
+  private final SocialProviderValidationFilter socialProviderValidationFilter;
 
   private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
   private final JwtAuthorizationFilter jwtAuthorizationFilter;
@@ -94,6 +97,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(socialProviderValidationFilter, OAuth2AuthorizationRequestRedirectFilter.class)
         .addFilterAt(loginFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(handler -> handler.authenticationEntryPoint(jwtAuthenticationEntryPoint))
         .build();
