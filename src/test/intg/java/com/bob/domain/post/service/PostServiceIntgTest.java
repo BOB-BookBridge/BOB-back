@@ -70,7 +70,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
-@Import(RedisContainerConfig.class)
 @DisplayName("게시글 서비스 통합 테스트")
 @Transactional
 @SpringBootTest
@@ -348,8 +347,6 @@ class PostServiceIntgTest extends TestContainerSupport {
           WHERE post_status = 'REMOVED'
         """, Long.class
     );
-    System.out.println("모든 게시글: " + allPostsCount);
-    System.out.println("삭제 게시글: " + removedPostsCount);
 
     ReadFilteredPostsQuery query = defaultReadFilteredPostsQuery(); // 기본 게시글 조회 쿼리 (app 기본)
     pageable = PageRequest.of(0, Integer.MAX_VALUE); // 모든 게시글 개수 조회를 위한 page limit 수정

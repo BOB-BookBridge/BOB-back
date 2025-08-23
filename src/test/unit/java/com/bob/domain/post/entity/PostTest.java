@@ -71,4 +71,16 @@ class PostTest {
     assertThat(post.getBookStatus().name()).isEqualTo(newBookStatus);
     assertThat(post.getDescription()).isEqualTo(newDescription);
   }
+
+  @Test
+  void 게시글_보류_상태_변경_테스트() {
+    // given
+    Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
+
+    // when
+    post.updateIsWithhold(true);
+
+    // then
+    assertThat(post.isWithhold()).isTrue();
+  }
 }
