@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS members (
     password VARCHAR(255) NOT NULL,
     nickname VARCHAR(20) NOT NULL,
     profile_image_url VARCHAR(255),
+    provider ENUM('GOOGLE', 'NAVER'),
     created_at DATETIME
 );
 
@@ -39,7 +40,7 @@ CREATE TABLE IF NOT EXISTS categories (
 -- ========================
 CREATE TABLE IF NOT EXISTS posts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    post_status ENUM('READY', 'IN_PROGRESS', 'COMPLETED') NOT NULL,
+    post_status ENUM('READY', 'IN_PROGRESS', 'COMPLETED', 'REMOVED') NOT NULL,
     category_id INT NOT NULL,
     seller_id BINARY(16) NOT NULL,
     thumbnail_url VARCHAR(255) NOT NULL,
@@ -320,6 +321,8 @@ INSERT INTO posts (book_id, seller_id, category_id, book_status, post_status, se
 (4, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'IN_PROGRESS', 16000, '거래 진행중 상태', 213, 'https://image/10.png', now()),
 (5, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 17000, '책 상태 상', 213, 'https://image/11.png', now()),
 (6, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 18000, '책 상태 하', 213, 'https://image/12.png', now()),
+(1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'REMOVED', 10000, '삭제된 게시글1', 213, 'https://image/1.png', now()),
+(1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'REMOVED', 10000, '삭제된 게시글2', 213, 'https://image/1.png', now()),
 (1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '오래된 게시글', 213, 'https://image/old.png', '2023-01-01 10:00:00'),
 (2, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 12000, '중간 게시글', 213, 'https://image/mid.png', '2023-06-01 10:00:00'),
 (3, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 14000, '최신 게시글', 213, 'https://image/new.png', '2024-01-01 10:00:00'),

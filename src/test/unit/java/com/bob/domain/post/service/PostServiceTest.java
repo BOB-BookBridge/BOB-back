@@ -14,6 +14,7 @@ import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.PostFixture.DEFAULT_MOCK_POSTS;
 import static com.bob.support.fixture.domain.PostFixture.defaultIdPost;
 import static com.bob.support.fixture.domain.PostFixture.defaultPost;
+import static com.bob.support.fixture.domain.PostFixture.customStatusPost;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadFilteredPostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadMemberFavoritePostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchCategoryQuery;
@@ -417,7 +418,7 @@ class PostServiceTest {
     // then
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).should(times(1)).removePostFavoriteProcess(post.getId());
-    then(postRepository).should(times(1)).deleteById(post.getId());
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.REMOVED);
   }
 
   @DisplayName("게시글 삭제 - 실패 테스트 (작성자 X)")
@@ -438,6 +439,42 @@ class PostServiceTest {
 
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).shouldHaveNoInteractions();
-    then(postRepository).shouldHaveNoInteractions();
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.READY);
+  }
+
+  @DisplayName("게시글 삭제 - 실패 테스트 (예약 상태의 게시글)")
+  @Test
+  void 예약_상태의_게시글은_삭제할_수_없다() {
+    // given
+    Post post = customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, PostStatus.IN_PROGRESS);
+    RemovePostCommand command = new RemovePostCommand(MEMBER_ID, post.getId());
+    given(postReader.readPostById(command.postId())).willReturn(post);
+
+    // when & then
+    assertThatThrownBy(() -> postService.removePostProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.UNREMOVABLE_POST_STATE.getMessage());
+
+    then(postReader).should(times(1)).readPostById(post.getId());
+    then(postFavoriteService).shouldHaveNoInteractions();
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.IN_PROGRESS);
+  }
+
+  @DisplayName("게시글 삭제 - 실패 테스트 (삭제 상태의 게시글)")
+  @Test
+  void 삭제_상태의_게시글을_삭제하는_경우_예외를_발생시킨다() {
+    // given
+    Post post = customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, PostStatus.REMOVED);
+    RemovePostCommand command = new RemovePostCommand(MEMBER_ID, post.getId());
+    given(postReader.readPostById(command.postId())).willReturn(post);
+
+    // when & then
+    assertThatThrownBy(() -> postService.removePostProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.ALREADY_REMOVED_POST_STATE.getMessage());
+
+    then(postReader).should(times(1)).readPostById(post.getId());
+    then(postFavoriteService).shouldHaveNoInteractions();
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.REMOVED);
   }
 }

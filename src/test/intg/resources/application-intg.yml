@@ -51,3 +51,6 @@ sse:
 
 app:
   base-url: "https://base"
+
+oauth:
+  entrance: entrance
