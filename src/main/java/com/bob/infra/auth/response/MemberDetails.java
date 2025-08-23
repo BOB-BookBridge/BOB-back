@@ -9,11 +9,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 public record MemberDetails(
     UUID id,
     String email,
-    String password
+    String password,
+    boolean enabled
 ) implements UserDetails {
 
-  public MemberDetails(UUID id) {
-    this(id, null, null);
+  public MemberDetails(UUID id, boolean enabled) {
+    this(id, null, null, enabled);
   }
 
   @Override
@@ -29,6 +30,11 @@ public record MemberDetails(
   @Override
   public String getUsername() {
     return email;
+  }
+
+  @Override
+  public boolean isEnabled() {
+    return enabled;
   }
 }
 

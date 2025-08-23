@@ -66,7 +66,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
       return;
     }
 
-    final MemberDetails memberDetails = new MemberDetails(jwtProvider.getMemberId(accessToken));
+    final MemberDetails memberDetails = new MemberDetails(jwtProvider.getMemberId(accessToken), true);
     final Authentication authentication = new UsernamePasswordAuthenticationToken(
         memberDetails, null, memberDetails.getAuthorities()
     );

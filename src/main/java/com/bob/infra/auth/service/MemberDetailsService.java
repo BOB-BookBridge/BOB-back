@@ -20,6 +20,6 @@ public class MemberDetailsService implements UserDetailsService {
     Member member = memberRepository.findByEmail(username)
         .orElseThrow(() -> new UsernameNotFoundException(username));
 
-    return new MemberDetails(member.getId(), member.getEmail(), member.getPassword());
+    return new MemberDetails(member.getId(), member.getEmail(), member.getPassword(), !member.isRemove());
   }
 }
