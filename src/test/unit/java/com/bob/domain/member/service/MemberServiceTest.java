@@ -14,6 +14,7 @@ import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.defaultIdMember;
 import static com.bob.support.fixture.domain.MemberFixture.defaultMember;
+import static com.bob.support.fixture.domain.MemberFixture.removedMember;
 import static com.bob.support.fixture.query.MemberQueryFixture.defaultReadProfileQuery;
 import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +32,7 @@ import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
@@ -38,7 +40,9 @@ import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
+import com.bob.global.event.application.dto.RemoveMemberEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +52,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @DisplayName("사용자 서비스 테스트")
@@ -71,6 +77,9 @@ class MemberServiceTest {
 
   @Mock
   private MemberAreaPort areaPort;
+
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
 
   @Mock
   private BCryptPasswordEncoder encoder;
@@ -189,6 +198,25 @@ class MemberServiceTest {
   }
 
   @Test
+  void 탈퇴한_사용자의_프로필_조회_테스트() {
+    // given
+    Member member = removedMember();
+    ReadProfileQuery query = defaultReadProfileQuery();
+
+    given(memberReader.readMemberById(query.memberId())).willReturn(member);
+    given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
+
+    // when
+    MemberProfileResponse response = memberService.readProfileProcess(query);
+
+    // then
+    then(memberReader).should(times(1)).readMemberById(query.memberId());
+    assertThat(response.memberId()).isEqualTo(member.getId());
+    assertThat(response.nickname()).isEqualTo("(알 수 없음)");
+    assertThat(response.profileImageUrl()).isNull();
+  }
+
+  @Test
   @DisplayName("프로필 변경 - 성공 테스트")
   void 닉네임이_다르면_프로필을_변경할_수_있다() {
     // given
@@ -293,5 +321,31 @@ class MemberServiceTest {
     assertThatThrownBy(() -> memberService.changePasswordProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(INVALID_OLD_PASSWORD.getMessage());
+  }
+
+  @Test
+  void 회원_삭제_테스트() {
+    // given
+    Member member = defaultIdMember();
+    given(memberReader.readMemberById(member.getId())).willReturn(member);
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    RemoveMemberCommand command = new RemoveMemberCommand(member.getId());
+
+    // when
+    memberService.softRemoveMemberProcess(command, response);
+
+    // then
+    assertThat(member.isRemove()).isTrue();
+
+    then(memberReader).should(times(1)).readMemberById(member.getId());
+    then(eventPublisher).should(times(1)).publishEvent(any(RemoveMemberEvent.class));
+
+    List<String> setCookies = response.getHeaders("Set-Cookie");
+    assertThat(setCookies).anySatisfy(h ->
+        assertThat(h).contains("AUTHORIZATION=").contains("Max-Age=0")
+    );
+    assertThat(setCookies).anySatisfy(h ->
+        assertThat(h).contains("REFRESH_KEY=").contains("Max-Age=0")
+    );
   }
 }

@@ -41,6 +41,20 @@ public class PostFixture {
         .build();
   }
 
+  public static Post customStatusPost(Category category, Book book, UUID sellerId, Integer emdId, PostStatus status) {
+    return Post.builder()
+        .book(book)
+        .sellerId(sellerId)
+        .category(category)
+        .bookStatus(BookStatus.BEST)
+        .postStatus(status)
+        .sellPrice(30000)
+        .description("Description")
+        .registrationAreaId(emdId)
+        .thumbnailUrl("https://image/1.png")
+        .build();
+  }
+
   public static List<Post> DEFAULT_MOCK_POSTS() {
     return List.of(
         Post.builder()

@@ -75,6 +75,9 @@ public class Post extends BaseTime {
   @Builder.Default
   private Integer scrapCount = 0;
 
+  @Column
+  private boolean isWithhold;
+
   public void updateOptionalFields(Integer sellPrice, String bookStatus, String description) {
     Optional.ofNullable(sellPrice).ifPresent(s -> this.sellPrice = s);
     Optional.ofNullable(bookStatus).ifPresent(b -> this.bookStatus = BookStatus.from(b));
@@ -83,5 +86,9 @@ public class Post extends BaseTime {
 
   public void updatePostStatus(PostStatus status) {
     this.postStatus = status;
+  }
+
+  public void updateIsWithhold(boolean isWithhold) {
+    this.isWithhold = isWithhold;
   }
 }

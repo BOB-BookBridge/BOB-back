@@ -21,6 +21,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -58,11 +59,15 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
   @Override
   protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
-    authenticationEntryPoint.commence(
-        request,
-        response,
-        new ApplicationAuthenticationException(AuthenticationError.FAILED_AUTHENTICATION) {}
-    );
+    AuthenticationError error = setAuthenticationError(failed);
+    authenticationEntryPoint.commence(request, response, new ApplicationAuthenticationException(error) {});
+  }
+
+  private static AuthenticationError setAuthenticationError(AuthenticationException ex) {
+    if (ex instanceof DisabledException) {
+      return AuthenticationError.IS_REMOVED_MEMBER;
+    }
+    return AuthenticationError.FAILED_AUTHENTICATION;
   }
 
   private LoginRequest readLoginData(HttpServletRequest request) {

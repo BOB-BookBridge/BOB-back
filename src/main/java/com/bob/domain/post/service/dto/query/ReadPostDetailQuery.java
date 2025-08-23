@@ -5,7 +5,7 @@ import java.util.UUID;
 public record ReadPostDetailQuery(
     UUID memberId,
     Long postId,
-    boolean shouldIncreaseViewCount
+    boolean isClient
 ) {
 
   public static ReadPostDetailQuery of(UUID memberId, Long postId, boolean flag) {

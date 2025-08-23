@@ -39,6 +39,9 @@ public enum ApplicationError {
   NOT_POST_OWNER("E303", "게시글 작성자가 아닙니다.", HttpStatus.FORBIDDEN),
   ALREADY_POST_FAVORITE("E304", "이미 좋아요한 게시글입니다.", HttpStatus.BAD_REQUEST),
   INVALID_POST_FAVORITE("E305", "좋아요 하지 않은 게시글입니다.", HttpStatus.BAD_REQUEST),
+  ALREADY_REMOVED_POST_STATE("E306", "이미 삭제 된 게시글입니다.", HttpStatus.BAD_REQUEST),
+  UNREMOVABLE_POST_STATE("E307", "거래 예약 상태의 게시글을 삭제할 수 없습니다.", HttpStatus.BAD_REQUEST),
+  NOT_ACCESSIBLE_POST("E308", "삭제되었거나 보류 중인 게시글은 조회할 수 없습니다.", HttpStatus.NOT_FOUND),
 
   // 채팅 예외
   IS_SAME_CHAT_MEMBER("E401", "자신과의 채팅은 불가능합니다.", HttpStatus.BAD_REQUEST),

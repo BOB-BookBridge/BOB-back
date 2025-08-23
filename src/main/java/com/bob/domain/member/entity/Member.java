@@ -44,6 +44,9 @@ public class Member extends BaseTime {
   @Column
   private String profileImageUrl;
 
+  @Column
+  private boolean isRemove;
+
   public void updatePassword(String newPassword) {
     password = newPassword;
   }
@@ -54,6 +57,10 @@ public class Member extends BaseTime {
 
   public void updateProfileImageUrl(String newProfileImageUrl) {
     profileImageUrl = newProfileImageUrl;
+  }
+
+  public void updateRemoveStatus(boolean isRemove) {
+    this.isRemove = isRemove;
   }
 
   public boolean isEqualsNickname(String oldNickname) {

@@ -1,19 +1,27 @@
 package com.bob.domain.post.service;
 
+import static com.bob.domain.post.entity.status.PostStatus.IN_PROGRESS;
+import static com.bob.domain.post.entity.status.PostStatus.REMOVED;
 import static com.bob.domain.post.entity.status.PostStatus.valueOf;
 import static com.bob.domain.post.service.dto.response.PostFileSummaryResponse.from;
+import static com.bob.global.exception.response.ApplicationError.ALREADY_REMOVED_POST_STATE;
+import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
+import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
+import static com.bob.global.exception.response.ApplicationError.UNREMOVABLE_POST_STATE;
 
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.service.BookService;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.service.reader.CategoryReader;
 import com.bob.domain.post.entity.Post;
+import com.bob.domain.post.entity.status.PostStatus;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
 import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
+import com.bob.domain.post.service.dto.command.WithholdPostStatusCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
@@ -71,12 +79,12 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
 
   private void verifyAreaAuthentication(boolean validity) {
     if (!validity) {
-      throw new ApplicationException(ApplicationError.NOT_VERIFIED_MEMBER);
+      throw new ApplicationException(NOT_VERIFIED_MEMBER);
     }
   }
 
   private void imageMapping(List<String> fileNames, Long postId) {
-    if(fileNames == null || fileNames.isEmpty()) {
+    if (fileNames == null || fileNames.isEmpty()) {
       return;
     }
     filePort.modifyReferenceId(fileNames, String.valueOf(postId));
@@ -104,7 +112,9 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   }
 
   private void addChildCategoryIds(ReadFilteredPostsQuery query) {
-    if (query.categoryIds() == null || query.categoryIds().isEmpty()) return;
+    if (query.categoryIds() == null || query.categoryIds().isEmpty()) {
+      return;
+    }
     List<Integer> categoryIds = categoryReader.readChildCategoryIds(query.categoryIds().get(0));
     query.updateCategoryIds(categoryIds);
   }
@@ -117,13 +127,22 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
 
   @Transactional
   public PostDetailResponse readPostDetailProcess(ReadPostDetailQuery query) {
-    if(query.shouldIncreaseViewCount()) postRepository.increaseViewCount(query.postId());
+    if (query.isClient()) {
+      postRepository.increaseViewCount(query.postId());
+    }
     Post post = postReader.readPostById(query.postId());
+    verifyAccessiblePost(post, query.isClient());
     PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
     PostFileSummaryResponse fileSummary = from(filePort.readPostFileSummaries(post.getId()));
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
     return PostDetailResponse.from(post, memberSummary, fileSummary, isFavorite, isOwner);
+  }
+
+  private static void verifyAccessiblePost(Post post, boolean isClient) {
+    if (isClient && (post.getPostStatus() == REMOVED || post.isWithhold())) {
+      throw new ApplicationException(ApplicationError.NOT_ACCESSIBLE_POST);
+    }
   }
 
   @Transactional
@@ -143,13 +162,32 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   public void removePostProcess(RemovePostCommand command) {
     Post post = postReader.readPostById(command.postId());
     verifyPostOwner(command.memberId(), post.getSellerId());
+    verifyRemovable(post.getPostStatus());
     postFavoriteService.removePostFavoriteProcess(post.getId());
-    postRepository.deleteById(post.getId());
+    post.updatePostStatus(REMOVED);
   }
 
-  private void verifyPostOwner(UUID requestMemberId, UUID postMemberId) {
+  private static void verifyPostOwner(UUID requestMemberId, UUID postMemberId) {
     if (!Objects.equals(requestMemberId, postMemberId)) {
-      throw new ApplicationException(ApplicationError.NOT_POST_OWNER);
+      throw new ApplicationException(NOT_POST_OWNER);
     }
+  }
+
+  private static void verifyRemovable(PostStatus status) {
+    if (status == REMOVED) {
+      throw new ApplicationException(ALREADY_REMOVED_POST_STATE);
+    }
+    if (status == IN_PROGRESS) {
+      throw new ApplicationException(UNREMOVABLE_POST_STATE);
+    }
+  }
+
+  @Transactional
+  public void withholdPostProcess(WithholdPostStatusCommand command) {
+    postReader.readPostsByMember(command.memberId())
+        .forEach(p -> {
+          p.updateIsWithhold(true);
+          postFavoriteService.removePostFavoriteProcess(p.getId());
+        });
   }
 }

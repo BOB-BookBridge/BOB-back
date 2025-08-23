@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,9 +19,11 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.member.usecase.MemberWriteUseCase;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -197,5 +200,19 @@ class MemberControllerTest {
         .andExpect(status().isOk());
 
     verify(modifyUseCase, times(1)).changeMemberProfileImageProcess(any());
+  }
+
+  @Test
+  @DisplayName("회원 탈퇴 API 호출 테스트")
+  void 회원_탈퇴_API를_호출할_수_있다() throws Exception {
+    // when & then
+    mvc.perform(delete("/members/me")
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.result").value("DELETED"));
+
+    verify(modifyUseCase, times(1))
+        .softRemoveMemberProcess(any(RemoveMemberCommand.class), any(HttpServletResponse.class));
   }
 }

@@ -1,6 +1,7 @@
 package com.bob.infra.auth.filter;
 
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
+import static com.bob.global.exception.response.AuthenticationError.IS_REMOVED_MEMBER;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_VALUE;
 import static com.bob.support.fixture.auth.CookieFixture.AUTH_COOKIE;
 import static com.bob.support.fixture.auth.CookieFixture.SET_COOKIE_HEADER;
@@ -38,6 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.DelegatingServletInputStream;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -75,7 +77,7 @@ class LoginFilterTest {
   @Mock
   private HttpServletRequest request;
 
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private ObjectMapper objectMapper = new ObjectMapper();
 
   @BeforeEach
   void setUp() {
@@ -83,8 +85,7 @@ class LoginFilterTest {
   }
 
   @Test
-  @DisplayName("로그인 요청 - 성공 테스트")
-  void 로그인_요청을_시도할_수_있다() throws Exception {
+  void 로그인_인증_시도_테스트() throws Exception {
     // given
     LoginRequest loginRequest = defaultLoginRequest();
     byte[] loginRequestBytes = objectMapper.writeValueAsBytes(loginRequest);
@@ -101,11 +102,10 @@ class LoginFilterTest {
   }
 
   @Test
-  @DisplayName("로그인 인증 - 성공 테스트")
-  void 인증에_성공하면_토큰을_발급하고_Security_Context에_정보를_저장한다() {
+  void 로그인_인증_성공_테스트() {
     // given
     FilterChain filterChain = mock(FilterChain.class);
-    MemberDetails memberDetails = new MemberDetails(UUID.randomUUID());
+    MemberDetails memberDetails = new MemberDetails(UUID.randomUUID(), true);
     Authentication authentication = new UsernamePasswordAuthenticationToken(
         memberDetails, null, memberDetails.getAuthorities()
     );
@@ -125,8 +125,7 @@ class LoginFilterTest {
   }
 
   @Test
-  @DisplayName("로그인 인증 - 실패 테스트")
-  void 인증에_실패하면_예외_핸들러를_호출한다() throws Exception {
+  void 로그인_인증_실패_테스트() throws Exception {
     // given
     AuthenticationException failed = mock(AuthenticationException.class);
 
@@ -136,6 +135,21 @@ class LoginFilterTest {
     // then
     then(authenticationEntryPoint).should().commence(eq(request), eq(response),
         argThat(e -> ((ApplicationAuthenticationException) e).getError() == FAILED_AUTHENTICATION)
+    );
+    then(redisPort).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 탈퇴_계정_로그인_테스트() throws Exception {
+    // given
+    AuthenticationException ex = new DisabledException("disabled");
+
+    // when
+    loginFilter.unsuccessfulAuthentication(request, response, ex);
+
+    // then
+    then(authenticationEntryPoint).should().commence(eq(request), eq(response),
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == IS_REMOVED_MEMBER)
     );
     then(redisPort).shouldHaveNoInteractions();
   }

@@ -8,6 +8,7 @@ import static com.bob.support.fixture.command.ChangePostCommandFixture.DEFAULT_C
 import static com.bob.support.fixture.command.CreatePostCommandFixture.FILE_NAMES;
 import static com.bob.support.fixture.command.CreatePostCommandFixture.defaultCreatePostCommand;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
+import static com.bob.support.fixture.query.PostQueryFixture.defaultReadFilteredPostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchAuthorQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchBetween_5000_10000_PriceQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchBookStatusQuery;
@@ -51,6 +52,7 @@ import com.bob.domain.post.service.port.out.PostAreaPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.TestContainerSupport;
+import com.bob.support.redis.RedisContainerConfig;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.time.LocalDateTime;
@@ -62,7 +64,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +92,9 @@ class PostServiceIntgTest extends TestContainerSupport {
 
   @Autowired
   private BookRepository bookRepository;
+
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
 
   @MockitoBean
   private PostAreaPort areaPort;
@@ -331,6 +338,29 @@ class PostServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
+  void 삭제_된_게시글은_조회_목록에서_제외된다() {
+    long allPostsCount = postRepository.count();
+    long removedPostsCount = jdbcTemplate.queryForObject(
+        """
+          SELECT COUNT(*) 
+          FROM posts
+          WHERE post_status = 'REMOVED'
+        """, Long.class
+    );
+
+    ReadFilteredPostsQuery query = defaultReadFilteredPostsQuery(); // 기본 게시글 조회 쿼리 (app 기본)
+    pageable = PageRequest.of(0, Integer.MAX_VALUE); // 모든 게시글 개수 조회를 위한 page limit 수정
+    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+
+    assertThat(result.posts())
+        .extracting(PostSummary::postStatus)
+        .doesNotContain("REMOVED");
+
+    assertThat(removedPostsCount).isNotZero();
+    assertThat(result.posts()).hasSize((int) (allPostsCount - removedPostsCount));
+  }
+
+  @Test
   @DisplayName("책 상태 필터 - 최상")
   void 책상태로_게시글을_조회할_수_있다() {
     ReadFilteredPostsQuery query = searchBookStatusQuery();
@@ -479,7 +509,7 @@ class PostServiceIntgTest extends TestContainerSupport {
 
 
   @Test
-  @DisplayName("게시글 삭제 - 작성자 본인이 삭제하면 게시글과 좋아요가 모두 삭제된다")
+  @DisplayName("게시글 삭제 - 작성자 본인이 삭제하면 게시글은 삭제 상태가 되고 좋아요는 모두 삭제된다")
   void 작성자_본인이_게시글을_삭제하면_게시글과_좋아요가_모두_삭제된다() {
     // given
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
@@ -499,7 +529,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     Optional<PostFavorite> writerFavorite = postFavoriteRepository.findByMemberIdAndPostId(writerId, post.getId());
     Optional<PostFavorite> otherFavorite = postFavoriteRepository.findByMemberIdAndPostId(otherId, post.getId());
 
-    assertThat(deletedPost).isEmpty();
+    assertThat(deletedPost.get().getPostStatus()).isEqualTo(PostStatus.REMOVED);
     assertThat(writerFavorite).isEmpty();
     assertThat(otherFavorite).isEmpty();
   }

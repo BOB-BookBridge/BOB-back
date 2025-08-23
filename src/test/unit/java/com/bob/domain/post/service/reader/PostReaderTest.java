@@ -1,6 +1,7 @@
 package com.bob.domain.post.service.reader;
 
 import static com.bob.global.exception.response.ApplicationError.NOT_EXIST_POST;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.PostFixture.DEFAULT_MOCK_POSTS;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadFilteredPostsQuery;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,11 +28,13 @@ import org.springframework.data.domain.Pageable;
 @ExtendWith(MockitoExtension.class)
 class PostReaderTest {
 
-  private final Pageable pageable = PageRequest.of(0, 10);
   @InjectMocks
   private PostReader postReader;
+
   @Mock
   private PostRepository postRepository;
+
+  private Pageable pageable = PageRequest.of(0, 10);
 
   @Test
   @DisplayName("게시글 목록 조회 테스트")
@@ -80,5 +83,20 @@ class PostReaderTest {
         .hasMessage(NOT_EXIST_POST.getMessage());
 
     then(postRepository).should().findById(invalidId);
+  }
+
+  @Test
+  @DisplayName("회원 ID로 게시글 목록 조회 - 성공 테스트")
+  void readPostsByMember_success() {
+    // given
+    List<Post> posts = DEFAULT_MOCK_POSTS();
+    given(postRepository.findAllBySellerId(MEMBER_ID)).willReturn(posts);
+
+    // when
+    List<Post> result = postReader.readPostsByMember(MEMBER_ID);
+
+    // then
+    assertThat(result).hasSize(posts.size()).isEqualTo(posts);
+    then(postRepository).should().findAllBySellerId(MEMBER_ID);
   }
 }

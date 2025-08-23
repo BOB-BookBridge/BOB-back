@@ -14,6 +14,7 @@ import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.PostFixture.DEFAULT_MOCK_POSTS;
 import static com.bob.support.fixture.domain.PostFixture.defaultIdPost;
 import static com.bob.support.fixture.domain.PostFixture.defaultPost;
+import static com.bob.support.fixture.domain.PostFixture.customStatusPost;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadFilteredPostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadMemberFavoritePostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchCategoryQuery;
@@ -42,6 +43,7 @@ import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
+import com.bob.domain.post.service.dto.command.WithholdPostStatusCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
@@ -56,9 +58,13 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -352,6 +358,42 @@ class PostServiceTest {
     then(postFavoriteService).should(times(1)).isFavorite(otherMemberId, post.getId());
   }
 
+  @ParameterizedTest(name = "클라이언트는 [{index}] {0}의 게시글 조회 불가")
+  @MethodSource("inaccessiblePostCases")
+  void 보류_삭제_상태_게시글_상세조회_테스트(String caseName, boolean isRemoved) {
+    // given
+    Post post = isRemoved
+        ? customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, PostStatus.REMOVED)
+        : defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
+
+    if (!isRemoved) {
+      post.updateIsWithhold(true);
+    }
+
+    ReadPostDetailQuery query = new ReadPostDetailQuery(UUID.randomUUID(), post.getId(), true);
+
+    given(postReader.readPostById(post.getId())).willReturn(post);
+    willDoNothing().given(postRepository).increaseViewCount(post.getId());
+
+    // when & then
+    assertThatThrownBy(() -> postService.readPostDetailProcess(query))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.NOT_ACCESSIBLE_POST.getMessage());
+
+    then(postRepository).should(times(1)).increaseViewCount(post.getId());
+    then(postReader).should(times(1)).readPostById(post.getId());
+    then(memberPort).shouldHaveNoInteractions();
+    then(filePort).shouldHaveNoInteractions();
+    then(postFavoriteService).shouldHaveNoInteractions();
+  }
+
+  private static Stream<Arguments> inaccessiblePostCases() {
+    return Stream.of(
+        Arguments.of("삭제 상태", true),  // isRemoved = true
+        Arguments.of("보류 상태", false)  // isRemoved = false (withhold = true)
+    );
+  }
+
   @DisplayName("게시글 수정 - 성공 테스트")
   @Test
   void 게시글_작성자는_게시글을_수정할_수_있다() {
@@ -417,7 +459,7 @@ class PostServiceTest {
     // then
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).should(times(1)).removePostFavoriteProcess(post.getId());
-    then(postRepository).should(times(1)).deleteById(post.getId());
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.REMOVED);
   }
 
   @DisplayName("게시글 삭제 - 실패 테스트 (작성자 X)")
@@ -438,6 +480,58 @@ class PostServiceTest {
 
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).shouldHaveNoInteractions();
-    then(postRepository).shouldHaveNoInteractions();
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.READY);
+  }
+
+  @Test
+  void 예약_상태_게시글_삭제_테스트() {
+    // given
+    Post post = customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, PostStatus.IN_PROGRESS);
+    RemovePostCommand command = new RemovePostCommand(MEMBER_ID, post.getId());
+    given(postReader.readPostById(command.postId())).willReturn(post);
+
+    // when & then
+    assertThatThrownBy(() -> postService.removePostProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.UNREMOVABLE_POST_STATE.getMessage());
+
+    then(postReader).should(times(1)).readPostById(post.getId());
+    then(postFavoriteService).shouldHaveNoInteractions();
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.IN_PROGRESS);
+  }
+
+  @Test
+  void 삭제_상태_게시글_삭제_테스트() {
+    // given
+    Post post = customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, PostStatus.REMOVED);
+    RemovePostCommand command = new RemovePostCommand(MEMBER_ID, post.getId());
+    given(postReader.readPostById(command.postId())).willReturn(post);
+
+    // when & then
+    assertThatThrownBy(() -> postService.removePostProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.ALREADY_REMOVED_POST_STATE.getMessage());
+
+    then(postReader).should(times(1)).readPostById(post.getId());
+    then(postFavoriteService).shouldHaveNoInteractions();
+    assertThat(post.getPostStatus()).isEqualTo(PostStatus.REMOVED);
+  }
+
+  @Test
+  void 탈퇴회원_관련_게시글_처리_테스트() {
+    // given
+    List<Post> posts = DEFAULT_MOCK_POSTS(); // size = 2
+    given(postReader.readPostsByMember(MEMBER_ID)).willReturn(posts);
+    WithholdPostStatusCommand command = new WithholdPostStatusCommand(MEMBER_ID);
+
+    // when
+    postService.withholdPostProcess(command);
+
+    // then
+    assertThat(posts.get(0).isWithhold()).isTrue();
+    assertThat(posts.get(1).isWithhold()).isTrue();
+    then(postFavoriteService).should(times(1)).removePostFavoriteProcess(1L);
+    then(postFavoriteService).should(times(1)).removePostFavoriteProcess(2L);
+    then(postReader).should(times(1)).readPostsByMember(MEMBER_ID);
   }
 }
