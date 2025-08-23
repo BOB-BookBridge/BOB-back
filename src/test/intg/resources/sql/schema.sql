@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS members (
     nickname VARCHAR(20) NOT NULL,
     profile_image_url VARCHAR(255),
     provider ENUM('GOOGLE', 'NAVER'),
+    is_remove BOOLEAN DEFAULT FALSE,
     created_at DATETIME
 );
 
@@ -51,6 +52,7 @@ CREATE TABLE IF NOT EXISTS posts (
     registration_area_id INT,
     view_count INT DEFAULT 0,
     scrap_count INT DEFAULT 0,
+    is_withhold BOOLEAN DEFAULT FALSE,
     created_at DATETIME,
     FOREIGN KEY (category_id) REFERENCES categories(id),
     FOREIGN KEY (seller_id) REFERENCES members(id),

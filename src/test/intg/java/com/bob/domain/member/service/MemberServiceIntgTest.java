@@ -25,24 +25,33 @@ import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
+import com.bob.global.event.application.dto.RemoveMemberEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
+import com.bob.support.redis.RedisContainerConfig;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
+@Import(RedisContainerConfig.class)
 @DisplayName("사용자 서비스 통합 테스트")
 @Transactional
 @SpringBootTest
@@ -274,5 +283,28 @@ class MemberServiceIntgTest extends TestContainerSupport {
 
     // then
     assertThat(member.getProfileImageUrl()).isEqualTo(command.fileName());
+  }
+
+  @Test
+  @DisplayName("회원 삭제 - 성공 테스트(소프트 삭제 + 이벤트 발행 + 쿠키 제거)")
+  void 회원을_삭제상태로_변경하고_이벤트를_발행하며_쿠키를_제거한다() {
+    // given
+    Member member = defaultMember();
+    memberRepository.save(member);
+
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    RemoveMemberCommand command = new RemoveMemberCommand(member.getId());
+
+    // when
+    memberService.softRemoveMemberProcess(command, response);
+
+    // then
+    Member after = memberRepository.findById(member.getId()).orElseThrow();
+    assertThat(after.isRemove()).isTrue();
+    List<String> setCookies = response.getHeaders("Set-Cookie");
+    assertThat(setCookies).anySatisfy(h ->
+        assertThat(h).contains("AUTHORIZATION=").contains("Max-Age=0"));
+    assertThat(setCookies).anySatisfy(h ->
+        assertThat(h).contains("REFRESH_KEY=").contains("Max-Age=0"));
   }
 }

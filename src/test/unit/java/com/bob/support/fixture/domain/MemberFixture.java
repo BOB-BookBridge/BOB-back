@@ -48,4 +48,13 @@ public class MemberFixture {
         .nickname("tester")
         .build();
   }
+
+  public static Member removedMember() {
+    return Member.builder()
+        .email("test@email.com")
+        .password("password")
+        .nickname("tester")
+        .isRemove(true)
+        .build();
+  }
 }
