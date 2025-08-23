@@ -30,26 +30,42 @@ class MemberDetailsServiceTest {
   private MemberRepository memberRepository;
 
   @Test
-  @DisplayName("회원 조회 - 성공 테스트")
-  void 이메일로_회원정보를_조회할_수_있다() {
+  void 정상_회원_조회_테스트() {
     // given
     Member member = defaultIdMember();
     memberRepository.save(member);
     given(memberRepository.findByEmail("test@email.com")).willReturn(Optional.of(member));
 
     // when
-    MemberDetails userDetails = (MemberDetails) memberDetailsService.loadUserByUsername(member.getEmail());
+    MemberDetails memberDetails = (MemberDetails) memberDetailsService.loadUserByUsername(member.getEmail());
 
     // then
-    assertThat(userDetails).isNotNull();
-    assertThat(userDetails.id()).isEqualTo(MEMBER_ID);
-    assertThat(userDetails.email()).isEqualTo(member.getEmail());
-    assertThat(userDetails.password()).isEqualTo(member.getPassword());
+    assertThat(memberDetails).isNotNull();
+    assertThat(memberDetails.id()).isEqualTo(MEMBER_ID);
+    assertThat(memberDetails.email()).isEqualTo(member.getEmail());
+    assertThat(memberDetails.password()).isEqualTo(member.getPassword());
+    assertThat(memberDetails.enabled()).isTrue();
   }
 
   @Test
-  @DisplayName("회원 조회 - 실패 테스트(이메일 존재 X)")
-  void 이메일로_회원을_찾지_못하면_예외를_던진다() {
+  void 탈퇴_회원_조회_테스트() {
+    // given
+    Member member = defaultIdMember();
+    member.updateRemoveStatus(true);
+    memberRepository.save(member);
+    given(memberRepository.findByEmail("test@email.com")).willReturn(Optional.of(member));
+
+    // when
+    MemberDetails memberDetails = (MemberDetails) memberDetailsService.loadUserByUsername(member.getEmail());
+
+    // then
+    assertThat(memberDetails).isNotNull();
+    assertThat(memberDetails.id()).isEqualTo(MEMBER_ID);
+    assertThat(memberDetails.enabled()).isFalse(); // 로그인 필터에서 DisabledException 처리
+  }
+
+  @Test
+  void 존재하지_않는_회원_조회_테스트() {
     // given
     given(memberRepository.findByEmail("unknown@email.com")).willReturn(Optional.empty());
 
