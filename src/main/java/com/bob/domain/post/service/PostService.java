@@ -21,6 +21,7 @@ import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
+import com.bob.domain.post.service.dto.command.WithholdPostStatusCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
@@ -40,6 +41,7 @@ import com.bob.domain.post.usecase.PostModifyUseCase;
 import com.bob.domain.post.usecase.PostReadUseCase;
 import com.bob.domain.post.usecase.PostWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -125,15 +127,22 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
 
   @Transactional
   public PostDetailResponse readPostDetailProcess(ReadPostDetailQuery query) {
-    if (query.shouldIncreaseViewCount()) {
+    if (query.isClient()) {
       postRepository.increaseViewCount(query.postId());
     }
     Post post = postReader.readPostById(query.postId());
+    verifyAccessiblePost(post, query.isClient());
     PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
     PostFileSummaryResponse fileSummary = from(filePort.readPostFileSummaries(post.getId()));
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
     return PostDetailResponse.from(post, memberSummary, fileSummary, isFavorite, isOwner);
+  }
+
+  private static void verifyAccessiblePost(Post post, boolean isClient) {
+    if (isClient && (post.getPostStatus() == REMOVED || post.isWithhold())) {
+      throw new ApplicationException(ApplicationError.NOT_ACCESSIBLE_POST);
+    }
   }
 
   @Transactional
@@ -171,5 +180,14 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     if (status == IN_PROGRESS) {
       throw new ApplicationException(UNREMOVABLE_POST_STATE);
     }
+  }
+
+  @Transactional
+  public void withholdPostProcess(WithholdPostStatusCommand command) {
+    postReader.readPostsByMember(command.memberId())
+        .forEach(p -> {
+          p.updateIsWithhold(true);
+          postFavoriteService.removePostFavoriteProcess(p.getId());
+        });
   }
 }
