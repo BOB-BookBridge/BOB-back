@@ -5,6 +5,7 @@ import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PAS
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
 import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
 import static com.bob.global.utils.random.RandomUtils.generateCode;
+import static com.bob.global.utils.web.CookieUtils.removeCookie;
 
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
@@ -13,6 +14,7 @@ import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberAreaSummaryResponse;
@@ -24,9 +26,12 @@ import com.bob.domain.member.service.reader.MemberReader;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.member.usecase.MemberWriteUseCase;
+import com.bob.global.event.application.dto.RemoveMemberEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +48,8 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   private final MemberRedisPort redisPort;
 
   private final PasswordEncoder encoder;
+
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public void signupProcess(CreateMemberCommand command) {
@@ -126,5 +133,14 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   public void changeMemberProfileImageProcess(ChangeProfileImageCommand command) {
     Member member = memberReader.readMemberById(command.memberId());
     member.updateProfileImageUrl(command.fileName());
+  }
+
+  @Transactional
+  public void softRemoveMemberProcess(RemoveMemberCommand command, HttpServletResponse response) {
+    Member member = memberReader.readMemberById(command.memberId());
+    member.updateRemoveStatus(true);
+    eventPublisher.publishEvent(RemoveMemberEvent.of(member.getId()));
+    removeCookie(response, "AUTHORIZATION");
+    removeCookie(response, "REFRESH_KEY");
   }
 }

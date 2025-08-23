@@ -14,10 +14,14 @@ public record MemberProfileResponse(
 ) {
 
   public static MemberProfileResponse from(Member member, MemberAreaSummaryResponse areaSummary) {
+    final boolean removed = Boolean.TRUE.equals(member.isRemove());
+    final String nickname = removed ? "(알 수 없음)" : member.getNickname();
+    final String profileImageUrl = removed ? null : member.getProfileImageUrl();
+
     return MemberProfileResponse.builder()
         .memberId(member.getId())
-        .nickname(member.getNickname())
-        .profileImageUrl(member.getProfileImageUrl())
+        .nickname(nickname)
+        .profileImageUrl(profileImageUrl)
         .area(Area.of(areaSummary.emdId(), areaSummary.validity(), areaSummary.authenticatedAt()))
         .build();
   }

@@ -1,10 +1,12 @@
 package com.bob.web.member.controller;
 
 import static com.bob.web.common.symbol.ResponseSymbol.CREATED;
+import static com.bob.web.common.symbol.ResponseSymbol.DELETED;
 import static com.bob.web.common.symbol.ResponseSymbol.SENT;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static com.bob.web.member.request.ReadProfileRequest.toQuery;
 
+import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
@@ -17,11 +19,13 @@ import com.bob.web.member.request.ChangeProfileRequest;
 import com.bob.web.member.request.IssuePasswordRequest;
 import com.bob.web.member.request.ChangeMemberProfileImageRequest;
 import com.bob.web.member.request.SignupRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -88,5 +92,15 @@ public class MemberController {
   ) {
     modifyUseCase.changeMemberProfileImageProcess(request.toCommand(memberId));
     return new CommonResponse<>(true, UPDATED);
+  }
+
+  @DeleteMapping("/me")
+  public CommonResponse<ResponseSymbol> handleRemoveMember(
+      HttpServletResponse response,
+      @AuthenticationId UUID memberId
+  ) {
+    RemoveMemberCommand command = new RemoveMemberCommand(memberId);
+    modifyUseCase.softRemoveMemberProcess(command, response);
+    return new CommonResponse<>(true, DELETED);
   }
 }
