@@ -30,6 +30,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     return queryFactory
         .selectFrom(post)
         .where(
+            notRemoved(),
             keywordCondition(query.key(), query.keyword()),
             memberIdCondition(query.memberId()),
             emdCondition(query.emdId()),
@@ -50,6 +51,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         .select(post.count())
         .from(post)
         .where(
+            notRemoved(),
             keywordCondition(query.key(), query.keyword()),
             memberIdCondition(query.memberId()),
             emdCondition(query.emdId()),
@@ -59,6 +61,10 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             bookStatusCondition(query.bookStatus())
         )
         .fetchOne();
+  }
+
+  private BooleanExpression notRemoved() {
+    return post.postStatus.ne(PostStatus.REMOVED);
   }
 
   private BooleanExpression keywordCondition(SearchKey key, String keyword) {
