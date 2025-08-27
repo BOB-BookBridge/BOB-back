@@ -7,6 +7,7 @@ import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_C
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_SUMMARY_LIST;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CREATE_CHATROOM_RESPONSE;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
+import static java.time.LocalDateTime.now;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -83,7 +84,7 @@ class ChatRoomControllerTest {
         "fileNames": []
       }
       """;
-    given(writeUseCase.createChatRoomMessageProcess(any())).willReturn(new ChatMessageSendResponse(false));
+    given(writeUseCase.createChatRoomMessageProcess(any())).willReturn(ChatMessageSendResponse.of(1L, false, now()));
 
     // when & then
     mvc.perform(post("/chatrooms/{chatroomId}/messages", 1L)

@@ -140,18 +140,18 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     if (status == CANCELED) {
       return normalizeReason(reason) != null
           ? NOTI_CANCELED_WITH_REASON.format(title, CANCELED.value(), normalizeReason(reason))
-          : NOTI_DEFAULT.format(title, CANCELED);
+          : NOTI_DEFAULT.format(title, CANCELED.value());
     }
-    return NOTI_DEFAULT.format(title, status);
+    return NOTI_DEFAULT.format(title, status.value());
   }
 
   private static String buildChatMessageBody(TradeStatus status, String reason) {
     if (status == CANCELED) {
       return normalizeReason(reason) != null
           ? CHAT_CANCELED_WITH_REASON.format(normalizeReason(reason))
-          : CHAT_DEFAULT.format();
+          : CHAT_DEFAULT.format(CANCELED.value());
     }
-    return CHAT_DEFAULT.format(status);
+    return CHAT_DEFAULT.format(status.value());
   }
 
   private static String normalizeReason(String reason) {

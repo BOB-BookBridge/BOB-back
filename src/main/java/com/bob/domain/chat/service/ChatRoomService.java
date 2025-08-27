@@ -113,14 +113,14 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   @Transactional
   public ChatMessageSendResponse createChatRoomMessageProcess(CreateChatMessageCommand command) {
     verifyParticipating(command.chatRoomId(), command.memberId());
-    UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
-    ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
+    final UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
+    final ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
     enableChatRoomIfDisabled(chatRoom);
     reEnterChatRoomIfPartnerExited(chatRoom.getId(), partnerId);
-    ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
+    final ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
     chatRoom.updateChatRoomLastMessageInfo(message.getContent(), message.getCreatedAt());
     publishChatMessageEvent(command, message, partnerId);
-    return ChatMessageSendResponse.of(message.getIsRead());
+    return ChatMessageSendResponse.of(message.getId(), message.getIsRead(), message.getCreatedAt());
   }
 
   private void enableChatRoomIfDisabled(ChatRoom chatRoom) {

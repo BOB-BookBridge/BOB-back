@@ -21,6 +21,7 @@ import com.bob.domain.chat.service.dto.query.ReadChatMessagesQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomDetailQuery;
 import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
+import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
@@ -168,15 +169,18 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     CreateChatMessageCommand command = CUSTOM_WITH_IMAGE_CREATE_CHAT_MESSAGE_COMMAND(chatRoomId, buyer.getId());
 
     // when
-    chatRoomService.createChatRoomMessageProcess(command);
+    ChatMessageSendResponse response = chatRoomService.createChatRoomMessageProcess(command);
 
     // then
     List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomId(chatRoomId);
     assertThat(messages).hasSize(1);
 
-    ChatMessage saved = messages.get(0);
-    assertThat(saved.getContent()).isEqualTo("message");
-    assertThat(saved.getType().name()).isEqualTo("MIX");
+    ChatMessage message = messages.get(0);
+    assertThat(message.getContent()).isEqualTo("message");
+    assertThat(message.getType().name()).isEqualTo("MIX");
+    assertThat(response.id()).isEqualTo(message.getId());
+    assertThat(response.isRead()).isEqualTo(message.getIsRead());
+    assertThat(response.sentAt()).isEqualTo(message.getCreatedAt());
   }
 
   @DisplayName("채팅 메시지 전송 - 성공 테스트 (상대방이 채팅방을 나간 경우)")
