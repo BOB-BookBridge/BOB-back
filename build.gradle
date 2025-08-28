@@ -2,11 +2,10 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'com.google.cloud.tools.jib' version '3.4.5'
     id 'jacoco'
 }
 
-group = 'toy'
+group = 'bob'
 version = '0.0.1-SNAPSHOT'
 
 java {
@@ -86,57 +85,6 @@ configurations {
     integrationTestAnnotationProcessor.extendsFrom annotationProcessor
 }
 
-def envFile = rootProject.file(".env")
-if (envFile.exists()) {
-    envFile.readLines()
-            .findAll { it && it.contains("=") }
-            .each { line ->
-                def (key, value) = line.split("=")
-                if (key == "USERNAME") {
-                    System.setProperty("jib.from.auth.username", value)
-                    System.setProperty("jib.to.auth.username", value)
-                }
-                if (key == "PASSWORD") {
-                    System.setProperty("jib.from.auth.password", value)
-                    System.setProperty("jib.to.auth.password", value)
-                }
-            }
-}
-
-jib {
-    from {
-        image = 'eclipse-temurin@sha256:3aad42c74fa9c55165d0f170cd67e85e4a960802ca035d932450db363d3759da'
-
-        def user = System.getProperty("jib.from.auth.username")
-        def pass = System.getProperty("jib.from.auth.password")
-        if (user != null && pass != null) {
-            auth {
-                username = user
-                password = pass
-            }
-        }
-    }
-
-    to {
-        image = 'leehyeonsoo/bserver:latest'
-
-        def user = System.getProperty("jib.to.auth.username")
-        def pass = System.getProperty("jib.to.auth.password")
-        if (user != null && pass != null) {
-            auth {
-                username = user
-                password = pass
-            }
-        }
-    }
-
-    container {
-        ports = ['8080']
-        creationTime = 'USE_CURRENT_TIMESTAMP'
-        jvmFlags = ['-Duser.timezone=Asia/Seoul']
-    }
-}
-
 sourceSets {
     test {
         java.srcDirs = ['src/test/unit/java']
@@ -182,33 +130,31 @@ tasks.register('integrationTest', Test) {
 }
 integrationTest.finalizedBy(clean)
 
+def jacocoExcludes = [
+        'com.bob.BookBridgeApplication',
+        'com.bob.global.audit.BaseTime',
+        'com.bob.global.utils.uuid.UuidV7Generator',
+        'com.bob.**.config.**',
+        'com.bob.**.request.**',
+        'com.bob.**.response.**',
+        'com.bob.**.dto.**',
+        'com.bob.**.symbol.**',
+        'com.bob.**.provider.**',
+        'com.bob.**.dsl.**',
+        'com.bob.**.Q*',
+        'com.bob.**.dummy.**'
+]
+
 jacocoTestCoverageVerification {
     violationRules {
         rule {
             element = 'CLASS'
-
-            excludes = [
-                    'com.bob.BookBridgeApplication',
-                    'com.bob.global.audit.BaseTime',
-                    'com.bob.**.config.**',
-                    'com.bob.**.request.**',
-                    'com.bob.**.response.**',
-                    'com.bob.**.dto.**',
-                    'com.bob.**.symbol.**',
-                    'com.bob.**.provider.**',
-                    'com.bob.**.dsl.**', // QueryDSL Impl 제외, 도메인 통합 테스트에서 검증
-                    'com.bob.**.Q*', // QueryDSL Q 클래스 제외
-                    'com.bob.**.dummy.**', // TODO: 개발 완료 시 삭제
-            ]
-
-            // LINE 커버리지
+            excludes = jacocoExcludes
             limit {
                 counter = 'LINE'
                 value = 'COVEREDRATIO'
                 minimum = 0.80
             }
-
-            // BRANCH 커버리지
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
@@ -218,19 +164,31 @@ jacocoTestCoverageVerification {
     }
 }
 
+def jacocoExcludesForReport = [
+        "com/bob/BookBridgeApplication",
+        "com/bob/global/audit/BaseTime",
+        'com/bob/global/utils/uuid/UuidV7Generator',
+        "**/*config*/**",
+        "**/*request*/**",
+        "**/*response*/**",
+        "**/*dto*/**",
+        "**/*symbol*/**",
+        "**/*provider*/**",
+        "**/*dsl*/**",
+        "**/Q*",
+        "**/*dummy*/**",
+]
+
 jacocoTestReport {
     dependsOn test
     reports {
         html.required.set(true)
-        //xml.required.set(false)
+        xml.required.set(true)
         //csv.required.set(false)
     }
     classDirectories.setFrom(
             files(classDirectories.files.collect {
-                fileTree(dir: it, exclude: [
-                        'com.bob.global.audit.BaseTime',
-                        'com.bob.BookBridgeApplication.class'
-                ])
+                fileTree(dir: it, exclude: jacocoExcludesForReport)
             })
     )
 }
