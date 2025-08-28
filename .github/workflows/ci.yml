@@ -1,0 +1,203 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+permissions:
+  contents: read
+  statuses: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      TZ: Asia/Seoul
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Copy secret yml
+        run: |
+          echo "${{ secrets.APPLICATION_SECRET }}" > ./src/main/resources/application-secret.yml
+          echo "${{ secrets.APPLICATION_PROD }}" > ./src/main/resources/application-prod.yml
+          echo "${{ secrets.APPLICATION_DEV }}" > ./src/main/resources/application-dev.yml
+        shell: bash
+
+      - name: Setup permission for gradle
+        run: chmod +x gradlew
+
+      - name: Build with test
+        run: ./gradlew clean build
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs/*-SNAPSHOT.jar
+
+  integration-tests:
+    name: integration-tests
+    runs-on: ubuntu-22.04
+    needs: build
+    env:
+      TESTCONTAINERS_CHECKS_DISABLE: "true"
+      TESTCONTAINERS_RYUK_DISABLED: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup permission for gradle
+        run: chmod +x gradlew
+
+      - name: Docker sanity check
+        run: |
+          docker version
+          docker info
+          docker ps
+
+      - name: Run integration tests
+        run: ./gradlew integrationTest --no-daemon
+
+  check-coverage:
+    name: check-coverage ( >=80% )
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup permission for gradle
+        run: chmod +x gradlew
+
+      - name: Run tests with coverage gate
+        run: ./gradlew clean test jacocoTestReport jacocoTestCoverageVerification --no-daemon
+
+      - name: Upload JaCoCo HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-html
+          path: build/reports/jacoco/test/html
+
+      - name: Upload JaCoCo XML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-xml
+          path: build/reports/jacoco/test/jacocoTestReport.xml
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Extract coverage metrics
+        id: coverage
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET, os
+          r = ET.parse("build/reports/jacoco/test/jacocoTestReport.xml").getroot()
+          g=lambda t:round(int(r.find(f"./counter[@type='{t}']").get("covered"))*100/
+                           (int(r.find(f"./counter[@type='{t}']").get("covered"))+
+                            int(r.find(f"./counter[@type='{t}']").get("missed"))),2)
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f: f.write(f"line={g('LINE')}\nbranch={g('BRANCH')}\n")
+          PY
+
+      - name: Set job summary
+        if: always()
+        run: |
+          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "- Line coverage: ${{ steps.coverage.outputs.line }}%" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch coverage: ${{ steps.coverage.outputs.branch }}%" >> $GITHUB_STEP_SUMMARY
+
+      - name: Publish coverage as commit status
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          LINE: ${{ steps.coverage.outputs.line }}
+          BRANCH: ${{ steps.coverage.outputs.branch }}
+        with:
+          script: |
+            const line = Number(process.env.LINE || 0);
+            const branch = Number(process.env.BRANCH || 0);
+            const state = (line >= 80 && branch >= 80) ? 'success' : 'failure';
+            const sha = context.payload.pull_request ? context.payload.pull_request.head.sha : context.sha;
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha,
+              state,
+              context: 'coverage',
+              description: `Line ${line}% | Branch ${branch}%`,
+              target_url: `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+            });
+
+  publish-image:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to docker hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Download jar
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: .
+
+      - name: Rename to app.jar
+        run: mv ./*.jar app.jar
+
+      - name: Docker build & push (latest only)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: leehyeonsoo/bserver:latest
+      - name: Delete app-jar artifact
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run_id = context.runId;
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id
+            });
+            const art = data.artifacts.find(a => a.name === 'app-jar');
+            if (art) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: art.id
+              });
+              core.info(`Deleted artifact ${art.name} (${art.id})`);
+            }
