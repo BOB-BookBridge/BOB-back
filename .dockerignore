@@ -1,0 +1,14 @@
+# git
+.git
+.github
+
+# gradle
+build/
+!app.jar
+
+# code, yml, etc..
+src/
+**/*.yml
+*.md
+*.iml
+.idea/

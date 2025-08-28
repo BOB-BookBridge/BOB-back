@@ -1,0 +1,25 @@
+name: CD
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Run deploy sh on EC2
+        uses: appleboy/ssh-action@v0.1.10
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script_stop: true
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_PASSWORD
+          script: |
+            sudo chmod +x /home/ubuntu/deploy/bserver-deploy.sh
+            /home/ubuntu/deploy/bserver-deploy.sh
