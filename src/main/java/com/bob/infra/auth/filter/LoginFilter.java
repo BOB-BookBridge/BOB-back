@@ -65,7 +65,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
   private static AuthenticationError setAuthenticationError(AuthenticationException ex) {
     if (ex instanceof DisabledException) {
-      return AuthenticationError.IS_REMOVED_MEMBER;
+      return AuthenticationError.IS_WITHDRAWN_MEMBER;
     }
     return AuthenticationError.FAILED_AUTHENTICATION;
   }

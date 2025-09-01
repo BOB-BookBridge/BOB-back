@@ -40,7 +40,7 @@ public class SocialAuthService implements OAuth2UserService<OAuth2UserRequest, O
 
     final SocialLoginResponse response = memberPort.socialLoginProcess(provider.toUpperCase(), profile.email(), profile.nickname());
     switch (response.status()) {
-      case "WITHDRAW" -> throw new ApplicationAuthenticationException(AuthenticationError.IS_REMOVED_MEMBER) {};
+      case "WITHDRAW" -> throw new ApplicationAuthenticationException(AuthenticationError.IS_WITHDRAWN_MEMBER) {};
       case "BANNED" -> throw new ApplicationAuthenticationException(AuthenticationError.IS_BANNED_MEMBER) {};
       default -> {
         final Map<String, Object> principalAttrs = Map.of("memberId", response.memberId().toString());
