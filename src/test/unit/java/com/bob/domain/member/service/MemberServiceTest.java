@@ -1,5 +1,6 @@
 package com.bob.domain.member.service;
 
+import static com.bob.domain.member.entity.Status.WITHDRAW;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_EMAIL;
 import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
@@ -36,6 +37,7 @@ import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
+import com.bob.domain.member.service.dto.response.SocialLoginResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
@@ -44,7 +46,6 @@ import com.bob.global.event.application.dto.RemoveMemberEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -135,8 +136,7 @@ class MemberServiceTest {
   }
 
   @Test
-  @DisplayName("소셜 로그인 - 존재하지 않는 회원의 회원가입 테스트")
-  void 동일한_이메일을_가진_회원이_존재하지_않는_경우_회원가입을_진행한다() {
+  void 소셜_로그인_회원가입_및_정보_반환() {
     // given
     SocialLoginCommand command = SocialLoginCommand.of("NAVER", "test@naver.com", "foo");
     given(memberRepository.findByEmail("test@naver.com")).willReturn(Optional.empty());
@@ -146,7 +146,7 @@ class MemberServiceTest {
     given(memberRepository.save(any(Member.class))).willReturn(saved);
 
     // when
-    UUID result = memberService.socialLoginProcess(command);
+    SocialLoginResponse result = memberService.socialLoginProcess(command);
 
     // then
     ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
@@ -157,21 +157,22 @@ class MemberServiceTest {
     assertThat(toSave.getNickname()).isEqualTo("foo");
     assertThat(toSave.getPassword()).isEqualTo("$2a$encodedDummy");
     then(areaPort).should(times(1)).createNonAuthenticatedActivityArea(saved.getId(), command.emdId());
-    assertThat(result).isEqualTo(saved.getId());
+    assertThat(result.memberId()).isEqualTo(saved.getId());
+    assertThat(result.status()).isEqualTo(saved.getStatus().name());
   }
 
   @Test
-  @DisplayName("소셜 로그인 - 존재하는 회원의 로그인 테스트")
-  void 동일한_이메일을_가진_회원이_존재하는_경우_회원_ID를_반환한다() {
+  void 소셜_로그인_정보_반환() {
     // given
     SocialLoginCommand command = SocialLoginCommand.of("GOOGLE", "test@google.com", "foo");
     given(memberRepository.findByEmail("test@google.com")).willReturn(Optional.of(defaultIdMember()));
 
     // when
-    UUID result = memberService.socialLoginProcess(command);
+    SocialLoginResponse result = memberService.socialLoginProcess(command);
 
     // then
-    assertThat(result).isEqualTo(defaultIdMember().getId());
+    assertThat(result.memberId()).isEqualTo(defaultIdMember().getId());
+    assertThat(result.status()).isEqualTo(defaultIdMember().getStatus().name());
     then(memberRepository).should(never()).save(any(Member.class));
     then(areaPort).should(never()).createNonAuthenticatedActivityArea(any(), any());
   }
@@ -335,7 +336,7 @@ class MemberServiceTest {
     memberService.softRemoveMemberProcess(command, response);
 
     // then
-    assertThat(member.isRemove()).isTrue();
+    assertThat(member.getStatus()).isEqualTo(WITHDRAW);
 
     then(memberReader).should(times(1)).readMemberById(member.getId());
     then(eventPublisher).should(times(1)).publishEvent(any(RemoveMemberEvent.class));

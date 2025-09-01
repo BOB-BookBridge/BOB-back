@@ -1,5 +1,6 @@
 package com.bob.domain.member.service;
 
+import static com.bob.domain.member.entity.Status.WITHDRAW;
 import static com.bob.support.fixture.command.ChangeProfileCommandFixture.defaultChangeProfileCommand;
 import static com.bob.support.fixture.command.ChangeProfileCommandFixture.sameNicknameChangeProfileCommand;
 import static com.bob.support.fixture.command.ChangeProfileImageUrlCommandFixture.customChangeProfileImageUrlCommand;
@@ -29,6 +30,7 @@ import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
+import com.bob.domain.member.service.dto.response.SocialLoginResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
@@ -36,7 +38,6 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,13 +126,14 @@ class MemberServiceIntgTest extends TestContainerSupport {
     SocialLoginCommand command = SocialLoginCommand.of("NAVER", email, nickname);
 
     // when
-    UUID result = memberService.socialLoginProcess(command);
+    SocialLoginResponse result = memberService.socialLoginProcess(command);
 
     // then
     Member saved = memberRepository.findByEmail(email).orElseThrow();
     assertThat(saved.getEmail()).isEqualTo(email);
     assertThat(saved.getNickname()).isEqualTo(nickname);
-    assertThat(result).isEqualTo(saved.getId());
+    assertThat(result.memberId()).isEqualTo(saved.getId());
+    assertThat(result.status()).isEqualTo(saved.getStatus().name());
     then(areaPort).should(times(1)).createNonAuthenticatedActivityArea(saved.getId(), command.emdId());
   }
 
@@ -144,10 +146,11 @@ class MemberServiceIntgTest extends TestContainerSupport {
     SocialLoginCommand command = SocialLoginCommand.of("GOOGLE", email, "foo");
 
     // when
-    UUID result = memberService.socialLoginProcess(command);
+    SocialLoginResponse result = memberService.socialLoginProcess(command);
 
     // then
-    assertThat(result).isEqualTo(existing.getId());
+    assertThat(result.memberId()).isEqualTo(existing.getId());
+    assertThat(result.status()).isEqualTo(existing.getStatus().name());
     then(areaPort).should(never()).createNonAuthenticatedActivityArea(any(), any());
   }
 
@@ -294,7 +297,7 @@ class MemberServiceIntgTest extends TestContainerSupport {
 
     // then
     Member after = memberRepository.findById(member.getId()).orElseThrow();
-    assertThat(after.isRemove()).isTrue();
+    assertThat(after.getStatus()).isEqualTo(WITHDRAW);
     List<String> setCookies = response.getHeaders("Set-Cookie");
     assertThat(setCookies).anySatisfy(h ->
         assertThat(h).contains("AUTHORIZATION=").contains("Max-Age=0"));

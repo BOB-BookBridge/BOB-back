@@ -1,7 +1,7 @@
 package com.bob.infra.auth.filter;
 
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
-import static com.bob.global.exception.response.AuthenticationError.IS_REMOVED_MEMBER;
+import static com.bob.global.exception.response.AuthenticationError.IS_WITHDRAWN_MEMBER;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_VALUE;
 import static com.bob.support.fixture.auth.CookieFixture.AUTH_COOKIE;
 import static com.bob.support.fixture.auth.CookieFixture.SET_COOKIE_HEADER;
@@ -149,7 +149,7 @@ class LoginFilterTest {
 
     // then
     then(authenticationEntryPoint).should().commence(eq(request), eq(response),
-        argThat(e -> ((ApplicationAuthenticationException) e).getError() == IS_REMOVED_MEMBER)
+        argThat(e -> ((ApplicationAuthenticationException) e).getError() == IS_WITHDRAWN_MEMBER)
     );
     then(redisPort).shouldHaveNoInteractions();
   }
