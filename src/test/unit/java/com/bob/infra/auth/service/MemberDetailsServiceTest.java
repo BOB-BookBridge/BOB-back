@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 import com.bob.domain.member.entity.Member;
+import com.bob.domain.member.entity.Status;
 import com.bob.domain.member.repository.MemberRepository;
 import com.bob.infra.auth.response.MemberDetails;
 import java.util.Optional;
@@ -51,7 +52,7 @@ class MemberDetailsServiceTest {
   void 탈퇴_회원_조회_테스트() {
     // given
     Member member = defaultIdMember();
-    member.updateRemoveStatus(true);
+    member.updateStatus(Status.WITHDRAW);
     memberRepository.save(member);
     given(memberRepository.findByEmail("test@email.com")).willReturn(Optional.of(member));
 

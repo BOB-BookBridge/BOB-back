@@ -1,14 +1,21 @@
 package com.bob.infra.auth.service;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
+import static com.bob.support.fixture.domain.MemberFixture.defaultIdMember;
+import static com.bob.support.fixture.response.oauth.SocialLoginResponseFixture.BANNED_MEMBER_RESPONSE;
+import static com.bob.support.fixture.response.oauth.SocialLoginResponseFixture.WITHDRAWN_MEMBER_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 import static org.springframework.security.oauth2.core.OAuth2AccessToken.TokenType.BEARER;
 
+import com.bob.domain.member.service.dto.response.SocialLoginResponse;
+import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
+import com.bob.global.exception.response.AuthenticationError;
 import com.bob.infra.auth.service.port.AuthMemberPort;
 import java.time.Instant;
 import java.util.Map;
@@ -48,7 +55,6 @@ class SocialAuthServiceTest {
   }
 
   @Test
-  @DisplayName("구글 로그인 테스트")
   void 구글_소셜_로그인() {
     // given
     ClientRegistration registration = googleRegistration();
@@ -56,7 +62,7 @@ class SocialAuthServiceTest {
     Map<String, Object> attrs = Map.of("sub", "1", "email", "test@google.com", "name", "foo");
     OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "sub");
     given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
-    given(memberPort.socialLoginProcess(eq("GOOGLE"), eq("test@google.com"), eq("foo"))).willReturn(MEMBER_ID);
+    given(memberPort.socialLoginProcess(eq("GOOGLE"), eq("test@google.com"), eq("foo"))).willReturn(SocialLoginResponse.from(defaultIdMember()));
 
     // when
     OAuth2User principal = socialAuthService.loadUser(request);
@@ -68,7 +74,6 @@ class SocialAuthServiceTest {
   }
 
   @Test
-  @DisplayName("네이버 로그인 테스트")
   void 네이버_소셜_로그인() {
     // given
     ClientRegistration registration = naverRegistration();
@@ -77,7 +82,7 @@ class SocialAuthServiceTest {
     Map<String, Object> attrs = Map.of("response", response);
     OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "response");
     given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
-    given(memberPort.socialLoginProcess(eq("NAVER"), eq("test@naver.com"), eq("foo"))).willReturn(MEMBER_ID);
+    given(memberPort.socialLoginProcess(eq("NAVER"), eq("test@naver.com"), eq("foo"))).willReturn(SocialLoginResponse.from(defaultIdMember()));
 
     // when
     OAuth2User principal = socialAuthService.loadUser(request);
@@ -89,8 +94,7 @@ class SocialAuthServiceTest {
   }
 
   @Test
-  @DisplayName("지원하지 않는 소셜 서비스 로그인 테스트")
-  void 지원하지_않는_provider는_예외를_발생시킨다() {
+  void 미지원_소셜_로그인() {
     // given
     ClientRegistration registration = kakaoRegistration();
     OAuth2UserRequest request = requestOf(registration);
@@ -99,6 +103,39 @@ class SocialAuthServiceTest {
     assertThatThrownBy(() -> socialAuthService.loadUser(request))
         .isInstanceOf(OAuth2AuthenticationException.class)
         .hasMessage("해당 로그인 방법은 지원하지 않습니다.");
+  }
+
+  @Test
+  void 탈퇴계정_예외_발생() {
+    // given
+    ClientRegistration registration = googleRegistration();
+    OAuth2UserRequest request = requestOf(registration);
+    Map<String, Object> attrs = Map.of("sub", "1", "email", "test@google.com", "name", "tester");
+    OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "sub");
+    given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
+    given(memberPort.socialLoginProcess(anyString(), anyString(), anyString())).willReturn(WITHDRAWN_MEMBER_RESPONSE);
+
+    // when & then
+    assertThatThrownBy(() -> socialAuthService.loadUser(request))
+        .isInstanceOf(ApplicationAuthenticationException.class)
+        .hasMessage(AuthenticationError.IS_REMOVED_MEMBER.getMessage());
+  }
+
+  @Test
+  void 제재계정_예외_발생() {
+    // given
+    ClientRegistration registration = naverRegistration();
+    OAuth2UserRequest request = requestOf(registration);
+    Map<String, Object> response = Map.of("id", "1", "email", "test@naver.com", "nickname", "tester");
+    Map<String, Object> attrs = Map.of("response", response);
+    OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "response");
+    given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
+    given(memberPort.socialLoginProcess(anyString(), anyString(), anyString())).willReturn(BANNED_MEMBER_RESPONSE);
+
+    // when & then
+    assertThatThrownBy(() -> socialAuthService.loadUser(request))
+        .isInstanceOf(ApplicationAuthenticationException.class)
+        .hasMessage(AuthenticationError.IS_BANNED_MEMBER.getMessage());
   }
 
   private static OAuth2UserRequest requestOf(ClientRegistration registration) {
