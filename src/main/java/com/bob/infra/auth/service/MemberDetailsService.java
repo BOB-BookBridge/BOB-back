@@ -1,5 +1,7 @@
 package com.bob.infra.auth.service;
 
+import static com.bob.domain.member.entity.Status.ACTIVE;
+
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
 import com.bob.infra.auth.response.MemberDetails;
@@ -20,6 +22,6 @@ public class MemberDetailsService implements UserDetailsService {
     Member member = memberRepository.findByEmail(username)
         .orElseThrow(() -> new UsernameNotFoundException(username));
 
-    return new MemberDetails(member.getId(), member.getEmail(), member.getPassword(), !member.isRemove());
+    return new MemberDetails(member.getId(), member.getEmail(), member.getPassword(), member.getStatus() == ACTIVE);
   }
 }

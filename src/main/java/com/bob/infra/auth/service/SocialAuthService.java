@@ -1,11 +1,13 @@
 package com.bob.infra.auth.service;
 
+import com.bob.domain.member.service.dto.response.SocialLoginResponse;
+import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
+import com.bob.global.exception.response.AuthenticationError;
 import com.bob.infra.auth.oauth.provider.GoogleProfile;
 import com.bob.infra.auth.oauth.provider.NaverProfile;
 import com.bob.infra.auth.oauth.provider.SocialProvider;
 import com.bob.infra.auth.service.port.AuthMemberPort;
 import java.util.Map;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -36,14 +38,20 @@ public class SocialAuthService implements OAuth2UserService<OAuth2UserRequest, O
       default -> throw new OAuth2AuthenticationException(new OAuth2Error("000"), "해당 로그인 방법은 지원하지 않습니다.");
     };
 
-    final UUID memberId = memberPort.socialLoginProcess(provider.toUpperCase(), profile.email(), profile.nickname());
-    final Map<String, Object> principalAttrs = Map.of("memberId", memberId.toString());
-    return new DefaultOAuth2User(null, principalAttrs, "memberId");
+    final SocialLoginResponse response = memberPort.socialLoginProcess(provider.toUpperCase(), profile.email(), profile.nickname());
+    switch (response.status()) {
+      case "WITHDRAW" -> throw new ApplicationAuthenticationException(AuthenticationError.IS_REMOVED_MEMBER) {};
+      case "BANNED" -> throw new ApplicationAuthenticationException(AuthenticationError.IS_BANNED_MEMBER) {};
+      default -> {
+        final Map<String, Object> principalAttrs = Map.of("memberId", response.memberId().toString());
+        return new DefaultOAuth2User(null, principalAttrs, "memberId");
+      }
+    }
   }
 
   private static void verifyProvider(String provider) {
     if (!"google".equalsIgnoreCase(provider) && !"naver".equalsIgnoreCase(provider)) {
-      throw new OAuth2AuthenticationException(new OAuth2Error("001"), "해당 로그인 방법은 지원하지 않습니다.");
+      throw new OAuth2AuthenticationException(new OAuth2Error("OE01"), "해당 로그인 방법은 지원하지 않습니다.");
     }
   }
 }
