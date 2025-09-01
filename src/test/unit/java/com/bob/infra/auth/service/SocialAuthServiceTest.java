@@ -118,7 +118,7 @@ class SocialAuthServiceTest {
     // when & then
     assertThatThrownBy(() -> socialAuthService.loadUser(request))
         .isInstanceOf(ApplicationAuthenticationException.class)
-        .hasMessage(AuthenticationError.IS_REMOVED_MEMBER.getMessage());
+        .hasMessage(AuthenticationError.IS_WITHDRAWN_MEMBER.getMessage());
   }
 
   @Test
