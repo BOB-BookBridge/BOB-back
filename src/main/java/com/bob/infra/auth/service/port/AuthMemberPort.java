@@ -1,8 +1,8 @@
 package com.bob.infra.auth.service.port;
 
-import java.util.UUID;
+import com.bob.domain.member.service.dto.response.SocialLoginResponse;
 
 public interface AuthMemberPort {
 
-  UUID socialLoginProcess(String provider, String email, String nickname);
+  SocialLoginResponse socialLoginProcess(String provider, String email, String nickname);
 }

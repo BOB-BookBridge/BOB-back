@@ -1,5 +1,7 @@
 package com.bob.domain.member.service.dto.response;
 
+import static com.bob.domain.member.entity.Status.WITHDRAW;
+
 import com.bob.domain.member.entity.Member;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -14,7 +16,7 @@ public record MemberProfileResponse(
 ) {
 
   public static MemberProfileResponse from(Member member, MemberAreaSummaryResponse areaSummary) {
-    final boolean removed = Boolean.TRUE.equals(member.isRemove());
+    final boolean removed = member.getStatus() == WITHDRAW;
     final String nickname = removed ? "(알 수 없음)" : member.getNickname();
     final String profileImageUrl = removed ? null : member.getProfileImageUrl();
 

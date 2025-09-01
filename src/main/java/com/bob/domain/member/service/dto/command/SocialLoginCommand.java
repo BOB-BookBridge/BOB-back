@@ -1,5 +1,7 @@
 package com.bob.domain.member.service.dto.command;
 
+import static com.bob.domain.member.entity.Status.ACTIVE;
+
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.entity.SocialProvider;
 import lombok.Builder;
@@ -23,6 +25,7 @@ public record SocialLoginCommand(
 
   public Member toMember(String encodedPassword) {
     return Member.builder()
+        .status(ACTIVE)
         .provider(SocialProvider.valueOf(provider))
         .email(email)
         .password(encodedPassword)

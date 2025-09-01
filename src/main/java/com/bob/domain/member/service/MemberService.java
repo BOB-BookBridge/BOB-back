@@ -1,5 +1,6 @@
 package com.bob.domain.member.service;
 
+import static com.bob.domain.member.entity.Status.WITHDRAW;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_EMAIL;
 import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
@@ -19,6 +20,7 @@ import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberAreaSummaryResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
+import com.bob.domain.member.service.dto.response.SocialLoginResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
@@ -29,7 +31,6 @@ import com.bob.domain.member.usecase.MemberWriteUseCase;
 import com.bob.global.event.application.dto.RemoveMemberEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -78,13 +79,13 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   }
 
   @Transactional
-  public UUID socialLoginProcess(SocialLoginCommand command) {
+  public SocialLoginResponse socialLoginProcess(SocialLoginCommand command) {
     return memberRepository.findByEmail(command.email())
-        .map(Member::getId)
+        .map(SocialLoginResponse::from)
         .orElseGet(() -> {
           Member member = memberRepository.save(command.toMember(encoder.encode(generateCode(12))));
           areaPort.createNonAuthenticatedActivityArea(member.getId(), command.emdId());
-          return member.getId();
+          return SocialLoginResponse.from(member);
         });
   }
 
@@ -138,7 +139,7 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   @Transactional
   public void softRemoveMemberProcess(RemoveMemberCommand command, HttpServletResponse response) {
     Member member = memberReader.readMemberById(command.memberId());
-    member.updateRemoveStatus(true);
+    member.updateStatus(WITHDRAW);
     eventPublisher.publishEvent(RemoveMemberEvent.of(member.getId()));
     removeCookie(response, "AUTHORIZATION");
     removeCookie(response, "REFRESH_KEY");

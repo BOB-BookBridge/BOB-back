@@ -44,8 +44,9 @@ public class Member extends BaseTime {
   @Column
   private String profileImageUrl;
 
+  @Enumerated(EnumType.STRING)
   @Column
-  private boolean isRemove;
+  private Status status;
 
   public void updatePassword(String newPassword) {
     password = newPassword;
@@ -59,8 +60,8 @@ public class Member extends BaseTime {
     profileImageUrl = newProfileImageUrl;
   }
 
-  public void updateRemoveStatus(boolean isRemove) {
-    this.isRemove = isRemove;
+  public void updateStatus(Status status) {
+    this.status = status;
   }
 
   public boolean isEqualsNickname(String oldNickname) {
