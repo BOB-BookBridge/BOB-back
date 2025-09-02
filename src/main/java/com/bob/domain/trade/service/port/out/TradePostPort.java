@@ -6,5 +6,5 @@ public interface TradePostPort {
 
   PostDetailResponse readTradePostSummary(Long postId);
 
-  void changePostStatus(Long postId, String status);
+  void changeTradeProgress(Long postId, String status);
 }

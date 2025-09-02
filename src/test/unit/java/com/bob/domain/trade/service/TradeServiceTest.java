@@ -203,7 +203,7 @@ class TradeServiceTest {
     // then
     then(tradeReader).should().readTradeById(command.tradeId());
     then(postPort).should().readTradePostSummary(requestTrade.getPostId());
-    then(postPort).should().changePostStatus(requestTrade.getPostId(), "IN_PROGRESS");
+    then(postPort).should().changeTradeProgress(requestTrade.getPostId(), "IN_PROGRESS");
   }
 
   @Test
@@ -223,7 +223,7 @@ class TradeServiceTest {
     tradeService.changeTradeStatusProcess(command);
 
     // then
-    then(postPort).should().changePostStatus(requestTrade.getPostId(), "READY");
+    then(postPort).should().changeTradeProgress(requestTrade.getPostId(), "READY");
     then(eventPublisher).should(times(2)).publishEvent(eventCaptor.capture());
 
     // 채팅, 알림 이벤트 발행 시 body의 거래 취소 사유 포함 여부 검증

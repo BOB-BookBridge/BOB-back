@@ -40,7 +40,7 @@ public record PostDetailResponse(
         .thumbnailUrl(post.getThumbnailUrl())
         .sellPrice(post.getSellPrice())
         .bookStatus(post.getBookStatus().name())
-        .postStatus(post.getPostStatus().name())
+        .postStatus(post.getTradeProgress().name())
         .category(post.getCategory().getId())
         .book(BookInfo.from(post))
         .description(post.getDescription())

@@ -93,7 +93,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     final TradeStatus status = valueOf(command.status());
     verifyIsSameRequest(trade.getTradeStatus(), status);
     trade.updateTradeStatus(status, now());
-    postPort.changePostStatus(trade.getPostId(), status.toPostStatusValue());
+    postPort.changeTradeProgress(trade.getPostId(), status.toPostStatusValue());
 
     final String notificationBody = buildNotificationBody(post.title(), status, command.reason());
     final String chatMessageBody = buildChatMessageBody(status, command.reason());

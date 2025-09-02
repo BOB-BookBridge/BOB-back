@@ -1,5 +1,6 @@
 package com.bob.domain.post.entity;
 
+import static com.bob.domain.post.entity.status.Status.WITHHELD;
 import static com.bob.support.fixture.domain.BookFixture.defaultBook;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
 import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
@@ -78,9 +79,9 @@ class PostTest {
     Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
 
     // when
-    post.updateIsWithhold(true);
+    post.updateStatus(WITHHELD);
 
     // then
-    assertThat(post.isWithhold()).isTrue();
+    assertThat(post.getStatus()).isEqualTo(WITHHELD);
   }
 }

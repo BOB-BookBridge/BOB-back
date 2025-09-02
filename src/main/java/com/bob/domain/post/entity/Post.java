@@ -3,7 +3,8 @@ package com.bob.domain.post.entity;
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.post.entity.status.BookStatus;
-import com.bob.domain.post.entity.status.PostStatus;
+import com.bob.domain.post.entity.status.TradeProgress;
+import com.bob.domain.post.entity.status.Status;
 import com.bob.global.audit.BaseTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,10 +36,6 @@ public class Post extends BaseTime {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private PostStatus postStatus;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "category_id", nullable = false)
@@ -75,8 +72,13 @@ public class Post extends BaseTime {
   @Builder.Default
   private Integer scrapCount = 0;
 
-  @Column
-  private boolean isWithhold;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private TradeProgress tradeProgress;
+
+  @Enumerated(EnumType.STRING)
+  @Column()
+  private Status status;
 
   public void updateOptionalFields(Integer sellPrice, String bookStatus, String description) {
     Optional.ofNullable(sellPrice).ifPresent(s -> this.sellPrice = s);
@@ -84,11 +86,11 @@ public class Post extends BaseTime {
     Optional.ofNullable(description).ifPresent(d -> this.description = d);
   }
 
-  public void updatePostStatus(PostStatus status) {
-    this.postStatus = status;
+  public void updateTradeProgress(TradeProgress status) {
+    this.tradeProgress = status;
   }
 
-  public void updateIsWithhold(boolean isWithhold) {
-    this.isWithhold = isWithhold;
+  public void updateStatus(Status status) {
+    this.status = status;
   }
 }
