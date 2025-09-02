@@ -1,8 +1,9 @@
 package com.bob.domain.post.service;
 
-import static com.bob.domain.post.entity.status.PostStatus.IN_PROGRESS;
-import static com.bob.domain.post.entity.status.PostStatus.REMOVED;
-import static com.bob.domain.post.entity.status.PostStatus.valueOf;
+import static com.bob.domain.post.entity.status.Status.REMOVED;
+import static com.bob.domain.post.entity.status.Status.WITHHELD;
+import static com.bob.domain.post.entity.status.TradeProgress.IN_PROGRESS;
+import static com.bob.domain.post.entity.status.TradeProgress.valueOf;
 import static com.bob.domain.post.service.dto.response.PostFileSummaryResponse.from;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_REMOVED_POST_STATE;
 import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
@@ -14,14 +15,13 @@ import com.bob.domain.book.service.BookService;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.service.reader.CategoryReader;
 import com.bob.domain.post.entity.Post;
-import com.bob.domain.post.entity.status.PostStatus;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
-import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
+import com.bob.domain.post.service.dto.command.ChangeTradeProgressCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
-import com.bob.domain.post.service.dto.command.WithholdPostStatusCommand;
+import com.bob.domain.post.service.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
@@ -140,7 +140,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   }
 
   private static void verifyAccessiblePost(Post post, boolean isClient) {
-    if (isClient && (post.getPostStatus() == REMOVED || post.isWithhold())) {
+    if (isClient && (post.getStatus() == REMOVED || post.getStatus() == WITHHELD)) {
       throw new ApplicationException(ApplicationError.NOT_ACCESSIBLE_POST);
     }
   }
@@ -153,18 +153,18 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   }
 
   @Transactional
-  public void changePostStatusProcess(ChangePostStatusCommand command) {
+  public void changeTradeProgressProcess(ChangeTradeProgressCommand command) {
     Post post = postReader.readPostById(command.postId());
-    post.updatePostStatus(valueOf(command.status()));
+    post.updateTradeProgress(valueOf(command.status()));
   }
 
   @Transactional
   public void removePostProcess(RemovePostCommand command) {
     Post post = postReader.readPostById(command.postId());
     verifyPostOwner(command.memberId(), post.getSellerId());
-    verifyRemovable(post.getPostStatus());
+    verifyRemovable(post);
     postFavoriteService.removePostFavoriteProcess(post.getId());
-    post.updatePostStatus(REMOVED);
+    post.updateStatus(REMOVED);
   }
 
   private static void verifyPostOwner(UUID requestMemberId, UUID postMemberId) {
@@ -173,21 +173,22 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     }
   }
 
-  private static void verifyRemovable(PostStatus status) {
-    if (status == REMOVED) {
+  private static void verifyRemovable(Post post) {
+    if (post.getStatus() == REMOVED) {
       throw new ApplicationException(ALREADY_REMOVED_POST_STATE);
     }
-    if (status == IN_PROGRESS) {
+    if (post.getTradeProgress() == IN_PROGRESS) {
       throw new ApplicationException(UNREMOVABLE_POST_STATE);
     }
   }
 
   @Transactional
-  public void withholdPostProcess(WithholdPostStatusCommand command) {
-    postReader.readPostsByMember(command.memberId())
-        .forEach(p -> {
-          p.updateIsWithhold(true);
-          postFavoriteService.removePostFavoriteProcess(p.getId());
-        });
+  public void changeStatusByAccountEventProcess(ChangeMemberPostStatusCommand command) {
+    postReader.readPostsByMember(command.memberId()).forEach(p -> {
+      p.updateStatus(command.status());
+      if (command.status() == REMOVED) {
+        postFavoriteService.removePostFavoriteProcess(p.getId());
+      }
+    });
   }
 }

@@ -4,6 +4,7 @@ import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RecoverAccountCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -16,6 +17,8 @@ public interface MemberModifyUseCase {
   void issueTempPasswordProcess(IssuePasswordCommand command);
 
   void changeMemberProfileImageProcess(ChangeProfileImageCommand command);
+
+  void recoverMemberAccountProcess(RecoverAccountCommand command);
 
   void softRemoveMemberProcess(RemoveMemberCommand command, HttpServletResponse response);
 }

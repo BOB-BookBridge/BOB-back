@@ -14,10 +14,11 @@ import com.bob.domain.member.usecase.MemberWriteUseCase;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
+import com.bob.web.member.request.ChangeMemberProfileImageRequest;
 import com.bob.web.member.request.ChangePasswordRequest;
 import com.bob.web.member.request.ChangeProfileRequest;
 import com.bob.web.member.request.IssuePasswordRequest;
-import com.bob.web.member.request.ChangeMemberProfileImageRequest;
+import com.bob.web.member.request.RecoverAccountRequest;
 import com.bob.web.member.request.SignupRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -91,6 +92,12 @@ public class MemberController {
       @AuthenticationId UUID memberId
   ) {
     modifyUseCase.changeMemberProfileImageProcess(request.toCommand(memberId));
+    return new CommonResponse<>(true, UPDATED);
+  }
+
+  @PatchMapping("/recover")
+  public CommonResponse<ResponseSymbol> handleRecoverMemberAccount(@Valid @RequestBody RecoverAccountRequest request) {
+    modifyUseCase.recoverMemberAccountProcess(request.toCommand());
     return new CommonResponse<>(true, UPDATED);
   }
 
