@@ -1,5 +1,7 @@
 package com.bob.domain.post.service;
 
+import static com.bob.domain.post.entity.status.Status.REMOVED;
+import static com.bob.domain.post.entity.status.Status.WITHHELD;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_POST_FAVORITE;
 import static com.bob.global.exception.response.ApplicationError.INVALID_POST_FAVORITE;
 import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
@@ -33,11 +35,11 @@ import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.repository.CategoryRepository;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.PostFavorite;
-import com.bob.domain.post.entity.status.PostStatus;
+import com.bob.domain.post.entity.status.TradeProgress;
 import com.bob.domain.post.repository.PostFavoriteRepository;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
-import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
+import com.bob.domain.post.service.dto.command.ChangeTradeProgressCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
@@ -52,7 +54,7 @@ import com.bob.domain.post.service.port.out.PostAreaPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.TestContainerSupport;
-import com.bob.support.redis.RedisContainerConfig;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.time.LocalDateTime;
@@ -64,7 +66,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -339,23 +340,22 @@ class PostServiceIntgTest extends TestContainerSupport {
 
   @Test
   void 삭제_된_게시글은_조회_목록에서_제외된다() {
+    // given
     long allPostsCount = postRepository.count();
     long removedPostsCount = jdbcTemplate.queryForObject(
         """
           SELECT COUNT(*) 
           FROM posts
-          WHERE post_status = 'REMOVED'
+          WHERE status = 'REMOVED'
         """, Long.class
     );
-
     ReadFilteredPostsQuery query = defaultReadFilteredPostsQuery(); // 기본 게시글 조회 쿼리 (app 기본)
     pageable = PageRequest.of(0, Integer.MAX_VALUE); // 모든 게시글 개수 조회를 위한 page limit 수정
+
+    // when
     PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
 
-    assertThat(result.posts())
-        .extracting(PostSummary::postStatus)
-        .doesNotContain("REMOVED");
-
+    // then
     assertThat(removedPostsCount).isNotZero();
     assertThat(result.posts()).hasSize((int) (allPostsCount - removedPostsCount));
   }
@@ -493,18 +493,17 @@ class PostServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("게시글 상태 수정 - 성공 테스트")
-  void 게시글_상태를_성공적으로_수정할_수_있다() {
+  void 게시글_거래_상태_수정() {
     // given
     Post post = postRepository.findAll().iterator().next();
-    ChangePostStatusCommand command = new ChangePostStatusCommand(post.getId(), "IN_PROGRESS");
+    ChangeTradeProgressCommand command = new ChangeTradeProgressCommand(post.getId(), "IN_PROGRESS");
 
     // when
-    postService.changePostStatusProcess(command);
+    postService.changeTradeProgressProcess(command);
 
     // then
     Post updated = postRepository.findById(post.getId()).orElseThrow();
-    assertThat(updated.getPostStatus()).isEqualTo(PostStatus.IN_PROGRESS);
+    assertThat(updated.getTradeProgress()).isEqualTo(TradeProgress.IN_PROGRESS);
   }
 
 
@@ -529,7 +528,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     Optional<PostFavorite> writerFavorite = postFavoriteRepository.findByMemberIdAndPostId(writerId, post.getId());
     Optional<PostFavorite> otherFavorite = postFavoriteRepository.findByMemberIdAndPostId(otherId, post.getId());
 
-    assertThat(deletedPost.get().getPostStatus()).isEqualTo(PostStatus.REMOVED);
+    assertThat(deletedPost.get().getStatus()).isEqualTo(REMOVED);
     assertThat(writerFavorite).isEmpty();
     assertThat(otherFavorite).isEmpty();
   }

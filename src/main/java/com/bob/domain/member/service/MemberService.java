@@ -1,6 +1,9 @@
 package com.bob.domain.member.service;
 
+import static com.bob.domain.member.entity.Status.ACTIVE;
+import static com.bob.domain.member.entity.Status.BANNED;
 import static com.bob.domain.member.entity.Status.WITHDRAW;
+import static com.bob.global.event.application.dto.member.type.AccountEventType.*;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_EMAIL;
 import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
@@ -15,6 +18,7 @@ import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RecoverAccountCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
@@ -28,8 +32,10 @@ import com.bob.domain.member.service.reader.MemberReader;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.member.usecase.MemberWriteUseCase;
-import com.bob.global.event.application.dto.RemoveMemberEvent;
+import com.bob.global.event.application.dto.member.AccountEvent;
+import com.bob.global.event.application.dto.member.type.AccountEventType;
 import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -137,10 +143,25 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   }
 
   @Transactional
+  public void recoverMemberAccountProcess(RecoverAccountCommand command) {
+    Member member = memberReader.readMemberByEmail(command.email());
+    verifyIsNotBannedMember(member);
+    member.updateStatus(ACTIVE);
+
+    eventPublisher.publishEvent(AccountEvent.of(member.getId(), RECOVER));
+  }
+
+  private static void verifyIsNotBannedMember(Member member) {
+    if (member.getStatus() == BANNED) {
+      throw new ApplicationException(ApplicationError.IS_BANNED_MEMBER);
+    }
+  }
+
+  @Transactional
   public void softRemoveMemberProcess(RemoveMemberCommand command, HttpServletResponse response) {
     Member member = memberReader.readMemberById(command.memberId());
     member.updateStatus(WITHDRAW);
-    eventPublisher.publishEvent(RemoveMemberEvent.of(member.getId()));
+    eventPublisher.publishEvent(AccountEvent.of(member.getId(), AccountEventType.WITHDRAW));
     removeCookie(response, "AUTHORIZATION");
     removeCookie(response, "REFRESH_KEY");
   }

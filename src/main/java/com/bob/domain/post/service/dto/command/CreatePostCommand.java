@@ -1,6 +1,6 @@
 package com.bob.domain.post.service.dto.command;
 
-import static com.bob.domain.post.entity.status.PostStatus.READY;
+import static com.bob.domain.post.entity.status.TradeProgress.READY;
 
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.service.dto.BookCreateCommand;
@@ -35,7 +35,7 @@ public record CreatePostCommand(
         .sellerId(sellerId)
         .category(category)
         .bookStatus(BookStatus.from(bookStatus))
-        .postStatus(READY)
+        .tradeProgress(READY)
         .sellPrice(sellPrice)
         .description(postDescription)
         .registrationAreaId(emdId)

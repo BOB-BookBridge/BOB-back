@@ -94,6 +94,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET, "/members/{memberId:\\d+}").permitAll()
             .requestMatchers(HttpMethod.GET, "/posts").permitAll()
             .requestMatchers(HttpMethod.GET, "/posts/{postId:[\\d]+}").permitAll()
+            .requestMatchers(HttpMethod.PATCH, "/members/recover").permitAll()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)

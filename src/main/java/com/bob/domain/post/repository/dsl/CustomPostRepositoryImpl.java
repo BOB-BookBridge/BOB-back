@@ -4,7 +4,8 @@ import static com.bob.domain.post.entity.QPost.post;
 
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.BookStatus;
-import com.bob.domain.post.entity.status.PostStatus;
+import com.bob.domain.post.entity.status.Status;
+import com.bob.domain.post.entity.status.TradeProgress;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.condition.SearchKey;
 import com.bob.domain.post.service.dto.query.condition.SearchPrice;
@@ -64,7 +65,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
   }
 
   private BooleanExpression visibleCondition() {
-    return post.postStatus.ne(PostStatus.REMOVED).and(post.isWithhold.isFalse());
+    return post.status.notIn(Status.REMOVED, Status.WITHHELD);
   }
 
   private BooleanExpression keywordCondition(SearchKey key, String keyword) {
@@ -100,7 +101,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
   }
 
   private BooleanExpression tradeStatusCondition(String status) {
-    return !StringUtils.hasText(status) ? null : post.postStatus.eq(PostStatus.valueOf(status));
+    return !StringUtils.hasText(status) ? null : post.tradeProgress.eq(TradeProgress.valueOf(status));
   }
 
   private BooleanExpression bookStatusCondition(String status) {

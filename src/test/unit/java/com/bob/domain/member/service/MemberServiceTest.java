@@ -1,5 +1,6 @@
 package com.bob.domain.member.service;
 
+import static com.bob.domain.member.entity.Status.ACTIVE;
 import static com.bob.domain.member.entity.Status.WITHDRAW;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_EMAIL;
 import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
@@ -33,6 +34,7 @@ import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RecoverAccountCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
@@ -42,7 +44,7 @@ import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
 import com.bob.domain.member.service.reader.MemberReader;
-import com.bob.global.event.application.dto.RemoveMemberEvent;
+import com.bob.global.event.application.dto.member.AccountEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.List;
 import java.util.Optional;
@@ -325,7 +327,23 @@ class MemberServiceTest {
   }
 
   @Test
-  void 회원_삭제_테스트() {
+  void 계정_복구() {
+    // given
+    Member member = removedMember();
+    RecoverAccountCommand command = new RecoverAccountCommand(member.getEmail());
+    given(memberReader.readMemberByEmail(member.getEmail())).willReturn(member);
+
+    // when
+    memberService.recoverMemberAccountProcess(command);
+
+    // then
+    assertThat(member.getStatus()).isEqualTo(ACTIVE);
+    then(memberReader).should(times(1)).readMemberByEmail(member.getEmail());
+    then(eventPublisher).should(times(1)).publishEvent(any(AccountEvent.class));
+  }
+
+  @Test
+  void 회원_삭제() {
     // given
     Member member = defaultIdMember();
     given(memberReader.readMemberById(member.getId())).willReturn(member);
@@ -339,7 +357,7 @@ class MemberServiceTest {
     assertThat(member.getStatus()).isEqualTo(WITHDRAW);
 
     then(memberReader).should(times(1)).readMemberById(member.getId());
-    then(eventPublisher).should(times(1)).publishEvent(any(RemoveMemberEvent.class));
+    then(eventPublisher).should(times(1)).publishEvent(any(AccountEvent.class));
 
     List<String> setCookies = response.getHeaders("Set-Cookie");
     assertThat(setCookies).anySatisfy(h ->

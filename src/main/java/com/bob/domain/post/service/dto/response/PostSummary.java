@@ -21,7 +21,7 @@ public record PostSummary(
         .postId(post.getId())
         .categoryId(post.getCategory().getId())
         .postTitle(post.getBook().getTitle())
-        .postStatus(post.getPostStatus().name())
+        .postStatus(post.getTradeProgress().name())
         .thumbnailUrl(post.getThumbnailUrl())
         .bookStatus(post.getBookStatus().name())
         .sellPrice(post.getSellPrice())

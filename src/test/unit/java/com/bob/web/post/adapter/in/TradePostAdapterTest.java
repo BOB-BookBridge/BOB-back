@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
+import com.bob.domain.post.service.dto.command.ChangeTradeProgressCommand;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.usecase.PostModifyUseCase;
@@ -55,10 +55,10 @@ class TradePostAdapterTest {
     String status = "COMPLETED";
 
     // when
-    tradePostAdapter.changePostStatus(postId, status);
+    tradePostAdapter.changeTradeProgress(postId, status);
 
     // then
-    ChangePostStatusCommand expectedCommand = new ChangePostStatusCommand(postId, status);
-    then(modifyUseCase).should().changePostStatusProcess(expectedCommand);
+    ChangeTradeProgressCommand expectedCommand = new ChangeTradeProgressCommand(postId, status);
+    then(modifyUseCase).should().changeTradeProgressProcess(expectedCommand);
   }
 }
