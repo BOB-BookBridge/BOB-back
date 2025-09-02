@@ -1,5 +1,6 @@
 package com.bob.domain.member.service;
 
+import static com.bob.domain.member.entity.Status.ACTIVE;
 import static com.bob.domain.member.entity.Status.WITHDRAW;
 import static com.bob.support.fixture.command.ChangeProfileCommandFixture.defaultChangeProfileCommand;
 import static com.bob.support.fixture.command.ChangeProfileCommandFixture.sameNicknameChangeProfileCommand;
@@ -26,6 +27,7 @@ import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileImageCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RecoverAccountCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
@@ -34,6 +36,7 @@ import com.bob.domain.member.service.dto.response.SocialLoginResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
+import com.bob.global.event.application.dto.member.AccountEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
@@ -282,9 +285,25 @@ class MemberServiceIntgTest extends TestContainerSupport {
     assertThat(member.getProfileImageUrl()).isEqualTo(command.fileName());
   }
 
+
   @Test
-  @DisplayName("회원 삭제 - 성공 테스트(소프트 삭제 + 이벤트 발행 + 쿠키 제거)")
-  void 회원을_삭제상태로_변경하고_이벤트를_발행하며_쿠키를_제거한다() {
+  void 계정_복구() {
+    // given
+    Member member = defaultMember();
+    member.updateStatus(WITHDRAW);
+    memberRepository.save(member);
+    RecoverAccountCommand command = new RecoverAccountCommand(member.getEmail());
+
+    // when
+    memberService.recoverMemberAccountProcess(command);
+
+    // then
+    Member after = memberRepository.findById(member.getId()).orElseThrow();
+    assertThat(after.getStatus()).isEqualTo(ACTIVE);
+  }
+
+  @Test
+  void 회원_삭제() {
     // given
     Member member = defaultMember();
     memberRepository.save(member);

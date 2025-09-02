@@ -1,5 +1,10 @@
 package com.bob.domain.post.service;
 
+import static com.bob.domain.post.entity.status.Status.ACTIVE;
+import static com.bob.domain.post.entity.status.Status.REMOVED;
+import static com.bob.domain.post.entity.status.Status.WITHHELD;
+import static com.bob.domain.post.entity.status.TradeProgress.IN_PROGRESS;
+import static com.bob.domain.post.entity.status.TradeProgress.READY;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_POST_FAVORITE;
 import static com.bob.global.exception.response.ApplicationError.INVALID_POST_FAVORITE;
 import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
@@ -12,9 +17,9 @@ import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
 import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.PostFixture.DEFAULT_MOCK_POSTS;
+import static com.bob.support.fixture.domain.PostFixture.customStatusPost;
 import static com.bob.support.fixture.domain.PostFixture.defaultIdPost;
 import static com.bob.support.fixture.domain.PostFixture.defaultPost;
-import static com.bob.support.fixture.domain.PostFixture.customStatusPost;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadFilteredPostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.defaultReadMemberFavoritePostsQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchCategoryQuery;
@@ -25,6 +30,7 @@ import static com.bob.support.fixture.response.PostMemberSummaryResponseFixture.
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_FAVORITE_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willDoNothing;
@@ -36,14 +42,15 @@ import com.bob.domain.book.service.BookService;
 import com.bob.domain.category.entity.Category;
 import com.bob.domain.category.service.reader.CategoryReader;
 import com.bob.domain.post.entity.Post;
-import com.bob.domain.post.entity.status.PostStatus;
+import com.bob.domain.post.entity.status.Status;
+import com.bob.domain.post.entity.status.TradeProgress;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
-import com.bob.domain.post.service.dto.command.ChangePostStatusCommand;
+import com.bob.domain.post.service.dto.command.ChangeTradeProgressCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
-import com.bob.domain.post.service.dto.command.WithholdPostStatusCommand;
+import com.bob.domain.post.service.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
@@ -363,11 +370,11 @@ class PostServiceTest {
   void 보류_삭제_상태_게시글_상세조회_테스트(String caseName, boolean isRemoved) {
     // given
     Post post = isRemoved
-        ? customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, PostStatus.REMOVED)
+        ? customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, READY, REMOVED)
         : defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
 
     if (!isRemoved) {
-      post.updateIsWithhold(true);
+      post.updateStatus(WITHHELD);
     }
 
     ReadPostDetailQuery query = new ReadPostDetailQuery(UUID.randomUUID(), post.getId(), true);
@@ -433,14 +440,14 @@ class PostServiceTest {
   void 게시글_상태를_수정할_수_있다() {
     // given
     Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
-    ChangePostStatusCommand command = new ChangePostStatusCommand(post.getId(), "IN_PROGRESS");
+    ChangeTradeProgressCommand command = new ChangeTradeProgressCommand(post.getId(), "IN_PROGRESS");
     given(postReader.readPostById(post.getId())).willReturn(post);
 
     // when
-    postService.changePostStatusProcess(command);
+    postService.changeTradeProgressProcess(command);
 
     // then
-    assertThat(post.getPostStatus()).isEqualTo(PostStatus.IN_PROGRESS);
+    assertThat(post.getTradeProgress()).isEqualTo(IN_PROGRESS);
     then(postReader).should().readPostById(post.getId());
   }
 
@@ -459,7 +466,7 @@ class PostServiceTest {
     // then
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).should(times(1)).removePostFavoriteProcess(post.getId());
-    assertThat(post.getPostStatus()).isEqualTo(PostStatus.REMOVED);
+    assertThat(post.getStatus()).isEqualTo(Status.REMOVED);
   }
 
   @DisplayName("게시글 삭제 - 실패 테스트 (작성자 X)")
@@ -480,13 +487,13 @@ class PostServiceTest {
 
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).shouldHaveNoInteractions();
-    assertThat(post.getPostStatus()).isEqualTo(PostStatus.READY);
+    assertThat(post.getTradeProgress()).isEqualTo(TradeProgress.READY);
   }
 
   @Test
   void 예약_상태_게시글_삭제_테스트() {
     // given
-    Post post = customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, PostStatus.IN_PROGRESS);
+    Post post = customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, IN_PROGRESS, ACTIVE);
     RemovePostCommand command = new RemovePostCommand(MEMBER_ID, post.getId());
     given(postReader.readPostById(command.postId())).willReturn(post);
 
@@ -497,13 +504,14 @@ class PostServiceTest {
 
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).shouldHaveNoInteractions();
-    assertThat(post.getPostStatus()).isEqualTo(PostStatus.IN_PROGRESS);
+    assertThat(post.getTradeProgress()).isEqualTo(IN_PROGRESS);
+    assertThat(post.getStatus()).isEqualTo(ACTIVE);
   }
 
   @Test
   void 삭제_상태_게시글_삭제_테스트() {
     // given
-    Post post = customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, PostStatus.REMOVED);
+    Post post = customStatusPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID, READY, REMOVED);
     RemovePostCommand command = new RemovePostCommand(MEMBER_ID, post.getId());
     given(postReader.readPostById(command.postId())).willReturn(post);
 
@@ -514,24 +522,40 @@ class PostServiceTest {
 
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).shouldHaveNoInteractions();
-    assertThat(post.getPostStatus()).isEqualTo(PostStatus.REMOVED);
+    assertThat(post.getStatus()).isEqualTo(REMOVED);
   }
 
-  @Test
-  void 탈퇴회원_관련_게시글_처리_테스트() {
+  @ParameterizedTest(name = "{index} → {0}")
+  @MethodSource("accountEventParam")
+  void 계정_이벤트를_통한_게시글_처리_테스트(Status inputStatus, Status expectedStatus, int expectedScrapRemovalsPerPost) {
     // given
-    List<Post> posts = DEFAULT_MOCK_POSTS(); // size = 2
+    List<Post> posts = DEFAULT_MOCK_POSTS();
     given(postReader.readPostsByMember(MEMBER_ID)).willReturn(posts);
-    WithholdPostStatusCommand command = new WithholdPostStatusCommand(MEMBER_ID);
+
+    ChangeMemberPostStatusCommand command = new ChangeMemberPostStatusCommand(MEMBER_ID, inputStatus);
 
     // when
-    postService.withholdPostProcess(command);
+    postService.changeStatusByAccountEventProcess(command);
 
     // then
-    assertThat(posts.get(0).isWithhold()).isTrue();
-    assertThat(posts.get(1).isWithhold()).isTrue();
-    then(postFavoriteService).should(times(1)).removePostFavoriteProcess(1L);
-    then(postFavoriteService).should(times(1)).removePostFavoriteProcess(2L);
+    assertThat(posts).hasSize(2);
+    assertThat(posts.get(0).getStatus()).isEqualTo(expectedStatus);
+    assertThat(posts.get(1).getStatus()).isEqualTo(expectedStatus);
+
+    int totalExpectedCalls = expectedScrapRemovalsPerPost * posts.size();
+    then(postFavoriteService).should(times(totalExpectedCalls)).removePostFavoriteProcess(anyLong());
+
+    if (expectedScrapRemovalsPerPost > 0) {
+      then(postFavoriteService).should().removePostFavoriteProcess(1L);
+      then(postFavoriteService).should().removePostFavoriteProcess(2L);
+    }
     then(postReader).should(times(1)).readPostsByMember(MEMBER_ID);
+  }
+
+  static Stream<Arguments> accountEventParam() {
+    return Stream.of(
+        Arguments.of(ACTIVE, ACTIVE, 0),
+        Arguments.of(REMOVED, REMOVED, 1)
+    );
   }
 }
