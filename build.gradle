@@ -142,6 +142,7 @@ def jacocoExcludes = [
         'com.bob.**.provider.**',
         'com.bob.**.dsl.**',
         'com.bob.**.Q*',
+        'com.bob.**.projection.**',
         'com.bob.**.dummy.**'
 ]
 
@@ -176,7 +177,8 @@ def jacocoExcludesForReport = [
         "**/*provider*/**",
         "**/*dsl*/**",
         "**/Q*",
-        "**/*dummy*/**",
+        "**/*projection*/**",
+        "**/*dummy*/**"
 ]
 
 jacocoTestReport {

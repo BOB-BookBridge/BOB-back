@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     BindingResult bindingResult = ex.getBindingResult();
 
     String detailMessage = bindingResult.getFieldErrors().stream()
-        .map(error -> String.format("[%s] %s", error.getField(), error.getDefaultMessage()))
+        .map(error -> String.format("%s", error.getDefaultMessage()))
         .findFirst()
         .orElse(VALIDATION_ERROR.getMessage());
 

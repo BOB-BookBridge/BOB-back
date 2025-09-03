@@ -4,6 +4,7 @@ import static com.bob.domain.member.entity.Status.WITHDRAW;
 
 import com.bob.domain.member.entity.Member;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -12,18 +13,21 @@ public record MemberProfileResponse(
     UUID memberId,
     String nickname,
     String profileImageUrl,
+    List<String> interests,
     Area area
 ) {
 
-  public static MemberProfileResponse from(Member member, MemberAreaSummaryResponse areaSummary) {
+  public static MemberProfileResponse from(Member member, List<String> interestNames, MemberAreaSummaryResponse areaSummary) {
     final boolean removed = member.getStatus() == WITHDRAW;
     final String nickname = removed ? "(알 수 없음)" : member.getNickname();
     final String profileImageUrl = removed ? null : member.getProfileImageUrl();
+    final List<String> interests = removed ? List.of() : interestNames;
 
     return MemberProfileResponse.builder()
         .memberId(member.getId())
         .nickname(nickname)
         .profileImageUrl(profileImageUrl)
+        .interests(interests)
         .area(Area.of(areaSummary.emdId(), areaSummary.validity(), areaSummary.authenticatedAt()))
         .build();
   }
