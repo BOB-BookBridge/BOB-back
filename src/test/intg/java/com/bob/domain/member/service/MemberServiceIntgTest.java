@@ -164,8 +164,7 @@ class MemberServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("사용자 프로필 조회 - 성공 테스트")
-  void 회원은_자신의_프로필을_조회할_수_있다() {
+  void 프로필_조회() {
     // given
     Member member = defaultMember();
     memberRepository.save(member);
@@ -176,7 +175,9 @@ class MemberServiceIntgTest extends TestContainerSupport {
     MemberProfileResponse response = memberService.readProfileProcess(query);
 
     // then
+    assertThat(response.isSocial()).isFalse();
     assertThat(response.memberId()).isEqualTo(member.getId());
+    assertThat(response.email()).isEqualTo(member.getEmail());
     assertThat(response.nickname()).isEqualTo(member.getNickname());
     assertThat(response.profileImageUrl()).isEqualTo(member.getProfileImageUrl());
     assertThat(response.interests()).isNotNull();

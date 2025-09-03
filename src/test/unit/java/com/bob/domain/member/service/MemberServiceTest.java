@@ -204,7 +204,9 @@ class MemberServiceTest {
 
     // then
     then(memberReader).should(times(1)).readMemberById(query.memberId());
+    assertThat(response.isSocial()).isFalse();
     assertThat(response.memberId()).isEqualTo(member.getId());
+    assertThat(response.email()).isEqualTo(member.getEmail());
     assertThat(response.nickname()).isEqualTo(member.getNickname());
     assertThat(response.interests()).hasSize(DEFAULT_INTEREST_DISPLAY_NAMES().size());
     assertThat(response.area().emdId()).isEqualTo(EMD_AREA_ID);
@@ -227,6 +229,7 @@ class MemberServiceTest {
     // then
     then(memberReader).should(times(1)).readMemberById(query.memberId());
     assertThat(response.memberId()).isEqualTo(member.getId());
+    assertThat(response.email()).isEqualTo("delete");
     assertThat(response.nickname()).isEqualTo("(알 수 없음)");
     assertThat(response.profileImageUrl()).isNull();
     assertThat(response.interests()).hasSize(0);
