@@ -2,8 +2,6 @@ package com.bob.domain.member.service;
 
 import static com.bob.domain.member.entity.Status.ACTIVE;
 import static com.bob.domain.member.entity.Status.WITHDRAW;
-import static com.bob.support.fixture.command.ChangeProfileCommandFixture.defaultChangeProfileCommand;
-import static com.bob.support.fixture.command.ChangeProfileCommandFixture.sameNicknameChangeProfileCommand;
 import static com.bob.support.fixture.command.ChangeProfileImageUrlCommandFixture.customChangeProfileImageUrlCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.customChangePasswordCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultCreateMemberCommand;
@@ -21,6 +19,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.bob.domain.member.entity.Member;
+import com.bob.domain.member.repository.MemberInterestRepository;
 import com.bob.domain.member.repository.MemberRepository;
 import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.ChangeProfileCommand;
@@ -36,11 +35,12 @@ import com.bob.domain.member.service.dto.response.SocialLoginResponse;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
-import com.bob.global.event.application.dto.member.AccountEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +60,12 @@ class MemberServiceIntgTest extends TestContainerSupport {
 
   @Autowired
   private MemberRepository memberRepository;
+
+  @Autowired
+  private MemberInterestService memberInterestService;
+
+  @Autowired
+  private MemberInterestRepository memberInterestRepository;
 
   @Autowired
   private PasswordEncoder passwordEncoder;
@@ -173,37 +179,53 @@ class MemberServiceIntgTest extends TestContainerSupport {
     assertThat(response.memberId()).isEqualTo(member.getId());
     assertThat(response.nickname()).isEqualTo(member.getNickname());
     assertThat(response.profileImageUrl()).isEqualTo(member.getProfileImageUrl());
+    assertThat(response.interests()).isNotNull();
     assertThat(response.area()).isNotNull();
   }
 
   @Test
-  @DisplayName("프로필 변경 - 성공 테스트")
-  void 닉네임이_다르면_프로필을_변경할_수_있다() {
+  void 프로필_수정_별명_관심사_수정() {
     // given
     Member member = defaultMember();
     memberRepository.save(member);
-    ChangeProfileCommand command = defaultChangeProfileCommand(member.getId());
+    memberInterestService.changeMemberInterests(member.getId(), List.of("Java", "Spring"));
+    ChangeProfileCommand command = new ChangeProfileCommand(member.getId(), "newTester", List.of("Kotlin", "Go"));
 
     // when
     memberService.changeProfileProcess(command);
 
     // then
-    assertThat(member.getNickname()).isEqualTo(command.nickname());
+    Member reloaded = memberRepository.findById(member.getId()).orElseThrow();
+    assertThat(reloaded.getNickname()).isEqualTo("newTester");
+
+    List<String> savedInterests = memberInterestRepository.findDisplayNamesByMemberId(member.getId());
+    assertThat(toLowerSet(savedInterests)).isEqualTo(Set.of("kotlin", "go"));
   }
 
   @Test
-  @DisplayName("프로필 변경 - 실패 테스트(동일한 닉네임)")
-  void 닉네임이_동일하면_프로필_변경에_실패한다() {
+  void 프로필_수정_동일_수정() {
     // given
     Member member = defaultMember();
     memberRepository.save(member);
+    List<String> initiInterests = List.of("Java", "Spring");
+    memberInterestService.changeMemberInterests(member.getId(), initiInterests);
 
-    ChangeProfileCommand command = sameNicknameChangeProfileCommand(member.getId());
+    ChangeProfileCommand command = new ChangeProfileCommand(member.getId(), member.getNickname(), List.of("Java", "Spring"));
 
     // when & then
     assertThatThrownBy(() -> memberService.changeProfileProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.IS_SAME_REQUEST.getMessage());
+
+    Member reloaded = memberRepository.findById(member.getId()).orElseThrow();
+    assertThat(reloaded.getNickname()).isEqualTo(member.getNickname());
+
+    List<String> savedInterests = memberInterestRepository.findDisplayNamesByMemberId(member.getId());
+    assertThat(toLowerSet(savedInterests)).isEqualTo(toLowerSet(initiInterests));
+  }
+
+  private static Set<String> toLowerSet(List<String> src) {
+    return src.stream().map(String::toLowerCase).collect(Collectors.toSet());
   }
 
   @Test

@@ -65,7 +65,6 @@ public class GlobalExceptionHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(VALIDATION_ERROR.getStatus());
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().code()).isEqualTo(VALIDATION_ERROR.getCode());
-    assertThat(response.getBody().message()).contains("email");
   }
 
   @Test

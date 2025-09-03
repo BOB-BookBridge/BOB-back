@@ -7,8 +7,7 @@ import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PAS
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
-import static com.bob.support.fixture.command.ChangeProfileCommandFixture.defaultChangeProfileCommand;
-import static com.bob.support.fixture.command.ChangeProfileCommandFixture.sameNicknameChangeProfileCommand;
+import static com.bob.support.fixture.command.ChangeProfileCommandFixture.sameChangeProfileCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultChangePasswordCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultCreateMemberCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultIssuePasswordCommand;
@@ -19,9 +18,11 @@ import static com.bob.support.fixture.domain.MemberFixture.defaultMember;
 import static com.bob.support.fixture.domain.MemberFixture.removedMember;
 import static com.bob.support.fixture.query.MemberQueryFixture.defaultReadProfileQuery;
 import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
+import static com.bob.support.fixture.response.interest.InterestNamesFixture.DEFAULT_INTEREST_DISPLAY_NAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -48,9 +49,14 @@ import com.bob.global.event.application.dto.member.AccountEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -65,6 +71,9 @@ class MemberServiceTest {
 
   @InjectMocks
   private MemberService memberService;
+
+  @Mock
+  private MemberInterestService memberInterestService;
 
   @Mock
   private MemberRepository memberRepository;
@@ -187,6 +196,7 @@ class MemberServiceTest {
     ReadProfileQuery query = defaultReadProfileQuery();
 
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
+    given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
     given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
 
     // when
@@ -196,6 +206,7 @@ class MemberServiceTest {
     then(memberReader).should(times(1)).readMemberById(query.memberId());
     assertThat(response.memberId()).isEqualTo(member.getId());
     assertThat(response.nickname()).isEqualTo(member.getNickname());
+    assertThat(response.interests()).hasSize(DEFAULT_INTEREST_DISPLAY_NAMES().size());
     assertThat(response.area().emdId()).isEqualTo(EMD_AREA_ID);
     assertThat(response.area().isAuthentication()).isTrue();
   }
@@ -207,6 +218,7 @@ class MemberServiceTest {
     ReadProfileQuery query = defaultReadProfileQuery();
 
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
+    given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
     given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
 
     // when
@@ -217,38 +229,63 @@ class MemberServiceTest {
     assertThat(response.memberId()).isEqualTo(member.getId());
     assertThat(response.nickname()).isEqualTo("(알 수 없음)");
     assertThat(response.profileImageUrl()).isNull();
+    assertThat(response.interests()).hasSize(0);
   }
 
-  @Test
-  @DisplayName("프로필 변경 - 성공 테스트")
-  void 닉네임이_다르면_프로필을_변경할_수_있다() {
+  @ParameterizedTest(name = "프로필 변경 성공 케이스: {0}")
+  @MethodSource("provideChangeProfileSuccessCases")
+  void 프로필_변경(String caseName, String newNickname, List<String> newInterests) {
     // given
     Member member = defaultIdMember();
-    ChangeProfileCommand command = defaultChangeProfileCommand(member.getId());
+    ChangeProfileCommand command = new ChangeProfileCommand(member.getId(), newNickname, newInterests);
 
     given(memberReader.readMemberById(member.getId())).willReturn(member);
+    given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
 
     // when
     memberService.changeProfileProcess(command);
 
     // then
     then(memberReader).should().readMemberById(member.getId());
+    then(memberInterestService).should().readMemberInterests(member.getId());
+    then(memberInterestService).should().changeMemberInterests(member.getId(), command.interests());
     assertThat(member.getNickname()).isEqualTo(command.nickname());
   }
 
   @Test
-  @DisplayName("프로필 변경 - 실패 테스트(동일한 닉네임)")
-  void 닉네임이_동일하면_프로필_변경에_실패한다() {
+  void 프로필_수정_별명_관심사_동일_요청() {
     // given
     Member member = defaultIdMember();
-    ChangeProfileCommand command = sameNicknameChangeProfileCommand(member.getId());
+    ChangeProfileCommand command = sameChangeProfileCommand(member.getId());
 
     given(memberReader.readMemberById(member.getId())).willReturn(member);
+    given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
 
     // when & then
     assertThatThrownBy(() -> memberService.changeProfileProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(IS_SAME_REQUEST.getMessage());
+
+    then(memberInterestService).should().readMemberInterests(member.getId());
+    then(memberInterestService).should(never()).changeMemberInterests(any(UUID.class), anyList());
+
+    assertThat(member.getNickname()).isNotNull();
+    assertThat(member.isEqualsNickname(command.nickname())).isTrue();
+  }
+
+  private static Stream<Arguments> provideChangeProfileSuccessCases() {
+    return Stream.of(
+        Arguments.of(
+            "다른 닉네임",
+            "newNickname",
+            List.of("interest1", "interest2")
+        ),
+        Arguments.of(
+            "다른 관심사",
+            "tester",
+            List.of("Kotlin", "Spring")
+        )
+    );
   }
 
   @Test
