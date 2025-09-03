@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS books (
 );
 
 -- ========================
--- 🧑 MEMBERS TABLE (UUID로 수정됨)
+-- 🧑 MEMBERS TABLE
 -- ========================
 CREATE TABLE IF NOT EXISTS members (
     id BINARY(16) PRIMARY KEY,
@@ -24,6 +24,30 @@ CREATE TABLE IF NOT EXISTS members (
     provider ENUM('GOOGLE', 'NAVER'),
     status ENUM('ACTIVE', 'WITHDRAW', 'BANNED'),
     created_at DATETIME
+);
+
+-- ========================
+-- INTERESTS TABLE
+-- ========================
+CREATE TABLE IF NOT EXISTS interests (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    canonical_name VARCHAR(120) NOT NULL,
+    created_at     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT uk_interests_canonical UNIQUE KEY (canonical_name)
+);
+
+-- ========================
+-- MEMBER INTERESTS TABLE
+-- ========================
+CREATE TABLE IF NOT EXISTS member_interests (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    member_id   BINARY(16) NOT NULL,
+    interest_id BIGINT     NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    created_at  DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT fk_mi_member   FOREIGN KEY (member_id)  REFERENCES members(id)   ON DELETE CASCADE,
+    CONSTRAINT fk_mi_interest FOREIGN KEY (interest_id) REFERENCES interests(id),
+    CONSTRAINT uk_member_interest UNIQUE KEY (member_id, interest_id)
 );
 
 -- ========================
