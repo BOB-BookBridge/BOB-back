@@ -10,7 +10,9 @@ import lombok.Builder;
 
 @Builder
 public record MemberProfileResponse(
+    boolean isSocial,
     UUID memberId,
+    String email,
     String nickname,
     String profileImageUrl,
     List<String> interests,
@@ -20,11 +22,14 @@ public record MemberProfileResponse(
   public static MemberProfileResponse from(Member member, List<String> interestNames, MemberAreaSummaryResponse areaSummary) {
     final boolean removed = member.getStatus() == WITHDRAW;
     final String nickname = removed ? "(알 수 없음)" : member.getNickname();
+    final String email = removed ? "delete" : member.getEmail();
     final String profileImageUrl = removed ? null : member.getProfileImageUrl();
     final List<String> interests = removed ? List.of() : interestNames;
 
     return MemberProfileResponse.builder()
+        .isSocial(member.getProvider() != null)
         .memberId(member.getId())
+        .email(email)
         .nickname(nickname)
         .profileImageUrl(profileImageUrl)
         .interests(interests)
