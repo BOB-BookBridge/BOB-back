@@ -3,7 +3,7 @@ package com.bob.domain.member.service;
 import static com.bob.domain.member.entity.Status.ACTIVE;
 import static com.bob.domain.member.entity.Status.BANNED;
 import static com.bob.domain.member.entity.Status.WITHDRAW;
-import static com.bob.global.event.application.dto.member.type.AccountEventType.*;
+import static com.bob.global.event.application.dto.member.type.AccountEventType.RECOVER;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_EMAIL;
 import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
@@ -37,6 +37,10 @@ import com.bob.global.event.application.dto.member.type.AccountEventType;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,6 +53,8 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
 
   private final MemberRepository memberRepository;
   private final MemberReader memberReader;
+
+  private final MemberInterestService memberInterestService;
 
   private final MemberAreaPort areaPort;
   private final MemberMailPort mailPort;
@@ -98,19 +104,24 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   @Transactional(readOnly = true)
   public MemberProfileResponse readProfileProcess(ReadProfileQuery query) {
     Member member = memberReader.readMemberById(query.memberId());
+    List<String> interests = memberInterestService.readMemberInterests(member.getId());
     MemberAreaSummaryResponse areaSummary = areaPort.readMemberAreaSummary(query.memberId());
-    return MemberProfileResponse.from(member, areaSummary);
+    return MemberProfileResponse.from(member, interests, areaSummary);
   }
 
   @Transactional
   public void changeProfileProcess(ChangeProfileCommand command) {
     Member member = memberReader.readMemberById(command.memberId());
-    verifyNickname(member, command.nickname());
+    List<String> interests = memberInterestService.readMemberInterests(member.getId());
+    verifyIsSameRequest(member, command.nickname(), interests, command.interests());
     member.updateNickname(command.nickname());
+    memberInterestService.changeMemberInterests(member.getId(), command.interests());
   }
 
-  private void verifyNickname(Member member, String nickname) {
-    if (member.isEqualsNickname(nickname)) {
+  private static void verifyIsSameRequest(Member member, String nickname, List<String> oldInterests, List<String> interests) {
+    Set<String> oldLower = oldInterests.stream().map(String::toLowerCase).collect(Collectors.toSet());
+    Set<String> newLower = interests.stream().map(String::toLowerCase).collect(Collectors.toSet());
+    if (member.isEqualsNickname(nickname) && Objects.equals(oldLower, newLower)) {
       throw new ApplicationException(IS_SAME_REQUEST);
     }
   }

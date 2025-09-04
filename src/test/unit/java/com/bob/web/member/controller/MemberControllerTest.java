@@ -127,7 +127,8 @@ class MemberControllerTest {
     // given
     String json = """
         {
-            "nickname": "변경된닉네임"
+            "nickname": "변경된닉네임",
+            "interests": []
         }
         """;
 
