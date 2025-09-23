@@ -1,6 +1,6 @@
 package com.bob.support.fixture.domain;
 
-import com.bob.domain.category.entity.Category;
+import com.bob.domain.post.entity.Category;
 
 public class CategoryFixture {
 

@@ -1,4 +1,4 @@
-package com.bob.domain.post.service.dto.response;
+package com.bob.domain.post.service.dto.response.internal;
 
 import com.bob.domain.file.service.dto.response.FilesResponse;
 import java.util.List;

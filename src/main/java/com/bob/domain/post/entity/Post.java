@@ -1,10 +1,8 @@
 package com.bob.domain.post.entity;
 
-import com.bob.domain.book.entity.Book;
-import com.bob.domain.category.entity.Category;
 import com.bob.domain.post.entity.status.BookStatus;
-import com.bob.domain.post.entity.status.TradeProgress;
 import com.bob.domain.post.entity.status.Status;
+import com.bob.domain.post.entity.status.TradeProgress;
 import com.bob.global.audit.BaseTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,23 +35,29 @@ public class Post extends BaseTime {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Status status;
+
+  @Column(length = 50, nullable = false)
+  private String title;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "category_id", nullable = false)
   private Category category;
+
+  @Column(nullable = false)
+  private Long bookId;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private BookStatus bookStatus;
 
   @Column(nullable = false)
   private UUID sellerId;
 
   @Column(nullable = false)
   private String thumbnailUrl;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "book_id", nullable = false)
-  private Book book;
-
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private BookStatus bookStatus;
 
   @Column(nullable = false)
   private Integer sellPrice;
@@ -75,10 +79,6 @@ public class Post extends BaseTime {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private TradeProgress tradeProgress;
-
-  @Enumerated(EnumType.STRING)
-  @Column()
-  private Status status;
 
   public void updateOptionalFields(Integer sellPrice, String bookStatus, String description) {
     Optional.ofNullable(sellPrice).ifPresent(s -> this.sellPrice = s);

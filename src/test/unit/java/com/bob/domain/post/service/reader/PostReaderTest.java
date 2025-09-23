@@ -49,8 +49,8 @@ class PostReaderTest {
 
     // then
     assertThat(result).hasSize(2);
-    assertThat(result.get(0).getBook().getTitle()).isEqualTo("객체지향의 사실과 오해");
-    assertThat(result.get(1).getBook().getTitle()).isEqualTo("오브젝트");
+    assertThat(result.get(0).getTitle()).isEqualTo("객체지향의 사실과 오해");
+    assertThat(result.get(1).getTitle()).isEqualTo("오브젝트");
     then(postRepository).should().findFilteredPosts(query, pageable);
   }
 

@@ -2,8 +2,8 @@ package com.bob.support.fixture.response;
 
 import com.bob.domain.file.service.dto.response.FilesResponse;
 import com.bob.domain.file.service.dto.response.internal.FileSummaryResponse;
-import com.bob.domain.post.service.dto.response.PostFileSummaryResponse;
-import com.bob.domain.post.service.dto.response.PostFileSummaryResponse.PostFileSummary;
+import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse;
+import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse.PostFileSummary;
 import java.util.List;
 
 public class PostFileSummaryResponseFixture {

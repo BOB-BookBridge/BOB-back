@@ -32,6 +32,7 @@ public class PostQueryFixture {
     return ReadFilteredPostsQuery.builder()
         .key(SearchKey.TITLE)
         .keyword("오브젝트")
+        .bookIds(new ArrayList<>())
         .sortKey(SortKey.RECENT)
         .build();
   }
@@ -40,6 +41,7 @@ public class PostQueryFixture {
     return ReadFilteredPostsQuery.builder()
         .key(SearchKey.AUTHOR)
         .keyword("김영한")
+        .bookIds(new ArrayList<>())
         .sortKey(SortKey.RECENT)
         .build();
   }

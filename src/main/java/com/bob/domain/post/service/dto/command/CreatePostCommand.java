@@ -1,10 +1,10 @@
 package com.bob.domain.post.service.dto.command;
 
+import static com.bob.domain.post.entity.status.Status.ACTIVE;
 import static com.bob.domain.post.entity.status.TradeProgress.READY;
 
-import com.bob.domain.book.entity.Book;
-import com.bob.domain.book.service.dto.BookCreateCommand;
-import com.bob.domain.category.entity.Category;
+import com.bob.domain.book.service.dto.command.CreateBookCommand;
+import com.bob.domain.post.entity.Category;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.BookStatus;
 import java.time.LocalDate;
@@ -29,12 +29,14 @@ public record CreatePostCommand(
     List<String> fileNames
 ) {
 
-  public Post toPost(Book book, Category category, UUID sellerId, Integer emdId) {
+  public Post toPost(Category category, Long bookId, UUID sellerId, Integer emdId) {
     return Post.builder()
-        .book(book)
-        .sellerId(sellerId)
+        .title(bookTitle)
+        .status(ACTIVE)
         .category(category)
+        .bookId(bookId)
         .bookStatus(BookStatus.from(bookStatus))
+        .sellerId(sellerId)
         .tradeProgress(READY)
         .sellPrice(sellPrice)
         .description(postDescription)
@@ -43,8 +45,8 @@ public record CreatePostCommand(
         .build();
   }
 
-  public BookCreateCommand toBookCreateCommand() {
-    return new BookCreateCommand(
+  public CreateBookCommand toCreateBookCommand() {
+    return new CreateBookCommand(
         bookIsbn,
         bookTitle,
         bookAuthor,

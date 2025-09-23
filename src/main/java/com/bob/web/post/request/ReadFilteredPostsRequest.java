@@ -27,6 +27,7 @@ public record ReadFilteredPostsRequest(
         .memberId(memberId)
         .emdId(emdId)
         .categoryIds(categoryId != null ? new ArrayList<>(List.of(categoryId)) : null)
+        .bookIds(keyword == null || keyword.isBlank() ? null : new ArrayList<>())
         .price(SearchPrice.fromIndex(price).orElse(null))
         .postStatus(postStatus)
         .bookStatus(bookStatus)

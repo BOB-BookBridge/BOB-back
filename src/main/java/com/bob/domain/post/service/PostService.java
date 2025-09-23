@@ -4,37 +4,42 @@ import static com.bob.domain.post.entity.status.Status.REMOVED;
 import static com.bob.domain.post.entity.status.Status.WITHHELD;
 import static com.bob.domain.post.entity.status.TradeProgress.IN_PROGRESS;
 import static com.bob.domain.post.entity.status.TradeProgress.valueOf;
-import static com.bob.domain.post.service.dto.response.PostFileSummaryResponse.from;
+import static com.bob.domain.post.service.dto.response.internal.PostAreaSummaryResponse.from;
+import static com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse.from;
+import static com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse.from;
+import static com.bob.domain.post.service.dto.response.internal.PostMemberSummaryResponse.from;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_REMOVED_POST_STATE;
 import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
 import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.UNREMOVABLE_POST_STATE;
+import static java.util.Collections.emptyList;
+import static org.springframework.util.StringUtils.hasText;
 
-import com.bob.domain.book.entity.Book;
-import com.bob.domain.book.service.BookService;
-import com.bob.domain.category.entity.Category;
-import com.bob.domain.category.service.reader.CategoryReader;
+import com.bob.domain.post.entity.Category;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.repository.PostRepository;
+import com.bob.domain.post.service.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
 import com.bob.domain.post.service.dto.command.ChangeTradeProgressCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
-import com.bob.domain.post.service.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
-import com.bob.domain.post.service.dto.response.PostAreaSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostCreateResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
-import com.bob.domain.post.service.dto.response.PostFileSummaryResponse;
-import com.bob.domain.post.service.dto.response.PostMemberSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.service.dto.response.internal.PostAreaSummaryResponse;
+import com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse;
+import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse;
+import com.bob.domain.post.service.dto.response.internal.PostMemberSummaryResponse;
 import com.bob.domain.post.service.port.out.PostAreaPort;
+import com.bob.domain.post.service.port.out.PostBookPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.domain.post.service.port.out.PostMemberPort;
+import com.bob.domain.post.service.reader.CategoryReader;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.domain.post.usecase.PostDeleteUseCase;
 import com.bob.domain.post.usecase.PostModifyUseCase;
@@ -42,6 +47,7 @@ import com.bob.domain.post.usecase.PostReadUseCase;
 import com.bob.domain.post.usecase.PostWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -59,19 +65,19 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
 
   private final PostFavoriteService postFavoriteService;
   private final CategoryReader categoryReader;
-  private final BookService bookService;
 
   private final PostMemberPort memberPort;
+  private final PostBookPort bookPort;
   private final PostAreaPort areaPort;
   private final PostFilePort filePort;
 
   @Transactional
   public PostCreateResponse createPostProcess(CreatePostCommand command) {
-    PostAreaSummaryResponse areaSummary = areaPort.readPostAreaSummary(command.memberId());
+    PostAreaSummaryResponse areaSummary = from(areaPort.readPostAreaSummary(command.memberId()));
     verifyAreaAuthentication(areaSummary.validity());
     Category category = categoryReader.readCategoryById(command.categoryId());
-    Book book = bookService.createBookProcess(command.toBookCreateCommand());
-    Post post = command.toPost(book, category, command.memberId(), areaSummary.emdId());
+    Long bookId = bookPort.createBook(command.toCreateBookCommand());
+    Post post = command.toPost(category, bookId, command.memberId(), areaSummary.emdId());
     postRepository.save(post);
     imageMapping(command.fileNames(), post.getId());
     return PostCreateResponse.of(post.getId());
@@ -106,6 +112,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   @Transactional(readOnly = true)
   public PostsResponse readFilteredPostsProcess(ReadFilteredPostsQuery query, Pageable pageable) {
     addChildCategoryIds(query);
+    addBookIds(query);
     List<Post> posts = postReader.readFilteredPosts(query, pageable);
     Long totalCount = postRepository.countFilteredPosts(query);
     return PostsResponse.of(totalCount, posts);
@@ -117,6 +124,20 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     }
     List<Integer> categoryIds = categoryReader.readChildCategoryIds(query.categoryIds().get(0));
     query.updateCategoryIds(categoryIds);
+  }
+
+  private void addBookIds(ReadFilteredPostsQuery query) {
+    if (query.bookIds() == null) {
+      return;
+    }
+    List<Long> bookIds = null;
+    if (hasText(query.keyword())) {
+      bookIds = bookPort.searchBookIds(String.valueOf(query.key()), query.keyword());
+      if (bookIds.isEmpty()) {
+        bookIds = emptyList();
+      }
+    }
+    query.updateBookIds(bookIds);
   }
 
   @Transactional(readOnly = true)
@@ -132,11 +153,12 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     }
     Post post = postReader.readPostById(query.postId());
     verifyAccessiblePost(post, query.isClient());
-    PostMemberSummaryResponse memberSummary = memberPort.readPostMemberSummary(post.getSellerId());
+    PostBookSummaryResponse bookSummary = from(bookPort.readBookSummary(post.getBookId()));
+    PostMemberSummaryResponse memberSummary = from(memberPort.readPostMemberSummary(post.getSellerId()));
     PostFileSummaryResponse fileSummary = from(filePort.readPostFileSummaries(post.getId()));
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
-    return PostDetailResponse.from(post, memberSummary, fileSummary, isFavorite, isOwner);
+    return PostDetailResponse.from(post, bookSummary, memberSummary, fileSummary, isFavorite, isOwner);
   }
 
   private static void verifyAccessiblePost(Post post, boolean isClient) {

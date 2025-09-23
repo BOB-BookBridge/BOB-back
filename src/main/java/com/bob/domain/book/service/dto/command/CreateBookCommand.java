@@ -1,9 +1,9 @@
-package com.bob.domain.book.service.dto;
+package com.bob.domain.book.service.dto.command;
 
 import com.bob.domain.book.entity.Book;
 import java.time.LocalDate;
 
-public record BookCreateCommand(
+public record CreateBookCommand(
     String isbn13,
     String title,
     String author,

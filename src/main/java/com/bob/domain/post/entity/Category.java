@@ -1,4 +1,4 @@
-package com.bob.domain.category.entity;
+package com.bob.domain.post.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
