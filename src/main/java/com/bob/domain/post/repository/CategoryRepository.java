@@ -1,6 +1,6 @@
-package com.bob.domain.category.repository;
+package com.bob.domain.post.repository;
 
-import com.bob.domain.category.entity.Category;
+import com.bob.domain.post.entity.Category;
 import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;

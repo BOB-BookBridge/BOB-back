@@ -7,12 +7,12 @@ import static com.bob.domain.post.entity.status.BookStatus.MEDIUM;
 
 import com.bob.domain.area.repository.ActivityAreaRepository;
 import com.bob.domain.book.entity.Book;
+import com.bob.domain.post.entity.status.BookStatus;
 import com.bob.domain.book.repository.BookRepository;
-import com.bob.domain.category.entity.Category;
-import com.bob.domain.category.repository.CategoryRepository;
+import com.bob.domain.post.entity.Category;
+import com.bob.domain.post.repository.CategoryRepository;
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.repository.MemberRepository;
-import com.bob.domain.post.entity.status.BookStatus;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.global.utils.web.CookieUtils;
 import com.bob.infra.auth.jwt.JwtProvider;

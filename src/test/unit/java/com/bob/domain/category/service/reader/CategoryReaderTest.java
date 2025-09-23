@@ -6,8 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import com.bob.domain.category.entity.Category;
-import com.bob.domain.category.repository.CategoryRepository;
+import com.bob.domain.post.entity.Category;
+import com.bob.domain.post.repository.CategoryRepository;
+import com.bob.domain.post.service.reader.CategoryReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
