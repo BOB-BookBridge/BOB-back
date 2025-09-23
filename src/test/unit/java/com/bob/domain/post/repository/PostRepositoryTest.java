@@ -10,8 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.repository.BookRepository;
-import com.bob.domain.category.entity.Category;
-import com.bob.domain.category.repository.CategoryRepository;
+import com.bob.domain.post.entity.Category;
 import com.bob.domain.post.entity.Post;
 import com.bob.support.config.TestConfig;
 import jakarta.persistence.EntityManager;

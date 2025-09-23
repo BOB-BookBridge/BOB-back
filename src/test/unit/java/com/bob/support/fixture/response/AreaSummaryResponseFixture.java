@@ -14,4 +14,11 @@ public class AreaSummaryResponseFixture {
       .validity(true)
       .authenticatedAt(LocalDate.now())
       .build();
+
+  public static final AreaSummaryResponse NOT_VALID_AREA_SUMMARY = AreaSummaryResponse.builder()
+      .emdId(EMD_AREA_ID)
+      .emdName("역삼동")
+      .siggName("강남구")
+      .validity(false)
+      .build();
 }

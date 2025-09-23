@@ -14,6 +14,7 @@ public record ReadFilteredPostsQuery(
     UUID memberId,
     Integer emdId,
     List<Integer> categoryIds,
+    List<Long> bookIds,
     SearchPrice price,
     String postStatus,
     String bookStatus,
@@ -22,5 +23,9 @@ public record ReadFilteredPostsQuery(
 
   public void updateCategoryIds(List<Integer> categoryIds) {
     this.categoryIds.addAll(categoryIds);
+  }
+
+  public void updateBookIds(List<Long> bookIds) {
+    this.bookIds.addAll(bookIds);
   }
 }

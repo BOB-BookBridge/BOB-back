@@ -20,7 +20,7 @@ public record PostSummary(
     return PostSummary.builder()
         .postId(post.getId())
         .categoryId(post.getCategory().getId())
-        .postTitle(post.getBook().getTitle())
+        .postTitle(post.getTitle())
         .postStatus(post.getTradeProgress().name())
         .thumbnailUrl(post.getThumbnailUrl())
         .bookStatus(post.getBookStatus().name())

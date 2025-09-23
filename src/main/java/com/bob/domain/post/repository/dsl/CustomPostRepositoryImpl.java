@@ -2,12 +2,11 @@ package com.bob.domain.post.repository.dsl;
 
 import static com.bob.domain.post.entity.QPost.post;
 
-import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.BookStatus;
+import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.Status;
 import com.bob.domain.post.entity.status.TradeProgress;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
-import com.bob.domain.post.service.dto.query.condition.SearchKey;
 import com.bob.domain.post.service.dto.query.condition.SearchPrice;
 import com.bob.domain.post.service.dto.query.condition.SortKey;
 import com.querydsl.core.types.OrderSpecifier;
@@ -32,7 +31,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         .selectFrom(post)
         .where(
             visibleCondition(),
-            keywordCondition(query.key(), query.keyword()),
+            bookIdsCondition(query.bookIds()),
             memberIdCondition(query.memberId()),
             emdCondition(query.emdId()),
             categoryCondition(query.categoryIds()),
@@ -40,7 +39,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             tradeStatusCondition(query.postStatus()),
             bookStatusCondition(query.bookStatus())
         )
-        .orderBy(getSortKey(query.sortKey()))
+        .orderBy(getSortKey(query.sortKey()), post.createdAt.desc())
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
@@ -53,7 +52,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         .from(post)
         .where(
             visibleCondition(),
-            keywordCondition(query.key(), query.keyword()),
+            bookIdsCondition(query.bookIds()),
             memberIdCondition(query.memberId()),
             emdCondition(query.emdId()),
             categoryCondition(query.categoryIds()),
@@ -68,16 +67,14 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     return post.status.notIn(Status.REMOVED, Status.WITHHELD);
   }
 
-  private BooleanExpression keywordCondition(SearchKey key, String keyword) {
-    if (!StringUtils.hasText(keyword)) {
+  private BooleanExpression bookIdsCondition(List<Long> bookIds) {
+    if (bookIds == null) {
       return null;
     }
-
-    return switch (key) {
-      case TITLE -> post.book.title.containsIgnoreCase(keyword);
-      case AUTHOR -> post.book.author.containsIgnoreCase(keyword);
-      case ALL -> post.book.title.containsIgnoreCase(keyword).or(post.book.author.containsIgnoreCase(keyword));
-    };
+    if (bookIds.isEmpty()) {
+      return post.id.isNull();
+    }
+    return post.bookId.in(bookIds);
   }
 
   private BooleanExpression memberIdCondition(UUID memberId) {

@@ -6,8 +6,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
+import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.usecase.MemberReadUseCase;
-import com.bob.domain.post.service.dto.response.PostMemberSummaryResponse;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,11 +36,11 @@ class PostMemberAdapterTest {
     given(readUseCase.readProfileProcess(query)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
     // when
-    PostMemberSummaryResponse result = postMemberAdapter.readPostMemberSummary(memberId);
+    MemberProfileResponse response = postMemberAdapter.readPostMemberSummary(memberId);
 
     // then
-    assertThat(result.nickname()).isEqualTo("tester");
-    assertThat(result.profileImageUrl()).isEqualTo("http://image.url");
+    assertThat(response.nickname()).isEqualTo("tester");
+    assertThat(response.profileImageUrl()).isEqualTo("http://image.url");
     then(readUseCase).should().readProfileProcess(query);
   }
 }

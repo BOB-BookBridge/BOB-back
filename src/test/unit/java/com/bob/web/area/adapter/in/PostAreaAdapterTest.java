@@ -8,8 +8,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.bob.domain.area.service.dto.query.ReadAreaQuery;
+import com.bob.domain.area.service.dto.response.AreaSummaryResponse;
 import com.bob.domain.area.usecase.AreaReadUseCase;
-import com.bob.domain.post.service.dto.response.PostAreaSummaryResponse;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,13 +38,13 @@ class PostAreaAdapterTest {
     given(readUseCase.readAreaSummaryProcess(query)).willReturn(DEFAULT_AREA_SUMMARY);
 
     // when
-    PostAreaSummaryResponse result = postAreaAdapter.readPostAreaSummary(memberId);
+    AreaSummaryResponse response = postAreaAdapter.readPostAreaSummary(memberId);
 
     // then
-    assertThat(result.emdId()).isEqualTo(EMD_AREA_ID);
-    assertThat(result.emdName()).isEqualTo("역삼동");
-    assertThat(result.siggName()).isEqualTo("강남구");
-    assertThat(result.validity()).isTrue();
+    assertThat(response.emdId()).isEqualTo(EMD_AREA_ID);
+    assertThat(response.emdName()).isEqualTo("역삼동");
+    assertThat(response.siggName()).isEqualTo("강남구");
+    assertThat(response.validity()).isTrue();
 
     verify(readUseCase).readAreaSummaryProcess(query);
   }

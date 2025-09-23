@@ -17,6 +17,7 @@ public enum ApplicationError {
   IS_SAME_REQUEST("E005", "변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
   VALIDATION_ERROR("E006", "요청 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
   TYPE_MISMATCH("E007", "요청 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+  NOT_EXIST_OBJECT("E008", "데이터가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
 
   // 사용자 예외
   UNVERIFIED_EMAIL("E101", "이메일 인증이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),

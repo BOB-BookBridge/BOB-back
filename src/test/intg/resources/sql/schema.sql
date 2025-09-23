@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS categories (
 -- ========================
 CREATE TABLE IF NOT EXISTS posts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(50) NOT NULL,
     trade_progress ENUM('READY', 'IN_PROGRESS', 'COMPLETED') NOT NULL,
     category_id INT NOT NULL,
     seller_id BINARY(16) NOT NULL,
@@ -334,25 +335,25 @@ INSERT INTO books (isbn13, title, author, description, price_standard, cover, pu
 ('9788999999001', '싸다구 책1', '김저렴', '저렴한 책1', 3000, 'https://cover/5.png', '2019-01-01'),
 ('9788999999002', '싸다구 책2', '박할인', '저렴한 책2', 4000, 'https://cover/6.png', '2018-12-01');
 
-INSERT INTO posts (book_id, seller_id, category_id, book_status, trade_progress, sell_price, description, registration_area_id, thumbnail_url, created_at, status) VALUES
-(1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '자바 기초를 다룬 책입니다.', 213, 'https://image/1.png', now(), 'ACTIVE'),
-(2, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 12000, 'JPA 핵심 이론', 785, 'https://image/2.png', now(), 'ACTIVE'),
-(3, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'MEDIUM', 'READY', 8000, '백기선 저자의 책', 213, 'https://image/3.png', now(), 'ACTIVE'),
-(4, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 9000, '오브젝트 저자의 책', 213, 'https://image/4.png', now(), 'ACTIVE'),
-(5, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 3000, '5000원 이하 도서', 213, 'https://image/5.png', now(), 'ACTIVE'),
-(6, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 4000, '저렴한 책', 213, 'https://image/6.png', now(), 'ACTIVE'),
-(1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'MEDIUM', 'READY', 11000, '카테고리 테스트용1', 213, 'https://image/7.png', now(), 'ACTIVE'),
-(2, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 2, 'MEDIUM', 'READY', 13000, '카테고리 테스트용2', 213, 'https://image/8.png', now(), 'ACTIVE'),
-(3, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'COMPLETED', 15000, '거래 완료 상태', 213, 'https://image/9.png', now(), 'ACTIVE'),
-(4, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'IN_PROGRESS', 16000, '거래 진행중 상태', 213, 'https://image/10.png', now(), 'ACTIVE'),
-(5, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 17000, '책 상태 상', 213, 'https://image/11.png', now(), 'ACTIVE'),
-(6, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 18000, '책 상태 하', 213, 'https://image/12.png', now(), 'ACTIVE'),
-(1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '삭제된 게시글1', 213, 'https://image/1.png', now(), 'REMOVED'),
-(1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '삭제된 게시글2', 213, 'https://image/1.png', now(), 'REMOVED'),
-(1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '오래된 게시글', 213, 'https://image/old.png', '2023-01-01 10:00:00', 'ACTIVE'),
-(2, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 12000, '중간 게시글', 213, 'https://image/mid.png', '2023-06-01 10:00:00', 'ACTIVE'),
-(3, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 14000, '최신 게시글', 213, 'https://image/new.png', '2024-01-01 10:00:00', 'ACTIVE'),
-(4, UUID_TO_BIN('0197365f-8074-7d24-a332-0c5f1dbe9c59'), 1, 'LOW', 'READY', 6000, "다른 사람의 게시글", 213, 'https://image/new.png', '2024-01-01 10:00:00', 'ACTIVE');
+INSERT INTO posts (book_id, title, seller_id, category_id, book_status, trade_progress, sell_price, description, registration_area_id, thumbnail_url, created_at, status) VALUES
+(1, '자바의 정석', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '자바 기초를 다룬 책입니다.', 213, 'https://image/1.png', now(), 'ACTIVE'),
+(2, '자바 ORM 표준 JPA 프로그래밍', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 12000, 'JPA 핵심 이론', 785, 'https://image/2.png', now(), 'ACTIVE'),
+(3, '토비의 스프링', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'MEDIUM', 'READY', 8000, '백기선 저자의 책', 213, 'https://image/3.png', now(), 'ACTIVE'),
+(4, '오브젝트', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 9000, '오브젝트 저자의 책', 213, 'https://image/4.png', now(), 'ACTIVE'),
+(5, '싸다구 책1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 3000, '5000원 이하 도서', 213, 'https://image/5.png', now(), 'ACTIVE'),
+(6, '싸다구 책2', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 4000, '저렴한 책', 213, 'https://image/6.png', now(), 'ACTIVE'),
+(1, '자바의 정석', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'MEDIUM', 'READY', 11000, '카테고리 테스트용1', 213, 'https://image/7.png', now(), 'ACTIVE'),
+(2, '자바 ORM 표준 JPA 프로그래밍', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 2, 'MEDIUM', 'READY', 13000, '카테고리 테스트용2', 213, 'https://image/8.png', now(), 'ACTIVE'),
+(3, '토비의 스프링', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'COMPLETED', 15000, '거래 완료 상태', 213, 'https://image/9.png', now(), 'ACTIVE'),
+(4, '오브젝트', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'IN_PROGRESS', 16000, '거래 진행중 상태', 213, 'https://image/10.png', now(), 'ACTIVE'),
+(5, '싸다구 책1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 17000, '책 상태 상', 213, 'https://image/11.png', now(), 'ACTIVE'),
+(6, '싸다구 책2', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 18000, '책 상태 하', 213, 'https://image/12.png', now(), 'ACTIVE'),
+(1, '자바의 정석', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '삭제된 게시글1', 213, 'https://image/1.png', now(), 'REMOVED'),
+(1, '자바의 정석', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '삭제된 게시글2', 213, 'https://image/1.png', now(), 'REMOVED'),
+(1, '자바의 정석', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '오래된 게시글', 213, 'https://image/old.png', '2023-01-01 10:00:00', 'ACTIVE'),
+(2, '자바 ORM 표준 JPA 프로그래밍', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'HIGH', 'READY', 12000, '중간 게시글', 213, 'https://image/mid.png', '2023-06-01 10:00:00', 'ACTIVE'),
+(3, '토비의 스프링', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'LOW', 'READY', 14000, '최신 게시글', 213, 'https://image/new.png', '2024-01-01 10:00:00', 'ACTIVE'),
+(4, '오브젝트', UUID_TO_BIN('0197365f-8074-7d24-a332-0c5f1dbe9c59'), 1, 'LOW', 'READY', 6000, "다른 사람의 게시글", 213, 'https://image/new.png', '2024-01-01 10:00:00', 'ACTIVE');
 
 INSERT INTO post_favorites (member_id, post_id, created_at) VALUES
 (UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, NOW()),

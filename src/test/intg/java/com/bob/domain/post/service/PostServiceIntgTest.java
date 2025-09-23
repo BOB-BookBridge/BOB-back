@@ -1,7 +1,6 @@
 package com.bob.domain.post.service;
 
 import static com.bob.domain.post.entity.status.Status.REMOVED;
-import static com.bob.domain.post.entity.status.Status.WITHHELD;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_POST_FAVORITE;
 import static com.bob.global.exception.response.ApplicationError.INVALID_POST_FAVORITE;
 import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
@@ -22,7 +21,8 @@ import static com.bob.support.fixture.query.PostQueryFixture.searchOldestQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTitleQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchTradeStatusQuery;
 import static com.bob.support.fixture.query.PostQueryFixture.searchUnder5000PriceQuery;
-import static com.bob.support.fixture.response.PostAreaSummaryResponseFixture.DEFAULT_POST_AREA_SUMMARY;
+import static com.bob.support.fixture.response.AreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY;
+import static com.bob.support.fixture.response.AreaSummaryResponseFixture.NOT_VALID_AREA_SUMMARY;
 import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,8 +31,8 @@ import static org.mockito.BDDMockito.then;
 
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.repository.BookRepository;
-import com.bob.domain.category.entity.Category;
-import com.bob.domain.category.repository.CategoryRepository;
+import com.bob.domain.post.entity.Category;
+import com.bob.domain.post.repository.CategoryRepository;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.PostFavorite;
 import com.bob.domain.post.entity.status.TradeProgress;
@@ -46,7 +46,6 @@ import com.bob.domain.post.service.dto.command.RemovePostCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
-import com.bob.domain.post.service.dto.response.PostAreaSummaryResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostSummary;
 import com.bob.domain.post.service.dto.response.PostsResponse;
@@ -115,7 +114,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Category category = categoryRepository.save(defaultCategory());
     CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), FILE_NAMES);
-    given(areaPort.readPostAreaSummary(memberId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(memberId)).willReturn(DEFAULT_AREA_SUMMARY);
     int beforePostCount = postRepository.findAllBySellerId(memberId).size();
     int expectedPostCount = beforePostCount + 1;
 
@@ -129,7 +128,6 @@ class PostServiceIntgTest extends TestContainerSupport {
     Post currentPost = posts.get(expectedPostCount - 1);
     assertThat(currentPost.getSellerId()).isEqualTo(memberId);
     assertThat(currentPost.getCategory().getId()).isEqualTo(category.getId());
-    assertThat(currentPost.getBook().getIsbn13()).isEqualTo(command.bookIsbn());
 
     Book book = bookRepository.findByIsbn13(command.bookIsbn()).get();
     assertThat(book).isNotNull();
@@ -143,7 +141,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Category category = categoryRepository.save(defaultCategory());
     CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), null);
-    given(areaPort.readPostAreaSummary(memberId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(memberId)).willReturn(DEFAULT_AREA_SUMMARY);
 
     // when
     postService.createPostProcess(command);
@@ -157,7 +155,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   void 위치_인증이_안된_사용자는_게시글을_등록할_수_없다() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
-    given(areaPort.readPostAreaSummary(memberId)).willReturn(PostAreaSummaryResponse.of(213, "역삼동", "강남구", false));
+    given(areaPort.readPostAreaSummary(memberId)).willReturn(NOT_VALID_AREA_SUMMARY);
     Category category = categoryRepository.save(defaultCategory());
     CreatePostCommand command = defaultCreatePostCommand(memberId, category.getId(), FILE_NAMES);
 
@@ -430,7 +428,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Post post = postRepository.findAllBySellerId(writerId).get(0); // 더미 데이터의 첫 번째 게시글
     int beforeViewCount = post.getViewCount();
-    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_AREA_SUMMARY);
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_READ_FILES_RESPONSE);
 
     // when
@@ -450,7 +448,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     UUID viewerId = UUID.randomUUID();
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Post post = postRepository.findAllBySellerId(writerId).get(0);
-    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_AREA_SUMMARY);
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_READ_FILES_RESPONSE);
 
     // when
@@ -513,7 +511,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     // given
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
     UUID otherId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
-    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_AREA_SUMMARY);
 
     postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId(), FILE_NAMES));
     Post post = postRepository.findAllBySellerId(writerId).get(0);
@@ -539,7 +537,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     // given
     UUID writerId = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
     UUID otherId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
-    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_POST_AREA_SUMMARY);
+    given(areaPort.readPostAreaSummary(writerId)).willReturn(DEFAULT_AREA_SUMMARY);
 
     postService.createPostProcess(defaultCreatePostCommand(writerId, defaultCategory().getId(), FILE_NAMES));
     Post post = postRepository.findAllBySellerId(writerId).get(0);

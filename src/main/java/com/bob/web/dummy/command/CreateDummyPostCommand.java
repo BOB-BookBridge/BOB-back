@@ -1,9 +1,9 @@
 package com.bob.web.dummy.command;
 
 import com.bob.domain.book.entity.Book;
-import com.bob.domain.category.entity.Category;
-import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.BookStatus;
+import com.bob.domain.post.entity.Category;
+import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.TradeProgress;
 import java.util.UUID;
 import lombok.Builder;
@@ -24,7 +24,7 @@ public record CreateDummyPostCommand(
         .category(category)
         .sellerId(sellerId)
         .thumbnailUrl(cover)
-        .book(book)
+        .bookId(book.getId())
         .bookStatus(status)
         .sellPrice(sellPrice)
         .description(description)

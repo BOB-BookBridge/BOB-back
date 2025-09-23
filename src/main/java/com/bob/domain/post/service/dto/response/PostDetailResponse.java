@@ -1,7 +1,10 @@
 package com.bob.domain.post.service.dto.response;
 
 import com.bob.domain.post.entity.Post;
-import com.bob.domain.post.service.dto.response.PostFileSummaryResponse.PostFileSummary;
+import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse;
+import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse.PostFileSummary;
+import com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse;
+import com.bob.domain.post.service.dto.response.internal.PostMemberSummaryResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +32,7 @@ public record PostDetailResponse(
 
   public static PostDetailResponse from(
       Post post,
+      PostBookSummaryResponse bookSummary,
       PostMemberSummaryResponse memberSummary,
       PostFileSummaryResponse fileSummary,
       boolean isFavorite,
@@ -42,7 +46,7 @@ public record PostDetailResponse(
         .bookStatus(post.getBookStatus().name())
         .postStatus(post.getTradeProgress().name())
         .category(post.getCategory().getId())
-        .book(BookInfo.from(post))
+        .book(BookInfo.from(bookSummary))
         .description(post.getDescription())
         .images(fileSummary.images())
         .writer(WriterInfo.of(
@@ -65,13 +69,13 @@ public record PostDetailResponse(
       String pubDate
   ) {
 
-    public static BookInfo from(Post post) {
+    public static BookInfo from(PostBookSummaryResponse response) {
       return BookInfo.builder()
-          .title(post.getBook().getTitle())
-          .author(post.getBook().getAuthor())
-          .description(post.getBook().getDescription())
-          .priceStandard(post.getBook().getPriceStandard())
-          .pubDate(post.getBook().getPubDate().toString())
+          .title(response.title())
+          .author(response.author())
+          .description(response.description())
+          .priceStandard(response.priceStandard())
+          .pubDate(response.pubDate().toString())
           .build();
     }
   }
