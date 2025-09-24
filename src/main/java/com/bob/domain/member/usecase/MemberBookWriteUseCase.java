@@ -1,0 +1,8 @@
+package com.bob.domain.member.usecase;
+
+import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
+
+public interface MemberBookWriteUseCase {
+
+  void registerMemberBookProcess(RegisterMemberBookCommand command);
+}
