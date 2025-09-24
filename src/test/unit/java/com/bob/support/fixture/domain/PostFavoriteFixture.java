@@ -1,6 +1,6 @@
 package com.bob.support.fixture.domain;
 
-import static com.bob.support.fixture.domain.BookFixture.defaultBook;
+import static com.bob.support.fixture.domain.BookFixture.DEFAULT_BOOK;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
 import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
@@ -16,12 +16,12 @@ public class PostFavoriteFixture {
         PostFavorite.builder()
             .id(1L)
             .memberId(MEMBER_ID)
-            .post(defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID))
+            .post(defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID))
             .build(),
         PostFavorite.builder()
             .id(2L)
             .memberId(MEMBER_ID)
-            .post(defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID))
+            .post(defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID))
             .build()
     );
   }

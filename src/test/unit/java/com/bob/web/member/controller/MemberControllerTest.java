@@ -19,7 +19,9 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
+import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
+import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.member.usecase.MemberWriteUseCase;
@@ -51,6 +53,9 @@ class MemberControllerTest {
   @Mock
   private MemberModifyUseCase modifyUseCase;
 
+  @Mock
+  private MemberBookWriteUseCase bookWriteUseCase;
+
   private MockMvc mvc;
 
   @BeforeEach
@@ -62,8 +67,7 @@ class MemberControllerTest {
   }
 
   @Test
-  @DisplayName("회원가입 API 호출 테스트")
-  void 회원가입_API를_호출할_수_있다() throws Exception {
+  void 회원가입_기능_호출() throws Exception {
     // given
     String json = """
         {
@@ -85,8 +89,35 @@ class MemberControllerTest {
   }
 
   @Test
-  @DisplayName("내 프로필 조회 API 호출 테스트")
-  void 내_프로필_조회_API를_호출할_수_있다() throws Exception {
+  void 회원_도서_등록_기능_호출() throws Exception {
+    // given
+    String json = """
+        {
+          "status": "AVAILABLE",
+          "isbn": "9781234567890",
+          "title": "테스트책",
+          "author": "홍길동",
+          "description": "설명",
+          "priceStandard": 15000,
+          "cover": "http://image.url/cover.jpg",
+          "pubDate": "2024-01-02"
+        }
+        """;
+
+    // when & then
+    mvc.perform(post("/members/books")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.result").value("CREATED"));
+
+    verify(bookWriteUseCase, times(1)).registerMemberBookProcess(any(RegisterMemberBookCommand.class));
+  }
+
+  @Test
+  void 내_프로필_조회_기능_호출() throws Exception {
     // given
     given(readUseCase.readProfileProcess(any())).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
@@ -104,8 +135,7 @@ class MemberControllerTest {
   }
 
   @Test
-  @DisplayName("특정 회원 프로필 조회 API 호출 테스트")
-  void 특정_회원_프로필과_게시글_목록을_조회할_수_있다() throws Exception {
+  void 특정_회원_프로필_및_게시글_목록_조회_기능_호출() throws Exception {
     // given
     given(readUseCase.readProfileProcess(any())).willReturn(OTHER_MEMBER_PROFILE_RESPONSE);
 
@@ -122,8 +152,7 @@ class MemberControllerTest {
   }
 
   @Test
-  @DisplayName("프로필 변경 API 호출 테스트")
-  void 프로필_변경_API를_호출할_수_있다() throws Exception {
+  void 프로필_변경_기능_호출() throws Exception {
     // given
     String json = """
         {
@@ -143,8 +172,7 @@ class MemberControllerTest {
   }
 
   @Test
-  @DisplayName("비밀번호 변경 API 호출 테스트")
-  void 비밀번호_변경_API를_호출할_수_있다() throws Exception {
+  void 비밀번호_변경_기능_호출() throws Exception {
     // given
     String json = """
         {
@@ -164,8 +192,7 @@ class MemberControllerTest {
   }
 
   @Test
-  @DisplayName("임시 비밀번호 발급 API 호출 테스트")
-  void 임시_비밀번호_발급_API를_호출할_수_있다() throws Exception {
+  void 임시_비밀번호_발급_기능_호출() throws Exception {
     // given
     String json = """
         {
@@ -184,8 +211,7 @@ class MemberControllerTest {
   }
 
   @Test
-  @DisplayName("프로필 이미지 변경 API 호출 테스트")
-  void 프로필_이미지_Presigned_URL_발급_API를_호출할_수_있다() throws Exception {
+  void 프로필_이미지_변경_기능_호출() throws Exception {
     // given
     String json = """
         {
@@ -204,8 +230,7 @@ class MemberControllerTest {
   }
 
   @Test
-  @DisplayName("회원 탈퇴 API 호출 테스트")
-  void 회원_탈퇴_API를_호출할_수_있다() throws Exception {
+  void 회원_탈퇴_기능_호출() throws Exception {
     // when & then
     mvc.perform(delete("/members/me")
             .requestAttr("memberId", MEMBER_ID))
