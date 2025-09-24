@@ -6,8 +6,7 @@ import java.time.LocalDate;
 public class BookFixture {
   public static final String DEFAULT_ISBN = "9788998139766";
 
-  public static Book defaultBook() {
-    return Book.builder()
+  public static Book DEFAULT_BOOK = Book.builder()
         .isbn13(DEFAULT_ISBN)
         .title("객체지향의 사실과 오해")
         .author("조영호")
@@ -16,5 +15,4 @@ public class BookFixture {
         .cover("https://image.url")
         .pubDate(LocalDate.now())
         .build();
-  }
 }

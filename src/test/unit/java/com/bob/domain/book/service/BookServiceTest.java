@@ -1,7 +1,7 @@
 package com.bob.domain.book.service;
 
-import static com.bob.support.fixture.command.BookCreateCommandFixture.defaultBookCreateCommand;
-import static com.bob.support.fixture.domain.BookFixture.defaultBook;
+import static com.bob.support.fixture.command.CreateBookCommandFixture.DEFAULT_CREATE_BOOK_COMMAND;
+import static com.bob.support.fixture.domain.BookFixture.DEFAULT_BOOK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -41,8 +41,8 @@ class BookServiceTest {
   @Test
   void 이미_존재하는_도서가_있으면_저장하지_않고_조회된_도서를_반환한다() {
     // given
-    CreateBookCommand command = defaultBookCreateCommand();
-    Book existingBook = defaultBook();
+    CreateBookCommand command = DEFAULT_CREATE_BOOK_COMMAND;
+    Book existingBook = DEFAULT_BOOK;
     given(bookReader.readOptionalBookByIsbn(command.isbn13())).willReturn(Optional.of(existingBook));
 
     // when
@@ -57,7 +57,7 @@ class BookServiceTest {
   @Test
   void 존재하지_않는_도서면_새로_저장하고_반환한다() {
     // given
-    CreateBookCommand command = defaultBookCreateCommand();
+    CreateBookCommand command = DEFAULT_CREATE_BOOK_COMMAND;
     Book newBook = command.toBook();
     given(bookReader.readOptionalBookByIsbn(command.isbn13())).willReturn(Optional.empty());
     given(bookRepository.save(any(Book.class))).willReturn(newBook);
@@ -75,7 +75,7 @@ class BookServiceTest {
   @DisplayName("도서 상세 조회 - 성공")
   void 도서_상세를_조회할_수_있다() {
     // given
-    Book book = defaultBook();
+    Book book = DEFAULT_BOOK;
     given(bookReader.readBookById(book.getId())).willReturn(book);
 
     // when

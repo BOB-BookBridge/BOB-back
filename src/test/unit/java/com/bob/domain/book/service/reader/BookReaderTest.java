@@ -1,7 +1,7 @@
 package com.bob.domain.book.service.reader;
 
 import static com.bob.support.fixture.domain.BookFixture.DEFAULT_ISBN;
-import static com.bob.support.fixture.domain.BookFixture.defaultBook;
+import static com.bob.support.fixture.domain.BookFixture.DEFAULT_BOOK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -31,10 +31,9 @@ class BookReaderTest {
   private BookRepository bookRepository;
 
   @Test
-  @DisplayName("ISBN Book 조회 - 존재하는 경우")
-  void isbn으로_책을_조회_할_수_있다() {
+  void 도서_정상_조회_isbn_활용() {
     // given
-    Book book = defaultBook();
+    Book book = DEFAULT_BOOK;
     given(bookRepository.findByIsbn13(DEFAULT_ISBN)).willReturn(Optional.of(book));
 
     // when
@@ -47,8 +46,7 @@ class BookReaderTest {
   }
 
   @Test
-  @DisplayName("ISBN Book 조회 - 존재하지 않는 경우")
-  void isbn으로_책_조회_시_존재하지_않으면_empty를_반환한다() {
+  void 도서_조회_시_존재하지_않는_ISBN인_경우_Empty를_반환한다() {
     // given
     String isbn = "0000000000000";
     given(bookRepository.findByIsbn13(isbn)).willReturn(Optional.empty());
@@ -62,9 +60,9 @@ class BookReaderTest {
   }
 
   @Test
-  void ID_기반_도서_조회() {
+  void 도서_조회_도서_id_활용() {
     // given
-    Book book = defaultBook();
+    Book book = DEFAULT_BOOK;
     Long id = book.getId();
     given(bookRepository.findById(id)).willReturn(Optional.of(book));
 
@@ -77,7 +75,7 @@ class BookReaderTest {
   }
 
   @Test
-  void 존재하지_않는_도서() {
+  void 도서_조회_시_존재하지_않는_도서인_경우_예외를_반환한다() {
     // given
     Long id = 999L;
     given(bookRepository.findById(id)).willReturn(Optional.empty());
@@ -90,8 +88,7 @@ class BookReaderTest {
   }
 
   @Test
-  @DisplayName("키워드로 Book ID 목록 조회 - 위임 및 반환")
-  void 키워드로_Book_ID_목록을_조회한다() {
+  void 도서_id_목록_조회_키워드_활용() {
     // given
     String key = "TITLE";
     String keyword = "spring";

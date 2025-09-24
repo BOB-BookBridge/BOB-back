@@ -47,7 +47,6 @@ import com.bob.domain.post.usecase.PostReadUseCase;
 import com.bob.domain.post.usecase.PostWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -77,6 +76,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     verifyAreaAuthentication(areaSummary.validity());
     Category category = categoryReader.readCategoryById(command.categoryId());
     Long bookId = bookPort.createBook(command.toCreateBookCommand());
+    memberPort.createMemberBook(command.toCreateMemberBookCommand(bookId));
     Post post = command.toPost(category, bookId, command.memberId(), areaSummary.emdId());
     postRepository.save(post);
     imageMapping(command.fileNames(), post.getId());

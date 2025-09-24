@@ -1,6 +1,6 @@
 package com.bob.domain.post.entity;
 
-import static com.bob.support.fixture.domain.BookFixture.defaultBook;
+import static com.bob.support.fixture.domain.BookFixture.DEFAULT_BOOK;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
 import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
@@ -14,10 +14,9 @@ import org.junit.jupiter.api.Test;
 class PostFavoriteTest {
 
   @Test
-  @DisplayName("PostFavorite 생성 - 정상 테스트")
-  void PostFavorite를_정상적으로_생성할_수_있다() {
+  void 게시글_좋아요_생성() {
     // given
-    Post post = defaultIdPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
+    Post post = defaultIdPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID);
 
     // when
     PostFavorite postFavorite = PostFavorite.create(MEMBER_ID, post);

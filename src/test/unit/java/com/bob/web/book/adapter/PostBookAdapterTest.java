@@ -1,6 +1,6 @@
 package com.bob.web.book.adapter;
 
-import static com.bob.support.fixture.command.BookCreateCommandFixture.defaultBookCreateCommand;
+import static com.bob.support.fixture.command.CreateBookCommandFixture.DEFAULT_CREATE_BOOK_COMMAND;
 import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,7 +39,7 @@ class PostBookAdapterTest {
   @Test
   void 책_생성_기능_호출() {
     // given
-    CreateBookCommand command = defaultBookCreateCommand();
+    CreateBookCommand command = DEFAULT_CREATE_BOOK_COMMAND;
     given(writeUseCase.createBookProcess(command)).willReturn(DEFAULT_BOOK_RESPONSE.id());
 
     // when

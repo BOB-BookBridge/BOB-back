@@ -1,7 +1,7 @@
 package com.bob.domain.post.entity;
 
 import static com.bob.domain.post.entity.status.Status.WITHHELD;
-import static com.bob.support.fixture.domain.BookFixture.defaultBook;
+import static com.bob.support.fixture.domain.BookFixture.DEFAULT_BOOK;
 import static com.bob.support.fixture.domain.CategoryFixture.defaultCategory;
 import static com.bob.support.fixture.domain.EmdAreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
@@ -18,10 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PostTest {
 
   @Test
-  @DisplayName("일부 필드만 null이 아닐 때 해당 필드만 업데이트된다")
-  void 일부_필드만_업데이트된다() {
+  void 게시글_일부_수정() {
     // given
-    Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
+    Post post = defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID);
 
     Integer newSellPrice = 8000;
     String newBookStatus = null;
@@ -36,10 +35,9 @@ class PostTest {
   }
 
   @Test
-  @DisplayName("모든 필드가 null이면 아무 것도 변경되지 않는다")
-  void 모든_필드가_null이면_변경되지_않는다() {
+  void 게시글_수정_시_null_입력() {
     // given
-    Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
+    Post post = defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID);
 
     Integer beforePrice = post.getSellPrice();
     String beforeStatus = post.getBookStatus().name();
@@ -55,10 +53,9 @@ class PostTest {
   }
 
   @Test
-  @DisplayName("모든 필드가 주어지면 모두 업데이트된다")
-  void 모든_필드가_업데이트된다() {
+  void 게시글_수정_모든_사항_변경() {
     // given
-    Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
+    Post post = defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID);
 
     Integer newSellPrice = 6000;
     String newBookStatus = "LOW";
@@ -74,9 +71,9 @@ class PostTest {
   }
 
   @Test
-  void 게시글_보류_상태_변경_테스트() {
+  void 게시글_보류_상태_변경() {
     // given
-    Post post = defaultPost(defaultCategory(), defaultBook(), MEMBER_ID, EMD_AREA_ID);
+    Post post = defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID);
 
     // when
     post.updateStatus(WITHHELD);
