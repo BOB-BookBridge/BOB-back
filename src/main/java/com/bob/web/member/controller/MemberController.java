@@ -8,6 +8,7 @@ import static com.bob.web.member.request.ReadProfileRequest.toQuery;
 
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
+import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.member.usecase.MemberWriteUseCase;
@@ -19,6 +20,7 @@ import com.bob.web.member.request.ChangePasswordRequest;
 import com.bob.web.member.request.ChangeProfileRequest;
 import com.bob.web.member.request.IssuePasswordRequest;
 import com.bob.web.member.request.RecoverAccountRequest;
+import com.bob.web.member.request.RegisterMemberBookRequest;
 import com.bob.web.member.request.SignupRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -45,10 +47,22 @@ public class MemberController {
   private final MemberReadUseCase readUseCase;
   private final MemberModifyUseCase modifyUseCase;
 
+  private final MemberBookWriteUseCase bookWriteUseCase;
+
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public CommonResponse<ResponseSymbol> handleSignup(@Valid @RequestBody SignupRequest request) {
     writeUseCase.signupProcess(request.toCommand());
+    return new CommonResponse<>(true, CREATED);
+  }
+
+  @PostMapping("/books")
+  @ResponseStatus(HttpStatus.CREATED)
+  public CommonResponse<ResponseSymbol> handleCreateMemberBook(
+      @AuthenticationId UUID memberId,
+      @Valid @RequestBody RegisterMemberBookRequest request
+  ) {
+    bookWriteUseCase.registerMemberBookProcess(request.toCommand(memberId));
     return new CommonResponse<>(true, CREATED);
   }
 

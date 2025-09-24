@@ -29,10 +29,10 @@ CREATE TABLE IF NOT EXISTS members (
 CREATE TABLE member_books (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     member_id BINARY(16) NOT NULL,
-    book_id BIGINT NOT NULL
+    book_id BIGINT NOT NULL,
     book_status ENUM('BEST', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,
     CONSTRAINT fk_mb_member FOREIGN KEY (member_id)  REFERENCES members(id) ON DELETE CASCADE,
-    CONSTRAINT fk_mb_book FOREIGN KEY (book_id) REFERENCES books(id),
+    CONSTRAINT fk_mb_book FOREIGN KEY (book_id) REFERENCES books(id)
 )
 
 -- ========================

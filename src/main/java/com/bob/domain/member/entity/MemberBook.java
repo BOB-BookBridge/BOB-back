@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "member_interests")
+@Table(name = "member_books")
 public class MemberBook {
 
   @Id
@@ -35,5 +35,13 @@ public class MemberBook {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private BookStatus bookStatus;
+  private BookStatus status;
+
+  public static MemberBook of(UUID memberId, Long bookId, String status) {
+    return MemberBook.builder()
+        .memberId(memberId)
+        .bookId(bookId)
+        .status(BookStatus.valueOf(status))
+        .build();
+  }
 }
