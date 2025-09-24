@@ -4,6 +4,7 @@ import static com.bob.domain.post.entity.status.Status.ACTIVE;
 import static com.bob.domain.post.entity.status.TradeProgress.READY;
 
 import com.bob.domain.book.service.dto.command.CreateBookCommand;
+import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.post.entity.Category;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.BookStatus;
@@ -46,7 +47,7 @@ public record CreatePostCommand(
   }
 
   public CreateBookCommand toCreateBookCommand() {
-    return new CreateBookCommand(
+    return CreateBookCommand.of(
         bookIsbn,
         bookTitle,
         bookAuthor,
@@ -55,5 +56,9 @@ public record CreatePostCommand(
         bookCover,
         bookPubDate
     );
+  }
+
+  public RegisterMemberBookCommand toCreateMemberBookCommand(Long id) {
+    return RegisterMemberBookCommand.of(memberId, id, bookStatus);
   }
 }
