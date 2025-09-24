@@ -26,14 +26,17 @@ CREATE TABLE IF NOT EXISTS members (
     created_at DATETIME
 );
 
-CREATE TABLE member_books (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+-- ========================
+-- MEMBER BOOKS TABLE
+-- ========================
+CREATE TABLE IF NOT EXISTS member_books (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     member_id BINARY(16) NOT NULL,
     book_id BIGINT NOT NULL,
-    book_status ENUM('BEST', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,
+    status ENUM('BEST', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,
     CONSTRAINT fk_mb_member FOREIGN KEY (member_id)  REFERENCES members(id) ON DELETE CASCADE,
     CONSTRAINT fk_mb_book FOREIGN KEY (book_id) REFERENCES books(id)
-)
+);
 
 -- ========================
 -- INTERESTS TABLE
