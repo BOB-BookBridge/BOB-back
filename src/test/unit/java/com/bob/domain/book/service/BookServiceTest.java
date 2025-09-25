@@ -2,6 +2,7 @@ package com.bob.domain.book.service;
 
 import static com.bob.support.fixture.command.CreateBookCommandFixture.DEFAULT_CREATE_BOOK_COMMAND;
 import static com.bob.support.fixture.domain.BookFixture.DEFAULT_BOOK;
+import static com.bob.support.fixture.domain.BookFixture.SECOND_BOOK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -13,6 +14,7 @@ import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.repository.BookRepository;
 import com.bob.domain.book.service.dto.command.CreateBookCommand;
 import com.bob.domain.book.service.dto.query.ReadBookDetailQuery;
+import com.bob.domain.book.service.dto.query.ReadBooksQuery;
 import com.bob.domain.book.service.dto.query.SearchBookQuery;
 import com.bob.domain.book.service.dto.response.BookResponse;
 import com.bob.domain.book.service.reader.BookReader;
@@ -72,8 +74,7 @@ class BookServiceTest {
   }
 
   @Test
-  @DisplayName("도서 상세 조회 - 성공")
-  void 도서_상세를_조회할_수_있다() {
+  void 도서_상세_정상_조회() {
     // given
     Book book = DEFAULT_BOOK;
     given(bookReader.readBookById(book.getId())).willReturn(book);
@@ -88,7 +89,7 @@ class BookServiceTest {
   }
 
   @Test
-  void 키워드_기반_도서_검색_결과_반환() {
+  void 도서_검색_키워드_기반_결과_반환() {
     // given
     String key = "TITLE";
     String keyword = "spring";
@@ -104,7 +105,7 @@ class BookServiceTest {
   }
 
   @Test
-  void 키워드_기반_도서_검색_결과_0건_빈_리스트_반환() {
+  void 도서_검색_키워드_기반_결과_0건_반환() {
     // given
     String key = "AUTHOR";
     String keyword = "nohit";
@@ -116,6 +117,26 @@ class BookServiceTest {
     // then
     assertThat(ids).isEmpty();
     then(bookReader).should().searchBookIdsByKeyword(key, keyword);
+    then(bookRepository).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 도서_ID_목록_정상_조회() {
+    // given
+    List<Long> ids = List.of(1L, 2L);
+    Book book1 = DEFAULT_BOOK;
+    Book book2 = SECOND_BOOK;
+
+    given(bookReader.readBooksByIds(ids)).willReturn(List.of(book1, book2));
+
+    // when
+    List<BookResponse> responses = bookService.readBooksProcess(ReadBooksQuery.of(ids));
+
+    // then
+    assertThat(responses).hasSize(2);
+    assertThat(responses.get(0).id()).isEqualTo(DEFAULT_BOOK.getId());
+    assertThat(responses.get(1).id()).isEqualTo(SECOND_BOOK.getId());
+    then(bookReader).should().readBooksByIds(ids);
     then(bookRepository).shouldHaveNoInteractions();
   }
 }

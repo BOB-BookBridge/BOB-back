@@ -17,6 +17,10 @@ public class BookReader {
 
   private final BookRepository bookRepository;
 
+  public List<Book> readBooksByIds(List<Long> ids) {
+    return bookRepository.findAllByIdIn(ids);
+  }
+
   public Book readBookById(Long id) {
     return bookRepository.findById(id)
         .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_OBJECT));

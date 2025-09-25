@@ -16,6 +16,6 @@ public class ChatMemberAdapter implements ChatMemberPort {
 
   @Override
   public MemberProfileResponse readChatMemberProfile(UUID memberId) {
-    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId));
+    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId, false));
   }
 }

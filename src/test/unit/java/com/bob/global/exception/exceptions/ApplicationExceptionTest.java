@@ -1,0 +1,55 @@
+package com.bob.global.exception.exceptions;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.bob.global.exception.response.ApplicationError;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("애플리케이션 예외 테스트")
+class ApplicationExceptionTest {
+
+  @Test
+  void 원문_메시지_사용() {
+    // given
+    ApplicationError error = ApplicationError.NOT_EXIST_OBJECT;
+
+    // when
+    ApplicationException ex = new ApplicationException(error);
+
+    // then
+    assertThat(ex.getError()).isEqualTo(error);
+    assertThat(ex.getArgs()).isEmpty();
+    assertThat(ex.getMessage()).isEqualTo(error.getMessage());
+  }
+
+  @Test
+  void 포맷_인수로_메시지_치환() {
+    // given
+    ApplicationError error = ApplicationError.MEMBER_BOOK_ALREADY_USE;
+    Long usageId = 3L;
+    String expected = String.format(error.getMessage(), usageId);
+
+    // when
+    ApplicationException ex = new ApplicationException(error, usageId);
+
+    // then
+    assertThat(ex.getError()).isEqualTo(error);
+    assertThat(ex.getArgs()).containsExactly(usageId);
+    assertThat(ex.getMessage()).isEqualTo(expected);
+  }
+
+  @Test
+  void 포맷_인수가_null이면_원문_메시지_사용() {
+    // given
+    ApplicationError error = ApplicationError.MEMBER_BOOK_ALREADY_USE;
+
+    // when
+    ApplicationException ex = new ApplicationException(error, (Object[]) null);
+
+    // then
+    assertThat(ex.getError()).isEqualTo(error);
+    assertThat(ex.getArgs()).isNull();
+    assertThat(ex.getMessage()).isEqualTo(error.getMessage());
+  }
+}

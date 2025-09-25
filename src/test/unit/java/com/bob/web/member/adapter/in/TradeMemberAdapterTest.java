@@ -30,7 +30,7 @@ class TradeMemberAdapterTest {
   @DisplayName("회원 ID를 통한 게시글 작성자 정보 조회 기능 호출 테스트")
   void 게시글_작성자_정보를_조회한다() {
     // given
-    ReadProfileQuery query = ReadProfileQuery.of(MEMBER_ID);
+    ReadProfileQuery query = ReadProfileQuery.of(MEMBER_ID, false);
     given(readUseCase.readProfileProcess(query)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
     // when

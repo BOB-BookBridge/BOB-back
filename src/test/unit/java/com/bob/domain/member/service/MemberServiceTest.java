@@ -16,8 +16,10 @@ import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.defaultIdMember;
 import static com.bob.support.fixture.domain.MemberFixture.defaultMember;
 import static com.bob.support.fixture.domain.MemberFixture.removedMember;
-import static com.bob.support.fixture.query.MemberQueryFixture.defaultReadProfileQuery;
+import static com.bob.support.fixture.query.MemberQueryFixture.READ_ME_PROFILE_QUERY;
+import static com.bob.support.fixture.query.MemberQueryFixture.READ_OTHER_PROFILE_QUERY;
 import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
+import static com.bob.support.fixture.response.MemberBooksResponseFixture.DEFAULT_MEMBER_BOOKS_RESPONSE;
 import static com.bob.support.fixture.response.interest.InterestNamesFixture.DEFAULT_INTEREST_DISPLAY_NAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,6 +40,7 @@ import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
 import com.bob.domain.member.service.dto.command.RecoverAccountCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.dto.response.SocialLoginResponse;
@@ -74,6 +77,9 @@ class MemberServiceTest {
 
   @Mock
   private MemberInterestService memberInterestService;
+
+  @Mock
+  private MemberBookService memberBookService;
 
   @Mock
   private MemberRepository memberRepository;
@@ -189,11 +195,41 @@ class MemberServiceTest {
   }
 
   @Test
-  @DisplayName("사용자 프로필 조회 - 성공 테스트")
-  void 사용자의_프로필을_조회할_수_있다() {
+  void 내_프로필_조회() {
     // given
     Member member = defaultMember();
-    ReadProfileQuery query = defaultReadProfileQuery();
+    ReadProfileQuery query = READ_ME_PROFILE_QUERY;
+
+    given(memberReader.readMemberById(query.memberId())).willReturn(member);
+    given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
+    given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
+    given(memberBookService.readMemberBooksProcess(ReadMemberBooksQuery.of(member.getId()))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
+
+    // when
+    MemberProfileResponse response = memberService.readProfileProcess(query);
+
+    // then
+    then(memberReader).should(times(1)).readMemberById(query.memberId());
+    assertThat(response.isSocial()).isFalse();
+    assertThat(response.memberId()).isEqualTo(member.getId());
+    assertThat(response.email()).isEqualTo(member.getEmail());
+    assertThat(response.nickname()).isEqualTo(member.getNickname());
+    assertThat(response.interests()).hasSize(DEFAULT_INTEREST_DISPLAY_NAMES().size());
+    assertThat(response.area().emdId()).isEqualTo(EMD_AREA_ID);
+    assertThat(response.area().isAuthentication()).isTrue();
+
+    // 내 프로필 조회 시 소유 도서 목록 포함
+    assertThat(response.books()).isNotNull();
+    assertThat(response.books()).hasSize(2);
+    assertThat(response.books().get(0).id()).isEqualTo(1L);
+    assertThat(response.books().get(1).id()).isEqualTo(2L);
+  }
+
+  @Test
+  void 타인_프로필_조회() {
+    // given
+    Member member = defaultMember();
+    ReadProfileQuery query = READ_OTHER_PROFILE_QUERY;
 
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
     given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
@@ -211,13 +247,16 @@ class MemberServiceTest {
     assertThat(response.interests()).hasSize(DEFAULT_INTEREST_DISPLAY_NAMES().size());
     assertThat(response.area().emdId()).isEqualTo(EMD_AREA_ID);
     assertThat(response.area().isAuthentication()).isTrue();
+
+    // 타인 프로필 조회 시 소유 도서 목록은 null.
+    assertThat(response.books()).isNull();
   }
 
   @Test
   void 탈퇴한_사용자의_프로필_조회_테스트() {
     // given
     Member member = removedMember();
-    ReadProfileQuery query = defaultReadProfileQuery();
+    ReadProfileQuery query = READ_OTHER_PROFILE_QUERY;
 
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
     given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
@@ -233,6 +272,8 @@ class MemberServiceTest {
     assertThat(response.nickname()).isEqualTo("(알 수 없음)");
     assertThat(response.profileImageUrl()).isNull();
     assertThat(response.interests()).hasSize(0);
+
+    assertThat(response.books()).isNull();
   }
 
   @ParameterizedTest(name = "프로필 변경 성공 케이스: {0}")

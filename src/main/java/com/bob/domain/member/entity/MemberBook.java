@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -33,15 +34,26 @@ public class MemberBook {
   @Column(nullable = false)
   private Long bookId;
 
+  @Column
+  private Long usageId;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private BookStatus status;
+  private BookStatus bookStatus;
 
   public static MemberBook of(UUID memberId, Long bookId, String status) {
     return MemberBook.builder()
         .memberId(memberId)
         .bookId(bookId)
-        .status(BookStatus.valueOf(status))
+        .bookStatus(BookStatus.valueOf(status))
         .build();
+  }
+
+  public boolean isOwner(UUID memberId) {
+    return Objects.equals(this.memberId, memberId);
+  }
+
+  public boolean isRemovable() {
+    return usageId == null;
   }
 }

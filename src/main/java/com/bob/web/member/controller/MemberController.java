@@ -6,8 +6,13 @@ import static com.bob.web.common.symbol.ResponseSymbol.SENT;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static com.bob.web.member.request.ReadProfileRequest.toQuery;
 
+import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
+import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
+import com.bob.domain.member.usecase.MemberBookReadUseCase;
+import com.bob.domain.member.usecase.MemberBookRemoveUseCase;
 import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
@@ -48,6 +53,8 @@ public class MemberController {
   private final MemberModifyUseCase modifyUseCase;
 
   private final MemberBookWriteUseCase bookWriteUseCase;
+  private final MemberBookReadUseCase bookReadUseCase;
+  private final MemberBookRemoveUseCase removeUseCase;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -68,12 +75,19 @@ public class MemberController {
 
   @GetMapping("/me")
   public ResponseEntity<MemberProfileResponse> handleReadProfile(@AuthenticationId UUID memberId) {
-    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId)));
+    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId, true)));
+  }
+
+  @GetMapping("/me/books")
+  public ResponseEntity<MemberBooksResponse> handleReadBooks(@AuthenticationId UUID memberId) {
+    return ResponseEntity.ok(bookReadUseCase.readMemberBooksProcess(ReadMemberBooksQuery.of(memberId)));
   }
 
   @GetMapping("/{memberId}")
-  public ResponseEntity<MemberProfileResponse> handleReadProfileById(@PathVariable UUID memberId) {
-    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId)));
+  public ResponseEntity<MemberProfileResponse> handleReadProfileById(
+      @PathVariable UUID memberId
+  ) {
+    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId, false)));
   }
 
   @PatchMapping("/me")
@@ -122,6 +136,15 @@ public class MemberController {
   ) {
     RemoveMemberCommand command = new RemoveMemberCommand(memberId);
     modifyUseCase.softRemoveMemberProcess(command, response);
+    return new CommonResponse<>(true, DELETED);
+  }
+
+  @DeleteMapping("/books/{memberBookId}")
+  public CommonResponse<ResponseSymbol> handleRemoveMemberBook(
+      @AuthenticationId UUID memberId,
+      @PathVariable Long memberBookId
+  ) {
+    removeUseCase.removeMemberBookProcess(RemoveMemberBookCommand.of(memberId, memberBookId));
     return new CommonResponse<>(true, DELETED);
   }
 }

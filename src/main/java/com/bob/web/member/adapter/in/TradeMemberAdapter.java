@@ -16,6 +16,6 @@ public class TradeMemberAdapter implements TradeMemberPort {
 
   @Override
   public MemberProfileResponse readTradeMemberProfile(UUID memberId) {
-    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId));
+    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId, false));
   }
 }
