@@ -4,6 +4,7 @@ import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.repository.BookRepository;
 import com.bob.domain.book.service.dto.command.CreateBookCommand;
 import com.bob.domain.book.service.dto.query.ReadBookDetailQuery;
+import com.bob.domain.book.service.dto.query.ReadBooksQuery;
 import com.bob.domain.book.service.dto.query.SearchBookQuery;
 import com.bob.domain.book.service.dto.response.BookResponse;
 import com.bob.domain.book.service.reader.BookReader;
@@ -26,6 +27,12 @@ public class BookService implements BookWriteUseCase, BookReadUseCase {
     Book book = bookReader.readOptionalBookByIsbn(command.isbn13())
         .orElseGet(() -> bookRepository.save(command.toBook()));
     return book.getId();
+  }
+
+  @Transactional(readOnly = true)
+  public List<BookResponse> readBooksProcess(ReadBooksQuery query) {
+    List<Book> books = bookReader.readBooksByIds(query.ids());
+    return books.stream().map(BookResponse::from).toList();
   }
 
   @Transactional(readOnly = true)

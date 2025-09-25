@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface BookRepository extends CrudRepository<Book, Long> {
 
+  List<Book> findAllByIdIn(List<Long> ids);
+
   Optional<Book> findByIsbn13(String isbn);
 
   @Query("""

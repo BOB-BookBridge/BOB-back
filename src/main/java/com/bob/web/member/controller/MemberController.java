@@ -7,7 +7,10 @@ import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static com.bob.web.member.request.ReadProfileRequest.toQuery;
 
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
+import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
+import com.bob.domain.member.usecase.MemberBookReadUseCase;
 import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
@@ -48,6 +51,7 @@ public class MemberController {
   private final MemberModifyUseCase modifyUseCase;
 
   private final MemberBookWriteUseCase bookWriteUseCase;
+  private final MemberBookReadUseCase bookReadUseCase;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -69,6 +73,11 @@ public class MemberController {
   @GetMapping("/me")
   public ResponseEntity<MemberProfileResponse> handleReadProfile(@AuthenticationId UUID memberId) {
     return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId)));
+  }
+
+  @GetMapping("/me/books")
+  public ResponseEntity<MemberBooksResponse> handleReadBooks(@AuthenticationId UUID memberId) {
+    return ResponseEntity.ok(bookReadUseCase.readMemberBooksProcess(ReadMemberBooksQuery.of(memberId)));
   }
 
   @GetMapping("/{memberId}")
