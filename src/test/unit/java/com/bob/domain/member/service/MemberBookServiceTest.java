@@ -1,5 +1,6 @@
 package com.bob.domain.member.service;
 
+import static com.bob.domain.member.entity.UsageStatus.FREE;
 import static com.bob.support.fixture.command.CreateBookCommandFixture.NEW_CREATE_BOOK_COMMAND;
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.DEFAULT_REGISTER_MEMBER_BOOK_COMMAND;
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID;
@@ -55,7 +56,7 @@ class MemberBookServiceTest {
     MemberBook saved = memberBookCaptor.getValue();
     assertThat(saved.getMemberId()).isEqualTo(DEFAULT_REGISTER_MEMBER_BOOK_COMMAND.memberId());
     assertThat(saved.getBookId()).isEqualTo(DEFAULT_REGISTER_MEMBER_BOOK_COMMAND.bookId());
-    assertThat(saved.getStatus().name()).isEqualTo(DEFAULT_REGISTER_MEMBER_BOOK_COMMAND.status());
+    assertThat(saved.getStatus()).isEqualTo(FREE);
   }
 
   @Test
@@ -75,6 +76,6 @@ class MemberBookServiceTest {
     MemberBook saved = memberBookCaptor.getValue();
     assertThat(saved.getMemberId()).isEqualTo(REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID.memberId());
     assertThat(saved.getBookId()).isEqualTo(NEW_MEMBER_BOOK.getBookId());
-    assertThat(saved.getStatus().name()).isEqualTo(REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID.status());
+    assertThat(saved.getStatus()).isEqualTo(FREE);
   }
 }

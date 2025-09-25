@@ -23,7 +23,6 @@ public record RegisterMemberBookCommand(
     return RegisterMemberBookCommand.builder()
         .memberId(memberId)
         .bookId(bookId)
-        .status(status)
         .build();
   }
 

@@ -23,7 +23,7 @@ public class MemberBookService implements MemberBookWriteUseCase {
     if (bookId == null) {
       bookId = createBook(command);
     }
-    memberBookRepository.save(MemberBook.of(command.memberId(), bookId, command.status()));
+    memberBookRepository.save(MemberBook.of(command.memberId(), bookId));
   }
 
   private Long createBook(RegisterMemberBookCommand command) {

@@ -8,9 +8,6 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record RegisterMemberBookRequest(
-    @NotBlank(message = "책 상태는 필수입니다.")
-    String status,
-
     @NotBlank(message = "ISBN은 필수입니다.")
     String isbn,
 
@@ -36,7 +33,6 @@ public record RegisterMemberBookRequest(
   public RegisterMemberBookCommand toCommand(UUID memberId) {
     return RegisterMemberBookCommand.builder()
         .memberId(memberId)
-        .status(status)
         .isbn(isbn)
         .title(title)
         .author(author)
