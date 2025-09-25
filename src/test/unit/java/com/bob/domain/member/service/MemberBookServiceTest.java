@@ -4,10 +4,12 @@ import static com.bob.support.fixture.command.CreateBookCommandFixture.NEW_CREAT
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.DEFAULT_REGISTER_MEMBER_BOOK_COMMAND;
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID;
 import static com.bob.support.fixture.domain.MemberBookFixture.DEFAULT_MEMBER_BOOK;
+import static com.bob.support.fixture.domain.MemberBookFixture.IN_TRADE_BOOK;
 import static com.bob.support.fixture.domain.MemberBookFixture.NEW_MEMBER_BOOK;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_RESPONSES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -17,11 +19,14 @@ import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.entity.BookStatus;
 import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
 import com.bob.domain.member.service.port.out.MemberBookPort;
 import com.bob.domain.member.service.reader.MemberBookReader;
+import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -120,5 +125,51 @@ class MemberBookServiceTest {
     assertThat(s2.id()).isEqualTo(NEW_MEMBER_BOOK.getId());
     assertThat(s2.bookId()).isEqualTo(NEW_MEMBER_BOOK.getBookId());
     assertThat(s2.bookStatus()).isEqualTo(BookStatus.HIGH.name());
+  }
+
+  @Test
+  void 회원_도서_정상_삭제() {
+    // given
+    MemberBook mb = DEFAULT_MEMBER_BOOK;
+    RemoveMemberBookCommand command = RemoveMemberBookCommand.of(MEMBER_ID, DEFAULT_MEMBER_BOOK.getId());
+    given(memberBookReader.readMemberBookById(mb.getId())).willReturn(mb);
+
+    // when
+    service.removeMemberBookProcess(command);
+
+    // then
+    then(memberBookRepository).should().deleteById(DEFAULT_MEMBER_BOOK.getId());
+  }
+
+  @Test
+  void 회원_도서_삭제_시_소유자가_아니면_예외가_발생한다() {
+    // given
+    MemberBook mb = DEFAULT_MEMBER_BOOK;
+    RemoveMemberBookCommand command = RemoveMemberBookCommand.of(UUID.randomUUID(), DEFAULT_MEMBER_BOOK.getId());
+
+    given(memberBookReader.readMemberBookById(DEFAULT_MEMBER_BOOK.getId())).willReturn(mb);
+
+    // when & then
+    assertThatThrownBy(() -> service.removeMemberBookProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.OBJECT_ACCESS_DENIED.getMessage());
+
+    then(memberBookRepository).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 회원_도서_삭제_시_사용처가_있으면_예외가_발생한다() {
+    // given
+    RemoveMemberBookCommand command = RemoveMemberBookCommand.of(MEMBER_ID, 3L);
+    MemberBook mb = IN_TRADE_BOOK;
+
+    given(memberBookReader.readMemberBookById(IN_TRADE_BOOK.getId())).willReturn(mb);
+
+    // when & then
+    assertThatThrownBy(() -> service.removeMemberBookProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.MEMBER_BOOK_ALREADY_USE.getMessage(), 1L);
+
+    then(memberBookRepository).shouldHaveNoInteractions();
   }
 }
