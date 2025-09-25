@@ -182,6 +182,8 @@ class MemberServiceIntgTest extends TestContainerSupport {
     assertThat(response.profileImageUrl()).isEqualTo(member.getProfileImageUrl());
     assertThat(response.interests()).isNotNull();
     assertThat(response.area()).isNotNull();
+
+    assertThat(response.books()).isNotNull();
   }
 
   @Test
