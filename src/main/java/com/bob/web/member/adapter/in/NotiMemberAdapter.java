@@ -16,6 +16,6 @@ public class NotiMemberAdapter implements NotiMemberPort {
 
   @Override
   public MemberProfileResponse readNotiMemberProfile(UUID memberId) {
-    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId));
+    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId, false));
   }
 }

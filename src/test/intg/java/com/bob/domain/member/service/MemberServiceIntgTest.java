@@ -168,7 +168,7 @@ class MemberServiceIntgTest extends TestContainerSupport {
     // given
     Member member = defaultMember();
     memberRepository.save(member);
-    ReadProfileQuery query = ReadProfileQuery.of(member.getId());
+    ReadProfileQuery query = ReadProfileQuery.of(member.getId(), true);
     given(areaPort.readMemberAreaSummary(member.getId())).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
 
     // when

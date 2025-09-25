@@ -32,7 +32,7 @@ class ChatMemberAdapterTest {
   void 채팅_상대방의_memberId로_프로필을_조회한다() {
     // given
     UUID memberId = MEMBER_ID;
-    ReadProfileQuery query = ReadProfileQuery.of(memberId);
+    ReadProfileQuery query = ReadProfileQuery.of(memberId, false);
     given(readUseCase.readProfileProcess(query)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
     // when

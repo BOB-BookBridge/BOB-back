@@ -104,7 +104,7 @@ class MemberControllerTest {
     // given
     String json = """
         {
-          "status": "AVAILABLE",
+          "bookStatus": "BEST",
           "isbn": "9781234567890",
           "title": "테스트책",
           "author": "홍길동",

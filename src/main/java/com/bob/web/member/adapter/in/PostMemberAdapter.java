@@ -20,7 +20,7 @@ public class PostMemberAdapter implements PostMemberPort {
 
   @Override
   public MemberProfileResponse readPostMemberSummary(UUID memberId) {
-    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId));
+    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId, false));
   }
 
   @Override

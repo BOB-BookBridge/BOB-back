@@ -75,7 +75,7 @@ public class MemberController {
 
   @GetMapping("/me")
   public ResponseEntity<MemberProfileResponse> handleReadProfile(@AuthenticationId UUID memberId) {
-    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId)));
+    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId, true)));
   }
 
   @GetMapping("/me/books")
@@ -84,8 +84,10 @@ public class MemberController {
   }
 
   @GetMapping("/{memberId}")
-  public ResponseEntity<MemberProfileResponse> handleReadProfileById(@PathVariable UUID memberId) {
-    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId)));
+  public ResponseEntity<MemberProfileResponse> handleReadProfileById(
+      @PathVariable UUID memberId
+  ) {
+    return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId, false)));
   }
 
   @PatchMapping("/me")

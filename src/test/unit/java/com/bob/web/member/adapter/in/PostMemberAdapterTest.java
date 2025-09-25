@@ -38,7 +38,7 @@ class PostMemberAdapterTest {
   void 게시글_작성자_정보를_조회한다() {
     // given
     UUID memberId = UUID.randomUUID();
-    ReadProfileQuery query = ReadProfileQuery.of(memberId);
+    ReadProfileQuery query = ReadProfileQuery.of(memberId, false);
 
     given(readUseCase.readProfileProcess(query)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 

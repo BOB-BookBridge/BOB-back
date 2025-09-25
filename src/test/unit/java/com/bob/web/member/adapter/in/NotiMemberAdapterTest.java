@@ -33,13 +33,13 @@ class NotiMemberAdapterTest {
     // given
     UUID memberId = MEMBER_ID;
     MemberProfileResponse memberSummary = DEFAULT_MEMBER_PROFILE_RESPONSE;
-    given(readUseCase.readProfileProcess(ReadProfileQuery.of(memberId))).willReturn(memberSummary);
+    given(readUseCase.readProfileProcess(ReadProfileQuery.of(memberId, false))).willReturn(memberSummary);
 
     // when
     MemberProfileResponse actual = notiMemberAdapter.readNotiMemberProfile(memberId);
 
     // then
     assertThat(actual).isEqualTo(memberSummary);
-    verify(readUseCase).readProfileProcess(ReadProfileQuery.of(memberId));
+    verify(readUseCase).readProfileProcess(ReadProfileQuery.of(memberId, false));
   }
 }

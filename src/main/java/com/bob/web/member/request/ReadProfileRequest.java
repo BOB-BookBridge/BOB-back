@@ -7,7 +7,7 @@ public record ReadProfileRequest(
 
 ) {
 
-  public static ReadProfileQuery toQuery(UUID memberId) {
-    return new ReadProfileQuery(memberId);
+  public static ReadProfileQuery toQuery(UUID memberId, boolean isMe) {
+    return new ReadProfileQuery(memberId, isMe);
   }
 }

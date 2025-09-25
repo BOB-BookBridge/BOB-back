@@ -11,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 public class MemberQueryFixture {
 
   public static ReadProfileQuery defaultReadProfileQuery() {
-    return new ReadProfileQuery(MEMBER_ID);
+    return new ReadProfileQuery(MEMBER_ID, false);
   }
 
   public static ReadProfileWithPostsQuery defaultReadProfileWithPostsQuery(UUID memberId) {

@@ -55,6 +55,7 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   private final MemberReader memberReader;
 
   private final MemberInterestService memberInterestService;
+  private final MemberBookService memberBookService;
 
   private final MemberAreaPort areaPort;
   private final MemberMailPort mailPort;
