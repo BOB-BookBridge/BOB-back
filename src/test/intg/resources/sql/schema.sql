@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS member_books (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     member_id BINARY(16) NOT NULL,
     book_id BIGINT NOT NULL,
-    usage_status ENUM('FREE', 'IN_TRADE') NOT NULL,
+    usage_id BIGINT,
+    book_status ENUM('BEST', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,
     CONSTRAINT fk_mb_member FOREIGN KEY (member_id)  REFERENCES members(id) ON DELETE CASCADE,
     CONSTRAINT fk_mb_book FOREIGN KEY (book_id) REFERENCES books(id)
 );
@@ -339,13 +340,13 @@ INSERT INTO activity_areas (member_id, emd_area_id, authentication_at) VALUES (U
 INSERT INTO activity_areas (member_id, emd_area_id, authentication_at) VALUES (UUID_TO_BIN('0197365f-8074-7d24-ba91-0c5fc1b37ca2'), 213, CURDATE());
 INSERT INTO activity_areas (member_id, emd_area_id, authentication_at) VALUES (UUID_TO_BIN('0197365f-8074-7d24-ba91-0c5fc1b37ca3'), 213, CURDATE());
 
-INSERT INTO books (isbn13, title, author, description, price_standard, cover, pub_date) VALUES
-('9788994492032', '자바의 정석', '남궁성', '자바 기초 입문서', 15000, 'https://cover/1.png', '2020-01-01'),
-('9788960777330', '자바 ORM 표준 JPA 프로그래밍', '김영한', 'JPA 표준 가이드', 18000, 'https://cover/2.png', '2021-06-01'),
-('9788998139766', '토비의 스프링', '백기선', '스프링 심화 학습', 22000, 'https://cover/3.png', '2022-03-10'),
-('9788966261208', '오브젝트', '조영호', '객체지향 설계 입문', 25000, 'https://cover/4.png', '2021-05-15'),
-('9788999999001', '싸다구 책1', '김저렴', '저렴한 책1', 3000, 'https://cover/5.png', '2019-01-01'),
-('9788999999002', '싸다구 책2', '박할인', '저렴한 책2', 4000, 'https://cover/6.png', '2018-12-01');
+INSERT INTO books (id, isbn13, title, author, description, price_standard, cover, pub_date) VALUES
+(1, '9788994492032', '자바의 정석', '남궁성', '자바 기초 입문서', 15000, 'https://cover/1.png', '2020-01-01'),
+(2, '9788960777330', '자바 ORM 표준 JPA 프로그래밍', '김영한', 'JPA 표준 가이드', 18000, 'https://cover/2.png', '2021-06-01'),
+(3, '9788998139766', '토비의 스프링', '백기선', '스프링 심화 학습', 22000, 'https://cover/3.png', '2022-03-10'),
+(4, '9788966261208', '오브젝트', '조영호', '객체지향 설계 입문', 25000, 'https://cover/4.png', '2021-05-15'),
+(5, '9788999999001', '싸다구 책1', '김저렴', '저렴한 책1', 3000, 'https://cover/5.png', '2019-01-01'),
+(6, '9788999999002', '싸다구 책2', '박할인', '저렴한 책2', 4000, 'https://cover/6.png', '2018-12-01');
 
 INSERT INTO posts (book_id, title, seller_id, category_id, book_status, trade_progress, sell_price, description, registration_area_id, thumbnail_url, created_at, status) VALUES
 (1, '자바의 정석', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, 'BEST', 'READY', 10000, '자바 기초를 다룬 책입니다.', 213, 'https://image/1.png', now(), 'ACTIVE'),

@@ -33,15 +33,18 @@ public class MemberBook {
   @Column(nullable = false)
   private Long bookId;
 
+  @Column
+  private Long usageId;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private UsageStatus status;
+  private BookStatus bookStatus;
 
-  public static MemberBook of(UUID memberId, Long bookId) {
+  public static MemberBook of(UUID memberId, Long bookId, String status) {
     return MemberBook.builder()
         .memberId(memberId)
         .bookId(bookId)
-        .status(UsageStatus.FREE)
+        .bookStatus(BookStatus.valueOf(status))
         .build();
   }
 }

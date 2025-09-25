@@ -17,11 +17,11 @@ class MemberBookTest {
     Long bookId = 1L;
 
     // when
-    MemberBook result = MemberBook.of(memberId, bookId);
+    MemberBook result = MemberBook.of(memberId, bookId, "BEST");
 
     // then
     assertThat(result.getMemberId()).isEqualTo(memberId);
     assertThat(result.getBookId()).isEqualTo(bookId);
-    assertThat(result.getStatus()).isEqualTo(UsageStatus.FREE);
+    assertThat(result.getBookStatus()).isEqualTo(BookStatus.BEST);
   }
 }

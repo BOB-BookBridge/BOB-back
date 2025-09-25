@@ -3,7 +3,8 @@ package com.bob.support.fixture.domain;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
 import com.bob.domain.member.entity.MemberBook;
-import com.bob.domain.member.entity.UsageStatus;
+import com.bob.domain.member.entity.BookStatus;
+import java.util.List;
 
 public class MemberBookFixture {
 
@@ -11,20 +12,23 @@ public class MemberBookFixture {
       .id(1L)
       .memberId(MEMBER_ID)
       .bookId(1L)
-      .status(UsageStatus.FREE)
+      .bookStatus(BookStatus.BEST)
       .build();
 
   public static MemberBook NEW_MEMBER_BOOK = MemberBook.builder()
       .id(2L)
       .memberId(MEMBER_ID)
       .bookId(2L)
-      .status(UsageStatus.FREE)
+      .bookStatus(BookStatus.HIGH)
       .build();
 
   public static MemberBook IN_TRADE_BOOK = MemberBook.builder()
       .id(3L)
       .memberId(MEMBER_ID)
       .bookId(3L)
-      .status(UsageStatus.IN_TRADE)
+      .bookStatus(BookStatus.LOW)
+      .usageId(1L)
       .build();
+
+  public static final List<MemberBook> DEFAULT_MEMBER_BOOK_RESPONSES = List.of(DEFAULT_MEMBER_BOOK, NEW_MEMBER_BOOK);
 }

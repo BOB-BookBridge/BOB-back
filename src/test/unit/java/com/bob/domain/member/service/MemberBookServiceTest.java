@@ -1,6 +1,5 @@
 package com.bob.domain.member.service;
 
-import static com.bob.domain.member.entity.UsageStatus.FREE;
 import static com.bob.support.fixture.command.CreateBookCommandFixture.NEW_CREATE_BOOK_COMMAND;
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.DEFAULT_REGISTER_MEMBER_BOOK_COMMAND;
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID;
@@ -15,7 +14,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 import com.bob.domain.member.entity.MemberBook;
-import com.bob.domain.member.entity.UsageStatus;
+import com.bob.domain.member.entity.BookStatus;
 import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
@@ -68,7 +67,7 @@ class MemberBookServiceTest {
     MemberBook saved = memberBookCaptor.getValue();
     assertThat(saved.getMemberId()).isEqualTo(DEFAULT_REGISTER_MEMBER_BOOK_COMMAND.memberId());
     assertThat(saved.getBookId()).isEqualTo(DEFAULT_REGISTER_MEMBER_BOOK_COMMAND.bookId());
-    assertThat(saved.getStatus()).isEqualTo(FREE);
+    assertThat(saved.getBookStatus()).isEqualTo(BookStatus.BEST);
   }
 
   @Test
@@ -88,7 +87,7 @@ class MemberBookServiceTest {
     MemberBook saved = memberBookCaptor.getValue();
     assertThat(saved.getMemberId()).isEqualTo(REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID.memberId());
     assertThat(saved.getBookId()).isEqualTo(NEW_MEMBER_BOOK.getBookId());
-    assertThat(saved.getStatus()).isEqualTo(FREE);
+    assertThat(saved.getBookStatus()).isEqualTo(BookStatus.HIGH);
   }
 
   @Test
@@ -115,11 +114,11 @@ class MemberBookServiceTest {
     MemberBookSummary s1 = summaries.get(0);
     assertThat(s1.id()).isEqualTo(DEFAULT_MEMBER_BOOK.getId());
     assertThat(s1.bookId()).isEqualTo(DEFAULT_MEMBER_BOOK.getBookId());
-    assertThat(s1.status()).isEqualTo(UsageStatus.FREE.name());
+    assertThat(s1.bookStatus()).isEqualTo(BookStatus.BEST.name());
 
     MemberBookSummary s2 = summaries.get(1);
     assertThat(s2.id()).isEqualTo(NEW_MEMBER_BOOK.getId());
     assertThat(s2.bookId()).isEqualTo(NEW_MEMBER_BOOK.getBookId());
-    assertThat(s2.status()).isEqualTo(UsageStatus.FREE.name());
+    assertThat(s2.bookStatus()).isEqualTo(BookStatus.HIGH.name());
   }
 }
