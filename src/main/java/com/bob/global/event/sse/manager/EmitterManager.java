@@ -53,7 +53,7 @@ public class EmitterManager implements Runnable {
       removeEmitter(old, key, repository);
     }
 
-    SseEmitter emitter = new SseEmitter(defaultTimeout);
+    SseEmitter emitter = new SseEmitter(defaultTimeout * 1000);
     setupEmitter(emitter, key, repository);
     repository.save(key, emitter);
     sendEvent(type, key, CONNECT, "connected");

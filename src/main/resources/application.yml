@@ -5,6 +5,6 @@ spring:
     time-zone: Asia/Seoul
 
 sse:
-  heartbeat-interval: 10 # 10초
-  default-timeout: 60000 # 1분
+  heartbeat-interval: 30 # 30초
+  default-timeout: 1800 # 30분
 
