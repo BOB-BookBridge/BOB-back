@@ -1,6 +1,7 @@
 package com.bob.web.book.adapter;
 
 import com.bob.domain.book.service.dto.command.CreateBookCommand;
+import com.bob.domain.book.service.dto.query.ReadBookDetailQuery;
 import com.bob.domain.book.service.dto.query.ReadBooksQuery;
 import com.bob.domain.book.service.dto.response.BookResponse;
 import com.bob.domain.book.usecase.BookReadUseCase;
@@ -25,5 +26,10 @@ public class MemberBookAdapter implements MemberBookPort {
   @Override
   public List<BookResponse> readBookSummaries(List<Long> ids) {
     return readUseCase.readBooksProcess(ReadBooksQuery.of(ids));
+  }
+
+  @Override
+  public BookResponse readBookSummary(Long id) {
+    return readUseCase.readBookProcess(ReadBookDetailQuery.of(id));
   }
 }

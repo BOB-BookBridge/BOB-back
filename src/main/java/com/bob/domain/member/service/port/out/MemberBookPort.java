@@ -9,4 +9,6 @@ public interface MemberBookPort {
   Long createBook(CreateBookCommand command);
 
   List<BookResponse> readBookSummaries(List<Long> ids);
+
+  BookResponse readBookSummary(Long id);
 }
