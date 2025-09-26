@@ -1,13 +1,15 @@
 package com.bob.domain.trade.service;
 
-import static com.bob.domain.trade.entity.status.TradeStatus.REQUESTED;
-import static com.bob.domain.trade.entity.status.TradeStatus.RESERVED;
+import static com.bob.domain.chat.entity.status.TradeStatus.READY;
+import static com.bob.domain.trade.entity.status.Status.REQUESTED;
+import static com.bob.domain.trade.entity.status.Status.RESERVED;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
 import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.repository.ChatRoomRepository;
@@ -15,11 +17,13 @@ import com.bob.domain.chat.service.reader.ChatRoomReader;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse.BookInfo;
 import com.bob.domain.trade.entity.Trade;
-import com.bob.domain.trade.entity.status.TradeStatus;
+import com.bob.domain.trade.entity.status.Status;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
+import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
+import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
@@ -29,6 +33,7 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
 import com.bob.support.redis.RedisContainerConfig;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -94,8 +99,32 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("거래 목록 조회 - 성공 테스트")
-  void 판매자는_거래_목록을_정상_조회할_수_있다() {
+  void 거래_생성() {
+    // given
+    Long targetPostId = postId;
+    UUID buyer = UUID.randomUUID();
+    List<Long> exchangeBookIds = List.of(10L, 11L);
+    given(postPort.readTradePostSummary(targetPostId)).willReturn(mockPostResponse());
+    CreateTradeCommand command = CreateTradeCommand.of(targetPostId, buyer, exchangeBookIds);
+
+    // when
+    CreateTradeResponse response = tradeService.createTradeProcess(command);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.id()).isNotNull();
+
+    Trade saved = tradeRepository.findById(response.id()).orElseThrow();
+    assertThat(saved.getPostId()).isEqualTo(targetPostId);
+    assertThat(saved.getSellerId()).isEqualTo(sellerId);
+    assertThat(saved.getBuyerId()).isEqualTo(buyer);
+    assertThat(saved.getStatus()).isEqualTo(REQUESTED);
+
+    then(memberPort).should().changeMemberBookUsage(targetPostId, exchangeBookIds);
+  }
+
+  @Test
+  void 거래_목록_조회() {
     // given
     ReadTradesQuery query = new ReadTradesQuery(postId, sellerId);
 
@@ -112,8 +141,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("거래 목록 조회 - 실패 테스트 (판매자 X)")
-  void 판매자가_아니면_거래_목록_조회_시_예외가_발생한다() {
+  void 거래_목록_조회_시_게시글_등록자가_아니면_예외가_발생한다() {
     // given
     UUID otherUser = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
     ReadTradesQuery query = new ReadTradesQuery(postId, otherUser);
@@ -127,8 +155,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("거래 상세 조회 - 성공 테스트")
-  void 거래_상세조회_시_판매자인_경우_성공한다() {
+  void 거래_상세_조회() {
     // given
     Trade trade = tradeRepository.findAllByPostId(1L).get(0);
     UUID sellerId = trade.getSellerId();
@@ -146,8 +173,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("거래 상세 조회 - 실패 테스트 (거래 참여자 X)")
-  void 거래_상세조회_비참여자라면_예외발생() {
+  void 거래_상세_조회_시_거래_참여자가_아니면_예외가_발생한다() {
     // given
     Trade trade = tradeRepository.findAllByPostId(1L).get(0);
     Long tradeId = trade.getId();
@@ -162,8 +188,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("거래 상태 변경 - 성공 테스트")
-  void 거래_상태를_정상적으로_변경할_수_있다() {
+  void 거래_상태_변경() {
     // given
     tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now())); // 대기 상태로 변경
     Trade trade = testTrade;
@@ -176,12 +201,11 @@ class TradeServiceIntgTest extends TestContainerSupport {
 
     // then
     Trade updatedTrade = tradeRepository.findById(trade.getId()).orElseThrow();
-    assertThat(updatedTrade.getTradeStatus()).isEqualTo(RESERVED);
+    assertThat(updatedTrade.getStatus()).isEqualTo(RESERVED);
   }
 
   @Test
-  @DisplayName("거래 상태 변경 - 실패 테스트 (이미 처리된 거래 존재)")
-  void 거래_상태_변경시_이미_처리된_거래가_있으면_예외가_발생한다() {
+  void 거래_상태_변경_시_이미_처리된_거래가_있으면_예외가_발생한다() {
     // given
     Trade trade = testTrade;
     given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
@@ -194,8 +218,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  @DisplayName("거래 상태 변경 - 실패 테스트 (게시글 소유자 아님)")
-  void 거래_상태_변경시_게시글_소유자가_아니면_예외가_발생한다() {
+  void 거래_상태_변경_시_게시글_소유자가_아니면_예외가_발생한다() {
     // given
     tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now()));
     Trade trade = testTrade;
@@ -209,12 +232,12 @@ class TradeServiceIntgTest extends TestContainerSupport {
         .hasMessage(ApplicationError.TRADE_ACCESS_DENIED.getMessage());
   }
 
-  private Trade createTrade(UUID buyerId, TradeStatus status) {
+  private Trade createTrade(UUID buyerId, Status status) {
     return Trade.builder()
         .postId(postId)
         .sellerId(sellerId)
         .buyerId(buyerId)
-        .tradeStatus(status)
+        .status(status)
         .updatedAt(now())
         .build();
   }
@@ -224,6 +247,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
         .postId(trade.getPostId())
         .tradeId(trade.getId())
         .titleSuffix("test")
+        .tradeStatus(READY)
         .build();
   }
 
