@@ -1,8 +1,8 @@
 package com.bob.domain.trade.service;
 
-import static com.bob.domain.trade.entity.status.TradeStatus.CANCELED;
-import static com.bob.domain.trade.entity.status.TradeStatus.REQUESTED;
-import static com.bob.domain.trade.entity.status.TradeStatus.valueOf;
+import static com.bob.domain.trade.entity.status.Status.CANCELED;
+import static com.bob.domain.trade.entity.status.Status.REQUESTED;
+import static com.bob.domain.trade.entity.status.Status.valueOf;
 import static com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary.from;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.CHAT_CANCELED_WITH_REASON;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.CHAT_DEFAULT;
@@ -14,14 +14,16 @@ import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_P
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
 import static java.time.LocalDateTime.now;
 
+import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.trade.entity.Trade;
-import com.bob.domain.trade.entity.status.TradeStatus;
+import com.bob.domain.trade.entity.status.Status;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
@@ -53,9 +55,11 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
-  public Long createTradeProcess(CreateTradeCommand command) {
-    Trade trade = tradeRepository.save(command.toTrade());
-    return trade.getId();
+  public CreateTradeResponse createTradeProcess(CreateTradeCommand command) {
+    PostDetailResponse post = postPort.readTradePostSummary(command.postId());
+    Trade trade = tradeRepository.save(Trade.of(command.postId(), post.sellerId(), command.buyerId()));
+    memberPort.changeMemberBookUsage(command.postId(), command.exchangeBookIds());
+    return CreateTradeResponse.of(trade.getId());
   }
 
   @Transactional(readOnly = true)
@@ -90,8 +94,8 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     verifyTradeOwner(post.sellerId(), command.memberId());
     verifyRequestedOnly(trade.getId(), trade.getPostId(), command.status());
 
-    final TradeStatus status = valueOf(command.status());
-    verifyIsSameRequest(trade.getTradeStatus(), status);
+    final Status status = valueOf(command.status());
+    verifyIsSameRequest(trade.getStatus(), status);
     trade.updateTradeStatus(status, now());
     postPort.changeTradeProgress(trade.getPostId(), status.toPostStatusValue());
 
@@ -123,20 +127,20 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     }
     tradeReader.readTradesByPostId(postId).stream()
         .filter(t -> !t.getId().equals(requestId))
-        .filter(t -> t.getTradeStatus().isProcessed())
+        .filter(t -> t.getStatus().isProcessed())
         .findAny()
         .ifPresent(t -> {
           throw new ApplicationException(TRADE_ALREADY_PROCESSED);
         });
   }
 
-  private static void verifyIsSameRequest(TradeStatus s1, TradeStatus s2) {
+  private static void verifyIsSameRequest(Status s1, Status s2) {
     if (s1 == s2) {
       throw new ApplicationException(TRADE_STATUS_UNCHANGED);
     }
   }
 
-  private static String buildNotificationBody(String title, TradeStatus status, String reason) {
+  private static String buildNotificationBody(String title, Status status, String reason) {
     if (status == CANCELED) {
       return normalizeReason(reason) != null
           ? NOTI_CANCELED_WITH_REASON.format(title, CANCELED.value(), normalizeReason(reason))
@@ -145,7 +149,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     return NOTI_DEFAULT.format(title, status.value());
   }
 
-  private static String buildChatMessageBody(TradeStatus status, String reason) {
+  private static String buildChatMessageBody(Status status, String reason) {
     if (status == CANCELED) {
       return normalizeReason(reason) != null
           ? CHAT_CANCELED_WITH_REASON.format(normalizeReason(reason))

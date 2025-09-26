@@ -3,7 +3,7 @@ package com.bob.domain.trade.entity.status;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public enum TradeStatus {
+public enum Status {
   REQUESTED("대기"),
   RESERVED("예약"),
   COMPLETED("완료"),
