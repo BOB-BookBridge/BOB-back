@@ -1,18 +1,14 @@
 package com.bob.domain.trade.adapter;
 
-import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
-import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_ID_TRADE;
+import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
-import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
-import com.bob.domain.trade.usecase.TradeWriteUseCase;
 import com.bob.web.trade.adapter.in.ChatTradeAdapter;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -30,26 +26,7 @@ class TradeAdapterTest {
   private ChatTradeAdapter tradeAdapter;
 
   @Mock
-  private TradeWriteUseCase writeUseCase;
-
-  @Mock
   private TradeReadUseCase readUseCase;
-
-  @Test
-  @DisplayName("거래 생성 기능 호출 테스트")
-  void 거래가_생성되면_거래_ID가_반환된다() {
-    // given
-    Long expect = 1L;
-    CreateTradeCommand command = DEFAULT_CREATE_TRADE_COMMAND();
-    given(writeUseCase.createTradeProcess(any(CreateTradeCommand.class))).willReturn(expect);
-
-    // when
-    Long tradeId = tradeAdapter.createTrade(command.postId(), command.sellerId(), command.buyerId());
-
-    // then
-    assertThat(tradeId).isEqualTo(expect);
-    then(writeUseCase).should(times(1)).createTradeProcess(any(CreateTradeCommand.class));
-  }
 
   @Test
   @DisplayName("채팅 거래 요약 조회 기능 호출 테스트")
@@ -57,7 +34,7 @@ class TradeAdapterTest {
     // given
     Long tradeId = 1L;
     UUID memberId = UUID.randomUUID();
-    TradeDetailResponse expectedResponse = TradeDetailResponse.from(DEFAULT_ID_TRADE(DEFAULT_CREATE_TRADE_COMMAND()));
+    TradeDetailResponse expectedResponse = TradeDetailResponse.from(DEFAULT_TRADE_WITH_ID);
     given(readUseCase.readTradeDetailProcess(ReadTradeDetailQuery.of(tradeId, memberId))).willReturn(expectedResponse);
 
     // when

@@ -6,8 +6,8 @@ import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DE
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND_WITH_REASON;
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
-import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_ID_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
+import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
 import static com.bob.support.fixture.domain.TradeFixture.REQUESTED_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.RESERVED_TRADE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
@@ -27,6 +27,7 @@ import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
@@ -68,33 +69,29 @@ class TradeServiceTest {
   private ApplicationEventPublisher eventPublisher;
 
   @Test
-  @DisplayName("거래 생성 시 ID가 반환된다")
-  void 거래가_생성되면_거래_ID를_반환한다() {
+  void 거래_생성_및_저장() {
     // given
-    CreateTradeCommand command = DEFAULT_CREATE_TRADE_COMMAND();
-    Trade trade = DEFAULT_ID_TRADE(command);
-
-    given(tradeRepository.save(any(Trade.class))).willReturn(trade);
+    CreateTradeCommand command = DEFAULT_CREATE_TRADE_COMMAND;
+    given(tradeRepository.save(any(Trade.class))).willReturn(DEFAULT_TRADE_WITH_ID);
+    given(postPort.readTradePostSummary(command.postId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
 
     // when
-    Long tradeId = tradeService.createTradeProcess(command);
+    CreateTradeResponse response = tradeService.createTradeProcess(command);
 
     // then
-    assertThat(tradeId).isEqualTo(1L);
+    assertThat(response.id()).isEqualTo(1L);
     then(tradeRepository).should(times(1)).save(any(Trade.class));
   }
 
   @Test
-  @DisplayName("거래 목록 조회 - 성공 테스트")
-  void 게시글_소유자는_거래_목록을_정상_조회할_수_있다() {
+  void 거래_목록_조회() {
     // given
     UUID requesterId = MEMBER_ID;
     Long postId = 1L;
     ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
     given(postPort.readTradePostSummary(postId)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
     given(tradeReader.readTradesByPostId(postId)).willReturn(DEFAULT_TRADES());
-    given(memberPort.readTradeMemberProfile(any(UUID.class)))
-        .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
+    given(memberPort.readTradeMemberProfile(any(UUID.class))).willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
 
     // when
     TradesResponse response = tradeService.readTradesProcess(query);
@@ -108,8 +105,7 @@ class TradeServiceTest {
   }
 
   @Test
-  @DisplayName("거래 목록 조회 - 실패 테스트 (게시글 소유자가 아님)")
-  void 게시글_소유자가_아니면_거래_목록_조회_시_예외가_발생한다() {
+  void 거래_목록_조회_시_게시글_등록자가_아니면_예외가_발생한다() {
     // given
     UUID postOwnerId = MEMBER_ID;
     UUID requesterId = UUID.randomUUID();
@@ -128,15 +124,12 @@ class TradeServiceTest {
   }
 
   @Test
-  @DisplayName("거래 상세 조회 - 성공 테스트")
-  void 거래_상세조회_시_판매자인_경우_성공한다() {
+  void 거래_상세_조회_게시글_등록자() {
     // given
-    Trade trade = DEFAULT_ID_TRADE(DEFAULT_CREATE_TRADE_COMMAND());
+    Trade trade = DEFAULT_TRADE_WITH_ID;
     UUID sellerId = trade.getSellerId();
     Long tradeId = trade.getId();
-
     given(tradeReader.readTradeById(tradeId)).willReturn(trade);
-
     ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, sellerId);
 
     // when
@@ -148,13 +141,11 @@ class TradeServiceTest {
   }
 
   @Test
-  @DisplayName("거래 상세 조회 - 구매자라면 성공한다")
-  void 거래_상세조회_시_구매자인_경우_성공한다() {
+  void 거래_상세_조회_교환_요청자() {
     // given
-    Trade trade = DEFAULT_ID_TRADE(DEFAULT_CREATE_TRADE_COMMAND());
+    Trade trade = DEFAULT_TRADE_WITH_ID;
     UUID buyerId = trade.getBuyerId();
     Long tradeId = trade.getId();
-
     given(tradeReader.readTradeById(tradeId)).willReturn(trade);
     ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, buyerId);
 
@@ -167,15 +158,12 @@ class TradeServiceTest {
   }
 
   @Test
-  @DisplayName("거래 상세 조회 - 실패 테스트")
-  void 거래_상세조회_비참여자라면_예외발생() {
+  void 거래_상세_조회_시_게시글_등록자_교환_요청자가_아니면_예외가_발생한다() {
     // given
-    Trade trade = DEFAULT_ID_TRADE(DEFAULT_CREATE_TRADE_COMMAND());
+    Trade trade = DEFAULT_TRADE_WITH_ID;
     UUID nonParticipantId = UUID.randomUUID();
     Long tradeId = trade.getId();
-
     given(tradeReader.readTradeById(tradeId)).willReturn(trade);
-
     ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, nonParticipantId);
 
     // when & then
@@ -186,16 +174,14 @@ class TradeServiceTest {
     then(tradeReader).should(times(1)).readTradeById(tradeId);
   }
 
-  @DisplayName("거래 상태 변경 - 성공 테스트")
   @Test
-  void 거래_상태를_정상적으로_변경할_수_있다() {
+  void 거래_상태_변경() {
     // given
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
     given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
     given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
-    given(tradeReader.readTradesByPostId(requestTrade.getPostId()))
-        .willReturn(List.of(REQUESTED_TRADE(1L,1L), REQUESTED_TRADE(2L,1L))); // 대기중인 거래만 존재
+    given(tradeReader.readTradesByPostId(requestTrade.getPostId())).willReturn(List.of(REQUESTED_TRADE(1L, 1L), REQUESTED_TRADE(2L, 1L))); // 대기중인 거래만 존재
 
     // when
     tradeService.changeTradeStatusProcess(command);
@@ -207,8 +193,7 @@ class TradeServiceTest {
   }
 
   @Test
-  @DisplayName("거래 상태 변경 - 성공 테스트 (취소 사유 입력)")
-  void 거래_상태를_취소로_변경_시_사유가_본문에_포함된다() {
+  void 거래_상태_변경_취소_사유_포함() {
     // given
     String reason = "cancel reason";
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND_WITH_REASON("CANCELED", reason);
@@ -233,9 +218,8 @@ class TradeServiceTest {
     then(eventPublisher).shouldHaveNoMoreInteractions();
   }
 
-  @DisplayName("거래 상태 변경 - 실패 테스트 (이미 처리된 거래 존재)")
   @Test
-  void 거래_상태_변경시_이미_처리된_거래가_있으면_예외가_발생한다() {
+  void 거래_상태_변경_시_이미_진행되는_다른_거래가_있다면_예외가_발생한다() {
     // given
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
@@ -253,9 +237,8 @@ class TradeServiceTest {
     then(tradeReader).should().readTradesByPostId(requestTrade.getPostId());
   }
 
-  @DisplayName("거래 상태 변경 - 실패 테스트 (게시글 소유자 아님)")
   @Test
-  void 거래_상태_변경시_게시글_소유자가_아니면_예외가_발생한다() {
+  void 거래_상태_변경_시_게시글_소유자가_아니면_예외가_발생한다() {
     // given
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
@@ -272,9 +255,8 @@ class TradeServiceTest {
     then(postPort).should().readTradePostSummary(requestTrade.getPostId());
   }
 
-  @DisplayName("거래 상태 변경 - 실패 테스트 (동일한 상태 변경 요청)")
   @Test
-  void 거래_상태_변경시_현재_상태와_요청_상태가_동일하면_예외가_발생한다() {
+  void 거래_상태_변경_시_현재_상태와_요청_상태가_동일하면_예외가_발생한다() {
     // given
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
     Trade requestTrade = RESERVED_TRADE(1L, 1L);

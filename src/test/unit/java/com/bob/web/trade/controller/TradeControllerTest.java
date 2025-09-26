@@ -8,12 +8,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
+import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
+import com.bob.domain.trade.usecase.TradeWriteUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,10 +36,13 @@ class TradeControllerTest {
   private TradeController tradeController;
 
   @Mock
-  private TradeReadUseCase tradeReadUseCase;
+  private TradeWriteUseCase writeUseCase;
 
   @Mock
-  private TradeModifyUseCase tradeModifyUseCase;
+  private TradeReadUseCase readUseCase;
+
+  @Mock
+  private TradeModifyUseCase modifyUseCase;
 
   private MockMvc mvc;
 
@@ -46,22 +52,42 @@ class TradeControllerTest {
   }
 
   @Test
-  @DisplayName("거래 목록 조회 API 호출 테스트")
-  void 거래_목록을_조회할_수_있다() throws Exception {
+  void 거래_생성_기능_호출() throws Exception {
     // given
-    given(tradeReadUseCase.readTradesProcess(any(ReadTradesQuery.class))).willReturn(DEFAULT_TRADES_RESPONSE());
+    String json = """
+        {
+          "postId": 1,
+          "memberBookIds": [10, 11]
+        }
+        """;
+    given(writeUseCase.createTradeProcess(any())).willReturn(org.mockito.Mockito.mock(CreateTradeResponse.class));
+
+    // when & then
+    mvc.perform(post("/trades")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .requestAttr("memberId", MEMBER_ID)
+        )
+        .andExpect(status().isCreated());
+
+    verify(writeUseCase, times(1)).createTradeProcess(any());
+  }
+
+  @Test
+  void 거래_목록_조회_기능_호출() throws Exception {
+    // given
+    given(readUseCase.readTradesProcess(any(ReadTradesQuery.class))).willReturn(DEFAULT_TRADES_RESPONSE());
 
     // when & then
     mvc.perform(get("/trades")
             .param("postId", "1"))
         .andExpect(status().isOk());
 
-    verify(tradeReadUseCase, times(1)).readTradesProcess(any(ReadTradesQuery.class));
+    verify(readUseCase, times(1)).readTradesProcess(any(ReadTradesQuery.class));
   }
 
   @Test
-  @DisplayName("거래 상태 변경 API 호출 테스트")
-  void 거래_상태를_변경할_수_있다() throws Exception {
+  void 거래_상태_변경_기능_호출() throws Exception {
     // given
     Long tradeId = 1L;
     String json = """
@@ -81,6 +107,6 @@ class TradeControllerTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.result").value("UPDATED"));
     // then
-    verify(tradeModifyUseCase, times(1)).changeTradeStatusProcess(any());
+    verify(modifyUseCase, times(1)).changeTradeStatusProcess(any());
   }
 }
