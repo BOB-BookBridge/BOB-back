@@ -26,7 +26,8 @@ public enum ApplicationError {
   NOT_EXISTS_MEMBER("E103", "사용자를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
   INVALID_OLD_PASSWORD("E104", "비밀번호가 틀립니다.", HttpStatus.BAD_REQUEST),
   IS_BANNED_MEMBER("E105", "제한 조치된 계정입니다.", HttpStatus.BAD_REQUEST),
-  MEMBER_BOOK_ALREADY_USE("E106", "해당 책은 교환 물품으로 사용되어 삭제할 수 없습니다. 교환 게시글: [#%d]", HttpStatus.CONFLICT),
+  UNREMOVABLE_MEMBER_BOOK("E106", "교환 물품으로 사용되는 책은 삭제할 수 없습니다. 교환 게시글: [#%d]", HttpStatus.CONFLICT),
+  MEMBER_BOOK_ALREADY_USE("E107", "교환 물품으로 사용되는 책이 포함되어 있습니다. 교환 게시글: [#%d], 책: [%s]", HttpStatus.CONFLICT),
 
   EXPIRED_MAIL_CODE("E111", "인증 코드가 만료되었습니다.", HttpStatus.GONE),
   INVALID_MAIL_CODE("E112", "입력하신 인증 코드가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),

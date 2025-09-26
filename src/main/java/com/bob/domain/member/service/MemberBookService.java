@@ -56,7 +56,7 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     if (!memberBook.isOwner(command.memberId()))
       throw new ApplicationException(ApplicationError.OBJECT_ACCESS_DENIED);
     if (!memberBook.isRemovable())
-      throw new ApplicationException(ApplicationError.MEMBER_BOOK_ALREADY_USE, memberBook.getUsageId());
+      throw new ApplicationException(ApplicationError.UNREMOVABLE_MEMBER_BOOK, memberBook.getUsageId());
     memberBookRepository.deleteById(command.id());
   }
 }
