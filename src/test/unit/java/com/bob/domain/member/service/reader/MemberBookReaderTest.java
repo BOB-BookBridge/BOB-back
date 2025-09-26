@@ -4,7 +4,6 @@ import static com.bob.support.fixture.domain.MemberBookFixture.DEFAULT_MEMBER_BO
 import static com.bob.support.fixture.domain.MemberBookFixture.NEW_MEMBER_BOOK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -22,7 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@DisplayName("회원 도서 Reader 테스트")
+@DisplayName("회원 책 Reader 테스트")
 @ExtendWith(MockitoExtension.class)
 class MemberBookReaderTest {
 
@@ -33,7 +32,7 @@ class MemberBookReaderTest {
   private MemberBookRepository repository;
 
   @Test
-  void 회원_소유_도서_정상_조회() {
+  void 회원_책_목록_조회() {
     // given
     UUID memberId = UUID.randomUUID();
     MemberBook mb1 = DEFAULT_MEMBER_BOOK;
@@ -50,7 +49,7 @@ class MemberBookReaderTest {
   }
 
   @Test
-  void 회원_소유_도서_정상_빈_리스트() {
+  void 회원_책_목록_조회_시_값이_없으면_빈_리스트_반환() {
     // given
     UUID memberId = UUID.randomUUID();
     given(repository.findByMemberId(memberId)).willReturn(List.of());
@@ -64,7 +63,24 @@ class MemberBookReaderTest {
   }
 
   @Test
-  void 도서_ID_기반_단건_정상_조회() {
+  void 회원_책_ID_목록_기반_목록_조회() {
+    // given
+    List<Long> bookIds = List.of(1L, 2L);
+    MemberBook mb1 = DEFAULT_MEMBER_BOOK;
+    MemberBook mb2 = NEW_MEMBER_BOOK;
+    List<MemberBook> expected = List.of(mb1, mb2);
+    given(repository.findAllByIdIn(bookIds)).willReturn(expected);
+
+    // when
+    List<MemberBook> actual = reader.readMemberBooksByBookIds(bookIds);
+
+    // then
+    assertThat(actual).containsExactlyElementsOf(expected);
+    then(repository).should().findAllByIdIn(bookIds);
+  }
+
+  @Test
+  void 회원_책_ID_기반_단건_조회() {
     // given
     Long id = 1L;
     MemberBook mb = DEFAULT_MEMBER_BOOK;
@@ -79,7 +95,7 @@ class MemberBookReaderTest {
   }
 
   @Test
-  void 도서_ID_기반_단건_조회_시_존재하지_않으면_예외가_발생한다() {
+  void 회원_책_ID_기반_단건_조회_시_존재하지_않으면_예외가_발생한다() {
     // given
     Long id = 99L;
     given(repository.findById(id)).willReturn(Optional.empty());

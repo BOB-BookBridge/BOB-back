@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.bob.domain.book.service.dto.command.CreateBookCommand;
+import com.bob.domain.book.service.dto.query.ReadBookDetailQuery;
 import com.bob.domain.book.service.dto.query.ReadBooksQuery;
 import com.bob.domain.book.service.dto.response.BookResponse;
 import com.bob.domain.book.usecase.BookReadUseCase;
@@ -34,7 +35,7 @@ class MemberBookAdapterTest {
   private BookReadUseCase readUseCase;
 
   @Test
-  void 도서_생성_기능_호출() {
+  void 책_생성_기능_호출() {
     // given
     CreateBookCommand command = DEFAULT_CREATE_BOOK_COMMAND;
     given(writeUseCase.createBookProcess(command)).willReturn(1L);
@@ -48,7 +49,7 @@ class MemberBookAdapterTest {
   }
 
   @Test
-  void 도서_ID_목록_조회_기능_호출() {
+  void 책_ID_목록_기반_목록_조회_기능_호출() {
     // given
     List<Long> ids = List.of(1L, 2L);
     List<BookResponse> expected = List.of(DEFAULT_BOOK_RESPONSE, SECOND_BOOK_RESPONSE);
@@ -60,5 +61,20 @@ class MemberBookAdapterTest {
     // then
     assertThat(result).isSameAs(expected);
     then(readUseCase).should().readBooksProcess(ReadBooksQuery.of(ids));
+  }
+
+  @Test
+  void 책_ID_기반_단건_조회_기능_호출() {
+    // given
+    Long id = 1L;
+    BookResponse expected = DEFAULT_BOOK_RESPONSE;
+    given(readUseCase.readBookProcess(ReadBookDetailQuery.of(id))).willReturn(expected);
+
+    // when
+    BookResponse result = adapter.readBookSummary(id);
+
+    // then
+    assertThat(result).isSameAs(expected);
+    then(readUseCase).should().readBookProcess(ReadBookDetailQuery.of(id));
   }
 }
