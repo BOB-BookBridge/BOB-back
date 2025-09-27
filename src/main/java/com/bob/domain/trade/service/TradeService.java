@@ -4,10 +4,10 @@ import static com.bob.domain.trade.entity.status.Status.CANCELED;
 import static com.bob.domain.trade.entity.status.Status.REQUESTED;
 import static com.bob.domain.trade.entity.status.Status.valueOf;
 import static com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary.from;
-import static com.bob.domain.trade.service.util.TradeMessageTemplate.CHAT_CANCELED_WITH_REASON;
-import static com.bob.domain.trade.service.util.TradeMessageTemplate.CHAT_DEFAULT;
-import static com.bob.domain.trade.service.util.TradeMessageTemplate.NOTI_CANCELED_WITH_REASON;
-import static com.bob.domain.trade.service.util.TradeMessageTemplate.NOTI_DEFAULT;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.CANCELED_WITH_REASON_CHAT;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.STATUS_CHANGED_CHAT;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.CANCELED_WITH_REASON_NOTI;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.STATUS_CHANGED_NOTI;
 import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
@@ -143,19 +143,19 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   private static String buildNotificationBody(String title, Status status, String reason) {
     if (status == CANCELED) {
       return normalizeReason(reason) != null
-          ? NOTI_CANCELED_WITH_REASON.format(title, CANCELED.value(), normalizeReason(reason))
-          : NOTI_DEFAULT.format(title, CANCELED.value());
+          ? CANCELED_WITH_REASON_NOTI.format(title, CANCELED.value(), normalizeReason(reason))
+          : STATUS_CHANGED_NOTI.format(title, CANCELED.value());
     }
-    return NOTI_DEFAULT.format(title, status.value());
+    return STATUS_CHANGED_NOTI.format(title, status.value());
   }
 
   private static String buildChatMessageBody(Status status, String reason) {
     if (status == CANCELED) {
       return normalizeReason(reason) != null
-          ? CHAT_CANCELED_WITH_REASON.format(normalizeReason(reason))
-          : CHAT_DEFAULT.format(CANCELED.value());
+          ? CANCELED_WITH_REASON_CHAT.format(normalizeReason(reason))
+          : STATUS_CHANGED_CHAT.format(CANCELED.value());
     }
-    return CHAT_DEFAULT.format(status.value());
+    return STATUS_CHANGED_CHAT.format(status.value());
   }
 
   private static String normalizeReason(String reason) {
