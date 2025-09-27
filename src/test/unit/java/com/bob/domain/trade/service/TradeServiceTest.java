@@ -11,6 +11,7 @@ import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
 import static com.bob.support.fixture.domain.TradeFixture.REQUESTED_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.RESERVED_TRADE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
+import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.CUSTOM_POST_DETAIL_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_DETAIL_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,6 +75,7 @@ class TradeServiceTest {
     CreateTradeCommand command = DEFAULT_CREATE_TRADE_COMMAND;
     given(tradeRepository.save(any(Trade.class))).willReturn(DEFAULT_TRADE_WITH_ID);
     given(postPort.readTradePostSummary(command.postId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+    given(memberPort.readTradeMemberProfile(command.buyerId())).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
     // when
     CreateTradeResponse response = tradeService.createTradeProcess(command);
