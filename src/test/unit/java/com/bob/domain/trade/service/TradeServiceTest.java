@@ -1,10 +1,12 @@
 package com.bob.domain.trade.service;
 
+import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND;
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND_WITH_REASON;
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
+import static com.bob.support.fixture.command.CreateTradeCommandFixture.SAME_MEMBER_CREATE_TRADE_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
@@ -83,6 +85,18 @@ class TradeServiceTest {
     // then
     assertThat(response.id()).isEqualTo(1L);
     then(tradeRepository).should(times(1)).save(any(Trade.class));
+  }
+
+  @Test
+  void 거래_생성_및_저장_시_자기_자신과의_교환을_요청하면_예외가_발생한다() {
+    // given
+    CreateTradeCommand command = SAME_MEMBER_CREATE_TRADE_COMMAND;
+    given(postPort.readTradePostSummary(command.postId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.createTradeProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(IS_SAME_TRADE_MEMBER.getMessage());
   }
 
   @Test

@@ -10,6 +10,7 @@ import static com.bob.domain.trade.service.util.TradeMessageTemplate.STATUS_CHAN
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.CANCELED_WITH_REASON_NOTI;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.STATUS_CHANGED_NOTI;
 import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
+import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
@@ -37,6 +38,7 @@ import com.bob.domain.trade.usecase.TradeWriteUseCase;
 import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.event.application.dto.SystemChatMessageEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -58,13 +60,19 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   @Transactional
   public CreateTradeResponse createTradeProcess(CreateTradeCommand command) {
     TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(command.postId()));
+    verifyBuyer(post.sellerId(), command.buyerId());
     Trade trade = tradeRepository.save(Trade.of(command.postId(), post.sellerId(), command.buyerId()));
     TradeMemberSummary buyer = from(memberPort.readTradeMemberProfile(command.buyerId()));
     memberPort.changeMemberBookUsage(command.postId(), command.exchangeBookIds());
-
     final String notificationBody = REQUESTED_NOTI.format(buyer.nickname(), post.title());
     sendTradeNotification(post, command.buyerId(), post.sellerId(), notificationBody);
     return CreateTradeResponse.of(trade.getId());
+  }
+
+  private void verifyBuyer(UUID sellerId, UUID buyerId) {
+    if (Objects.equals(sellerId, buyerId)) {
+      throw new ApplicationException(IS_SAME_TRADE_MEMBER);
+    }
   }
 
   @Transactional(readOnly = true)
