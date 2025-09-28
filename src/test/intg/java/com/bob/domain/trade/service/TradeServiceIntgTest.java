@@ -1,6 +1,6 @@
 package com.bob.domain.trade.service;
 
-import static com.bob.domain.chat.entity.status.TradeStatus.READY;
+import static com.bob.domain.chat.entity.status.TradeStatus.ACCEPTED;
 import static com.bob.domain.trade.entity.status.Status.REQUESTED;
 import static com.bob.domain.trade.entity.status.Status.RESERVED;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
@@ -102,10 +102,10 @@ class TradeServiceIntgTest extends TestContainerSupport {
   void 거래_생성() {
     // given
     Long targetPostId = postId;
-    UUID buyer = UUID.randomUUID();
     List<Long> exchangeBookIds = List.of(10L, 11L);
     given(postPort.readTradePostSummary(targetPostId)).willReturn(mockPostResponse());
-    CreateTradeCommand command = CreateTradeCommand.of(targetPostId, buyer, exchangeBookIds);
+    given(memberPort.readTradeMemberProfile(any(UUID.class))).willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
+    CreateTradeCommand command = CreateTradeCommand.of(targetPostId, buyerId1, exchangeBookIds);
 
     // when
     CreateTradeResponse response = tradeService.createTradeProcess(command);
@@ -117,7 +117,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     Trade saved = tradeRepository.findById(response.id()).orElseThrow();
     assertThat(saved.getPostId()).isEqualTo(targetPostId);
     assertThat(saved.getSellerId()).isEqualTo(sellerId);
-    assertThat(saved.getBuyerId()).isEqualTo(buyer);
+    assertThat(saved.getBuyerId()).isEqualTo(buyerId1);
     assertThat(saved.getStatus()).isEqualTo(REQUESTED);
 
     then(memberPort).should().changeMemberBookUsage(targetPostId, exchangeBookIds);
@@ -247,7 +247,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
         .postId(trade.getPostId())
         .tradeId(trade.getId())
         .titleSuffix("test")
-        .tradeStatus(READY)
+        .tradeStatus(ACCEPTED)
         .build();
   }
 

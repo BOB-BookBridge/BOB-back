@@ -1,11 +1,9 @@
 package com.bob.web.chat.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
-import static com.bob.support.fixture.request.CreateChatRoomRequestFixture.DEFAULT_CREATE_CHAT_ROOM_REQUEST;
 import static com.bob.support.fixture.response.ChatMessagesResponseFixture.DEFAULT_CHAT_MESSAGES_RESPONSE;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_DETAIL;
 import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CHATROOM_SUMMARY_LIST;
-import static com.bob.support.fixture.response.ChatRoomResponseFixture.DEFAULT_CREATE_CHATROOM_RESPONSE;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static java.time.LocalDateTime.now;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,34 +54,16 @@ class ChatRoomControllerTest {
     mvc = MockMvcBuilders.standaloneSetup(chatRoomController).build();
   }
 
-  @Test
-  @DisplayName("채팅방 생성 API 호출 테스트")
-  void 채팅방_생성_API를_호출할_수_있다() throws Exception {
-    // given
-    String json = DEFAULT_CREATE_CHAT_ROOM_REQUEST();
-    given(writeUseCase.createChatRoomProcess(any())).willReturn(DEFAULT_CREATE_CHATROOM_RESPONSE);
-
-    // when & then
-    mvc.perform(post("/chatrooms")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json)
-            .requestAttr("memberId", MEMBER_ID))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.chatRoomId").value(1L));
-
-    then(writeUseCase).should(times(1)).createChatRoomProcess(any());
-  }
-
   @DisplayName("채팅 메시지 전송 API 호출 테스트")
   @Test
   void 채팅_메시지_전송_API를_호출할_수_있다() throws Exception {
     // given
     String json = """
-      {
-        "message": "안녕하세요, 거래 가능할까요?",
-        "fileNames": []
-      }
-      """;
+        {
+          "message": "안녕하세요, 거래 가능할까요?",
+          "fileNames": []
+        }
+        """;
     given(writeUseCase.createChatRoomMessageProcess(any())).willReturn(ChatMessageSendResponse.of(1L, false, now()));
 
     // when & then

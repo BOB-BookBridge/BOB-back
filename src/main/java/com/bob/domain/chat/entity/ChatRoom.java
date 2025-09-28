@@ -1,8 +1,11 @@
 package com.bob.domain.chat.entity;
 
+import com.bob.domain.chat.entity.status.TradeStatus;
 import com.bob.global.audit.BaseTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -41,12 +44,21 @@ public class ChatRoom extends BaseTime {
   @Column
   private LocalDateTime lastChatAt;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  @Builder.Default
-  private Boolean enableStatus = false;
+  private TradeStatus tradeStatus;
 
-  public void updateChatRoomStatus(boolean status) {
-    this.enableStatus = status;
+  public static ChatRoom of(Long postId, Long tradeId, String titleSuffix) {
+    return ChatRoom.builder()
+        .postId(postId)
+        .tradeId(tradeId)
+        .titleSuffix(titleSuffix)
+        .tradeStatus(TradeStatus.ACCEPTED)
+        .build();
+  }
+
+  public void updateChatRoomTradeStatus(TradeStatus status) {
+    this.tradeStatus = status;
   }
 
   public void updateChatRoomLastMessageInfo(String lastChatMessage, LocalDateTime lastChatAt) {

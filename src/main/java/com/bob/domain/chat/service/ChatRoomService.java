@@ -5,9 +5,7 @@ import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.I
 import static com.bob.domain.chat.service.dto.command.CreateChatMessageCommand.of;
 import static com.bob.domain.chat.service.dto.response.ChatMemberResponse.from;
 import static com.bob.domain.chat.service.dto.response.ChatPostResponse.from;
-import static com.bob.domain.chat.service.dto.response.ChatTradeResponse.from;
 import static com.bob.global.event.application.dto.type.NotiEventType.CHAT;
-import static com.bob.global.exception.response.ApplicationError.IS_SAME_CHAT_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_CHAT_PARTNER;
 import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 
@@ -33,14 +31,12 @@ import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
-import com.bob.domain.chat.service.dto.response.ChatTradeResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.service.dto.response.internal.ChatFileSummary;
 import com.bob.domain.chat.service.dto.response.internal.MessageSummary;
 import com.bob.domain.chat.service.port.out.ChatFilePort;
 import com.bob.domain.chat.service.port.out.ChatMemberPort;
 import com.bob.domain.chat.service.port.out.ChatPostPort;
-import com.bob.domain.chat.service.port.out.ChatTradePort;
 import com.bob.domain.chat.service.reader.ChatMessageReader;
 import com.bob.domain.chat.service.reader.ChatRoomMemberReader;
 import com.bob.domain.chat.service.reader.ChatRoomReader;
@@ -52,7 +48,6 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -74,7 +69,6 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
 
   private final ChatPostPort postPort;
   private final ChatFilePort filePort;
-  private final ChatTradePort tradePort;
   private final ChatMemberPort memberPort;
 
   private final ApplicationEventPublisher eventPublisher;
@@ -82,7 +76,6 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   @Transactional
   public CreateChatRoomResponse createChatRoomProcess(CreateChatRoomCommand command) {
     ChatPostResponse post = from(postPort.readChatPostSummary(command.postId()));
-    verifyBuyer(post.sellerId(), command.buyerId());
     return chatRoomReader.readExistingChatRoom(post.postId(), post.sellerId(), command.buyerId())
         .map(chatRoomId -> reEnterChatRoom(chatRoomId, command.buyerId()))
         .orElseGet(() -> createNewChatRoom(command, post));
@@ -94,20 +87,12 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   }
 
   private CreateChatRoomResponse createNewChatRoom(CreateChatRoomCommand command, ChatPostResponse post) {
-    Long tradeId = tradePort.createTrade(post.postId(), post.sellerId(), command.buyerId());
-    ChatRoom chatRoom = command.toChatRoom(tradeId, post.title());
+    ChatRoom chatRoom = ChatRoom.of(post.postId(), command.tradeId(), post.title());
     chatRoomRepository.save(chatRoom);
     chatRoomMemberService.registerChatRoomMembersProcess(CreateChatRoomMembersCommand.of(chatRoom.getId(), List.of(post.sellerId(), command.buyerId())));
-    if (command.isFar()) {
+    if (command.isFar())
       chatMessageService.createSystemChatMessageProcess(of(chatRoom.getId(), command.buyerId(), IS_FAR_MEMBER, null));
-    }
     return CreateChatRoomResponse.of(chatRoom.getId());
-  }
-
-  private void verifyBuyer(UUID sellerId, UUID buyerId) {
-    if (Objects.equals(sellerId, buyerId)) {
-      throw new ApplicationException(IS_SAME_CHAT_MEMBER);
-    }
   }
 
   @Transactional
@@ -115,7 +100,6 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     verifyParticipating(command.chatRoomId(), command.memberId());
     final UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(command.chatRoomId(), command.memberId());
     final ChatRoom chatRoom = chatRoomReader.readChatRoomById(command.chatRoomId());
-    enableChatRoomIfDisabled(chatRoom);
     reEnterChatRoomIfPartnerExited(chatRoom.getId(), partnerId);
     final ChatMessage message = chatMessageService.createChatMessageProcess(command, partnerId);
     chatRoom.updateChatRoomLastMessageInfo(message.getContent(), message.getCreatedAt());
@@ -123,15 +107,10 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     return ChatMessageSendResponse.of(message.getId(), message.getIsRead(), message.getCreatedAt());
   }
 
-  private void enableChatRoomIfDisabled(ChatRoom chatRoom) {
-    if (!chatRoom.getEnableStatus()) {
-      chatRoom.updateChatRoomStatus(true);
-    }
-  }
-
   private void reEnterChatRoomIfPartnerExited(Long chatRoomId, UUID partnerId) {
     ChatRoomMember partner = chatRoomMemberReader.readChatRoomMember(chatRoomId, partnerId);
-    if (partner.getExitedAt() == null) return;
+    if (partner.getExitedAt() == null)
+      return;
     partner.reEnterChatRoom(LocalDateTime.now());
   }
 
@@ -147,7 +126,6 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   public List<ChatRoomSummaryResponse> readChatRoomListProcess(ReadChatRoomListQuery query) {
     List<ChatRoomSummaryResponse> responses = chatRoomReader.readParticipatingChatRoomsByMemberId(query.memberId())
         .stream()
-        .filter(ChatRoom::getEnableStatus)
         .map(chatRoom -> convertToChatRoomSummary(query, chatRoom))
         .toList();
     return sortByDesc(responses, ChatRoomSummaryResponse::lastMessageAt);
@@ -161,9 +139,8 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
       int unreadCount = chatMessageReader.readUnreadMessageCountOfChatRoom(chatRoom.getId(), query.memberId());
       return ChatRoomSummaryResponse.from(chatRoom, memberSummary, postSummary, unreadCount);
     } catch (ApplicationException e) {
-      if (e.getError() == NOT_EXISTS_CHAT_PARTNER) {
+      if (e.getError() == NOT_EXISTS_CHAT_PARTNER)
         return null;
-      }
       throw e;
     }
   }
@@ -180,10 +157,9 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
     ChatRoom chatRoom = chatRoomReader.readChatRoomById(query.chatroomId());
     verifyParticipating(query.chatroomId(), query.memberId());
     UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(chatRoom.getId(), query.memberId());
-    ChatPostResponse postSummary = from(postPort.readChatPostSummary(chatRoom.getPostId()));
-    ChatTradeResponse tradeSummary = from(tradePort.readChatTradeSummary(query.chatroomId(), query.memberId()));
-    ChatMemberResponse memberSummary = from(memberPort.readChatMemberProfile(partnerId));
-    return ChatRoomDetailResponse.from(chatRoom, postSummary, tradeSummary, memberSummary);
+    ChatPostResponse post = from(postPort.readChatPostSummary(chatRoom.getPostId()));
+    ChatMemberResponse member = from(memberPort.readChatMemberProfile(partnerId));
+    return ChatRoomDetailResponse.from(chatRoom, post, member);
   }
 
   @Transactional(readOnly = true)
@@ -210,9 +186,8 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
 
   private void verifyParticipating(Long chatRoomId, UUID memberId) {
     ChatRoomMember member = chatRoomMemberReader.readChatRoomMember(chatRoomId, memberId);
-    if (member.getExitedAt() != null) {
+    if (member.getExitedAt() != null)
       throw new ApplicationException(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM);
-    }
   }
 
   @Transactional

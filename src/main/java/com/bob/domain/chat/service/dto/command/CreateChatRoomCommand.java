@@ -1,21 +1,12 @@
 package com.bob.domain.chat.service.dto.command;
 
-import com.bob.domain.chat.entity.ChatRoom;
 import java.util.UUID;
 
 public record CreateChatRoomCommand(
     Long postId,
+    Long tradeId,
     UUID buyerId,
     boolean isFar
 ) {
 
-  public ChatRoom toChatRoom(Long tradeId, String titleSuffix) {
-    return ChatRoom.builder()
-        .postId(postId)
-        .tradeId(tradeId)
-        .titleSuffix(titleSuffix)
-        .enableStatus(false)
-        .lastChatAt(null)
-        .build();
-  }
 }

@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS chat_rooms (
     title_suffix VARCHAR(100) NOT NULL,
     last_chat_message VARCHAR(500),
     last_chat_at DATETIME,
-    enable_status BOOLEAN NOT NULL,
+    trade_status ENUM('ACCEPTED', 'RESERVED', 'COMPLETED', 'CANCELED', 'REJECTED') NOT NULL,
     created_at DATETIME NOT NULL,
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (trade_id) REFERENCES trades(id)
@@ -378,5 +378,4 @@ INSERT INTO notifications (type, reference_id, receiver_id, body, is_read, creat
 ('TRADE', '1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), '최근 알림2', FALSE, DATE_SUB(NOW(), INTERVAL 10 DAY));
 
 -- 15일 이전 알림
-INSERT INTO notifications (type, reference_id, receiver_id, body, is_read, created_at)
-VALUES ('TRADE', '1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), '오래된 알림', TRUE, DATE_SUB(NOW(), INTERVAL 15 DAY));
+INSERT INTO notifications (type, reference_id, receiver_id, body, is_read, created_at) VALUES ('TRADE', '1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), '오래된 알림', TRUE, DATE_SUB(NOW(), INTERVAL 15 DAY));
