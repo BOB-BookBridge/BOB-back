@@ -14,7 +14,7 @@ public record TradeSummary(
   public static TradeSummary from(Trade trade, TradeMemberSummary member) {
     return TradeSummary.builder()
         .tradeId(trade.getId())
-        .tradeStatus(trade.getTradeStatus().name())
+        .tradeStatus(trade.getStatus().name())
         .buyer(Buyer.of(member.id(), member.nickname(), member.profile()))
         .build();
   }

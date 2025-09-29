@@ -28,14 +28,15 @@ class ApplicationExceptionTest {
     // given
     ApplicationError error = ApplicationError.MEMBER_BOOK_ALREADY_USE;
     Long usageId = 3L;
-    String expected = String.format(error.getMessage(), usageId);
+    String title = "제목";
+    String expected = String.format(error.getMessage(), usageId, title);
 
     // when
-    ApplicationException ex = new ApplicationException(error, usageId);
+    ApplicationException ex = new ApplicationException(error, usageId, title);
 
     // then
     assertThat(ex.getError()).isEqualTo(error);
-    assertThat(ex.getArgs()).containsExactly(usageId);
+    assertThat(ex.getArgs()).containsExactly(usageId, title);
     assertThat(ex.getMessage()).isEqualTo(expected);
   }
 

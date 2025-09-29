@@ -12,13 +12,11 @@ import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
-import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.service.dto.response.UnreadMessageCountResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
 import com.bob.web.chat.request.CreateChatMessageRequest;
-import com.bob.web.chat.request.CreateChatRoomRequest;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
@@ -45,15 +43,6 @@ public class ChatRoomController {
   private final ChatRoomReadUseCase readUseCase;
 
   private final ChatRoomModifyUseCase memberModifyUseCase;
-
-  @PostMapping
-  public ResponseEntity<CreateChatRoomResponse> handleCreateChatRoom(
-      @Valid @RequestBody CreateChatRoomRequest request,
-      @AuthenticationId UUID memberId
-  ) {
-    CreateChatRoomResponse response = writeUseCase.createChatRoomProcess(request.toCommand(memberId));
-    return ResponseEntity.status(CREATED).body(response);
-  }
 
   @PostMapping("/{chatroomId}/messages")
   @ResponseStatus(CREATED)

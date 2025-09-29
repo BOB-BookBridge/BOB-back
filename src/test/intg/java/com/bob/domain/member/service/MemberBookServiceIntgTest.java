@@ -8,6 +8,7 @@ import com.bob.domain.book.repository.BookRepository;
 import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.entity.BookStatus;
 import com.bob.domain.member.repository.MemberBookRepository;
+import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
@@ -24,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-@DisplayName("회원 도서 서비스 통합 테스트")
+@DisplayName("회원 책 서비스 통합 테스트")
 @Transactional
 @SpringBootTest
 class MemberBookServiceIntgTest extends TestContainerSupport {
@@ -39,7 +40,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   private BookRepository bookRepository;
 
   @Test
-  void 회원_도서_정상_등록_이미_등록된_도서() {
+  void 회원_책_등록_시_이미_등록된_책이면_기존_책_정보_사용() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     Optional<Book> findBook = bookRepository.findByIsbn13("9788966261208");
@@ -73,7 +74,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  void 도서ID가_null이면_신규도서를_생성하고_해당_ID로_저장한다() {
+  void 회원_책_등록_시_책이_존재하지_않으면_책을_생성하고_해당_ID로_저장한다() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     String unregisterBookIsbn = "9780000000002";
@@ -85,7 +86,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
         .bookId(null)
         .bookStatus("BEST")
         .isbn(unregisterBookIsbn)
-        .title("신규도서")
+        .title("신규 책")
         .author("임꺽정")
         .description("신규")
         .priceStandard(20000)
@@ -110,7 +111,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  void 회원_소유_도서_목록_정상_조회() {
+  void 회원_소유_책_목록_정상_조회() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     MemberBook mb1 = memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
@@ -137,7 +138,28 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  void 회원_소유_도서_삭제_성공() {
+  void 회원_책_사용처_변경() {
+    // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    MemberBook mb1 = memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
+    MemberBook mb2 = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+
+    Long usageId = 1L;
+    List<Long> ids = List.of(mb1.getId(), mb2.getId());
+    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(usageId, ids);
+
+    // when
+    service.changeMemberBookUsageProcess(command);
+
+    // then
+    MemberBook updated1 = memberBookRepository.findById(mb1.getId()).orElseThrow();
+    MemberBook updated2 = memberBookRepository.findById(mb2.getId()).orElseThrow();
+    assertThat(updated1.getUsageId()).isEqualTo(usageId);
+    assertThat(updated2.getUsageId()).isEqualTo(usageId);
+  }
+
+  @Test
+  void 회원_소유_책_삭제() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     MemberBook mb = memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));

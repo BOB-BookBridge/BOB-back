@@ -1,6 +1,6 @@
 package com.bob.domain.trade.entity;
 
-import com.bob.domain.trade.entity.status.TradeStatus;
+import com.bob.domain.trade.entity.status.Status;
 import com.bob.global.audit.BaseTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,13 +41,22 @@ public class Trade extends BaseTime {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private TradeStatus tradeStatus;
+  private Status status;
 
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
-  public void updateTradeStatus(TradeStatus status, LocalDateTime now) {
-    this.tradeStatus = status;
+  public static Trade of(Long postId, UUID sellerId, UUID buyerId) {
+    return Trade.builder()
+        .postId(postId)
+        .sellerId(sellerId)
+        .buyerId(buyerId)
+        .status(Status.REQUESTED)
+        .updatedAt(LocalDateTime.now())
+        .build();
+  }
+  public void updateTradeStatus(Status status, LocalDateTime now) {
+    this.status = status;
     this.updatedAt = now;
   }
 }

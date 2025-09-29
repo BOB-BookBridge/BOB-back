@@ -1,13 +1,13 @@
 package com.bob.domain.chat.service.dto.response;
 
-import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.chat.entity.status.TradeStatus;
 
 public record ChatTradeResponse(
     Long id,
-    String status
+    TradeStatus status
 ) {
 
-  public static ChatTradeResponse from(TradeDetailResponse response) {
-    return new ChatTradeResponse(response.id(), response.status());
+  public static ChatTradeResponse of(Long id, TradeStatus status) {
+    return new ChatTradeResponse(id, status);
   }
 }

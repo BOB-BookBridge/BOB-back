@@ -1,8 +1,7 @@
 package com.bob.domain.trade.service.reader;
 
-import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
-import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_ID_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
+import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -33,10 +32,9 @@ class TradeReaderTest {
   private TradeRepository tradeRepository;
 
   @Test
-  @DisplayName("ID로 거래 조회 - 성공 테스트")
-  void 거래ID로_조회_성공() {
+  void ID_기반_거래_조회() {
     // given
-    Trade trade = DEFAULT_ID_TRADE(DEFAULT_CREATE_TRADE_COMMAND());
+    Trade trade = DEFAULT_TRADE_WITH_ID;
     Long tradeId = trade.getId();
 
     given(tradeRepository.findById(tradeId)).willReturn(Optional.of(trade));
@@ -50,8 +48,7 @@ class TradeReaderTest {
   }
 
   @Test
-  @DisplayName("ID로 거래 조회 - 실패 테스트")
-  void 거래ID로_조회_시_존재하지_않는_거래인_경우_예외발생() {
+  void ID_기반_거래_조회_시_존재하지_않는_ID이면_예외가_발생한다() {
     // given
     Long tradeId = 999L;
 
@@ -66,8 +63,7 @@ class TradeReaderTest {
   }
 
   @Test
-  @DisplayName("거래 목록 조회 (조회 조건: postId) - 성공 테스트")
-  void 게시글ID로_거래_목록을_조회한다() {
+  void 게시글_ID_기반_거래_목록_조회() {
     // given
     Long postId = 1L;
     given(tradeRepository.findAllByPostId(postId)).willReturn(DEFAULT_TRADES());

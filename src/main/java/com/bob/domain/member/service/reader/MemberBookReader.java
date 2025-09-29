@@ -21,6 +21,10 @@ public class MemberBookReader {
     return repository.findByMemberId(memberId);
   }
 
+  public List<MemberBook> readMemberBooksByBookIds(List<Long> bookIds) {
+    return repository.findAllByIdIn(bookIds);
+  }
+
   public MemberBook readMemberBookById(Long id) {
     return repository.findById(id)
         .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_OBJECT));

@@ -1,6 +1,6 @@
 package com.bob.domain.trade.entity;
 
-import static com.bob.domain.trade.entity.status.TradeStatus.RESERVED;
+import static com.bob.domain.trade.entity.status.Status.RESERVED;
 import static com.bob.support.fixture.domain.TradeFixture.TRADE;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +22,7 @@ class TradeTest {
     trade.updateTradeStatus(RESERVED, now);
 
     // then
-    assertThat(trade.getTradeStatus()).isEqualTo(RESERVED);
+    assertThat(trade.getStatus()).isEqualTo(RESERVED);
     assertThat(trade.getUpdatedAt()).isEqualTo(now);
   }
 }

@@ -21,7 +21,7 @@ public record TradeDetailResponse(
         .postId(trade.getPostId())
         .sellerId(trade.getSellerId())
         .buyerId(trade.getBuyerId())
-        .status(trade.getTradeStatus().name())
+        .status(trade.getStatus().name())
         .updatedAt(trade.getUpdatedAt())
         .build();
   }

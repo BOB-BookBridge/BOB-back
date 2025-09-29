@@ -49,6 +49,10 @@ public class MemberBook {
         .build();
   }
 
+  public void updateUsageId(Long usageId) {
+    this.usageId = usageId;
+  }
+
   public boolean isOwner(UUID memberId) {
     return Objects.equals(this.memberId, memberId);
   }

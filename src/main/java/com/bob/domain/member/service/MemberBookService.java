@@ -1,7 +1,9 @@
 package com.bob.domain.member.service;
 
+import com.bob.domain.book.service.dto.response.BookResponse;
 import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.repository.MemberBookRepository;
+import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
@@ -9,19 +11,21 @@ import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
 import com.bob.domain.member.service.port.out.MemberBookPort;
 import com.bob.domain.member.service.reader.MemberBookReader;
+import com.bob.domain.member.usecase.MemberBookModifyUseCase;
 import com.bob.domain.member.usecase.MemberBookReadUseCase;
 import com.bob.domain.member.usecase.MemberBookRemoveUseCase;
 import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class MemberBookService implements MemberBookWriteUseCase, MemberBookReadUseCase, MemberBookRemoveUseCase {
+public class MemberBookService implements MemberBookWriteUseCase, MemberBookReadUseCase, MemberBookModifyUseCase, MemberBookRemoveUseCase {
 
   private final MemberBookRepository memberBookRepository;
   private final MemberBookReader memberBookReader;
@@ -50,13 +54,27 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   }
 
   @Transactional
+  public void changeMemberBookUsageProcess(ChangeMemberBookUsageCommand command) {
+    List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.memberBookIds());
+    memberBooks.stream()
+        .filter(mb -> mb.getUsageId() != null && !Objects.equals(mb.getUsageId(), command.usageId()))
+        .findFirst().ifPresent(mb -> {
+          BookResponse book = bookPort.readBookSummary(mb.getBookId());
+          throw new ApplicationException(ApplicationError.MEMBER_BOOK_ALREADY_USE, mb.getUsageId(), book.title());
+        });
+    memberBooks.stream()
+        .filter(mb -> !Objects.equals(mb.getUsageId(), command.usageId()))
+        .forEach(mb -> mb.updateUsageId(command.usageId()));
+  }
+
+  @Transactional
   public void removeMemberBookProcess(RemoveMemberBookCommand command) {
     MemberBook memberBook = memberBookReader.readMemberBookById(command.id());
 
     if (!memberBook.isOwner(command.memberId()))
       throw new ApplicationException(ApplicationError.OBJECT_ACCESS_DENIED);
     if (!memberBook.isRemovable())
-      throw new ApplicationException(ApplicationError.MEMBER_BOOK_ALREADY_USE, memberBook.getUsageId());
+      throw new ApplicationException(ApplicationError.UNREMOVABLE_MEMBER_BOOK, memberBook.getUsageId());
     memberBookRepository.deleteById(command.id());
   }
 }
