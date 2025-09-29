@@ -19,8 +19,6 @@ import com.bob.domain.area.usecase.AreaReadUseCase;
 import com.bob.domain.area.usecase.AreaWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
-import java.time.LocalDate;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
@@ -47,29 +45,16 @@ public class AreaService implements AreaWriteUseCase, AreaReadUseCase, AreaModif
   @Transactional
   public void authenticateProcess(AuthenticationCommand command) {
     verifyLocation(command);
-    if (command.isSignup()) {
+    if (command.isGuest()) 
       return;
-    }
-    verifyLoginMember(command.isGuest());
-    switch (command.purpose()) {
-      case CHANGE_AREA -> handleChangeArea(command);
-      case RE_AUTHENTICATE -> handleReAuthenticate(command);
-    }
+    createActivityArea(command);
   }
 
-  private void handleChangeArea(AuthenticationCommand command) {
+  private void createActivityArea(AuthenticationCommand command) {
     ActivityArea area = activityAreaReader.readActivityAreaByMemberId(command.memberId());
-    verifyIsSameArea(area.getId().getEmdAreaId(), command.emdId());
     activityAreaRepository.delete(area);
-
     ActivityAreaId newId = createId(command.memberId(), command.emdId());
     activityAreaRepository.save(create(newId));
-  }
-
-  private void handleReAuthenticate(AuthenticationCommand command) {
-    ActivityArea area = activityAreaReader.readActivityAreaByMemberId(command.memberId());
-    verifyIsNotSameArea(area.getId().getEmdAreaId(), command.emdId());
-    area.updateAuthenticationAt(LocalDate.now());
   }
 
   private void verifyLocation(AuthenticationCommand command) {
@@ -77,24 +62,6 @@ public class AreaService implements AreaWriteUseCase, AreaReadUseCase, AreaModif
     Point point = createPoint(command.lat(), command.lon());
     if (!emdArea.getGeom().contains(point)) {
       throw new ApplicationException(ApplicationError.INVALID_AREA_AUTHENTICATION);
-    }
-  }
-
-  private void verifyLoginMember(boolean isGuest) {
-    if (isGuest) {
-      throw new ApplicationException(ApplicationError.NOT_EXISTS_MEMBER);
-    }
-  }
-
-  private void verifyIsSameArea(Integer oldId, Integer newId) {
-    if (Objects.equals(oldId, newId)) {
-      throw new ApplicationException(ApplicationError.IS_SAME_REQUEST);
-    }
-  }
-
-  private void verifyIsNotSameArea(Integer oldId, Integer newId) {
-    if (!Objects.equals(oldId, newId)) {
-      throw new ApplicationException(ApplicationError.IS_NOT_SAME_AREA);
     }
   }
 
