@@ -27,11 +27,11 @@ import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
+import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
-import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
-import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
-import com.bob.domain.trade.service.dto.response.TradesResponse;
+import com.bob.domain.trade.service.dto.response.PostTradesResponse;
+import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
@@ -104,13 +104,13 @@ class TradeServiceTest {
     // given
     UUID requesterId = MEMBER_ID;
     Long postId = 1L;
-    ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
+    ReadPostTradesQuery query = new ReadPostTradesQuery(postId, requesterId);
     given(postPort.readTradePostSummary(postId)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
     given(tradeReader.readTradesByPostId(postId)).willReturn(DEFAULT_TRADES());
     given(memberPort.readTradeMemberProfile(any(UUID.class))).willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
 
     // when
-    TradesResponse response = tradeService.readTradesProcess(query);
+    PostTradesResponse response = tradeService.readPostTradesProcess(query);
 
     // then
     assertThat(response).isNotNull();
@@ -126,11 +126,11 @@ class TradeServiceTest {
     UUID postOwnerId = MEMBER_ID;
     UUID requesterId = UUID.randomUUID();
     Long postId = 1L;
-    ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
+    ReadPostTradesQuery query = new ReadPostTradesQuery(postId, requesterId);
     given(postPort.readTradePostSummary(postId)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
 
     // when & then
-    assertThatThrownBy(() -> tradeService.readTradesProcess(query))
+    assertThatThrownBy(() -> tradeService.readPostTradesProcess(query))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(TRADE_ACCESS_DENIED.getMessage());
 

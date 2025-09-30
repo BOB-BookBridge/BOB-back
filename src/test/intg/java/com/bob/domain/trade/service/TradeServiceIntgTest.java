@@ -21,11 +21,11 @@ import com.bob.domain.trade.entity.status.Status;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
+import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
-import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
+import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
-import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
@@ -126,14 +126,14 @@ class TradeServiceIntgTest extends TestContainerSupport {
   @Test
   void 거래_목록_조회() {
     // given
-    ReadTradesQuery query = new ReadTradesQuery(postId, sellerId);
+    ReadPostTradesQuery query = new ReadPostTradesQuery(postId, sellerId);
 
     given(postPort.readTradePostSummary(postId)).willReturn(mockPostResponse());
     given(memberPort.readTradeMemberProfile(any(UUID.class)))
         .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
 
     // when
-    TradesResponse response = tradeService.readTradesProcess(query);
+    PostTradesResponse response = tradeService.readPostTradesProcess(query);
 
     // then
     assertThat(response).isNotNull();
@@ -144,12 +144,12 @@ class TradeServiceIntgTest extends TestContainerSupport {
   void 거래_목록_조회_시_게시글_등록자가_아니면_예외가_발생한다() {
     // given
     UUID otherUser = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
-    ReadTradesQuery query = new ReadTradesQuery(postId, otherUser);
+    ReadPostTradesQuery query = new ReadPostTradesQuery(postId, otherUser);
 
     given(postPort.readTradePostSummary(postId)).willReturn(mockPostResponse());
 
     // when & then
-    assertThatThrownBy(() -> tradeService.readTradesProcess(query))
+    assertThatThrownBy(() -> tradeService.readPostTradesProcess(query))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.TRADE_ACCESS_DENIED.getMessage());
   }

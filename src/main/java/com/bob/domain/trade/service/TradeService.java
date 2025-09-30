@@ -5,9 +5,9 @@ import static com.bob.domain.trade.entity.status.Status.REQUESTED;
 import static com.bob.domain.trade.entity.status.Status.valueOf;
 import static com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary.from;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.CANCELED_WITH_REASON_CHAT;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.CANCELED_WITH_REASON_NOTI;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.REQUESTED_NOTI;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.STATUS_CHANGED_CHAT;
-import static com.bob.domain.trade.service.util.TradeMessageTemplate.CANCELED_WITH_REASON_NOTI;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.STATUS_CHANGED_NOTI;
 import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
@@ -21,14 +21,14 @@ import com.bob.domain.trade.entity.status.Status;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
+import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
-import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
-import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
-import com.bob.domain.trade.service.dto.response.TradesResponse;
+import com.bob.domain.trade.service.dto.response.PostTradesResponse;
+import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.trade.service.dto.response.internal.PostTradeSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
-import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
@@ -62,7 +62,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(command.postId()));
     verifyBuyer(post.sellerId(), command.buyerId());
     Trade trade = tradeRepository.save(Trade.of(command.postId(), post.sellerId(), command.buyerId()));
-    TradeMemberSummary buyer = from(memberPort.readTradeMemberProfile(command.buyerId()));
+    TradeMemberSummary buyer = TradeMemberSummary.from(memberPort.readTradeMemberProfile(command.buyerId()));
     memberPort.changeMemberBookUsage(command.postId(), command.exchangeBookIds());
     final String notificationBody = REQUESTED_NOTI.format(buyer.nickname(), post.title());
     sendTradeNotification(post, command.buyerId(), post.sellerId(), notificationBody);
@@ -76,11 +76,11 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   }
 
   @Transactional(readOnly = true)
-  public TradesResponse readTradesProcess(ReadTradesQuery query) {
+  public PostTradesResponse readPostTradesProcess(ReadPostTradesQuery query) {
     UUID ownerId = postPort.readTradePostSummary(query.postId()).sellerId();
     verifyTradeOwner(ownerId, query.memberId());
-    return TradesResponse.of(tradeReader.readTradesByPostId(query.postId()).stream()
-        .map(trade -> TradeSummary.from(trade, from(memberPort.readTradeMemberProfile(trade.getBuyerId()))))
+    return PostTradesResponse.of(tradeReader.readTradesByPostId(query.postId()).stream()
+        .map(trade -> PostTradeSummary.from(trade, from(memberPort.readTradeMemberProfile(trade.getBuyerId()))))
         .toList());
   }
 

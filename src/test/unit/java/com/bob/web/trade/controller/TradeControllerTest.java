@@ -1,18 +1,16 @@
 package com.bob.web.trade.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
-import static com.bob.support.fixture.response.TradesResponseFixture.DEFAULT_TRADES_RESPONSE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
@@ -60,7 +58,7 @@ class TradeControllerTest {
           "memberBookIds": [10, 11]
         }
         """;
-    given(writeUseCase.createTradeProcess(any())).willReturn(org.mockito.Mockito.mock(CreateTradeResponse.class));
+    given(writeUseCase.createTradeProcess(any())).willReturn(mock(CreateTradeResponse.class));
 
     // when & then
     mvc.perform(post("/trades")
@@ -71,19 +69,6 @@ class TradeControllerTest {
         .andExpect(status().isCreated());
 
     verify(writeUseCase, times(1)).createTradeProcess(any());
-  }
-
-  @Test
-  void 거래_목록_조회_기능_호출() throws Exception {
-    // given
-    given(readUseCase.readTradesProcess(any(ReadTradesQuery.class))).willReturn(DEFAULT_TRADES_RESPONSE());
-
-    // when & then
-    mvc.perform(get("/trades")
-            .param("postId", "1"))
-        .andExpect(status().isOk());
-
-    verify(readUseCase, times(1)).readTradesProcess(any(ReadTradesQuery.class));
   }
 
   @Test
