@@ -1,8 +1,13 @@
 package com.bob.domain.trade.service;
 
 import static com.bob.domain.chat.entity.status.TradeStatus.ACCEPTED;
+import static com.bob.domain.trade.entity.status.Status.COMPLETED;
+import static com.bob.domain.trade.entity.status.Status.REJECTED;
 import static com.bob.domain.trade.entity.status.Status.REQUESTED;
 import static com.bob.domain.trade.entity.status.Status.RESERVED;
+import static com.bob.support.fixture.query.TradeQueryFixture.KEY_NULL_STATUS_NULL;
+import static com.bob.support.fixture.query.TradeQueryFixture.RECEIVED_STATUS_REQUESTED;
+import static com.bob.support.fixture.query.TradeQueryFixture.SENT_STATUS_REQUESTED_REJECTED;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
 import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,9 +28,12 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.trade.service.dto.response.TradesResponse;
+import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
@@ -43,6 +51,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -83,6 +93,8 @@ class TradeServiceIntgTest extends TestContainerSupport {
   private UUID buyerId2 = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca2");
   private UUID buyerId3 = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
 
+  private Pageable pageable = PageRequest.of(0, 12);
+
   @BeforeEach
   void setUp() {
     testTrade = tradeRepository.save(createTrade(buyerId1, REQUESTED));
@@ -104,7 +116,8 @@ class TradeServiceIntgTest extends TestContainerSupport {
     Long targetPostId = postId;
     List<Long> exchangeBookIds = List.of(10L, 11L);
     given(postPort.readTradePostSummary(targetPostId)).willReturn(mockPostResponse());
-    given(memberPort.readTradeMemberProfile(any(UUID.class))).willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
+    given(memberPort.readTradeMemberProfile(any(UUID.class)))
+        .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
     CreateTradeCommand command = CreateTradeCommand.of(targetPostId, buyerId1, exchangeBookIds);
 
     // when
@@ -124,10 +137,9 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  void 거래_목록_조회() {
+  void 게시글_거래_목록_조회() {
     // given
     ReadPostTradesQuery query = new ReadPostTradesQuery(postId, sellerId);
-
     given(postPort.readTradePostSummary(postId)).willReturn(mockPostResponse());
     given(memberPort.readTradeMemberProfile(any(UUID.class)))
         .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
@@ -141,17 +153,66 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  void 거래_목록_조회_시_게시글_등록자가_아니면_예외가_발생한다() {
+  void 게시글_거래_목록_조회_시_게시글_등록자가_아니면_예외가_발생한다() {
     // given
     UUID otherUser = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
     ReadPostTradesQuery query = new ReadPostTradesQuery(postId, otherUser);
-
     given(postPort.readTradePostSummary(postId)).willReturn(mockPostResponse());
 
     // when & then
     assertThatThrownBy(() -> tradeService.readPostTradesProcess(query))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.TRADE_ACCESS_DENIED.getMessage());
+  }
+
+  @Test
+  void 거래_목록_조회_시_key_null_status_null_이면_모든_거래_응답() {
+    // given: sellerId 기준으로 ALL + 상태필터 미적용 → seller의 모든 거래 조회
+    tradeRepository.save(createTrade(buyerId1, COMPLETED)); // 추가 1건(완료 상태)
+    ReadTradesQuery query = KEY_NULL_STATUS_NULL(sellerId);
+    given(postPort.readTradePostSummary(any(Long.class))).willReturn(mockPostResponse());
+
+    // when
+    TradesResponse response = tradeService.readTradesProcess(query, pageable);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.trades()).hasSize(4); // setUp: 거래 3건 + 신규 1건(완료)
+  }
+
+  @Test
+  void 거래_목록_조회_시_key_SENT_status_REQUESTED_REJECTED_사용자가_보낸_제안_거절_상태의_거래_응답() {
+    // given: buyer1 기준 SENT + [REQUESTED, REJECTED] → buyer가 보낸 제안, 거절 상태의 거래 2건
+    tradeRepository.save(createTrade(buyerId1, REJECTED)); // 추가 1건(거절 상태)
+    tradeRepository.save(createTrade(buyerId1, COMPLETED)); // 추가 1건(완료 상태) <- 응답 반영 X
+    ReadTradesQuery query = SENT_STATUS_REQUESTED_REJECTED(buyerId1);
+    given(postPort.readTradePostSummary(any(Long.class))).willReturn(mockPostResponse());
+
+    // when
+    TradesResponse response = tradeService.readTradesProcess(query, pageable);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.trades()).hasSize(2); // setUp: 거래 1건(제안) + 신규 1건(거절)
+    assertThat(response.trades().stream().map(TradeSummary::status).toList())
+        .containsOnly("REQUESTED", "REJECTED");
+  }
+
+  @Test
+  void 거래_목록_조회_시_key_RECEIVED_status_REQUESTED_이면_사용자가_받은_제안_상태_거래_응답() {
+    // given: seller 기준 RECEIVED + [REQUESTED] → seller가 받은 제안 상태의 거래 2건(by buyer1, by buyer3)
+    tradeRepository.save(createTrade(sellerId, REJECTED)); // 추가 1건(거절 상태) <- 응답 반영 X
+    ReadTradesQuery query = RECEIVED_STATUS_REQUESTED(sellerId);
+    given(postPort.readTradePostSummary(any(Long.class))).willReturn(mockPostResponse());
+
+    // when
+    TradesResponse response = tradeService.readTradesProcess(query, pageable);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.trades()).hasSize(2); // setUp: 거래 2건(제안)
+    assertThat(response.trades().stream().map(TradeSummary::status).toList())
+        .containsOnly("REQUESTED");
   }
 
   @Test
