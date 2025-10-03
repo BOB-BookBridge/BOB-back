@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-public interface TradeRepository extends CrudRepository<Trade, Long> {
+public interface TradeRepository extends CrudRepository<Trade, Long>, CustomTradeRepository {
 
   @Query("""
       SELECT t FROM Trade t

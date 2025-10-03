@@ -1,9 +1,10 @@
 package com.bob.web.trade.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
-import static com.bob.support.fixture.response.TradesResponseFixture.DEFAULT_TRADES_RESPONSE;
+import static com.bob.support.fixture.response.trade.TradesResponseFixture.RECEIVED_TRADES_RESPONSE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -48,7 +50,10 @@ class TradeControllerTest {
 
   @BeforeEach
   void setUp() {
-    mvc = MockMvcBuilders.standaloneSetup(tradeController).build();
+    mvc = MockMvcBuilders.standaloneSetup(tradeController)
+        .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+        .build();
+    ;
   }
 
   @Test
@@ -60,14 +65,13 @@ class TradeControllerTest {
           "memberBookIds": [10, 11]
         }
         """;
-    given(writeUseCase.createTradeProcess(any())).willReturn(org.mockito.Mockito.mock(CreateTradeResponse.class));
+    given(writeUseCase.createTradeProcess(any())).willReturn(mock(CreateTradeResponse.class));
 
     // when & then
     mvc.perform(post("/trades")
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
-            .requestAttr("memberId", MEMBER_ID)
-        )
+            .requestAttr("memberId", MEMBER_ID))
         .andExpect(status().isCreated());
 
     verify(writeUseCase, times(1)).createTradeProcess(any());
@@ -76,14 +80,17 @@ class TradeControllerTest {
   @Test
   void 거래_목록_조회_기능_호출() throws Exception {
     // given
-    given(readUseCase.readTradesProcess(any(ReadTradesQuery.class))).willReturn(DEFAULT_TRADES_RESPONSE());
+    given(readUseCase.readTradesProcess(any(ReadTradesQuery.class), any())).willReturn(RECEIVED_TRADES_RESPONSE);
 
     // when & then
-    mvc.perform(get("/trades")
-            .param("postId", "1"))
+    mvc.perform(get("/trades", 1L)
+            .param("key", "all")
+            .param("status", "all")
+            .param("page", "0")
+            .param("size", "12"))
         .andExpect(status().isOk());
 
-    verify(readUseCase, times(1)).readTradesProcess(any(ReadTradesQuery.class));
+    verify(readUseCase, times(1)).readTradesProcess(any(ReadTradesQuery.class), any());
   }
 
   @Test
@@ -101,8 +108,7 @@ class TradeControllerTest {
     mvc.perform(patch("/trades/{tradeId}", tradeId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
-            .requestAttr("memberId", MEMBER_ID)
-        )
+            .requestAttr("memberId", MEMBER_ID))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.result").value("UPDATED"));

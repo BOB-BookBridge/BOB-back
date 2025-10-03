@@ -12,6 +12,7 @@ import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
 import static com.bob.support.fixture.domain.TradeFixture.REQUESTED_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.RESERVED_TRADE;
+import static com.bob.support.fixture.query.TradeQueryFixture.KEY_NULL_STATUS_NULL;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.CUSTOM_POST_DETAIL_RESPONSE;
@@ -19,6 +20,7 @@ import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -27,10 +29,13 @@ import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
+import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
-import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.trade.service.dto.query.SearchKey;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
+import com.bob.domain.trade.service.dto.response.PostTradesResponse;
+import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
@@ -48,6 +53,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @DisplayName("거래 서비스 테스트")
 @ExtendWith(MockitoExtension.class)
@@ -70,6 +77,8 @@ class TradeServiceTest {
 
   @Mock
   private ApplicationEventPublisher eventPublisher;
+
+  private Pageable pageable = PageRequest.of(0, 12);
 
   @Test
   void 거래_생성_및_저장() {
@@ -100,17 +109,17 @@ class TradeServiceTest {
   }
 
   @Test
-  void 거래_목록_조회() {
+  void 게시글_거래_목록_조회() {
     // given
     UUID requesterId = MEMBER_ID;
     Long postId = 1L;
-    ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
+    ReadPostTradesQuery query = new ReadPostTradesQuery(postId, requesterId);
     given(postPort.readTradePostSummary(postId)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
     given(tradeReader.readTradesByPostId(postId)).willReturn(DEFAULT_TRADES());
     given(memberPort.readTradeMemberProfile(any(UUID.class))).willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
 
     // when
-    TradesResponse response = tradeService.readTradesProcess(query);
+    PostTradesResponse response = tradeService.readPostTradesProcess(query);
 
     // then
     assertThat(response).isNotNull();
@@ -121,22 +130,48 @@ class TradeServiceTest {
   }
 
   @Test
-  void 거래_목록_조회_시_게시글_등록자가_아니면_예외가_발생한다() {
+  void 게시글_거래_목록_조회_시_게시글_등록자가_아니면_예외가_발생한다() {
     // given
     UUID postOwnerId = MEMBER_ID;
     UUID requesterId = UUID.randomUUID();
     Long postId = 1L;
-    ReadTradesQuery query = new ReadTradesQuery(postId, requesterId);
+    ReadPostTradesQuery query = new ReadPostTradesQuery(postId, requesterId);
     given(postPort.readTradePostSummary(postId)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
 
     // when & then
-    assertThatThrownBy(() -> tradeService.readTradesProcess(query))
+    assertThatThrownBy(() -> tradeService.readPostTradesProcess(query))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(TRADE_ACCESS_DENIED.getMessage());
 
     then(postPort).should(times(1)).readTradePostSummary(postId);
     then(tradeReader).shouldHaveNoInteractions();
     then(memberPort).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 거래_목록_조회() {
+    // given
+    ReadTradesQuery query = KEY_NULL_STATUS_NULL(MEMBER_ID);
+    List<Trade> trades = DEFAULT_TRADES();
+    given(postPort.readTradePostSummary(1L)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+    given(tradeReader.readTradesByQuery(any(ReadTradesQuery.class), eq(pageable))).willReturn(trades);
+    given(tradeRepository.countTradesByQuery(any(ReadTradesQuery.class))).willReturn((long) trades.size());
+
+    // when
+    TradesResponse response = tradeService.readTradesProcess(query, pageable);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.trades()).hasSize(trades.size());
+
+    ArgumentCaptor<ReadTradesQuery> captor = ArgumentCaptor.forClass(ReadTradesQuery.class);
+    then(tradeReader).should(times(1)).readTradesByQuery(captor.capture(), eq(pageable));
+    then(tradeRepository).should(times(1)).countTradesByQuery(any(ReadTradesQuery.class));
+
+    ReadTradesQuery captured = captor.getValue();
+    assertThat(captured.memberId()).isEqualTo(query.memberId());
+    assertThat(captured.key()).isEqualTo(SearchKey.ALL);
+    assertThat(captured.statuses()).isNull();
   }
 
   @Test

@@ -3,6 +3,7 @@ package com.bob.web.trade.controller;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
+import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
@@ -13,10 +14,11 @@ import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
 import com.bob.web.trade.request.ChangeTradeStatusRequest;
 import com.bob.web.trade.request.CreateTradeRequest;
-import com.bob.web.trade.request.ReadFilteredTradesRequest;
+import com.bob.web.trade.request.ReadTradesRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -45,10 +47,11 @@ public class TradeController {
 
   @GetMapping
   public ResponseEntity<TradesResponse> handleReadTrades(
-      ReadFilteredTradesRequest request,
-      @AuthenticationId UUID memberId
+      @Valid ReadTradesRequest request,
+      @AuthenticationId UUID memberId,
+      Pageable pageable
   ) {
-    return ResponseEntity.ok(readUseCase.readTradesProcess(request.toQuery(memberId)));
+    return ResponseEntity.ok(readUseCase.readTradesProcess(ReadTradesQuery.of(memberId, request.key(), request.status()), pageable));
   }
 
   @PatchMapping("/{tradeId}")

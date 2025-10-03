@@ -31,6 +31,17 @@ public class TradeFixture {
         .build();
   }
 
+  public static Trade SENT_TRADE(Long id, Long postId, Status status) {
+    return Trade.builder()
+        .id(id)
+        .postId(postId)
+        .sellerId(UUID.randomUUID())
+        .buyerId(MEMBER_ID)
+        .status(status)
+        .updatedAt(LocalDateTime.now())
+        .build();
+  }
+
   public static Trade REQUESTED_TRADE(Long id, Long postId) {
     return TRADE(id, postId, Status.REQUESTED);
   }

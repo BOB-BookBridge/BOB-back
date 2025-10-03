@@ -6,16 +6,18 @@ import lombok.Builder;
 
 @Builder
 public record TradePostSummary(
-    Long postId,
+    Long id,
     UUID sellerId,
-    String title
+    String title,
+    String thumbnailUrl
 ) {
 
   public static TradePostSummary from(PostDetailResponse post) {
     return TradePostSummary.builder()
-        .postId(post.postId())
+        .id(post.postId())
         .sellerId(post.sellerId())
         .title(post.book().title())
+        .thumbnailUrl(post.thumbnailUrl())
         .build();
   }
 }

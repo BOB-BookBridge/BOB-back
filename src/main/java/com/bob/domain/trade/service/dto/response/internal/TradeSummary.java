@@ -1,31 +1,20 @@
 package com.bob.domain.trade.service.dto.response.internal;
 
-import com.bob.domain.trade.entity.Trade;
-import java.util.UUID;
+import com.bob.domain.trade.entity.status.Status;
 import lombok.Builder;
 
 @Builder
 public record TradeSummary(
-    Long tradeId,
-    String tradeStatus,
-    Buyer buyer
+    Long id,
+    String status,
+    TradePostSummary post
 ) {
 
-  public static TradeSummary from(Trade trade, TradeMemberSummary member) {
+  public static TradeSummary of(Long id, Status status, TradePostSummary post) {
     return TradeSummary.builder()
-        .tradeId(trade.getId())
-        .tradeStatus(trade.getStatus().name())
-        .buyer(Buyer.of(member.id(), member.nickname(), member.profile()))
+        .id(id)
+        .status(status.name())
+        .post(post)
         .build();
-  }
-
-  public record Buyer(
-      UUID id,
-      String nickname,
-      String profile
-  ) {
-    public static Buyer of(UUID id, String nickname, String profile) {
-      return new Buyer(id, nickname, profile);
-    }
   }
 }
