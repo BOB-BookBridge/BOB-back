@@ -3,18 +3,24 @@ package com.bob.web.trade.controller;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
+import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
+import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
+import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.domain.trade.usecase.TradeWriteUseCase;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
 import com.bob.web.trade.request.ChangeTradeStatusRequest;
 import com.bob.web.trade.request.CreateTradeRequest;
+import com.bob.web.trade.request.ReadTradesRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TradeController {
 
   private final TradeWriteUseCase writeUseCase;
+  private final TradeReadUseCase readUseCase;
   private final TradeModifyUseCase modifyUseCase;
 
   @PostMapping
@@ -36,6 +43,15 @@ public class TradeController {
       @AuthenticationId UUID memberId
   ) {
     return ResponseEntity.status(CREATED).body(writeUseCase.createTradeProcess(request.toCommand(memberId)));
+  }
+
+  @GetMapping
+  public ResponseEntity<TradesResponse> handleReadTrades(
+      @Valid ReadTradesRequest request,
+      @AuthenticationId UUID memberId,
+      Pageable pageable
+  ) {
+    return ResponseEntity.ok(readUseCase.readTradesProcess(ReadTradesQuery.of(memberId, request.key(), request.status()), pageable));
   }
 
   @PatchMapping("/{tradeId}")
