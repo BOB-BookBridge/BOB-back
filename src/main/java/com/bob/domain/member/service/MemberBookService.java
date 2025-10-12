@@ -6,6 +6,7 @@ import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
@@ -54,6 +55,8 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     return MemberBooksResponse.of(summaries);
   }
 
+  // TODO: memberBookId를 통한 책 정보 조회 기능 구현
+
   @Transactional
   public void changeMemberBookUsageProcess(ChangeMemberBookUsageCommand command) {
     List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.memberBookIds());
@@ -66,6 +69,11 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     memberBooks.stream()
         .filter(mb -> !Objects.equals(mb.getUsageId(), command.usageId()))
         .forEach(mb -> mb.updateUsageId(command.usageId()));
+  }
+
+  @Transactional
+  public void removeMemberBookUsageProcess(RemoveMemberBookUsageCommand command) {
+    memberBookRepository.clearUsageId(command.usageId());
   }
 
   @Transactional

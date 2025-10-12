@@ -509,7 +509,6 @@ class PostServiceTest {
   void 게시글_정상_삭제() {
     // given
     Post post = defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID);
-
     RemovePostCommand command = new RemovePostCommand(MEMBER_ID, post.getId());
     given(postReader.readPostById(command.postId())).willReturn(post);
 
@@ -519,6 +518,7 @@ class PostServiceTest {
     // then
     then(postReader).should(times(1)).readPostById(post.getId());
     then(postFavoriteService).should(times(1)).removePostFavoriteProcess(post.getId());
+    then(memberPort).should(times(1)).removeMemberBookUsage(post.getId());
     assertThat(post.getStatus()).isEqualTo(Status.REMOVED);
   }
 

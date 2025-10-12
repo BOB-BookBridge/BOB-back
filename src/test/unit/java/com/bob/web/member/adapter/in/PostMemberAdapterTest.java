@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.usecase.MemberBookModifyUseCase;
@@ -79,5 +80,17 @@ class PostMemberAdapterTest {
 
     // then
     then(bookModifyUseCase).should(times(1)).changeMemberBookUsageProcess(any(ChangeMemberBookUsageCommand.class));
+  }
+
+  @Test
+  void 회원_소유_책_사용처_삭제_기능_호출() {
+    // given
+    Long usageId = 1L;
+
+    // when
+    postMemberAdapter.removeMemberBookUsage(usageId);
+
+    // then
+    then(bookModifyUseCase).should(times(1)).removeMemberBookUsageProcess(any(RemoveMemberBookUsageCommand.class));
   }
 }

@@ -11,4 +11,6 @@ public interface PostMemberPort {
   Long createMemberBook(RegisterMemberBookCommand command);
 
   void changeMemberBookUsage(Long usageId, Long bookId);
+
+  void removeMemberBookUsage(Long usageId);
 }

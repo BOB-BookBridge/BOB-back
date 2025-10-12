@@ -60,6 +60,9 @@ public class Post extends BaseTime {
   private UUID sellerId;
 
   @Column(nullable = false)
+  private Long sellerBookId;
+
+  @Column(nullable = false)
   private String thumbnailUrl;
 
   @Column(nullable = false)
@@ -84,7 +87,8 @@ public class Post extends BaseTime {
   private TradeProgress tradeProgress;
 
   public static Post create(Category category, Long bookId, int emdId,
-      String title, String description, String thumbnailUrl, String bookStatus, UUID sellerId, int sellPrice
+      String title, String description, String thumbnailUrl, String bookStatus,
+      UUID sellerId, Long sellerBookId, int sellPrice
   ) {
     return Post.builder()
         .status(ACTIVE)
@@ -94,6 +98,7 @@ public class Post extends BaseTime {
         .bookId(bookId)
         .bookStatus(BookStatus.from(bookStatus))
         .sellerId(sellerId)
+        .sellerBookId(sellerBookId)
         .sellPrice(sellPrice)
         .tradeProgress(READY)
         .registrationAreaId(emdId)
