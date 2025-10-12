@@ -219,10 +219,10 @@ class MemberServiceTest {
     assertThat(response.area().isAuthentication()).isTrue();
 
     // 내 프로필 조회 시 소유 도서 목록 포함
-    assertThat(response.books()).isNotNull();
-    assertThat(response.books()).hasSize(2);
-    assertThat(response.books().get(0).id()).isEqualTo(1L);
-    assertThat(response.books().get(1).id()).isEqualTo(2L);
+    assertThat(response.bookcase()).isNotNull();
+    assertThat(response.bookcase()).hasSize(2);
+    assertThat(response.bookcase().get(0).id()).isEqualTo(1L);
+    assertThat(response.bookcase().get(1).id()).isEqualTo(2L);
   }
 
   @Test
@@ -249,7 +249,7 @@ class MemberServiceTest {
     assertThat(response.area().isAuthentication()).isTrue();
 
     // 타인 프로필 조회 시 소유 도서 목록은 null.
-    assertThat(response.books()).isNull();
+    assertThat(response.bookcase()).isNull();
   }
 
   @Test
@@ -273,7 +273,7 @@ class MemberServiceTest {
     assertThat(response.profileImageUrl()).isNull();
     assertThat(response.interests()).hasSize(0);
 
-    assertThat(response.books()).isNull();
+    assertThat(response.bookcase()).isNull();
   }
 
   @ParameterizedTest(name = "프로필 변경 성공 케이스: {0}")

@@ -38,7 +38,7 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     if (bookId == null) {
       bookId = createBook(command);
     }
-    memberBookRepository.save(MemberBook.of(command.memberId(), bookId, command.bookStatus()));
+    memberBookRepository.save(MemberBook.of(command.memberId(), bookId, command.status()));
   }
 
   private Long createBook(RegisterMemberBookCommand command) {
@@ -75,6 +75,6 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
       throw new ApplicationException(ApplicationError.OBJECT_ACCESS_DENIED);
     if (!memberBook.isRemovable())
       throw new ApplicationException(ApplicationError.UNREMOVABLE_MEMBER_BOOK, memberBook.getUsageId());
-    memberBookRepository.deleteById(command.id());
+    memberBook.remove();
   }
 }

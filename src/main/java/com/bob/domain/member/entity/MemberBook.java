@@ -37,20 +37,28 @@ public class MemberBook {
   @Column
   private Long usageId;
 
+  @Column(nullable = false)
+  private boolean isRemove;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private BookStatus bookStatus;
+  private BookStatus status;
 
   public static MemberBook of(UUID memberId, Long bookId, String status) {
     return MemberBook.builder()
         .memberId(memberId)
         .bookId(bookId)
-        .bookStatus(BookStatus.valueOf(status))
+        .status(BookStatus.valueOf(status))
+        .isRemove(false)
         .build();
   }
 
   public void updateUsageId(Long usageId) {
     this.usageId = usageId;
+  }
+
+  public void remove() {
+    this.isRemove = true;
   }
 
   public boolean isOwner(UUID memberId) {

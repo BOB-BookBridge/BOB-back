@@ -183,7 +183,7 @@ class MemberServiceIntgTest extends TestContainerSupport {
     assertThat(response.interests()).isNotNull();
     assertThat(response.area()).isNotNull();
 
-    assertThat(response.books()).isNotNull();
+    assertThat(response.bookcase()).isNotNull();
   }
 
   @Test

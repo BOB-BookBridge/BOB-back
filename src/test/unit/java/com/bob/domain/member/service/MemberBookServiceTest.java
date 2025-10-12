@@ -5,8 +5,8 @@ import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.D
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID;
 import static com.bob.support.fixture.domain.MemberBookFixture.DEFAULT_MEMBER_BOOK;
 import static com.bob.support.fixture.domain.MemberBookFixture.DIFF_IN_TRADE_BOOK;
-import static com.bob.support.fixture.domain.MemberBookFixture.SAME_IN_TRADE_BOOK;
 import static com.bob.support.fixture.domain.MemberBookFixture.NEW_MEMBER_BOOK;
+import static com.bob.support.fixture.domain.MemberBookFixture.SAME_IN_TRADE_BOOK;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_RESPONSE;
 import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_RESPONSES;
@@ -19,8 +19,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
-import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.entity.BookStatus;
+import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
@@ -77,7 +77,7 @@ class MemberBookServiceTest {
     MemberBook saved = memberBookCaptor.getValue();
     assertThat(saved.getMemberId()).isEqualTo(DEFAULT_REGISTER_MEMBER_BOOK_COMMAND.memberId());
     assertThat(saved.getBookId()).isEqualTo(DEFAULT_REGISTER_MEMBER_BOOK_COMMAND.bookId());
-    assertThat(saved.getBookStatus()).isEqualTo(BookStatus.BEST);
+    assertThat(saved.getStatus()).isEqualTo(BookStatus.BEST);
   }
 
   @Test
@@ -97,7 +97,7 @@ class MemberBookServiceTest {
     MemberBook saved = memberBookCaptor.getValue();
     assertThat(saved.getMemberId()).isEqualTo(REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID.memberId());
     assertThat(saved.getBookId()).isEqualTo(NEW_MEMBER_BOOK.getBookId());
-    assertThat(saved.getBookStatus()).isEqualTo(BookStatus.HIGH);
+    assertThat(saved.getStatus()).isEqualTo(BookStatus.HIGH);
   }
 
   @Test
@@ -121,13 +121,11 @@ class MemberBookServiceTest {
 
     MemberBookSummary s1 = summaries.get(0);
     assertThat(s1.id()).isEqualTo(DEFAULT_MEMBER_BOOK.getId());
-    assertThat(s1.bookId()).isEqualTo(DEFAULT_MEMBER_BOOK.getBookId());
-    assertThat(s1.bookStatus()).isEqualTo(BookStatus.BEST.name());
+    assertThat(s1.status()).isEqualTo(BookStatus.BEST.name());
 
     MemberBookSummary s2 = summaries.get(1);
     assertThat(s2.id()).isEqualTo(NEW_MEMBER_BOOK.getId());
-    assertThat(s2.bookId()).isEqualTo(NEW_MEMBER_BOOK.getBookId());
-    assertThat(s2.bookStatus()).isEqualTo(BookStatus.HIGH.name());
+    assertThat(s2.status()).isEqualTo(BookStatus.HIGH.name());
   }
 
   @Test
@@ -196,7 +194,7 @@ class MemberBookServiceTest {
     service.removeMemberBookProcess(command);
 
     // then
-    then(memberBookRepository).should().deleteById(DEFAULT_MEMBER_BOOK.getId());
+    assertThat(mb.isRemove()).isTrue();
   }
 
   @Test
