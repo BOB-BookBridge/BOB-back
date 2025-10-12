@@ -76,11 +76,19 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     verifyAreaAuthentication(areaSummary.validity());
     Category category = categoryReader.readCategoryById(command.categoryId());
     Long bookId = bookPort.createBook(command.toCreateBookCommand());
-    memberPort.createMemberBook(command.toCreateMemberBookCommand(bookId));
-    Post post = command.toPost(category, bookId, command.memberId(), areaSummary.emdId());
-    postRepository.save(post);
+    Long memberBookId = memberPort.createMemberBook(command.toCreateMemberBookCommand(bookId));
+    Post post = savePost(command, category, memberBookId, areaSummary);
+    memberPort.changeMemberBookUsage(post.getId(), memberBookId);
     imageMapping(command.fileNames(), post.getId());
     return PostCreateResponse.of(post.getId());
+  }
+
+  private Post savePost(CreatePostCommand command, Category category, Long memberBookId, PostAreaSummaryResponse areaSummary) {
+    return postRepository.save(
+        Post.create(category, memberBookId, areaSummary.emdId(),
+            command.bookTitle(), command.postDescription(), command.bookCover(),
+            command.bookStatus(), command.memberId(), command.sellPrice())
+    );
   }
 
   private void verifyAreaAuthentication(boolean validity) {
@@ -186,6 +194,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     verifyPostOwner(command.memberId(), post.getSellerId());
     verifyRemovable(post);
     postFavoriteService.removePostFavoriteProcess(post.getId());
+    // TODO: 게시글 삭제 시 책장 책 매핑 삭제
     post.updateStatus(REMOVED);
   }
 

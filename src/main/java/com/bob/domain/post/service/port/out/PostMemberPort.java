@@ -8,5 +8,7 @@ public interface PostMemberPort {
 
   MemberProfileResponse readPostMemberSummary(UUID memberId);
 
-  void createMemberBook(RegisterMemberBookCommand command);
+  Long createMemberBook(RegisterMemberBookCommand command);
+
+  void changeMemberBookUsage(Long usageId, Long bookId);
 }

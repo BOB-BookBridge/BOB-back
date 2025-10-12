@@ -33,12 +33,13 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   private final MemberBookPort bookPort;
 
   @Transactional
-  public void registerMemberBookProcess(RegisterMemberBookCommand command) {
+  public Long registerMemberBookProcess(RegisterMemberBookCommand command) {
     Long bookId = command.bookId();
     if (bookId == null) {
       bookId = createBook(command);
     }
-    memberBookRepository.save(MemberBook.of(command.memberId(), bookId, command.status()));
+    MemberBook memberBook = memberBookRepository.save(MemberBook.of(command.memberId(), bookId, command.status()));
+    return memberBook.getId();
   }
 
   private Long createBook(RegisterMemberBookCommand command) {

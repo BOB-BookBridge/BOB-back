@@ -32,6 +32,7 @@ import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DE
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_FAVORITE_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -39,6 +40,7 @@ import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.times;
 
+import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.post.entity.Category;
 import com.bob.domain.post.service.dto.query.condition.SearchKey;
 import com.bob.domain.post.service.port.out.PostBookPort;
@@ -124,6 +126,8 @@ class PostServiceTest {
     given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY);
     given(categoryReader.readCategoryById(command.categoryId())).willReturn(category);
     given(bookPort.createBook(command.toCreateBookCommand())).willReturn(bookId);
+    given(memberPort.createMemberBook(any(RegisterMemberBookCommand.class))).willReturn(1L);
+    given(postRepository.save(any(Post.class))).willAnswer(invocation -> invocation.getArgument(0));
 
     ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
 
@@ -147,9 +151,12 @@ class PostServiceTest {
   void 게시글_등록_시_referenceId가_null이면_이미지_매핑을_하지_않는다() {
     // given
     CreatePostCommand command = createPostCommandWithImageRefId(null);
+    Long bookId = DEFAULT_BOOK.getId();
     given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY);
     given(categoryReader.readCategoryById(command.categoryId())).willReturn(defaultCategory());
-    given(bookPort.createBook(command.toCreateBookCommand())).willReturn(anyLong());
+    given(bookPort.createBook(command.toCreateBookCommand())).willReturn(bookId);
+    given(memberPort.createMemberBook(any(RegisterMemberBookCommand.class))).willReturn(1L);
+    given(postRepository.save(any(Post.class))).willAnswer(invocation -> invocation.getArgument(0));
 
     // when
     postService.createPostProcess(command);
@@ -162,9 +169,12 @@ class PostServiceTest {
   void 게시글_등록_시_referenceId가_공백이면_이미지_매핑을_하지_않는다() {
     // given
     CreatePostCommand command = createPostCommandWithImageRefId(List.of());
+    Long bookId = DEFAULT_BOOK.getId();
     given(areaPort.readPostAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY);
     given(categoryReader.readCategoryById(command.categoryId())).willReturn(defaultCategory());
-    given(bookPort.createBook(command.toCreateBookCommand())).willReturn(anyLong());
+    given(bookPort.createBook(command.toCreateBookCommand())).willReturn(bookId);
+    given(memberPort.createMemberBook(any(RegisterMemberBookCommand.class))).willReturn(1L);
+    given(postRepository.save(any(Post.class))).willAnswer(invocation -> invocation.getArgument(0));
 
     // when
     postService.createPostProcess(command);
