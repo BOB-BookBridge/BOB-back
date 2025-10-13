@@ -1,11 +1,15 @@
 package com.bob.web.member.adapter.in;
 
+import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
+import com.bob.domain.member.usecase.MemberBookModifyUseCase;
 import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.post.service.port.out.PostMemberPort;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,6 +21,7 @@ public class PostMemberAdapter implements PostMemberPort {
   private final MemberReadUseCase readUseCase;
 
   private final MemberBookWriteUseCase bookWriteUseCase;
+  private final MemberBookModifyUseCase bookModifyUseCase;
 
   @Override
   public MemberProfileResponse readPostMemberSummary(UUID memberId) {
@@ -24,7 +29,17 @@ public class PostMemberAdapter implements PostMemberPort {
   }
 
   @Override
-  public void createMemberBook(RegisterMemberBookCommand command) {
-    bookWriteUseCase.registerMemberBookProcess(command);
+  public Long createMemberBook(RegisterMemberBookCommand command) {
+    return bookWriteUseCase.registerMemberBookProcess(command);
+  }
+
+  @Override
+  public void changeMemberBookUsage(Long usageId, Long bookId) {
+    bookModifyUseCase.changeMemberBookUsageProcess(ChangeMemberBookUsageCommand.of(usageId, List.of(bookId)));
+  }
+
+  @Override
+  public void removeMemberBookUsage(Long usageId) {
+    bookModifyUseCase.removeMemberBookUsageProcess(RemoveMemberBookUsageCommand.of(usageId));
   }
 }

@@ -5,12 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.repository.BookRepository;
-import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.entity.BookStatus;
+import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
@@ -50,7 +51,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
     RegisterMemberBookCommand command = RegisterMemberBookCommand.builder()
         .memberId(memberId)
         .bookId(exist.getId())
-        .bookStatus("BEST")
+        .status("BEST")
         .isbn(exist.getIsbn13())
         .title(exist.getTitle())
         .author(exist.getAuthor())
@@ -70,7 +71,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
     MemberBook saved = all.get(0);
     assertThat(saved.getMemberId()).isEqualTo(memberId);
     assertThat(saved.getBookId()).isEqualTo(DEFAULT_REGISTER_MEMBER_BOOK_COMMAND.bookId());
-    assertThat(saved.getBookStatus()).isEqualTo(BookStatus.BEST);
+    assertThat(saved.getStatus()).isEqualTo(BookStatus.BEST);
   }
 
   @Test
@@ -84,7 +85,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
     RegisterMemberBookCommand command = RegisterMemberBookCommand.builder()
         .memberId(memberId)
         .bookId(null)
-        .bookStatus("BEST")
+        .status("BEST")
         .isbn(unregisterBookIsbn)
         .title("신규 책")
         .author("임꺽정")
@@ -104,7 +105,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
     MemberBook saved = all.get(0);
     assertThat(saved.getMemberId()).isEqualTo(memberId);
     assertThat(saved.getBookId()).isNotNull();
-    assertThat(saved.getBookStatus()).isEqualTo(BookStatus.BEST);
+    assertThat(saved.getStatus()).isEqualTo(BookStatus.BEST);
 
     Optional<Book> newBook = bookRepository.findByIsbn13(unregisterBookIsbn);
     assertThat(newBook).isPresent();
@@ -126,14 +127,38 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
 
     MemberBookSummary s1 = summaries.get(0);
     assertThat(s1.id()).isEqualTo(mb1.getId());
-    assertThat(s1.bookId()).isEqualTo(mb1.getBookId());
-    assertThat(s1.bookStatus()).isEqualTo(BookStatus.BEST.name());
+    assertThat(s1.status()).isEqualTo(BookStatus.BEST.name());
     assertThat(s1.title()).isEqualTo("자바의 정석");
 
     MemberBookSummary s2 = summaries.get(1);
     assertThat(s2.id()).isEqualTo(mb2.getId());
-    assertThat(s2.bookId()).isEqualTo(mb2.getBookId());
-    assertThat(s2.bookStatus()).isEqualTo(BookStatus.HIGH.name());
+    assertThat(s2.status()).isEqualTo(BookStatus.HIGH.name());
+    assertThat(s2.title()).isEqualTo("자바 ORM 표준 JPA 프로그래밍");
+  }
+
+  @Test
+  void id_기반_회원_소유_책_목록_정상_조회() {
+    // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    MemberBook mb1 = memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
+    MemberBook mb2 = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+    ReadMemberBooksByIdQuery query = ReadMemberBooksByIdQuery.of(List.of(mb1.getId(), mb2.getId()));
+
+    // when
+    MemberBooksResponse response = service.readMemberBooksByIdsProcess(query);
+
+    // then
+    List<MemberBookSummary> summaries = response.books();
+    assertThat(summaries).hasSize(2);
+
+    MemberBookSummary s1 = summaries.get(0);
+    assertThat(s1.id()).isEqualTo(mb1.getId());
+    assertThat(s1.status()).isEqualTo(BookStatus.BEST.name());
+    assertThat(s1.title()).isEqualTo("자바의 정석");
+
+    MemberBookSummary s2 = summaries.get(1);
+    assertThat(s2.id()).isEqualTo(mb2.getId());
+    assertThat(s2.status()).isEqualTo(BookStatus.HIGH.name());
     assertThat(s2.title()).isEqualTo("자바 ORM 표준 JPA 프로그래밍");
   }
 
@@ -164,12 +189,14 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
     UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
     MemberBook mb = memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
     Long memberBookId = mb.getId();
-    assertThat(memberBookRepository.findById(memberBookId)).isPresent();
+    assertThat(mb.isRemove()).isFalse();
 
     // when
     service.removeMemberBookProcess(RemoveMemberBookCommand.of(memberId, memberBookId));
 
     // then
-    assertThat(memberBookRepository.findById(memberBookId)).isNotPresent();
+    Optional<MemberBook> updated = memberBookRepository.findById(memberBookId);
+    assertThat(updated).isPresent();
+    assertThat(updated.get().isRemove()).isTrue();
   }
 }

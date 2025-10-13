@@ -34,8 +34,9 @@ CREATE TABLE IF NOT EXISTS member_books (
     member_id BINARY(16) NOT NULL,
     book_id BIGINT NOT NULL,
     usage_id BIGINT,
-    book_status ENUM('BEST', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,
-    CONSTRAINT fk_mb_member FOREIGN KEY (member_id)  REFERENCES members(id) ON DELETE CASCADE,
+    status ENUM('BEST', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,
+    is_remove BOOLEAN DEFAULT FALSE,
+    CONSTRAINT fk_mb_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
     CONSTRAINT fk_mb_book FOREIGN KEY (book_id) REFERENCES books(id)
 );
 

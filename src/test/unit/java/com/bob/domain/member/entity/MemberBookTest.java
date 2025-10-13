@@ -23,7 +23,7 @@ class MemberBookTest {
     // then
     assertThat(result.getMemberId()).isEqualTo(memberId);
     assertThat(result.getBookId()).isEqualTo(bookId);
-    assertThat(result.getBookStatus()).isEqualTo(BookStatus.BEST);
+    assertThat(result.getStatus()).isEqualTo(BookStatus.BEST);
   }
 
   @Test

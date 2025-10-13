@@ -6,6 +6,8 @@ import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
@@ -33,12 +35,13 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   private final MemberBookPort bookPort;
 
   @Transactional
-  public void registerMemberBookProcess(RegisterMemberBookCommand command) {
+  public Long registerMemberBookProcess(RegisterMemberBookCommand command) {
     Long bookId = command.bookId();
     if (bookId == null) {
       bookId = createBook(command);
     }
-    memberBookRepository.save(MemberBook.of(command.memberId(), bookId, command.bookStatus()));
+    MemberBook memberBook = memberBookRepository.save(MemberBook.of(command.memberId(), bookId, command.status()));
+    return memberBook.getId();
   }
 
   private Long createBook(RegisterMemberBookCommand command) {
@@ -48,9 +51,21 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   @Transactional(readOnly = true)
   public MemberBooksResponse readMemberBooksProcess(ReadMemberBooksQuery query) {
     List<MemberBook> memberBooks = memberBookReader.readMemberBooksByMemberId(query.memberId());
+    List<MemberBookSummary> summaries = getMemberBookSummaries(memberBooks);
+    return MemberBooksResponse.of(summaries);
+  }
+
+  @Transactional(readOnly = true)
+  public MemberBooksResponse readMemberBooksByIdsProcess(ReadMemberBooksByIdQuery query) {
+    List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(query.ids());
+    List<MemberBookSummary> summaries = getMemberBookSummaries(memberBooks);
+    return MemberBooksResponse.of(summaries);
+  }
+
+  private List<MemberBookSummary> getMemberBookSummaries(List<MemberBook> memberBooks) {
     List<Long> bookIds = memberBooks.stream().map(MemberBook::getBookId).toList();
     List<MemberBookSummary> summaries = MemberBookSummary.listFrom(memberBooks, bookPort.readBookSummaries(bookIds));
-    return MemberBooksResponse.of(summaries);
+    return summaries;
   }
 
   @Transactional
@@ -68,6 +83,11 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   }
 
   @Transactional
+  public void removeMemberBookUsageProcess(RemoveMemberBookUsageCommand command) {
+    memberBookRepository.clearUsageId(command.usageId());
+  }
+
+  @Transactional
   public void removeMemberBookProcess(RemoveMemberBookCommand command) {
     MemberBook memberBook = memberBookReader.readMemberBookById(command.id());
 
@@ -75,6 +95,6 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
       throw new ApplicationException(ApplicationError.OBJECT_ACCESS_DENIED);
     if (!memberBook.isRemovable())
       throw new ApplicationException(ApplicationError.UNREMOVABLE_MEMBER_BOOK, memberBook.getUsageId());
-    memberBookRepository.deleteById(command.id());
+    memberBook.remove();
   }
 }

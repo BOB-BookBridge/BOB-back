@@ -18,14 +18,14 @@ public record MemberProfileResponse(
     String profileImageUrl,
     List<String> interests,
     Area area,
-    List<MemberBookSummary> books
+    List<MemberBookSummary> bookcase
 ) {
 
   public static MemberProfileResponse from(
       Member member,
       List<String> interestNames,
       MemberAreaSummaryResponse areaSummary,
-      List<MemberBookSummary> books
+      List<MemberBookSummary> bookcase
   ) {
     final boolean removed = member.getStatus() == WITHDRAW;
     final String nickname = removed ? "(알 수 없음)" : member.getNickname();
@@ -41,7 +41,7 @@ public record MemberProfileResponse(
         .profileImageUrl(profileImageUrl)
         .interests(interests)
         .area(Area.of(areaSummary.emdId(), areaSummary.validity(), areaSummary.authenticatedAt()))
-        .books(books)
+        .bookcase(bookcase)
         .build();
   }
 

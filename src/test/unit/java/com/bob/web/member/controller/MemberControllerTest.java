@@ -104,7 +104,7 @@ class MemberControllerTest {
     // given
     String json = """
         {
-          "bookStatus": "BEST",
+          "status": "BEST",
           "isbn": "9781234567890",
           "title": "테스트책",
           "author": "홍길동",
@@ -177,7 +177,6 @@ class MemberControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.books.length()").value(expectedSize))
         .andExpect(jsonPath("$.books[0].id").value(first.id().intValue()))
-        .andExpect(jsonPath("$.books[0].bookId").value(first.bookId().intValue()))
         .andExpect(jsonPath("$.books[0].title").value(first.title()));
 
     verify(bookReadUseCase, times(1)).readMemberBooksProcess(any(ReadMemberBooksQuery.class));

@@ -12,30 +12,34 @@ public class MemberBookFixture {
       .id(1L)
       .memberId(MEMBER_ID)
       .bookId(1L)
-      .bookStatus(BookStatus.BEST)
+      .status(BookStatus.BEST)
+      .isRemove(false)
       .build();
 
   public static MemberBook NEW_MEMBER_BOOK = MemberBook.builder()
       .id(2L)
       .memberId(MEMBER_ID)
       .bookId(2L)
-      .bookStatus(BookStatus.HIGH)
+      .status(BookStatus.HIGH)
+      .isRemove(false)
       .build();
 
   public static MemberBook SAME_IN_TRADE_BOOK = MemberBook.builder()
       .id(3L)
       .memberId(MEMBER_ID)
       .bookId(3L)
-      .bookStatus(BookStatus.LOW)
+      .status(BookStatus.LOW)
       .usageId(1L)
+      .isRemove(false)
       .build();
 
   public static MemberBook DIFF_IN_TRADE_BOOK = MemberBook.builder()
       .id(4L)
       .memberId(MEMBER_ID)
       .bookId(4L)
-      .bookStatus(BookStatus.BEST)
+      .status(BookStatus.BEST)
       .usageId(3L)
+      .isRemove(false)
       .build();
 
   public static final List<MemberBook> DEFAULT_MEMBER_BOOK_RESPONSES = List.of(DEFAULT_MEMBER_BOOK, NEW_MEMBER_BOOK);

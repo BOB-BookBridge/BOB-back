@@ -76,11 +76,19 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     verifyAreaAuthentication(areaSummary.validity());
     Category category = categoryReader.readCategoryById(command.categoryId());
     Long bookId = bookPort.createBook(command.toCreateBookCommand());
-    memberPort.createMemberBook(command.toCreateMemberBookCommand(bookId));
-    Post post = command.toPost(category, bookId, command.memberId(), areaSummary.emdId());
-    postRepository.save(post);
+    Long sellerBookId = memberPort.createMemberBook(command.toCreateMemberBookCommand(bookId));
+    Post post = savePost(command, category, bookId, sellerBookId, areaSummary);
+    memberPort.changeMemberBookUsage(post.getId(), sellerBookId);
     imageMapping(command.fileNames(), post.getId());
     return PostCreateResponse.of(post.getId());
+  }
+
+  private Post savePost(CreatePostCommand command, Category category, Long bookId, Long sellerBookId, PostAreaSummaryResponse areaSummary) {
+    return postRepository.save(
+        Post.create(category, bookId, areaSummary.emdId(),
+            command.bookTitle(), command.postDescription(), command.bookCover(),
+            command.bookStatus(), command.memberId(), sellerBookId, command.sellPrice())
+    );
   }
 
   private void verifyAreaAuthentication(boolean validity) {
@@ -148,9 +156,9 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
 
   @Transactional
   public PostDetailResponse readPostDetailProcess(ReadPostDetailQuery query) {
-    if (query.isClient()) {
+    if (query.isClient())
       postRepository.increaseViewCount(query.postId());
-    }
+
     Post post = postReader.readPostById(query.postId());
     verifyAccessiblePost(post, query.isClient());
     PostBookSummaryResponse bookSummary = from(bookPort.readBookSummary(post.getBookId()));
@@ -185,8 +193,9 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     Post post = postReader.readPostById(command.postId());
     verifyPostOwner(command.memberId(), post.getSellerId());
     verifyRemovable(post);
-    postFavoriteService.removePostFavoriteProcess(post.getId());
     post.updateStatus(REMOVED);
+    postFavoriteService.removePostFavoriteProcess(post.getId());
+    memberPort.removeMemberBookUsage(post.getId());
   }
 
   private static void verifyPostOwner(UUID requestMemberId, UUID postMemberId) {

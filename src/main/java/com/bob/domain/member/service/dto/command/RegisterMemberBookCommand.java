@@ -9,7 +9,7 @@ import lombok.Builder;
 public record RegisterMemberBookCommand(
     UUID memberId,
     Long bookId,
-    String bookStatus,
+    String status,
     String isbn,
     String title,
     String author,
@@ -23,7 +23,7 @@ public record RegisterMemberBookCommand(
     return RegisterMemberBookCommand.builder()
         .memberId(memberId)
         .bookId(bookId)
-        .bookStatus(status)
+        .status(status)
         .build();
   }
 

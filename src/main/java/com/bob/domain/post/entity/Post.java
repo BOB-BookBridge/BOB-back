@@ -1,5 +1,8 @@
 package com.bob.domain.post.entity;
 
+import static com.bob.domain.post.entity.status.Status.ACTIVE;
+import static com.bob.domain.post.entity.status.TradeProgress.READY;
+
 import com.bob.domain.post.entity.status.BookStatus;
 import com.bob.domain.post.entity.status.Status;
 import com.bob.domain.post.entity.status.TradeProgress;
@@ -57,6 +60,9 @@ public class Post extends BaseTime {
   private UUID sellerId;
 
   @Column(nullable = false)
+  private Long sellerBookId;
+
+  @Column(nullable = false)
   private String thumbnailUrl;
 
   @Column(nullable = false)
@@ -79,6 +85,26 @@ public class Post extends BaseTime {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private TradeProgress tradeProgress;
+
+  public static Post create(Category category, Long bookId, int emdId,
+      String title, String description, String thumbnailUrl, String bookStatus,
+      UUID sellerId, Long sellerBookId, int sellPrice
+  ) {
+    return Post.builder()
+        .status(ACTIVE)
+        .category(category)
+        .title(title)
+        .description(description)
+        .bookId(bookId)
+        .bookStatus(BookStatus.from(bookStatus))
+        .sellerId(sellerId)
+        .sellerBookId(sellerBookId)
+        .sellPrice(sellPrice)
+        .tradeProgress(READY)
+        .registrationAreaId(emdId)
+        .thumbnailUrl(thumbnailUrl)
+        .build();
+  }
 
   public void updateOptionalFields(Integer sellPrice, String bookStatus, String description) {
     Optional.ofNullable(sellPrice).ifPresent(s -> this.sellPrice = s);
