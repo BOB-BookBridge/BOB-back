@@ -11,6 +11,7 @@ import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
@@ -119,6 +120,32 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
 
     // when
     MemberBooksResponse response = service.readMemberBooksProcess(ReadMemberBooksQuery.of(memberId));
+
+    // then
+    List<MemberBookSummary> summaries = response.books();
+    assertThat(summaries).hasSize(2);
+
+    MemberBookSummary s1 = summaries.get(0);
+    assertThat(s1.id()).isEqualTo(mb1.getId());
+    assertThat(s1.status()).isEqualTo(BookStatus.BEST.name());
+    assertThat(s1.title()).isEqualTo("자바의 정석");
+
+    MemberBookSummary s2 = summaries.get(1);
+    assertThat(s2.id()).isEqualTo(mb2.getId());
+    assertThat(s2.status()).isEqualTo(BookStatus.HIGH.name());
+    assertThat(s2.title()).isEqualTo("자바 ORM 표준 JPA 프로그래밍");
+  }
+
+  @Test
+  void id_기반_회원_소유_책_목록_정상_조회() {
+    // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-a332-95c9ebd1f5c0");
+    MemberBook mb1 = memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
+    MemberBook mb2 = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+    ReadMemberBooksByIdQuery query = ReadMemberBooksByIdQuery.of(List.of(mb1.getId(), mb2.getId()));
+
+    // when
+    MemberBooksResponse response = service.readMemberBooksByIdsProcess(query);
 
     // then
     List<MemberBookSummary> summaries = response.books();

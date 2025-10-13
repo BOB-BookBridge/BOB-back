@@ -25,6 +25,7 @@ import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
@@ -114,6 +115,35 @@ class MemberBookServiceTest {
 
     // then
     then(memberBookReader).should().readMemberBooksByMemberId(memberId);
+    then(bookPort).should().readBookSummaries(List.of(DEFAULT_MEMBER_BOOK.getBookId(), NEW_MEMBER_BOOK.getBookId()));
+
+    List<MemberBookSummary> summaries = response.books();
+    assertThat(summaries).hasSize(2);
+
+    MemberBookSummary s1 = summaries.get(0);
+    assertThat(s1.id()).isEqualTo(DEFAULT_MEMBER_BOOK.getId());
+    assertThat(s1.status()).isEqualTo(BookStatus.BEST.name());
+
+    MemberBookSummary s2 = summaries.get(1);
+    assertThat(s2.id()).isEqualTo(NEW_MEMBER_BOOK.getId());
+    assertThat(s2.status()).isEqualTo(BookStatus.HIGH.name());
+  }
+
+  @Test
+  void id_기반_회원_소유_책_목록_조회() {
+    // given
+    MemberBook mb1 = DEFAULT_MEMBER_BOOK;
+    MemberBook mb2 = NEW_MEMBER_BOOK;
+    ReadMemberBooksByIdQuery query = ReadMemberBooksByIdQuery.of(List.of(mb1.getId(), mb2.getId()));
+    given(memberBookReader.readMemberBooksByBookIds(query.ids())).willReturn(List.of(mb1, mb2));
+    given(bookPort.readBookSummaries(List.of(mb1.getBookId(), mb2.getBookId()))).willReturn(DEFAULT_BOOK_RESPONSES);
+
+
+    // when
+    MemberBooksResponse response = service.readMemberBooksByIdsProcess(query);
+
+    // then
+    then(memberBookReader).should().readMemberBooksByBookIds(query.ids());
     then(bookPort).should().readBookSummaries(List.of(DEFAULT_MEMBER_BOOK.getBookId(), NEW_MEMBER_BOOK.getBookId()));
 
     List<MemberBookSummary> summaries = response.books();
