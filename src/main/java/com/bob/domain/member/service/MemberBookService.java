@@ -7,6 +7,7 @@ import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
@@ -50,12 +51,22 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   @Transactional(readOnly = true)
   public MemberBooksResponse readMemberBooksProcess(ReadMemberBooksQuery query) {
     List<MemberBook> memberBooks = memberBookReader.readMemberBooksByMemberId(query.memberId());
-    List<Long> bookIds = memberBooks.stream().map(MemberBook::getBookId).toList();
-    List<MemberBookSummary> summaries = MemberBookSummary.listFrom(memberBooks, bookPort.readBookSummaries(bookIds));
+    List<MemberBookSummary> summaries = getMemberBookSummaries(memberBooks);
     return MemberBooksResponse.of(summaries);
   }
 
-  // TODO: memberBookId를 통한 책 정보 조회 기능 구현
+  @Transactional(readOnly = true)
+  public MemberBooksResponse readMemberBooksByIdsProcess(ReadMemberBooksByIdQuery query) {
+    List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(query.ids());
+    List<MemberBookSummary> summaries = getMemberBookSummaries(memberBooks);
+    return MemberBooksResponse.of(summaries);
+  }
+
+  private List<MemberBookSummary> getMemberBookSummaries(List<MemberBook> memberBooks) {
+    List<Long> bookIds = memberBooks.stream().map(MemberBook::getBookId).toList();
+    List<MemberBookSummary> summaries = MemberBookSummary.listFrom(memberBooks, bookPort.readBookSummaries(bookIds));
+    return summaries;
+  }
 
   @Transactional
   public void changeMemberBookUsageProcess(ChangeMemberBookUsageCommand command) {
