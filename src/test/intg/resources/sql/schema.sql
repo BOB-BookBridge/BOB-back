@@ -185,6 +185,19 @@ CREATE TABLE IF NOT EXISTS trades (
 );
 
 -- ========================
+-- 🧾 TRADE_ITEMS TABLE
+-- ========================
+CREATE TABLE IF NOT EXISTS trade_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    trade_id BIGINT NOT NULL,
+    item_id BIGINT NOT NULL,
+    owner ENUM('SELLER','BUYER') NOT NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT uk_trade_item UNIQUE KEY (trade_id, item_id),
+    FOREIGN KEY (trade_id) REFERENCES trades(id) ON DELETE CASCADE,
+);
+
+-- ========================
 -- 💬 CHAT_ROOMS TABLE
 -- ========================
 CREATE TABLE IF NOT EXISTS chat_rooms (
