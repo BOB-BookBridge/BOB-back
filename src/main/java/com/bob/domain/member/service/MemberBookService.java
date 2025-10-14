@@ -82,8 +82,11 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
         .forEach(mb -> mb.updateUsageId(command.usageId()));
   }
 
+  // TODO : id List 기반 usageId null 업데이트 기능
+
   @Transactional
   public void removeMemberBookUsageProcess(RemoveMemberBookUsageCommand command) {
+    // TODO : 메서드 명 변경 (게시글 삭제로 인한 관련 참조 모두 삭제)
     memberBookRepository.clearUsageId(command.usageId());
   }
 
