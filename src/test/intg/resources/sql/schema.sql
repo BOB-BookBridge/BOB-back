@@ -193,8 +193,7 @@ CREATE TABLE IF NOT EXISTS trade_items (
     item_id BIGINT NOT NULL,
     owner ENUM('SELLER','BUYER') NOT NULL,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    CONSTRAINT uk_trade_item UNIQUE KEY (trade_id, item_id),
-    FOREIGN KEY (trade_id) REFERENCES trades(id) ON DELETE CASCADE,
+    CONSTRAINT uk_trade_item UNIQUE (trade_id, item_id)
 );
 
 -- ========================

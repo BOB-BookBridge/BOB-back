@@ -40,7 +40,6 @@ import com.bob.domain.trade.service.reader.TradeReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
-import com.bob.support.redis.RedisContainerConfig;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,13 +49,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
-@Import(RedisContainerConfig.class)
 @DisplayName("거래 서비스 통합 테스트")
 @Transactional
 @SpringBootTest
