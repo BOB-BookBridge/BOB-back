@@ -28,6 +28,10 @@ public enum Status {
     return this == RESERVED || this == COMPLETED;
   }
 
+  public boolean isAborted() {
+    return this == Status.REJECTED || this == Status.CANCELED;
+  }
+
   public String toPostStatusValue() {
     return switch (this) {
       case REQUESTED, ACCEPTED, REJECTED, CANCELED -> "READY";

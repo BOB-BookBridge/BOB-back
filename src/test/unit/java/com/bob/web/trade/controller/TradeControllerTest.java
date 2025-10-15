@@ -62,7 +62,8 @@ class TradeControllerTest {
     String json = """
         {
           "postId": 1,
-          "memberBookIds": [10, 11]
+          "itemIds": [10, 11],
+          "isFar": false
         }
         """;
     given(writeUseCase.createTradeProcess(any())).willReturn(mock(CreateTradeResponse.class));

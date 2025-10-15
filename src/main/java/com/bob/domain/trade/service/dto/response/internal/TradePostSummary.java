@@ -7,7 +7,9 @@ import lombok.Builder;
 @Builder
 public record TradePostSummary(
     Long id,
+    String status,
     UUID sellerId,
+    Long sellerBookId,
     String title,
     String thumbnailUrl
 ) {
@@ -15,7 +17,9 @@ public record TradePostSummary(
   public static TradePostSummary from(PostDetailResponse post) {
     return TradePostSummary.builder()
         .id(post.postId())
+        .status(post.status())
         .sellerId(post.sellerId())
+        .sellerBookId(post.sellerBookId())
         .title(post.book().title())
         .thumbnailUrl(post.thumbnailUrl())
         .build();

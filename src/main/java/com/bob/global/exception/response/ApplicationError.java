@@ -63,8 +63,11 @@ public enum ApplicationError {
   TRADE_ALREADY_PROCESSED("E603", "다른 회원과 거래가 진행중이거나 완료된 상태입니다.", HttpStatus.CONFLICT),
   TRADE_STATUS_UNCHANGED("E604", "변경하려는 거래 상태와 현재 상태가 동일합니다.", HttpStatus.CONFLICT),
   IS_SAME_TRADE_MEMBER("E605", "자신과의 거래는 불가능합니다.", HttpStatus.BAD_REQUEST),
+  TRADE_POST_REMOVED("E606", "삭제 된 게시글은 거래 요청이 불가능합니다.", HttpStatus.BAD_REQUEST),
 
   TRADE_ITEMS_UNCHANGED("E611", "거래 물품의 변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
+  UNCHANGEABLE_TRADE_ITEM("E612", "예약, 완료 상태의 거래는 거래 물품 변경이 불가능합니다.", HttpStatus.BAD_REQUEST),
+  MAIN_TRADE_ITEM_CONTAINED("E613", "거래 대표 물품은 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
 
   // 알림 예외
   NOT_EXISTS_NOTIFICATION("E701", "알림을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
