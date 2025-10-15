@@ -4,8 +4,10 @@ import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
+import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
+import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
@@ -54,6 +56,15 @@ public class TradeController {
       Pageable pageable
   ) {
     return ResponseEntity.ok(readUseCase.readTradesProcess(ReadTradesQuery.of(memberId, request.key(), request.status()), pageable));
+  }
+
+  @GetMapping("/{tradeId}")
+  public ResponseEntity<TradeDetailResponse> handleReadTradeDetail(
+      @PathVariable Long tradeId,
+      @AuthenticationId UUID memberId
+  ) {
+    ReadTradeDetailQuery query = ReadTradeDetailQuery.of(tradeId, memberId);
+    return ResponseEntity.ok(readUseCase.readTradeDetailProcess(query));
   }
 
   @PatchMapping("/{tradeId}")

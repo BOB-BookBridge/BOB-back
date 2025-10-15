@@ -40,11 +40,13 @@ import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.dto.response.internal.PostTradeSummary;
+import com.bob.domain.trade.service.dto.response.internal.TradeItemSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
+import com.bob.domain.trade.service.port.view.TradeItemView;
 import com.bob.domain.trade.service.reader.TradeReader;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
@@ -53,8 +55,10 @@ import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.event.application.dto.SystemChatMessageEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
@@ -131,7 +135,28 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   public TradeDetailResponse readTradeDetailProcess(ReadTradeDetailQuery query) {
     Trade trade = tradeReader.readTradeById(query.tradeId());
     verifyTradeParticipate(trade, query.memberId());
-    return TradeDetailResponse.from(trade);
+
+    Map<Owner, List<Long>> tradeItemOwnerMap = tradeItemService.readTradeItemsOwnerMapProcess(query.tradeId());
+    List<Long> sellerItemIds = tradeItemOwnerMap.get(SELLER);
+    List<Long> buyerItemIds = tradeItemOwnerMap.get(BUYER);
+    List<Long> allItemIds = Stream.concat(sellerItemIds.stream(), buyerItemIds.stream()).toList();
+
+    List<TradeItemView> bookRes = memberPort.readTradeItemSummary(allItemIds);
+    List<TradeItemSummary> sellerItems = TradeItemSummary.listFrom(bookRes, sellerItemIds);
+    List<TradeItemSummary> buyerItems = TradeItemSummary.listFrom(bookRes, buyerItemIds);
+    int sellerItemsWorth = sellerItems.stream().map(TradeItemSummary::priceStandard).mapToInt(Integer::intValue).sum();
+    int buyerItemsWorth = buyerItems.stream().map(TradeItemSummary::priceStandard).mapToInt(Integer::intValue).sum();
+
+    TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
+    TradeMemberSummary seller = TradeMemberSummary.from(memberPort.readTradeMemberProfile(trade.getSellerId()));
+    TradeMemberSummary buyer = TradeMemberSummary.from(memberPort.readTradeMemberProfile(trade.getBuyerId()));
+
+    return TradeDetailResponse.from(
+        trade.getId(), trade.getStatus().name(),
+        TradeDetailResponse.Post.from(post),
+        TradeDetailResponse.Trader.from(seller, sellerItemsWorth, sellerItems),
+        TradeDetailResponse.Trader.from(buyer, buyerItemsWorth, buyerItems)
+    );
   }
 
   @Transactional
