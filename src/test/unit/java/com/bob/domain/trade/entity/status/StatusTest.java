@@ -22,6 +22,14 @@ class StatusTest {
     );
   }
 
+  static Stream<Arguments> isAbortedSource() {
+    return Stream.of(
+        Arguments.of(Status.REQUESTED, false),
+        Arguments.of(Status.REJECTED, true),
+        Arguments.of(Status.CANCELED, true)
+    );
+  }
+
   static Stream<Arguments> toPostStatusValueSource() {
     return Stream.of(
         Arguments.of(Status.REQUESTED, "READY"),
@@ -31,11 +39,16 @@ class StatusTest {
     );
   }
 
-  @ParameterizedTest(name = "{0} 상태의 isProcessed 결과는 {1}")
+  @ParameterizedTest(name = "{0} 상태, isProcessed 결과: {1}")
   @MethodSource("isProcessedSource")
-  @DisplayName("거래 진행 여부 반환 테스트 ")
-  void isProcessed_테스트(Status status, boolean expected) {
+  void 거래_진행_여부(Status status, boolean expected) {
     assertThat(status.isProcessed()).isEqualTo(expected);
+  }
+
+  @ParameterizedTest(name = "{0} 상태, isAborted 결과: {1}")
+  @MethodSource("isAbortedSource")
+  void 거래_중단_여부(Status status, boolean expected) {
+    assertThat(status.isAborted()).isEqualTo(expected);
   }
 
   @ParameterizedTest(name = "{0} → {1}")

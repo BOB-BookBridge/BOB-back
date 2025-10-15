@@ -32,9 +32,6 @@ public class TradeMemberAdapter implements TradeMemberPort {
   @Override
   public List<TradeItemView> readTradeItemSummary(List<Long> ids) {
     MemberBooksResponse response = bookReadUseCase.readMemberBooksByIdsProcess(ReadMemberBooksByIdQuery.of(ids));
-    if (response == null || response.books() == null)
-      return List.of();
-
     return response.books().stream()
         .map(b -> TradeItemView.of(
             b.id(), b.status(), b.title(), b.author(),

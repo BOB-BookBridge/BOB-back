@@ -8,6 +8,7 @@ import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DE
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.SAME_MEMBER_CREATE_TRADE_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
+import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
 import static com.bob.support.fixture.domain.TradeFixture.REQUESTED_TRADE;
@@ -20,6 +21,7 @@ import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -29,13 +31,13 @@ import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
+import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.query.SearchKey;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
-import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
@@ -44,6 +46,7 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,6 +73,9 @@ class TradeServiceTest {
   private TradeReader tradeReader;
 
   @Mock
+  private TradeItemService tradeItemService;
+
+  @Mock
   private TradeMemberPort memberPort;
 
   @Mock
@@ -84,8 +90,9 @@ class TradeServiceTest {
   void 거래_생성_및_저장() {
     // given
     CreateTradeCommand command = DEFAULT_CREATE_TRADE_COMMAND;
-    given(tradeRepository.save(any(Trade.class))).willReturn(DEFAULT_TRADE_WITH_ID);
     given(postPort.readTradePostSummary(command.postId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+    given(tradeRepository.findIdByPostIdAndBuyerId(command.postId(), command.buyerId())).willReturn(Optional.empty());
+    given(tradeRepository.save(any(Trade.class))).willReturn(DEFAULT_TRADE_WITH_ID);
     given(memberPort.readTradeMemberProfile(command.buyerId())).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
     // when
@@ -93,7 +100,28 @@ class TradeServiceTest {
 
     // then
     assertThat(response.id()).isEqualTo(1L);
+    then(tradeRepository).should(times(1)).findIdByPostIdAndBuyerId(anyLong(), any(UUID.class));
     then(tradeRepository).should(times(1)).save(any(Trade.class));
+    then(memberPort).should(times(1)).changeMemberBookUsage(OTHER_MEMBER_ID, command.postId(), command.exchangeBookIds(), false);
+    then(tradeItemService).should(times(2)).createTradeItemsProcess(any(CreateTradeItemsCommand.class));
+  }
+
+  @Test
+  void 거래_생성_및_저장_시_기존_거래가_존재하면_해당_거래의_id_반환() {
+    // given
+    CreateTradeCommand command = DEFAULT_CREATE_TRADE_COMMAND;
+    given(postPort.readTradePostSummary(command.postId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+    given(tradeRepository.findIdByPostIdAndBuyerId(command.postId(), command.buyerId())).willReturn(Optional.of(1L));
+
+    // when
+    CreateTradeResponse response = tradeService.createTradeProcess(command);
+
+    // then
+    assertThat(response.id()).isEqualTo(1L);
+    then(tradeRepository).should(times(1)).findIdByPostIdAndBuyerId(anyLong(), any(UUID.class));
+    then(tradeRepository).shouldHaveNoMoreInteractions();
+    then(memberPort).shouldHaveNoInteractions();
+    then(tradeItemService).shouldHaveNoInteractions();
   }
 
   @Test
@@ -172,40 +200,6 @@ class TradeServiceTest {
     assertThat(captured.memberId()).isEqualTo(query.memberId());
     assertThat(captured.key()).isEqualTo(SearchKey.ALL);
     assertThat(captured.statuses()).isNull();
-  }
-
-  @Test
-  void 거래_상세_조회_게시글_등록자() {
-    // given
-    Trade trade = DEFAULT_TRADE_WITH_ID;
-    UUID sellerId = trade.getSellerId();
-    Long tradeId = trade.getId();
-    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
-    ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, sellerId);
-
-    // when
-    TradeDetailResponse response = tradeService.readTradeDetailProcess(query);
-
-    // then
-    assertThat(response).isNotNull();
-    then(tradeReader).should(times(1)).readTradeById(tradeId);
-  }
-
-  @Test
-  void 거래_상세_조회_교환_요청자() {
-    // given
-    Trade trade = DEFAULT_TRADE_WITH_ID;
-    UUID buyerId = trade.getBuyerId();
-    Long tradeId = trade.getId();
-    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
-    ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, buyerId);
-
-    // when
-    TradeDetailResponse response = tradeService.readTradeDetailProcess(query);
-
-    // then
-    assertThat(response).isNotNull();
-    then(tradeReader).should(times(1)).readTradeById(tradeId);
   }
 
   @Test
