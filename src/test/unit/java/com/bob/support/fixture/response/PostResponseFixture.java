@@ -66,9 +66,10 @@ public class PostResponseFixture {
         .build();
   }
 
-  public static PostDetailResponse CUSTOM_POST_DETAIL_RESPONSE(Long postId, UUID memberId) {
+  public static PostDetailResponse CUSTOM_POST_DETAIL_RESPONSE(Long postId, UUID memberId, String status) {
     return PostDetailResponse.builder()
         .postId(postId)
+        .status(status)
         .sellerId(memberId)
         .sellerBookId(1L)
         .sellPrice(7000)
@@ -96,6 +97,10 @@ public class PostResponseFixture {
         .createdAt(LocalDateTime.of(2024, 3, 29, 12, 0))
         .build();
   }
+
+  public static PostDetailResponse REMOVED_POST_DETAIL_RESPONSE = PostDetailResponse.builder()
+      .status("REMOVED")
+      .build();
 
   public static List<PostSummary> DEFAULT_POST_SUMMARY() {
     return List.of(FIRST_POST, SECOND_POST);

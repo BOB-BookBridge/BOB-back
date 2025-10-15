@@ -211,7 +211,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   }
 
   private void verifyTradeItemChangeable(Status status) {
-    if (status == RESERVED || status == COMPLETED)
+    if (status.isProcessed())
       throw new ApplicationException(UNCHANGEABLE_TRADE_ITEM);
   }
 

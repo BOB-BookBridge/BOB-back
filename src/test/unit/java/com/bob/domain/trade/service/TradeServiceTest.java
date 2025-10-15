@@ -1,8 +1,13 @@
 package com.bob.domain.trade.service;
 
+import static com.bob.domain.trade.entity.status.Status.REQUESTED;
+import static com.bob.domain.trade.entity.type.Owner.SELLER;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
+import static com.bob.global.exception.response.ApplicationError.MAIN_TRADE_ITEM_CONTAINED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
+import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND;
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND_WITH_REASON;
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_CREATE_TRADE_COMMAND;
@@ -13,6 +18,7 @@ import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
 import static com.bob.support.fixture.domain.TradeFixture.REQUESTED_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.RESERVED_TRADE;
+import static com.bob.support.fixture.domain.TradeFixture.TRADE;
 import static com.bob.support.fixture.query.TradeQueryFixture.KEY_NULL_STATUS_NULL;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
@@ -27,13 +33,15 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
+import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.trade.entity.Trade;
+import com.bob.domain.trade.entity.status.Status;
 import com.bob.domain.trade.repository.TradeRepository;
+import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
-import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.query.SearchKey;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
@@ -203,23 +211,6 @@ class TradeServiceTest {
   }
 
   @Test
-  void 거래_상세_조회_시_게시글_등록자_교환_요청자가_아니면_예외가_발생한다() {
-    // given
-    Trade trade = DEFAULT_TRADE_WITH_ID;
-    UUID nonParticipantId = UUID.randomUUID();
-    Long tradeId = trade.getId();
-    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
-    ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, nonParticipantId);
-
-    // when & then
-    assertThatThrownBy(() -> tradeService.readTradeDetailProcess(query))
-        .isInstanceOf(ApplicationException.class)
-        .hasMessageContaining(TRADE_ACCESS_DENIED.getMessage());
-
-    then(tradeReader).should(times(1)).readTradeById(tradeId);
-  }
-
-  @Test
   void 거래_상태_변경() {
     // given
     ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
@@ -289,7 +280,7 @@ class TradeServiceTest {
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
 
     given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
-    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(CUSTOM_POST_DETAIL_RESPONSE(1L, UUID.randomUUID()));
+    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(CUSTOM_POST_DETAIL_RESPONSE(1L, UUID.randomUUID(), "REQUESTED"));
 
     // when & then
     assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
@@ -316,6 +307,121 @@ class TradeServiceTest {
 
     then(tradeReader).should().readTradeById(command.tradeId());
     then(postPort).should().readTradePostSummary(requestTrade.getPostId());
+  }
+
+  @Test
+  void 거래_물품_변경() {
+    // given
+    Long tradeId = 1L;
+    List<Long> itemIds = List.of(2L, 3L);
+    Trade trade = REQUESTED_TRADE(tradeId, 1L);
+    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
+    PostDetailResponse post = DEFAULT_POST_DETAIL_RESPONSE(trade.getPostId());
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(post);
+    ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(tradeId, itemIds, MEMBER_ID);
+
+    // when
+    tradeService.changeTradeItemProcess(command);
+
+    // then
+    then(tradeItemService).should().changeTradeItemsProcess(eq(command), eq(post.postId()), eq(SELLER));
+  }
+
+  @Test
+  void 거래_물품_변경_시_취소_거절_상태가_요청_상태로_변경() {
+    // given
+    Trade trade = TRADE(1L, 1L, Status.REJECTED);
+    List<Long> itemIds = List.of(2L, 3L);
+    assertThat(trade.getStatus().isAborted()).isTrue();
+
+    given(tradeReader.readTradeById(trade.getId())).willReturn(trade);
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(trade.getPostId()));
+    ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(1L, itemIds, MEMBER_ID);
+
+    // when
+    tradeService.changeTradeItemProcess(command);
+
+    // then
+    assertThat(trade.getStatus().isAborted()).isFalse();
+    assertThat(trade.getStatus()).isEqualTo(REQUESTED);
+
+    then(tradeItemService).should().changeTradeItemsProcess(eq(command), eq(1L), eq(SELLER));
+  }
+
+  @Test
+  void 거래_물품_변경_시_거래_진행_상태라면_예외가_발생한다() {
+    // given
+    Long tradeId = 1L;
+    Trade trade = RESERVED_TRADE(tradeId, 1L); // 예약 상태 변경 불가
+    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(trade.getPostId()));
+    ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(tradeId, List.of(1L), MEMBER_ID);
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeItemProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(UNCHANGEABLE_TRADE_ITEM.getMessage());
+
+    then(tradeItemService).shouldHaveNoInteractions();
+    then(eventPublisher).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 거래_물품_변경_시_거래_대표_아이템이_포함되면_예외가_발생한다() {
+    // given
+    Long tradeId = 1L;
+    Trade trade = REQUESTED_TRADE(tradeId, 1L);
+    List<Long> itemIds = List.of(1L, 2L); // id: 1, 대표 물품
+    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(trade.getPostId()));
+    ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(tradeId, itemIds, MEMBER_ID);
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeItemProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(MAIN_TRADE_ITEM_CONTAINED.getMessage());
+
+    then(tradeItemService).shouldHaveNoInteractions();
+    then(eventPublisher).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 거래_물품_변경_시_거래_참여자가_아니면_예외가_발생한다() {
+    // given
+    Long tradeId = 1L;
+    Trade trade = REQUESTED_TRADE(tradeId, 1L);
+    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(trade.getPostId()));
+
+    ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(tradeId, List.of(), UUID.randomUUID());
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeItemProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(TRADE_ACCESS_DENIED.getMessage());
+
+    then(tradeItemService).shouldHaveNoInteractions();
+    then(eventPublisher).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 거래_물품_변경_시_게시글이_삭제_된_상태면_예외가_발생한다() {
+    // given
+    Long tradeId = 1L;
+    Trade trade = REQUESTED_TRADE(tradeId, 1L);
+    List<Long> itemIds = List.of(2L, 3L);
+    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
+
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(CUSTOM_POST_DETAIL_RESPONSE(1L, MEMBER_ID, "REMOVED"));
+    ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(tradeId, itemIds, MEMBER_ID);
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeItemProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(TRADE_POST_REMOVED.getMessage());
+
+    then(tradeItemService).shouldHaveNoInteractions();
+    then(eventPublisher).shouldHaveNoInteractions();
   }
 
   private static String extractEventBody(Object event) {

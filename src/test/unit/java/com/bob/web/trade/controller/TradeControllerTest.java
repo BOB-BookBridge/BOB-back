@@ -1,6 +1,7 @@
 package com.bob.web.trade.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
+import static com.bob.support.fixture.response.trade.TradeDetailResponseFixture.DEFAULT_TRADE_DETAIL_RESPONSE;
 import static com.bob.support.fixture.response.trade.TradesResponseFixture.RECEIVED_TRADES_RESPONSE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -13,6 +14,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
+import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
@@ -53,7 +56,6 @@ class TradeControllerTest {
     mvc = MockMvcBuilders.standaloneSetup(tradeController)
         .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
         .build();
-    ;
   }
 
   @Test
@@ -95,6 +97,19 @@ class TradeControllerTest {
   }
 
   @Test
+  void 거래_상세_조회_기능_호출() throws Exception {
+    // given
+    given(readUseCase.readTradeDetailProcess(any(ReadTradeDetailQuery.class))).willReturn(DEFAULT_TRADE_DETAIL_RESPONSE);
+
+    // when & then
+    mvc.perform(get("/trades/{tradeId}", 1L)
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk());
+
+    verify(readUseCase, times(1)).readTradeDetailProcess(any(ReadTradeDetailQuery.class));
+  }
+
+  @Test
   void 거래_상태_변경_기능_호출() throws Exception {
     // given
     Long tradeId = 1L;
@@ -115,5 +130,27 @@ class TradeControllerTest {
         .andExpect(jsonPath("$.result").value("UPDATED"));
     // then
     verify(modifyUseCase, times(1)).changeTradeStatusProcess(any());
+  }
+
+  @Test
+  void 거래_물품_변경_기능_호출() throws Exception {
+    // given
+    Long tradeId = 1L;
+    String json = """
+        {
+          "itemIds": [1, 2]
+        }
+        """;
+
+    // when & then
+    mvc.perform(patch("/trades/{tradeId}/items", tradeId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.result").value("UPDATED"));
+    // then
+    verify(modifyUseCase, times(1)).changeTradeItemProcess(any(ChangeTradeItemsCommand.class));
   }
 }
