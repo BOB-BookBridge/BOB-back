@@ -17,6 +17,7 @@ import com.bob.domain.trade.entity.type.Owner;
 import com.bob.domain.trade.repository.TradeItemRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +37,9 @@ class TradeItemServiceTest {
 
   @Mock
   TradeItemRepository tradeItemRepository;
+
+  @Mock
+  TradeMemberPort memberPort;
 
   @Test
   void 거래_물품_생성() {
@@ -111,7 +115,7 @@ class TradeItemServiceTest {
     ChangeTradeItemsCommand command = new ChangeTradeItemsCommand(tradeId, List.of(2L, 3L, 4L, 5L), OTHER_MEMBER_ID);
 
     // when
-    tradeItemService.changeTradeItemsProcess(command, owner);
+    tradeItemService.changeTradeItemsProcess(command, 1L, owner);
 
     // then
     // 삭제
@@ -130,5 +134,8 @@ class TradeItemServiceTest {
       assertThat(item.getTradeId()).isEqualTo(tradeId);
       assertThat(item.getOwner()).isEqualTo(owner);
     });
+
+    then(memberPort).should().changeMemberBookUsage(OTHER_MEMBER_ID, 1L, List.of(1L), true);
+    then(memberPort).should().changeMemberBookUsage(OTHER_MEMBER_ID, 1L, List.of(4L, 5L), false);
   }
 }

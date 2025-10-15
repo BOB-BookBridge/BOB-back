@@ -8,6 +8,7 @@ import static com.bob.support.fixture.domain.MemberBookFixture.DIFF_IN_TRADE_BOO
 import static com.bob.support.fixture.domain.MemberBookFixture.NEW_MEMBER_BOOK;
 import static com.bob.support.fixture.domain.MemberBookFixture.SAME_IN_TRADE_BOOK;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
+import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_RESPONSE;
 import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_RESPONSES;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -164,7 +165,7 @@ class MemberBookServiceTest {
     Long usageId = 1L;
     List<Long> ids = List.of(1L, 2L);
     given(memberBookReader.readMemberBooksByBookIds(ids)).willReturn(List.of(DEFAULT_MEMBER_BOOK, NEW_MEMBER_BOOK));
-    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(usageId, ids);
+    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(MEMBER_ID, usageId, ids, false);
 
     // when
     service.changeMemberBookUsageProcess(command);
@@ -181,17 +182,18 @@ class MemberBookServiceTest {
     Long usageId = 1L;
     List<Long> ids = List.of(1L, 2L);
     MemberBook nullUsage = mock(MemberBook.class);
-    given(nullUsage.getUsageId()).willReturn(null);
     MemberBook alreadySameUsage = mock(MemberBook.class);
+    given(nullUsage.getUsageId()).willReturn(null);
     given(alreadySameUsage.getUsageId()).willReturn(usageId);
+    given(nullUsage.getMemberId()).willReturn(MEMBER_ID);
+    given(alreadySameUsage.getMemberId()).willReturn(MEMBER_ID);
     given(memberBookReader.readMemberBooksByBookIds(ids)).willReturn(List.of(nullUsage, alreadySameUsage));
-    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(usageId, ids);
+    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(MEMBER_ID, usageId, ids, false);
 
     // when
     service.changeMemberBookUsageProcess(command);
 
     // then
-    assertThat(DEFAULT_MEMBER_BOOK.getUsageId()).isEqualTo(usageId);
     then(memberBookReader).should().readMemberBooksByBookIds(ids);
     then(nullUsage).should(times(1)).updateUsageId(usageId);
     then(alreadySameUsage).should(never()).updateUsageId(usageId);
@@ -199,18 +201,32 @@ class MemberBookServiceTest {
   }
 
   @Test
-  void 회원_책_사용처_변경_시_다른_사용처가_존재하면_예외() {
+  void 회원_책_사용처_변경_시_다른_사용처가_존재하면_예외가_발생한다() {
     // given
     Long usageId = 1L;
     List<Long> ids = List.of(1L, 2L);
     given(memberBookReader.readMemberBooksByBookIds(ids)).willReturn(List.of(DEFAULT_MEMBER_BOOK, DIFF_IN_TRADE_BOOK));
     given(bookPort.readBookSummary(DIFF_IN_TRADE_BOOK.getBookId())).willReturn(DEFAULT_BOOK_RESPONSE);
-    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(usageId, ids);
+    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(MEMBER_ID, usageId, ids, false);
 
     // when & then
     assertThatThrownBy(() -> service.changeMemberBookUsageProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.MEMBER_BOOK_ALREADY_USE.getMessage(), DIFF_IN_TRADE_BOOK.getUsageId(), DEFAULT_BOOK_RESPONSE.title());
+  }
+
+  @Test
+  void 회원_책_사용처_변경_시_소유자가_아니면_예외가_발생한다() {
+    // given
+    Long usageId = 1L;
+    List<Long> ids = List.of(1L, 2L);
+    given(memberBookReader.readMemberBooksByBookIds(ids)).willReturn(List.of(DEFAULT_MEMBER_BOOK, DIFF_IN_TRADE_BOOK));
+    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(OTHER_MEMBER_ID, usageId, ids, false);
+
+    // when & then
+    assertThatThrownBy(() -> service.changeMemberBookUsageProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(ApplicationError.MEMBER_BOOK_ACCESS_DENIED.getMessage());
   }
 
   @Test

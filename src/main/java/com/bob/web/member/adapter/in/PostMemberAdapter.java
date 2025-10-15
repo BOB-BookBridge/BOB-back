@@ -34,8 +34,8 @@ public class PostMemberAdapter implements PostMemberPort {
   }
 
   @Override
-  public void changeMemberBookUsage(Long usageId, Long bookId) {
-    bookModifyUseCase.changeMemberBookUsageProcess(ChangeMemberBookUsageCommand.of(usageId, List.of(bookId)));
+  public void changeMemberBookUsage(UUID memberId, Long usageId, Long bookId) {
+    bookModifyUseCase.changeMemberBookUsageProcess(ChangeMemberBookUsageCommand.of(memberId, usageId, List.of(bookId), false));
   }
 
   @Override

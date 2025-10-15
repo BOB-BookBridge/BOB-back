@@ -130,7 +130,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     assertThat(saved.getBuyerId()).isEqualTo(buyerId1);
     assertThat(saved.getStatus()).isEqualTo(REQUESTED);
 
-    then(memberPort).should().changeMemberBookUsage(targetPostId, exchangeBookIds);
+    then(memberPort).should().changeMemberBookUsage(targetPostId, exchangeBookIds, false);
   }
 
   @Test

@@ -1,6 +1,7 @@
 package com.bob.web.member.adapter.in;
 
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.DEFAULT_REGISTER_MEMBER_BOOK_COMMAND;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -76,7 +77,7 @@ class PostMemberAdapterTest {
     Long memberBookId = 1L;
 
     // when
-    postMemberAdapter.changeMemberBookUsage(usageId, memberBookId);
+    postMemberAdapter.changeMemberBookUsage(MEMBER_ID, usageId, memberBookId);
 
     // then
     then(bookModifyUseCase).should(times(1)).changeMemberBookUsageProcess(any(ChangeMemberBookUsageCommand.class));

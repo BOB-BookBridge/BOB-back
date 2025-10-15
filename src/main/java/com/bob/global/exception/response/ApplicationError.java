@@ -28,6 +28,7 @@ public enum ApplicationError {
   IS_BANNED_MEMBER("E105", "제한 조치된 계정입니다.", HttpStatus.BAD_REQUEST),
   UNREMOVABLE_MEMBER_BOOK("E106", "교환 물품으로 사용되는 책은 삭제할 수 없습니다. 교환 게시글: [#%d]", HttpStatus.CONFLICT),
   MEMBER_BOOK_ALREADY_USE("E107", "교환 물품으로 사용되는 책이 포함되어 있습니다. 교환 게시글: [#%d], 책: [%s]", HttpStatus.CONFLICT),
+  MEMBER_BOOK_ACCESS_DENIED("E108", "다른 사용자의 도서는 사용할 수 없습니다.", HttpStatus.BAD_REQUEST),
 
   EXPIRED_MAIL_CODE("E111", "인증 코드가 만료되었습니다.", HttpStatus.GONE),
   INVALID_MAIL_CODE("E112", "입력하신 인증 코드가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
@@ -62,6 +63,8 @@ public enum ApplicationError {
   TRADE_ALREADY_PROCESSED("E603", "다른 회원과 거래가 진행중이거나 완료된 상태입니다.", HttpStatus.CONFLICT),
   TRADE_STATUS_UNCHANGED("E604", "변경하려는 거래 상태와 현재 상태가 동일합니다.", HttpStatus.CONFLICT),
   IS_SAME_TRADE_MEMBER("E605", "자신과의 거래는 불가능합니다.", HttpStatus.BAD_REQUEST),
+
+  TRADE_ITEMS_UNCHANGED("E611", "거래 물품의 변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
 
   // 알림 예외
   NOT_EXISTS_NOTIFICATION("E701", "알림을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),

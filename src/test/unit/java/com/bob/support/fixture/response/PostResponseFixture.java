@@ -1,5 +1,6 @@
 package com.bob.support.fixture.response;
 
+import static com.bob.support.fixture.domain.MemberBookFixture.DEFAULT_MEMBER_BOOK;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
 import com.bob.domain.post.entity.status.BookStatus;
@@ -38,6 +39,7 @@ public class PostResponseFixture {
     return PostDetailResponse.builder()
         .postId(postId)
         .sellerId(MEMBER_ID)
+        .sellerBookId(DEFAULT_MEMBER_BOOK.getId())
         .sellPrice(10000)
         .bookStatus("BEST")
         .postStatus("READY")
@@ -68,6 +70,7 @@ public class PostResponseFixture {
     return PostDetailResponse.builder()
         .postId(postId)
         .sellerId(memberId)
+        .sellerBookId(1L)
         .sellPrice(7000)
         .bookStatus("LOW")
         .postStatus("IN_PROGRESS")

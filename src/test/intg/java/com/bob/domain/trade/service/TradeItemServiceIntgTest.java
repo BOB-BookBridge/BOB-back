@@ -105,7 +105,7 @@ public class TradeItemServiceIntgTest extends TestContainerSupport {
     ChangeTradeItemsCommand command = new ChangeTradeItemsCommand(tradeId, List.of(2L, 3L, 4L, 5L), buyerId);
 
     // when
-    tradeItemService.changeTradeItemsProcess(command, BUYER);
+    tradeItemService.changeTradeItemsProcess(command, postId, BUYER);
 
     // then
     List<Long> after = tradeItemRepository.findAllItemId(tradeId, BUYER);

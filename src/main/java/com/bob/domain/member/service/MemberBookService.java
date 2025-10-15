@@ -21,6 +21,7 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,22 +72,33 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   @Transactional
   public void changeMemberBookUsageProcess(ChangeMemberBookUsageCommand command) {
     List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.memberBookIds());
+    verifyMemberBookOwner(command.memberId(), memberBooks);
+    if (!command.release())
+      allocate(memberBooks, command.usageId());
+    else
+      memberBooks.forEach(mb -> mb.updateUsageId(null));
+  }
+
+  private static void verifyMemberBookOwner(UUID memberId, List<MemberBook> memberBooks) {
+    boolean isOwner = memberBooks.stream().allMatch(mb -> Objects.equals(mb.getMemberId(), memberId));
+    if (!isOwner)
+      throw new ApplicationException(ApplicationError.MEMBER_BOOK_ACCESS_DENIED);
+  }
+
+  private void allocate(List<MemberBook> memberBooks, Long usageId) {
     memberBooks.stream()
-        .filter(mb -> mb.getUsageId() != null && !Objects.equals(mb.getUsageId(), command.usageId()))
+        .filter(mb -> mb.getUsageId() != null && !Objects.equals(mb.getUsageId(), usageId))
         .findFirst().ifPresent(mb -> {
           BookResponse book = bookPort.readBookSummary(mb.getBookId());
           throw new ApplicationException(ApplicationError.MEMBER_BOOK_ALREADY_USE, mb.getUsageId(), book.title());
         });
     memberBooks.stream()
-        .filter(mb -> !Objects.equals(mb.getUsageId(), command.usageId()))
-        .forEach(mb -> mb.updateUsageId(command.usageId()));
+        .filter(mb -> !Objects.equals(mb.getUsageId(), usageId))
+        .forEach(mb -> mb.updateUsageId(usageId));
   }
-
-  // TODO : id List 기반 usageId null 업데이트 기능
 
   @Transactional
   public void removeMemberBookUsageProcess(RemoveMemberBookUsageCommand command) {
-    // TODO : 메서드 명 변경 (게시글 삭제로 인한 관련 참조 모두 삭제)
     memberBookRepository.clearUsageId(command.usageId());
   }
 

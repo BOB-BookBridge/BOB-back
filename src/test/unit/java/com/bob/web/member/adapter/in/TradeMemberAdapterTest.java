@@ -55,7 +55,7 @@ class TradeMemberAdapterTest {
     List<Long> memberBookIds = List.of(10L, 11L);
 
     // when
-    tradeMemberAdapter.changeMemberBookUsage(usageId, memberBookIds);
+    tradeMemberAdapter.changeMemberBookUsage(MEMBER_ID, usageId, memberBookIds, false);
 
     // then
     then(memberBookModifyUseCase).should().changeMemberBookUsageProcess(any(ChangeMemberBookUsageCommand.class));

@@ -25,7 +25,8 @@ public class TradeMemberAdapter implements TradeMemberPort {
   }
 
   @Override
-  public void changeMemberBookUsage(Long usageId, List<Long> memberBookIds) {
-    bookModifyUseCase.changeMemberBookUsageProcess(ChangeMemberBookUsageCommand.of(usageId, memberBookIds));
+  public void changeMemberBookUsage(UUID memberId, Long usageId, List<Long> memberBookIds, boolean release) {
+    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(memberId, usageId, memberBookIds, release);
+    bookModifyUseCase.changeMemberBookUsageProcess(command);
   }
 }
