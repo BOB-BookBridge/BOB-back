@@ -46,7 +46,7 @@ public class Trade extends BaseTime {
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
-  public static Trade of(Long postId, UUID sellerId, UUID buyerId) {
+  public static Trade create(Long postId, UUID sellerId, UUID buyerId) {
     return Trade.builder()
         .postId(postId)
         .sellerId(sellerId)
