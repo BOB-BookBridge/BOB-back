@@ -1,6 +1,7 @@
 package com.bob.domain.trade.service;
 
 import static com.bob.domain.trade.entity.status.Status.REQUESTED;
+import static com.bob.domain.trade.entity.type.Owner.BUYER;
 import static com.bob.domain.trade.entity.type.Owner.SELLER;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.MAIN_TRADE_ITEM_CONTAINED;
@@ -24,6 +25,7 @@ import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUST
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.CUSTOM_POST_DETAIL_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_DETAIL_RESPONSE;
+import static com.bob.support.fixture.response.trade.internal.TradeItemViewFixture.ALL_TRADE_ITEM_VIEWS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,10 +44,12 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.query.SearchKey;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
+import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
@@ -54,6 +58,7 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -208,6 +213,82 @@ class TradeServiceTest {
     assertThat(captured.memberId()).isEqualTo(query.memberId());
     assertThat(captured.key()).isEqualTo(SearchKey.ALL);
     assertThat(captured.statuses()).isNull();
+  }
+
+  @Test
+  void 거래_상세_조회() {
+    // given
+    Long tradeId = 1L;
+    Trade trade = DEFAULT_TRADE_WITH_ID;
+    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
+
+    // 거래 아이템 ID 맵 (판매자 1건, 구매자 2건)
+    List<Long> sellerItemIds = List.of(1L);
+    List<Long> buyerItemIds  = List.of(2L, 3L);
+    given(tradeItemService.readTradeItemsOwnerMapProcess(tradeId)).willReturn(Map.of(SELLER, sellerItemIds, BUYER, buyerItemIds));
+
+    // 아이템 상세 응답 (가격: 판매자 10000, 구매자 6000 + 8000)
+    List<Long> allIds = List.of(1L, 2L, 3L);
+    given(memberPort.readTradeItemSummary(allIds)).willReturn(ALL_TRADE_ITEM_VIEWS);
+
+    // 게시글/회원 요약
+    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+    given(memberPort.readTradeMemberProfile(trade.getSellerId())).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
+    given(memberPort.readTradeMemberProfile(trade.getBuyerId())).willReturn(CUSTOM_MEMBER_PROFILE_RESPONSE(trade.getBuyerId()));
+
+    ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, trade.getSellerId());
+
+    // when
+    TradeDetailResponse response = tradeService.readTradeDetailProcess(query);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.id()).isEqualTo(tradeId);
+    assertThat(response.status()).isEqualTo(trade.getStatus().name());
+
+    // post
+    assertThat(response.post()).isNotNull();
+    assertThat(response.post().id()).isEqualTo(trade.getPostId());
+
+    // seller
+    assertThat(response.seller()).isNotNull();
+    assertThat(response.seller().id()).isEqualTo(trade.getSellerId());
+    assertThat(response.seller().worth()).isEqualTo(10000);
+    assertThat(response.seller().item()).hasSize(1);
+    assertThat(response.seller().item().get(0).id()).isEqualTo(1L);
+
+    // buyer
+    assertThat(response.buyer()).isNotNull();
+    assertThat(response.buyer().id()).isEqualTo(trade.getBuyerId());
+    assertThat(response.buyer().worth()).isEqualTo(14000);
+    assertThat(response.buyer().item()).hasSize(2);
+    assertThat(response.buyer().item()).extracting("id").containsExactlyInAnyOrder(2L, 3L);
+
+    then(tradeReader).should().readTradeById(tradeId);
+    then(tradeItemService).should().readTradeItemsOwnerMapProcess(tradeId);
+    then(memberPort).should().readTradeItemSummary(allIds);
+    then(postPort).should().readTradePostSummary(trade.getPostId());
+    then(memberPort).should().readTradeMemberProfile(trade.getSellerId());
+    then(memberPort).should().readTradeMemberProfile(trade.getBuyerId());
+  }
+  @Test
+  void 거래_상세_조회_시_거래_참여자가_아니면_예외가_발생한다() {
+    // given
+    Trade trade = DEFAULT_TRADE_WITH_ID;
+    UUID nonParticipantId = UUID.randomUUID();
+    Long tradeId = trade.getId();
+    given(tradeReader.readTradeById(tradeId)).willReturn(trade);
+    ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, nonParticipantId);
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.readTradeDetailProcess(query))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(TRADE_ACCESS_DENIED.getMessage());
+
+    then(tradeReader).should(times(1)).readTradeById(tradeId);
+    then(tradeItemService).shouldHaveNoInteractions();
+    then(memberPort).shouldHaveNoInteractions();
+    then(postPort).shouldHaveNoInteractions();
   }
 
   @Test
