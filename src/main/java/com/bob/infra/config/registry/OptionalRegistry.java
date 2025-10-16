@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class OptionalRegistry {
   private final List<RequestMatcher> optionalAuthMatchers = List.of(
       new AntPathRequestMatcher("/areas/**", HttpMethod.PATCH.name()),
+      new AntPathRequestMatcher("/posts", GET.name()),
       new AntPathRequestMatcher("/posts/{postId:\\d+}", GET.name())
   );
 
