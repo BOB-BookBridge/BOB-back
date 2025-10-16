@@ -85,7 +85,7 @@ public class PostController {
     List<Long> ids = result.posts().stream().map(PostSummary::postId).toList();
 
     Map<Long, String> statusMap = new HashMap<>();
-    if (memberId != null && !ids.isEmpty()) {
+    if (memberId != null) {
       ReadParticipateTradeStatusQuery query = ReadParticipateTradeStatusQuery.of(memberId, ids);
       statusMap.putAll(tradeReadUseCase.readTradeStatusProcess(query).statusMap());
     }

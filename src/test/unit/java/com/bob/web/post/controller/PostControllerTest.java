@@ -13,9 +13,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.bob.domain.post.service.PostService;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
-import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.service.dto.response.PostsResult;
+import com.bob.domain.post.usecase.PostDeleteUseCase;
+import com.bob.domain.post.usecase.PostModifyUseCase;
+import com.bob.domain.post.usecase.PostReadUseCase;
+import com.bob.domain.post.usecase.PostWriteUseCase;
+import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
+import com.bob.domain.trade.usecase.TradeReadUseCase;
+import com.bob.support.auth.WithAuthMember;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -37,20 +45,34 @@ class PostControllerTest {
   private PostController postController;
 
   @Mock
-  private PostService postService;
+  private PostWriteUseCase writeUseCase;
+
+  @Mock
+  private PostReadUseCase readUseCase;
+
+  @Mock
+  private PostModifyUseCase modifyUseCase;
+
+  @Mock
+  private PostDeleteUseCase deleteUseCase;
+
+  @Mock
+  private TradeReadUseCase tradeReadUseCase;
 
   private MockMvc mvc;
 
   @BeforeEach
   void setUp() {
     mvc = MockMvcBuilders.standaloneSetup(postController)
-        .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+        .setCustomArgumentResolvers(
+            new PageableHandlerMethodArgumentResolver(),
+            new AuthenticationPrincipalArgumentResolver()
+        )
         .build();
   }
 
   @Test
-  @DisplayName("게시글 생성 API 호출 테스트")
-  void 게시글_생성_API를_호출할_수_있다() throws Exception {
+  void 게시글_생성_API_호출() throws Exception {
     // given
     String json = """
         {
@@ -77,12 +99,11 @@ class PostControllerTest {
             .requestAttr("memberId", UUID.randomUUID()))
         .andExpect(status().isCreated());
 
-    verify(postService, times(1)).createPostProcess(any());
+    verify(writeUseCase, times(1)).createPostProcess(any());
   }
 
   @Test
-  @DisplayName("게시글 좋아요 API 호출 테스트")
-  void 게시글_좋아요_API를_호출할_수_있다() throws Exception {
+  void 게시글_좋아요_등록_API_호출() throws Exception {
     Long postId = 1L;
     UUID memberId = UUID.randomUUID();
 
@@ -93,12 +114,11 @@ class PostControllerTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.result").value("CREATED"));
 
-    verify(postService, times(1)).registerPostFavoriteProcess(any());
+    verify(writeUseCase, times(1)).registerPostFavoriteProcess(any());
   }
 
   @Test
-  @DisplayName("게시글 좋아요 해제 API 호출 테스트")
-  void 게시글_좋아요_해제_API를_호출할_수_있다() throws Exception {
+  void 게시글_좋아요_해제_API_호출() throws Exception {
     // given
     Long postId = 1L;
     UUID memberId = UUID.randomUUID();
@@ -110,23 +130,22 @@ class PostControllerTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.result").value("DELETED"));
 
-    verify(postService, times(1)).unregisterPostFavoriteProcess(any());
+    verify(deleteUseCase, times(1)).unregisterPostFavoriteProcess(any());
   }
 
   @Test
-  @DisplayName("게시글 목록 필터 조회 API 호출 테스트")
-  void 게시글_목록_필터_조회_API를_호출할_수_있다() throws Exception {
+  void 게시글_목록_조회_API_호출() throws Exception {
     // given
-    PostsResponse response = new PostsResponse(2L, DEFAULT_POST_SUMMARY());
-    given(postService.readFilteredPostsProcess(any(), any())).willReturn(response);
+    PostsResult result = new PostsResult(2L, DEFAULT_POST_SUMMARY());
+    given(readUseCase.readFilteredPostsProcess(any(), any())).willReturn(result);
 
     // when & then
     mvc.perform(get("/posts")
             .param("key", "TITLE")
-            .param("keyword", "객체지향")
-            .param("emdId", "11010")
-            .param("categoryId", "1")
-            .param("price", "0")
+            .param("keyword", "")
+            .param("emdId", "")
+            .param("categoryId", "")
+            .param("price", "")
             .param("postStatus", "READY")
             .param("bookStatus", "BEST")
             .param("sort", "RECENT")
@@ -138,17 +157,46 @@ class PostControllerTest {
         .andExpect(jsonPath("$.posts[0].postTitle").value("객체지향의 사실과 오해"))
         .andExpect(jsonPath("$.posts[1].postTitle").value("오브젝트"));
 
-    verify(postService, times(1)).readFilteredPostsProcess(any(), any());
+    verify(readUseCase, times(1)).readFilteredPostsProcess(any(), any());
   }
 
   @Test
-  @DisplayName("게시글 상세 조회 API 호출 테스트")
-  void 게시글_상세_조회_API를_호출할_수_있다() throws Exception {
+  @WithAuthMember
+  void 게시글_목록_조회_API_호출_시_로그인_상태면_거래_상태_매핑() throws Exception {
+    // given
+    PostsResult result = new PostsResult(2L, DEFAULT_POST_SUMMARY());
+    TradeStatusMapResult tradeStatusResult = TradeStatusMapResult.of(Map.of());
+    given(readUseCase.readFilteredPostsProcess(any(), any())).willReturn(result);
+    given(tradeReadUseCase.readTradeStatusProcess(any())).willReturn(tradeStatusResult);
+
+    // when & then
+    mvc.perform(get("/posts")
+            .param("key", "TITLE")
+            .param("keyword", "")
+            .param("emdId", "")
+            .param("categoryId", "")
+            .param("price", "")
+            .param("postStatus", "READY")
+            .param("bookStatus", "BEST")
+            .param("sort", "RECENT")
+            .param("page", "0")
+            .param("size", "12"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalCount").value(2))
+        .andExpect(jsonPath("$.posts[0].postTitle").value("객체지향의 사실과 오해"))
+        .andExpect(jsonPath("$.posts[1].postTitle").value("오브젝트"));
+
+    verify(readUseCase, times(1)).readFilteredPostsProcess(any(), any());
+    verify(tradeReadUseCase, times(1)).readTradeStatusProcess(any());
+  }
+
+  @Test
+  void 게시글_상세_조회_API_호출() throws Exception {
     // given
     Long postId = 1L;
     UUID memberId = UUID.randomUUID();
     PostDetailResponse response = DEFAULT_POST_DETAIL_RESPONSE(postId);
-    given(postService.readPostDetailProcess(any())).willReturn(response);
+    given(readUseCase.readPostDetailProcess(any())).willReturn(response);
 
     // when & then
     mvc.perform(get("/posts/{postId}", postId)
@@ -169,12 +217,11 @@ class PostControllerTest {
         .andExpect(jsonPath("$.isOwner").value(false))
         .andExpect(jsonPath("$.createdAt[0]").value(2024));
 
-    verify(postService, times(1)).readPostDetailProcess(any());
+    verify(readUseCase, times(1)).readPostDetailProcess(any());
   }
 
   @Test
-  @DisplayName("게시글 수정 API 호출 테스트")
-  void 게시글_수정_API를_호출할_수_있다() throws Exception {
+  void 게시글_수정_API_호출() throws Exception {
     // given
     Long postId = 1L;
     UUID memberId = UUID.randomUUID();
@@ -197,12 +244,11 @@ class PostControllerTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.result").value("OK"));
 
-    verify(postService, times(1)).changePostProcess(any());
+    verify(modifyUseCase, times(1)).changePostProcess(any());
   }
 
   @Test
-  @DisplayName("게시글 삭제 API 호출 테스트")
-  void 게시글_삭제_API를_호출할_수_있다() throws Exception {
+  void 게시글_삭제_API_호출() throws Exception {
     // given
     Long postId = 1L;
     UUID memberId = UUID.randomUUID();
@@ -214,6 +260,6 @@ class PostControllerTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.result").value("DELETED"));
 
-    verify(postService, times(1)).removePostProcess(any());
+    verify(deleteUseCase, times(1)).removePostProcess(any());
   }
 }
