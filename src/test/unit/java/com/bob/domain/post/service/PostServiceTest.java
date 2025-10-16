@@ -42,28 +42,28 @@ import static org.mockito.Mockito.times;
 
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.post.entity.Category;
-import com.bob.domain.post.service.dto.query.condition.SearchKey;
-import com.bob.domain.post.service.port.out.PostBookPort;
-import com.bob.domain.post.service.reader.CategoryReader;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.status.Status;
 import com.bob.domain.post.entity.status.TradeProgress;
 import com.bob.domain.post.repository.PostRepository;
+import com.bob.domain.post.service.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
 import com.bob.domain.post.service.dto.command.ChangeTradeProgressCommand;
 import com.bob.domain.post.service.dto.command.CreatePostCommand;
 import com.bob.domain.post.service.dto.command.RegisterPostFavoriteCommand;
 import com.bob.domain.post.service.dto.command.RemovePostCommand;
-import com.bob.domain.post.service.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.domain.post.service.dto.query.ReadFilteredPostsQuery;
 import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
+import com.bob.domain.post.service.dto.query.condition.SearchKey;
 import com.bob.domain.post.service.dto.response.PostCreateResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
-import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.service.dto.response.PostsResult;
 import com.bob.domain.post.service.port.out.PostAreaPort;
+import com.bob.domain.post.service.port.out.PostBookPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.domain.post.service.port.out.PostMemberPort;
+import com.bob.domain.post.service.reader.CategoryReader;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
@@ -281,10 +281,10 @@ class PostServiceTest {
     given(postRepository.countFilteredPosts(query)).willReturn(2L);
 
     // when
-    PostsResponse response = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     // then
-    assertThat(response.totalCount()).isEqualTo(2L);
+    assertThat(result.totalCount()).isEqualTo(2L);
     then(postReader).should(times(1)).readFilteredPosts(query, pageable);
     then(postRepository).should(times(1)).countFilteredPosts(query);
   }
@@ -298,7 +298,7 @@ class PostServiceTest {
     given(postRepository.countFilteredPosts(query)).willReturn(2L);
 
     // when
-    PostsResponse response = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     // then
     then(categoryReader).should(times(1)).readChildCategoryIds(query.categoryIds().get(0));
@@ -306,7 +306,7 @@ class PostServiceTest {
 
     then(postReader).should(times(1)).readFilteredPosts(query, pageable);
     then(postRepository).should(times(1)).countFilteredPosts(query);
-    assertThat(response.totalCount()).isEqualTo(2L);
+    assertThat(result.totalCount()).isEqualTo(2L);
   }
 
   @Test
@@ -322,11 +322,11 @@ class PostServiceTest {
     given(postRepository.countFilteredPosts(query)).willReturn(2L);
 
     // when
-    PostsResponse res = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     // then
     assertThat(query.bookIds()).containsExactly(1L, 2L);
-    assertThat(res.totalCount()).isEqualTo(2L);
+    assertThat(result.totalCount()).isEqualTo(2L);
     then(bookPort).should(times(1)).searchBookIds(query.key().name(), query.keyword());
     then(postReader).should(times(1)).readFilteredPosts(query, pageable);
     then(postRepository).should(times(1)).countFilteredPosts(query);
@@ -340,10 +340,10 @@ class PostServiceTest {
     given(postRepository.countFilteredPosts(query)).willReturn(0L);
 
     // when
-    PostsResponse res = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     // then
-    assertThat(res.totalCount()).isEqualTo(0L);
+    assertThat(result.totalCount()).isEqualTo(0L);
     then(bookPort).should(times(1)).searchBookIds(query.key().name(), query.keyword());
 
     assertThat(query.bookIds()).isEmpty();
@@ -371,10 +371,10 @@ class PostServiceTest {
     given(postFavoriteService.readMemberFavoritePosts(memberId, pageable)).willReturn(DEFAULT_FAVORITE_RESPONSE());
 
     // when
-    PostsResponse response = postService.readPostFavoritesProcess(query, pageable);
+    PostsResult result = postService.readPostFavoritesProcess(query, pageable);
 
     // then
-    assertThat(response.totalCount()).isEqualTo(2L);
+    assertThat(result.totalCount()).isEqualTo(2L);
     then(postFavoriteService).should(times(1)).readMemberFavoritePosts(query.memberId(), pageable);
   }
 

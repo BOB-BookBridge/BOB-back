@@ -28,4 +28,6 @@ public interface TradeRepository extends CrudRepository<Trade, Long>, CustomTrad
          AND t.buyerId = :buyerId
       """)
   Optional<Long> findIdByPostIdAndBuyerId(Long postId, UUID buyerId);
+
+  List<Trade> findAllByBuyerIdAndPostIdIn(UUID buyerId, List<Long> postIds);
 }

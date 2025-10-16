@@ -20,8 +20,9 @@ public record ReadFilteredPostsRequest(
     String sort
 ) {
 
-  public ReadFilteredPostsQuery toQuery() {
+  public ReadFilteredPostsQuery toQuery(UUID authenticatorId) {
     return ReadFilteredPostsQuery.builder()
+        .authenticatorId(authenticatorId)
         .key(SearchKey.from(key).orElse(SearchKey.ALL))
         .keyword(keyword)
         .memberId(memberId)

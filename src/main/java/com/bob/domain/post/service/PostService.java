@@ -30,7 +30,7 @@ import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
 import com.bob.domain.post.service.dto.response.PostCreateResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
-import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.service.dto.response.PostsResult;
 import com.bob.domain.post.service.dto.response.internal.PostAreaSummaryResponse;
 import com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse;
 import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse;
@@ -118,12 +118,12 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   }
 
   @Transactional(readOnly = true)
-  public PostsResponse readFilteredPostsProcess(ReadFilteredPostsQuery query, Pageable pageable) {
+  public PostsResult readFilteredPostsProcess(ReadFilteredPostsQuery query, Pageable pageable) {
     addChildCategoryIds(query);
     addBookIds(query);
     List<Post> posts = postReader.readFilteredPosts(query, pageable);
     Long totalCount = postRepository.countFilteredPosts(query);
-    return PostsResponse.of(totalCount, posts);
+    return PostsResult.of(totalCount, posts, query.authenticatorId());
   }
 
   private void addChildCategoryIds(ReadFilteredPostsQuery query) {
@@ -149,9 +149,9 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   }
 
   @Transactional(readOnly = true)
-  public PostsResponse readPostFavoritesProcess(ReadPostFavoritesQuery query, Pageable pageable) {
+  public PostsResult readPostFavoritesProcess(ReadPostFavoritesQuery query, Pageable pageable) {
     PostFavoritesResponse response = postFavoriteService.readMemberFavoritePosts(query.memberId(), pageable);
-    return new PostsResponse(response.totalCount(), response.postFavorites());
+    return new PostsResult(response.totalCount(), response.postFavorites());
   }
 
   @Transactional

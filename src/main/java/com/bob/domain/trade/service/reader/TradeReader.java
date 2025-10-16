@@ -6,6 +6,7 @@ import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,10 @@ public class TradeReader {
 
   public List<Trade> readTradesByPostId(Long postId) {
     return tradeRepository.findAllByPostId(postId);
+  }
+
+  public List<Trade> readTradesByBuyerIdAndPostId(UUID memberId, List<Long> postIds) {
+    return tradeRepository.findAllByBuyerIdAndPostIdIn(memberId, postIds);
   }
 
   public Trade readTradeById(Long id) {

@@ -8,11 +8,14 @@ import static com.bob.web.post.request.RegisterPostFavoriteRequest.toCommand;
 
 import com.bob.domain.post.service.dto.response.PostCreateResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
-import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.service.dto.response.PostSummary;
+import com.bob.domain.post.service.dto.response.PostsResult;
 import com.bob.domain.post.usecase.PostDeleteUseCase;
 import com.bob.domain.post.usecase.PostModifyUseCase;
 import com.bob.domain.post.usecase.PostReadUseCase;
 import com.bob.domain.post.usecase.PostWriteUseCase;
+import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
+import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
@@ -21,7 +24,11 @@ import com.bob.web.post.request.CreatePostRequest;
 import com.bob.web.post.request.ReadFilteredPostsRequest;
 import com.bob.web.post.request.ReadPostFavoritesRequest;
 import com.bob.web.post.request.RemovePostRequest;
+import com.bob.web.post.response.PostsResponse;
 import jakarta.validation.Valid;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +54,8 @@ public class PostController {
   private final PostModifyUseCase modifyUseCase;
   private final PostDeleteUseCase deleteUseCase;
 
+  private final TradeReadUseCase tradeReadUseCase;
+
   @PostMapping
   public ResponseEntity<PostCreateResponse> handleCreatePost(
       @Valid @RequestBody CreatePostRequest request,
@@ -69,13 +78,22 @@ public class PostController {
   @GetMapping
   public ResponseEntity<PostsResponse> handleReadFilteredPosts(
       ReadFilteredPostsRequest request,
-      Pageable pageable
+      Pageable pageable,
+      @AuthenticationId UUID memberId
   ) {
-    return ResponseEntity.ok(readUseCase.readFilteredPostsProcess(request.toQuery(), pageable));
+    PostsResult result = readUseCase.readFilteredPostsProcess(request.toQuery(memberId), pageable);
+    List<Long> ids = result.posts().stream().map(PostSummary::postId).toList();
+
+    Map<Long, String> statusMap = new HashMap<>();
+    if (memberId != null && !ids.isEmpty()) {
+      ReadParticipateTradeStatusQuery query = ReadParticipateTradeStatusQuery.of(memberId, ids);
+      statusMap.putAll(tradeReadUseCase.readTradeStatusProcess(query).statusMap());
+    }
+    return ResponseEntity.ok(PostsResponse.from(result, statusMap));
   }
 
   @GetMapping("/favorites")
-  public ResponseEntity<PostsResponse> handleReadMemberFavoritePosts(
+  public ResponseEntity<PostsResult> handleReadMemberFavoritePosts(
       @AuthenticationId UUID memberId,
       Pageable pageable
   ) {
