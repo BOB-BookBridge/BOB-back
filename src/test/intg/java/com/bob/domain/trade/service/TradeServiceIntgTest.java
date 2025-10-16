@@ -1,31 +1,31 @@
 package com.bob.domain.trade.service;
 
 import static com.bob.domain.chat.entity.status.TradeStatus.ACCEPTED;
+import static com.bob.domain.trade.entity.status.Status.CANCELED;
 import static com.bob.domain.trade.entity.status.Status.COMPLETED;
 import static com.bob.domain.trade.entity.status.Status.REJECTED;
 import static com.bob.domain.trade.entity.status.Status.REQUESTED;
 import static com.bob.domain.trade.entity.status.Status.RESERVED;
+import static com.bob.domain.trade.entity.type.Owner.BUYER;
+import static com.bob.domain.trade.entity.type.Owner.SELLER;
 import static com.bob.support.fixture.query.TradeQueryFixture.KEY_NULL_STATUS_NULL;
 import static com.bob.support.fixture.query.TradeQueryFixture.RECEIVED_STATUS_REQUESTED;
 import static com.bob.support.fixture.query.TradeQueryFixture.SENT_STATUS_REQUESTED_REJECTED;
-import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
 import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 import com.bob.domain.chat.entity.ChatRoom;
 import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.reader.ChatRoomReader;
-import com.bob.domain.post.service.dto.response.PostDetailResponse;
-import com.bob.domain.post.service.dto.response.PostDetailResponse.BookInfo;
 import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.entity.status.Status;
 import com.bob.domain.trade.repository.TradeRepository;
+import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
+import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
@@ -34,9 +34,6 @@ import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
-import com.bob.domain.trade.service.port.out.TradeMemberPort;
-import com.bob.domain.trade.service.port.out.TradePostPort;
-import com.bob.domain.trade.service.reader.TradeReader;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.TestContainerSupport;
@@ -66,16 +63,10 @@ class TradeServiceIntgTest extends TestContainerSupport {
   private TradeRepository tradeRepository;
 
   @Autowired
-  private TradeReader tradeReader;
+  private TradeItemService tradeItemService;
 
   @Autowired
   private ChatRoomRepository chatRoomRepository;
-
-  @MockitoBean
-  private TradeMemberPort memberPort;
-
-  @MockitoBean
-  private TradePostPort postPort;
 
   @MockitoBean
   private ChatRoomReader chatRoomReader;
@@ -99,6 +90,9 @@ class TradeServiceIntgTest extends TestContainerSupport {
     tradeRepository.save(createTrade(buyerId3, REQUESTED));
     chatRoom = createChatRoom(testTrade);
     chatRoomRepository.save(chatRoom);
+
+    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(testTrade.getId(), List.of(1L), SELLER));
+    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(testTrade.getId(), List.of(2L, 3L), BUYER));
   }
 
   @AfterEach
@@ -110,12 +104,9 @@ class TradeServiceIntgTest extends TestContainerSupport {
   @Test
   void 거래_생성() {
     // given
-    Long targetPostId = postId;
-    List<Long> exchangeBookIds = List.of(10L, 11L);
-    given(postPort.readTradePostSummary(targetPostId)).willReturn(mockPostResponse());
-    given(memberPort.readTradeMemberProfile(any(UUID.class)))
-        .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
-    CreateTradeCommand command = CreateTradeCommand.of(targetPostId, buyerId1, exchangeBookIds);
+    Long postId = 2L;
+    List<Long> requestItemIds = List.of(10L, 11L);
+    CreateTradeCommand command = CreateTradeCommand.of(postId, buyerId1, requestItemIds);
 
     // when
     CreateTradeResponse response = tradeService.createTradeProcess(command);
@@ -125,21 +116,19 @@ class TradeServiceIntgTest extends TestContainerSupport {
     assertThat(response.id()).isNotNull();
 
     Trade saved = tradeRepository.findById(response.id()).orElseThrow();
-    assertThat(saved.getPostId()).isEqualTo(targetPostId);
+    assertThat(saved.getPostId()).isEqualTo(postId);
     assertThat(saved.getSellerId()).isEqualTo(sellerId);
     assertThat(saved.getBuyerId()).isEqualTo(buyerId1);
     assertThat(saved.getStatus()).isEqualTo(REQUESTED);
 
-    then(memberPort).should().changeMemberBookUsage(targetPostId, exchangeBookIds);
+    List<Long> itemIds = tradeItemService.readTradeItemIdsProcess(saved.getId(), BUYER);
+    assertThat(itemIds).containsExactlyInAnyOrder(10L, 11L);
   }
 
   @Test
   void 게시글_거래_목록_조회() {
     // given
     ReadPostTradesQuery query = new ReadPostTradesQuery(postId, sellerId);
-    given(postPort.readTradePostSummary(postId)).willReturn(mockPostResponse());
-    given(memberPort.readTradeMemberProfile(any(UUID.class)))
-        .willAnswer(invocation -> CUSTOM_MEMBER_PROFILE_RESPONSE(invocation.getArgument(0)));
 
     // when
     PostTradesResponse response = tradeService.readPostTradesProcess(query);
@@ -154,7 +143,6 @@ class TradeServiceIntgTest extends TestContainerSupport {
     // given
     UUID otherUser = UUID.fromString("0197365f-8074-7d24-a332-0c5f1dbe9c59");
     ReadPostTradesQuery query = new ReadPostTradesQuery(postId, otherUser);
-    given(postPort.readTradePostSummary(postId)).willReturn(mockPostResponse());
 
     // when & then
     assertThatThrownBy(() -> tradeService.readPostTradesProcess(query))
@@ -167,7 +155,6 @@ class TradeServiceIntgTest extends TestContainerSupport {
     // given: sellerId 기준으로 ALL + 상태필터 미적용 → seller의 모든 거래 조회
     tradeRepository.save(createTrade(buyerId1, COMPLETED)); // 추가 1건(완료 상태)
     ReadTradesQuery query = KEY_NULL_STATUS_NULL(sellerId);
-    given(postPort.readTradePostSummary(any(Long.class))).willReturn(mockPostResponse());
 
     // when
     TradesResponse response = tradeService.readTradesProcess(query, pageable);
@@ -183,7 +170,6 @@ class TradeServiceIntgTest extends TestContainerSupport {
     tradeRepository.save(createTrade(buyerId1, REJECTED)); // 추가 1건(거절 상태)
     tradeRepository.save(createTrade(buyerId1, COMPLETED)); // 추가 1건(완료 상태) <- 응답 반영 X
     ReadTradesQuery query = SENT_STATUS_REQUESTED_REJECTED(buyerId1);
-    given(postPort.readTradePostSummary(any(Long.class))).willReturn(mockPostResponse());
 
     // when
     TradesResponse response = tradeService.readTradesProcess(query, pageable);
@@ -200,7 +186,6 @@ class TradeServiceIntgTest extends TestContainerSupport {
     // given: seller 기준 RECEIVED + [REQUESTED] → seller가 받은 제안 상태의 거래 2건(by buyer1, by buyer3)
     tradeRepository.save(createTrade(sellerId, REJECTED)); // 추가 1건(거절 상태) <- 응답 반영 X
     ReadTradesQuery query = RECEIVED_STATUS_REQUESTED(sellerId);
-    given(postPort.readTradePostSummary(any(Long.class))).willReturn(mockPostResponse());
 
     // when
     TradesResponse response = tradeService.readTradesProcess(query, pageable);
@@ -215,19 +200,25 @@ class TradeServiceIntgTest extends TestContainerSupport {
   @Test
   void 거래_상세_조회() {
     // given
-    Trade trade = tradeRepository.findAllByPostId(1L).get(0);
-    UUID sellerId = trade.getSellerId();
-    Long tradeId = trade.getId();
-
-    ReadTradeDetailQuery query = new ReadTradeDetailQuery(tradeId, sellerId);
+    ReadTradeDetailQuery query = new ReadTradeDetailQuery(testTrade.getId(), sellerId);
 
     // when
     TradeDetailResponse response = tradeService.readTradeDetailProcess(query);
 
     // then
     assertThat(response).isNotNull();
-    assertThat(response.id()).isEqualTo(tradeId);
-    assertThat(response.sellerId()).isEqualTo(sellerId);
+    assertThat(response.id()).isEqualTo(testTrade.getId());
+    assertThat(response.status()).isEqualTo(testTrade.getStatus().name());
+
+    assertThat(response.seller()).isNotNull();
+    assertThat(response.seller().id()).isEqualTo(sellerId);
+    assertThat(response.seller().item()).hasSize(1);
+    assertThat(response.seller().worth()).isEqualTo(15000);
+
+    assertThat(response.buyer()).isNotNull();
+    assertThat(response.buyer().id()).isEqualTo(buyerId1);
+    assertThat(response.buyer().item()).hasSize(2);
+    assertThat(response.buyer().worth()).isEqualTo(40000);
   }
 
   @Test
@@ -248,9 +239,8 @@ class TradeServiceIntgTest extends TestContainerSupport {
   @Test
   void 거래_상태_변경() {
     // given
-    tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now())); // 대기 상태로 변경
     Trade trade = testTrade;
-    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
+    tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now())); // 대기 상태로 변경
     given(chatRoomReader.readExistingChatRoom(postId, sellerId, buyerId1)).willReturn(Optional.of(chatRoom.getId()));
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "RESERVED", null);
 
@@ -266,7 +256,6 @@ class TradeServiceIntgTest extends TestContainerSupport {
   void 거래_상태_변경_시_이미_처리된_거래가_있으면_예외가_발생한다() {
     // given
     Trade trade = testTrade;
-    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "RESERVED", null);
 
     // when & then
@@ -281,13 +270,36 @@ class TradeServiceIntgTest extends TestContainerSupport {
     tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now()));
     Trade trade = testTrade;
     UUID otherUserId = UUID.fromString("0197365f-8074-7d24-a332-999999999999");
-    given(postPort.readTradePostSummary(trade.getPostId())).willReturn(mockPostResponse());
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(otherUserId, trade.getId(), "RESERVED", null);
 
     // when & then
     assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.TRADE_ACCESS_DENIED.getMessage());
+  }
+
+  @Test
+  void 거래_물품_변경() {
+    // given
+    Trade trade = testTrade;
+    testTrade.updateTradeStatus(CANCELED, now());
+    List<Long> requestIds = List.of(2L, 4L);
+    ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(trade.getId(), requestIds, buyerId1);
+    given(chatRoomReader.readExistingChatRoom(postId, buyerId1, sellerId)).willReturn(Optional.of(chatRoom.getId()));
+
+    // 사전 검증
+    assertThat(trade.getStatus()).isEqualTo(CANCELED);
+    List<Long> currentItemIds = tradeItemService.readTradeItemIdsProcess(testTrade.getId(), BUYER);
+    assertThat(currentItemIds).containsExactlyInAnyOrder(2L, 3L);
+
+    // when
+    tradeService.changeTradeItemProcess(command);
+
+    // then
+    assertThat(trade.getStatus()).isEqualTo(REQUESTED);
+    List<Long> savedItemIds = tradeItemService.readTradeItemIdsProcess(testTrade.getId(), BUYER);
+    assertThat(savedItemIds).containsExactlyInAnyOrder(2L, 4L)
+        .doesNotContain(3L);
   }
 
   private Trade createTrade(UUID buyerId, Status status) {
@@ -306,14 +318,6 @@ class TradeServiceIntgTest extends TestContainerSupport {
         .tradeId(trade.getId())
         .titleSuffix("test")
         .tradeStatus(ACCEPTED)
-        .build();
-  }
-
-  private PostDetailResponse mockPostResponse() {
-    return PostDetailResponse.builder()
-        .postId(postId)
-        .sellerId(sellerId)
-        .book(BookInfo.builder().title("자바의 정석").build())
         .build();
   }
 }

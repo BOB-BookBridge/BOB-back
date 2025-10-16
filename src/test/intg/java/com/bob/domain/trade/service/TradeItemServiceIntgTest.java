@@ -13,6 +13,7 @@ import com.bob.domain.trade.repository.TradeItemRepository;
 import com.bob.domain.trade.repository.TradeRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.support.TestContainerSupport;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 @DisplayName("거래 물품 서비스 통합 테스트")
@@ -38,6 +40,9 @@ public class TradeItemServiceIntgTest extends TestContainerSupport {
 
   @Autowired
   TradeRepository tradeRepository;
+
+  @MockitoBean
+  TradeMemberPort memberPort;
 
   private Long tradeId;
   private Long postId = 1L;
@@ -101,15 +106,15 @@ public class TradeItemServiceIntgTest extends TestContainerSupport {
   @Test
   void 거래_물품_변경() {
     // given
-    saveItems(tradeId, BUYER, List.of(1L, 2L, 3L));
-    ChangeTradeItemsCommand command = new ChangeTradeItemsCommand(tradeId, List.of(2L, 3L, 4L, 5L), buyerId);
+    saveItems(tradeId, BUYER, List.of(2L, 3L));
+    ChangeTradeItemsCommand command = new ChangeTradeItemsCommand(tradeId, List.of(3L, 4L, 5L), buyerId);
 
     // when
-    tradeItemService.changeTradeItemsProcess(command, BUYER);
+    tradeItemService.changeTradeItemsProcess(command, postId, BUYER);
 
     // then
     List<Long> after = tradeItemRepository.findAllItemId(tradeId, BUYER);
-    assertThat(after).containsExactlyInAnyOrder(2L, 3L, 4L, 5L); // [1] 삭제, [4, 5] 추가
+    assertThat(after).containsExactlyInAnyOrder(3L, 4L, 5L); // [2] 삭제, [4, 5] 추가
   }
 
   private void saveItems(Long tradeId, Owner owner, List<Long> itemIds) {

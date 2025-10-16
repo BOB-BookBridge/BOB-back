@@ -2,12 +2,14 @@ package com.bob.domain.trade.service;
 
 import static com.bob.domain.trade.entity.type.Owner.BUYER;
 import static com.bob.domain.trade.entity.type.Owner.SELLER;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ITEMS_UNCHANGED;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.domain.trade.TradeItemFixture.DEFAULT_TRADE_BUYER_ITEM_1;
 import static com.bob.support.fixture.domain.trade.TradeItemFixture.DEFAULT_TRADE_BUYER_ITEM_2;
 import static com.bob.support.fixture.domain.trade.TradeItemFixture.DEFAULT_TRADE_SELLER_ITEM_1;
 import static com.bob.support.fixture.domain.trade.TradeItemFixture.DEFAULT_TRADE_SELLER_ITEM_2;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -17,6 +19,8 @@ import com.bob.domain.trade.entity.type.Owner;
 import com.bob.domain.trade.repository.TradeItemRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.port.out.TradeMemberPort;
+import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +40,9 @@ class TradeItemServiceTest {
 
   @Mock
   TradeItemRepository tradeItemRepository;
+
+  @Mock
+  TradeMemberPort memberPort;
 
   @Test
   void 거래_물품_생성() {
@@ -111,7 +118,7 @@ class TradeItemServiceTest {
     ChangeTradeItemsCommand command = new ChangeTradeItemsCommand(tradeId, List.of(2L, 3L, 4L, 5L), OTHER_MEMBER_ID);
 
     // when
-    tradeItemService.changeTradeItemsProcess(command, owner);
+    tradeItemService.changeTradeItemsProcess(command, 1L, owner);
 
     // then
     // 삭제
@@ -130,5 +137,25 @@ class TradeItemServiceTest {
       assertThat(item.getTradeId()).isEqualTo(tradeId);
       assertThat(item.getOwner()).isEqualTo(owner);
     });
+
+    then(memberPort).should().changeMemberBookUsage(OTHER_MEMBER_ID, 1L, List.of(1L), true);
+    then(memberPort).should().changeMemberBookUsage(OTHER_MEMBER_ID, 1L, List.of(4L, 5L), false);
+  }
+
+  @Test
+  void 거래_물품_변경_추가_삭제_시_변경_사항이_없으면_예외가_발생한다() {
+    // given
+    Long tradeId = 1L;
+    Owner owner = BUYER;
+    // 현재: [1,2]  요청: [1, 2]
+    given(tradeItemRepository.findAllItemId(tradeId, owner)).willReturn(List.of(1L, 2L));
+    ChangeTradeItemsCommand command = new ChangeTradeItemsCommand(tradeId, List.of(1L, 2L), OTHER_MEMBER_ID);
+
+    // when & then
+    assertThatThrownBy(() -> tradeItemService.changeTradeItemsProcess(command, 1L, owner))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(TRADE_ITEMS_UNCHANGED.getMessage());
+
+    then(memberPort).shouldHaveNoInteractions();
   }
 }

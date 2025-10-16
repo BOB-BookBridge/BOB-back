@@ -1,16 +1,20 @@
 package com.bob.web.trade.request;
 
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.UUID;
 
 public record CreateTradeRequest(
     Long postId,
-    List<Long> exchangeBookIds,
-    boolean isFar
+
+    @NotEmpty(message = "거래 물품은 필수입니다.")
+    List<Long> itemIds,
+
+    Boolean isFar
 ) {
 
   public CreateTradeCommand toCommand(UUID memberId) {
-    return CreateTradeCommand.of(postId, memberId, exchangeBookIds);
+    return CreateTradeCommand.of(postId, memberId, itemIds);
   }
 }

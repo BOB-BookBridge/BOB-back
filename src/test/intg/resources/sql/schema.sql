@@ -392,3 +392,10 @@ INSERT INTO notifications (type, reference_id, receiver_id, body, is_read, creat
 
 -- 15일 이전 알림
 INSERT INTO notifications (type, reference_id, receiver_id, body, is_read, created_at) VALUES ('TRADE', '1', UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), '오래된 알림', TRUE, DATE_SUB(NOW(), INTERVAL 15 DAY));
+
+INSERT INTO member_books (id, member_id, book_id, usage_id, status, is_remove) VALUES
+(1, UUID_TO_BIN('0197365f-8074-7d24-a332-95c9ebd1f5c0'), 1, null, 'BEST', false),
+(2, UUID_TO_BIN('0197365f-8074-7d24-ba91-0c5fc1b37ca1'), 2, null, 'HIGH', false),
+(3, UUID_TO_BIN('0197365f-8074-7d24-ba91-0c5fc1b37ca1'), 3, null, 'LOW', false),
+(4, UUID_TO_BIN('0197365f-8074-7d24-ba91-0c5fc1b37ca1'), 4, null, 'MEDIUM', false),
+(5, UUID_TO_BIN('0197365f-8074-7d24-ba91-0c5fc1b37ca1'), 5, null, 'BEST', false)

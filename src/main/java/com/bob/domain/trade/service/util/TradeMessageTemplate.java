@@ -7,7 +7,10 @@ public enum TradeMessageTemplate {
   CANCELED_WITH_REASON_NOTI("[%s]의 거래 진행 상태가 '%s'(으)로 변경되었습니다.\n\n사유: %s"),
 
   STATUS_CHANGED_CHAT("거래 진행 상태가 '%s'(으)로 변경되었습니다."),
-  CANCELED_WITH_REASON_CHAT("거래가 취소되었습니다.\n\n사유: %s");
+  CANCELED_WITH_REASON_CHAT("거래가 취소되었습니다.\n\n사유: %s"),
+
+  CHANGED_TRADE_ITEM_CHAT("거래 물품이 변경되었습니다. 거래 상세 정보를 확인해 주세요.")
+  ;
 
   private final String template;
 

@@ -3,24 +3,33 @@ package com.bob.domain.trade.service;
 import static com.bob.domain.trade.entity.status.Status.CANCELED;
 import static com.bob.domain.trade.entity.status.Status.REQUESTED;
 import static com.bob.domain.trade.entity.status.Status.valueOf;
+import static com.bob.domain.trade.entity.type.Owner.BUYER;
+import static com.bob.domain.trade.entity.type.Owner.SELLER;
 import static com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary.from;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.CANCELED_WITH_REASON_CHAT;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.CANCELED_WITH_REASON_NOTI;
+import static com.bob.domain.trade.service.util.TradeMessageTemplate.CHANGED_TRADE_ITEM_CHAT;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.REQUESTED_NOTI;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.STATUS_CHANGED_CHAT;
 import static com.bob.domain.trade.service.util.TradeMessageTemplate.STATUS_CHANGED_NOTI;
 import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
+import static com.bob.global.exception.response.ApplicationError.MAIN_TRADE_ITEM_CONTAINED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
+import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
 import static java.time.LocalDateTime.now;
 
 import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.entity.status.Status;
+import com.bob.domain.trade.entity.type.Owner;
 import com.bob.domain.trade.repository.TradeRepository;
+import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
+import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
@@ -29,11 +38,13 @@ import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.dto.response.internal.PostTradeSummary;
+import com.bob.domain.trade.service.dto.response.internal.TradeItemSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
+import com.bob.domain.trade.service.port.view.TradeItemView;
 import com.bob.domain.trade.service.reader.TradeReader;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
@@ -42,8 +53,10 @@ import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.event.application.dto.SystemChatMessageEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
@@ -57,6 +70,8 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   private final TradeRepository tradeRepository;
   private final TradeReader tradeReader;
 
+  private final TradeItemService tradeItemService;
+
   private final TradeMemberPort memberPort;
   private final TradePostPort postPort;
 
@@ -66,18 +81,31 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   public CreateTradeResponse createTradeProcess(CreateTradeCommand command) {
     TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(command.postId()));
     verifyBuyer(post.sellerId(), command.buyerId());
-    Trade trade = tradeRepository.save(Trade.of(command.postId(), post.sellerId(), command.buyerId()));
-    TradeMemberSummary buyer = TradeMemberSummary.from(memberPort.readTradeMemberProfile(command.buyerId()));
-    memberPort.changeMemberBookUsage(command.postId(), command.exchangeBookIds());
-    final String notificationBody = REQUESTED_NOTI.format(buyer.nickname(), post.title());
-    sendTradeNotification(post, command.buyerId(), post.sellerId(), notificationBody);
-    return CreateTradeResponse.of(trade.getId());
+    verifyTradePostAccessible(post.status());
+
+    return tradeRepository.findIdByPostIdAndBuyerId(post.id(), command.buyerId())
+        .map(CreateTradeResponse::of)
+        .orElseGet(() -> {
+          Trade trade = tradeRepository.save(Trade.create(command.postId(), post.sellerId(), command.buyerId()));
+          registerTradeItem(command, trade.getId(), post.sellerBookId());
+
+          TradeMemberSummary buyer = TradeMemberSummary.from(memberPort.readTradeMemberProfile(command.buyerId()));
+          final String notificationBody = REQUESTED_NOTI.format(buyer.nickname(), post.title());
+          sendTradeNotification(post, command.buyerId(), post.sellerId(), notificationBody);
+
+          return CreateTradeResponse.of(trade.getId());
+        });
+  }
+
+  private void registerTradeItem(CreateTradeCommand command, Long tradeId, Long sellerItemId) {
+    memberPort.changeMemberBookUsage(command.buyerId(), command.postId(), command.itemIds(), false);
+    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(tradeId, List.of(sellerItemId), SELLER));
+    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(tradeId, command.itemIds(), BUYER));
   }
 
   private void verifyBuyer(UUID sellerId, UUID buyerId) {
-    if (Objects.equals(sellerId, buyerId)) {
+    if (Objects.equals(sellerId, buyerId))
       throw new ApplicationException(IS_SAME_TRADE_MEMBER);
-    }
   }
 
   @Transactional(readOnly = true)
@@ -105,15 +133,28 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   public TradeDetailResponse readTradeDetailProcess(ReadTradeDetailQuery query) {
     Trade trade = tradeReader.readTradeById(query.tradeId());
     verifyTradeParticipate(trade, query.memberId());
-    return TradeDetailResponse.from(trade);
-  }
 
-  private void verifyTradeParticipate(Trade trade, UUID memberId) {
-    UUID sellerId = trade.getSellerId();
-    UUID buyerId = trade.getBuyerId();
+    Map<Owner, List<Long>> tradeItemOwnerMap = tradeItemService.readTradeItemsOwnerMapProcess(query.tradeId());
+    List<Long> sellerItemIds = tradeItemOwnerMap.get(SELLER);
+    List<Long> buyerItemIds = tradeItemOwnerMap.get(BUYER);
+    List<Long> allItemIds = Stream.concat(sellerItemIds.stream(), buyerItemIds.stream()).toList();
 
-    if (!memberId.equals(sellerId) && !memberId.equals(buyerId))
-      throw new ApplicationException(TRADE_ACCESS_DENIED);
+    List<TradeItemView> bookRes = memberPort.readTradeItemSummary(allItemIds);
+    List<TradeItemSummary> sellerItems = TradeItemSummary.listFrom(bookRes, sellerItemIds);
+    List<TradeItemSummary> buyerItems = TradeItemSummary.listFrom(bookRes, buyerItemIds);
+    int sellerItemsWorth = sellerItems.stream().map(TradeItemSummary::priceStandard).mapToInt(Integer::intValue).sum();
+    int buyerItemsWorth = buyerItems.stream().map(TradeItemSummary::priceStandard).mapToInt(Integer::intValue).sum();
+
+    TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
+    TradeMemberSummary seller = TradeMemberSummary.from(memberPort.readTradeMemberProfile(trade.getSellerId()));
+    TradeMemberSummary buyer = TradeMemberSummary.from(memberPort.readTradeMemberProfile(trade.getBuyerId()));
+
+    return TradeDetailResponse.from(
+        trade.getId(), trade.getStatus().name(),
+        TradeDetailResponse.Post.from(post),
+        TradeDetailResponse.Trader.from(seller, sellerItemsWorth, sellerItems),
+        TradeDetailResponse.Trader.from(buyer, buyerItemsWorth, buyerItems)
+    );
   }
 
   @Transactional
@@ -135,14 +176,46 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     publishSystemMessageEvent(post, command.memberId(), trade.getBuyerId(), chatMessageBody);
   }
 
-  private void sendTradeNotification(TradePostSummary post, UUID senderId, UUID receiverId, String body) {
-    NotiEvent event = NotiEvent.toSystemNotiEvent(TRADE, String.valueOf(post.id()), "SYSTEM", senderId, receiverId, body);
-    eventPublisher.publishEvent(event);
+  @Transactional
+  public void changeTradeItemProcess(ChangeTradeItemsCommand command) {
+    Trade trade = tradeReader.readTradeById(command.tradeId());
+    TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
+    verifyTradeParticipate(trade, command.memberId());
+    verifyTradePostAccessible(post.status());
+    verifyTradeItemChangeable(trade.getStatus());
+    verifyTradeMainItemContains(command.itemIds(), post.sellerBookId());
+
+    Owner owner = trade.getBuyerId().equals(command.memberId()) ? BUYER : SELLER;
+    tradeItemService.changeTradeItemsProcess(command, post.id(), owner);
+    if (trade.getStatus().isAborted())
+      trade.updateTradeStatus(REQUESTED, now());
+
+    final String messageBody = CHANGED_TRADE_ITEM_CHAT.format();
+    UUID receiverId = owner == SELLER ? trade.getBuyerId() : trade.getSellerId();
+    publishSystemMessageEvent(post, command.memberId(), receiverId, messageBody);
   }
 
-  private void publishSystemMessageEvent(TradePostSummary post, UUID senderId, UUID receiverId, String body) {
-    SystemChatMessageEvent event = SystemChatMessageEvent.of("TRADE", post.id().toString(), senderId, receiverId, body);
-    eventPublisher.publishEvent(event);
+  private void verifyTradeParticipate(Trade trade, UUID memberId) {
+    UUID sellerId = trade.getSellerId();
+    UUID buyerId = trade.getBuyerId();
+
+    if (!memberId.equals(sellerId) && !memberId.equals(buyerId))
+      throw new ApplicationException(TRADE_ACCESS_DENIED);
+  }
+
+  private void verifyTradePostAccessible(String postStatus) {
+    if (Objects.equals(postStatus, "REMOVED"))
+      throw new ApplicationException(TRADE_POST_REMOVED);
+  }
+
+  private void verifyTradeItemChangeable(Status status) {
+    if (status.isProcessed())
+      throw new ApplicationException(UNCHANGEABLE_TRADE_ITEM);
+  }
+
+  private void verifyTradeMainItemContains(List<Long> itemIds, Long mainItemId) {
+    if (itemIds.contains(mainItemId))
+      throw new ApplicationException(MAIN_TRADE_ITEM_CONTAINED);
   }
 
   private static void verifyTradeOwner(UUID ownerId, UUID memberId) {
@@ -153,18 +226,27 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   private void verifyRequestedOnly(Long requestId, Long postId, String status) {
     if (valueOf(status) == CANCELED || valueOf(status) == REQUESTED)
       return;
+
     tradeReader.readTradesByPostId(postId).stream()
         .filter(t -> !t.getId().equals(requestId))
         .filter(t -> t.getStatus().isProcessed())
         .findAny()
-        .ifPresent(t -> {
-          throw new ApplicationException(TRADE_ALREADY_PROCESSED);
-        });
+        .ifPresent(t -> { throw new ApplicationException(TRADE_ALREADY_PROCESSED); });
   }
 
   private static void verifyIsSameRequest(Status s1, Status s2) {
     if (s1 == s2)
       throw new ApplicationException(TRADE_STATUS_UNCHANGED);
+  }
+
+  private void sendTradeNotification(TradePostSummary post, UUID senderId, UUID receiverId, String body) {
+    NotiEvent event = NotiEvent.toSystemNotiEvent(TRADE, String.valueOf(post.id()), "SYSTEM", senderId, receiverId, body);
+    eventPublisher.publishEvent(event);
+  }
+
+  private void publishSystemMessageEvent(TradePostSummary post, UUID senderId, UUID receiverId, String body) {
+    SystemChatMessageEvent event = SystemChatMessageEvent.of("TRADE", post.id().toString(), senderId, receiverId, body);
+    eventPublisher.publishEvent(event);
   }
 
   private static String buildChangeStatusNotificationBody(String title, Status status, String reason) {

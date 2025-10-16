@@ -78,7 +78,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     Long bookId = bookPort.createBook(command.toCreateBookCommand());
     Long sellerBookId = memberPort.createMemberBook(command.toCreateMemberBookCommand(bookId));
     Post post = savePost(command, category, bookId, sellerBookId, areaSummary);
-    memberPort.changeMemberBookUsage(post.getId(), sellerBookId);
+    memberPort.changeMemberBookUsage(command.memberId(), post.getId(), sellerBookId);
     imageMapping(command.fileNames(), post.getId());
     return PostCreateResponse.of(post.getId());
   }

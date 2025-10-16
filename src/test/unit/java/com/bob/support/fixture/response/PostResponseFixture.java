@@ -1,5 +1,6 @@
 package com.bob.support.fixture.response;
 
+import static com.bob.support.fixture.domain.MemberBookFixture.DEFAULT_MEMBER_BOOK;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
 import com.bob.domain.post.entity.status.BookStatus;
@@ -38,6 +39,7 @@ public class PostResponseFixture {
     return PostDetailResponse.builder()
         .postId(postId)
         .sellerId(MEMBER_ID)
+        .sellerBookId(DEFAULT_MEMBER_BOOK.getId())
         .sellPrice(10000)
         .bookStatus("BEST")
         .postStatus("READY")
@@ -64,10 +66,12 @@ public class PostResponseFixture {
         .build();
   }
 
-  public static PostDetailResponse CUSTOM_POST_DETAIL_RESPONSE(Long postId, UUID memberId) {
+  public static PostDetailResponse CUSTOM_POST_DETAIL_RESPONSE(Long postId, UUID memberId, String status) {
     return PostDetailResponse.builder()
         .postId(postId)
+        .status(status)
         .sellerId(memberId)
+        .sellerBookId(1L)
         .sellPrice(7000)
         .bookStatus("LOW")
         .postStatus("IN_PROGRESS")
@@ -93,6 +97,10 @@ public class PostResponseFixture {
         .createdAt(LocalDateTime.of(2024, 3, 29, 12, 0))
         .build();
   }
+
+  public static PostDetailResponse REMOVED_POST_DETAIL_RESPONSE = PostDetailResponse.builder()
+      .status("REMOVED")
+      .build();
 
   public static List<PostSummary> DEFAULT_POST_SUMMARY() {
     return List.of(FIRST_POST, SECOND_POST);

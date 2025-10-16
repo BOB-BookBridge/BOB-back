@@ -1,28 +1,41 @@
 package com.bob.domain.trade.service.dto.response;
 
-import com.bob.domain.trade.entity.Trade;
-import java.time.LocalDateTime;
+import com.bob.domain.trade.service.dto.response.internal.TradeItemSummary;
+import com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary;
+import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
+import java.util.List;
 import java.util.UUID;
-import lombok.Builder;
 
-@Builder
 public record TradeDetailResponse(
     Long id,
-    Long postId,
-    UUID sellerId,
-    UUID buyerId,
     String status,
-    LocalDateTime updatedAt
+    Post post,
+    Trader seller,
+    Trader buyer
 ) {
 
-  public static TradeDetailResponse from(Trade trade) {
-    return TradeDetailResponse.builder()
-        .id(trade.getId())
-        .postId(trade.getPostId())
-        .sellerId(trade.getSellerId())
-        .buyerId(trade.getBuyerId())
-        .status(trade.getStatus().name())
-        .updatedAt(trade.getUpdatedAt())
-        .build();
+  public static TradeDetailResponse from(Long id, String status, Post post, Trader seller, Trader buyer) {
+    return new TradeDetailResponse(id, status, post, seller, buyer);
+  }
+
+  public record Post(
+      Long id,
+      String title,
+      String cover
+  ) {
+    public static Post from(TradePostSummary post) {
+      return new Post(post.id(), post.title(), post.thumbnailUrl());
+    }
+  }
+
+  public record Trader(
+      UUID id,
+      String nickname,
+      Integer worth,
+      List<TradeItemSummary> item
+  ) {
+    public static Trader from(TradeMemberSummary trader, int itemsWorth, List<TradeItemSummary> items) {
+      return new Trader(trader.id(), trader.nickname(), itemsWorth, items);
+    }
   }
 }

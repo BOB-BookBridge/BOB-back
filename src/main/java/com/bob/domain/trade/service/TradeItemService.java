@@ -3,15 +3,20 @@ package com.bob.domain.trade.service;
 import static com.bob.domain.trade.entity.type.Owner.BUYER;
 import static com.bob.domain.trade.entity.type.Owner.SELLER;
 
-import com.bob.domain.trade.entity.type.Owner;
 import com.bob.domain.trade.entity.TradeItem;
+import com.bob.domain.trade.entity.type.Owner;
 import com.bob.domain.trade.repository.TradeItemRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.port.out.TradeMemberPort;
+import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class TradeItemService {
 
   private final TradeItemRepository tradeItemRepository;
+
+  private final TradeMemberPort memberPort;
 
   @Transactional
   public void createTradeItemsProcess(CreateTradeItemsCommand command) {
@@ -39,33 +46,40 @@ public class TradeItemService {
   public Map<Owner, List<Long>> readTradeItemsOwnerMapProcess(Long tradeId) {
     Map<Owner, List<Long>> result = new EnumMap<>(Owner.class);
     result.put(SELLER, readTradeItemIdsProcess(tradeId, SELLER));
-    result.put(BUYER,  readTradeItemIdsProcess(tradeId, BUYER));
+    result.put(BUYER, readTradeItemIdsProcess(tradeId, BUYER));
     return result;
   }
 
   @Transactional
-  public void changeTradeItemsProcess(ChangeTradeItemsCommand command, Owner owner) {
-    Long tradeId = command.tradeId();
-    List<Long> current = tradeItemRepository.findAllItemId(tradeId, owner);
+  public void changeTradeItemsProcess(ChangeTradeItemsCommand command, Long postId, Owner owner) {
+    List<Long> current = tradeItemRepository.findAllItemId(command.tradeId(), owner);
     List<Long> requested = command.itemIds();
-    removeObsoleteItems(tradeId, owner, current, requested);
-    insertNewItems(tradeId, owner, current, requested);
+    verifyItemsChange(current, requested);
+
+    removeObsoleteItems(command.memberId(), command.tradeId(), postId, owner, current, requested);
+    insertNewItems(command.memberId(), command.tradeId(), postId, owner, current, requested);
   }
 
-  private void removeObsoleteItems(Long tradeId, Owner owner, List<Long> current, List<Long> requested) {
+  private void removeObsoleteItems(UUID memberId, Long tradeId, Long postId, Owner owner, List<Long> current, List<Long> requested) {
     List<Long> toRemove = new ArrayList<>(current);
     toRemove.removeAll(requested);
     tradeItemRepository.deleteTradeItem(tradeId, owner, toRemove);
-    // TODO : toRemove item 사용 가능 전환
+    memberPort.changeMemberBookUsage(memberId, postId, toRemove, true);
   }
 
-  private void insertNewItems(Long tradeId, Owner owner, List<Long> current, List<Long> requested) {
+  private void insertNewItems(UUID memberId, Long tradeId, Long postId, Owner owner, List<Long> current, List<Long> requested) {
     List<Long> toAdd = new ArrayList<>(requested);
     toAdd.removeAll(current);
     List<TradeItem> newItems = toAdd.stream().distinct()
         .map(id -> TradeItem.create(tradeId, id, owner))
         .toList();
     tradeItemRepository.saveAll(newItems);
-    // TODO : toAdd item 사용 불가 전환
+    memberPort.changeMemberBookUsage(memberId, postId, toAdd, false);
+  }
+
+  private void verifyItemsChange(List<Long> origin, List<Long> other) {
+    if (new HashSet<>(origin).equals(new HashSet<>(other))) {
+      throw new ApplicationException(ApplicationError.TRADE_ITEMS_UNCHANGED);
+    }
   }
 }

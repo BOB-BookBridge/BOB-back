@@ -3,8 +3,11 @@ package com.bob.web.trade.controller;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
+import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
+import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
+import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
@@ -12,6 +15,7 @@ import com.bob.domain.trade.usecase.TradeWriteUseCase;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
+import com.bob.web.trade.request.ChangeTradeItemsRequest;
 import com.bob.web.trade.request.ChangeTradeStatusRequest;
 import com.bob.web.trade.request.CreateTradeRequest;
 import com.bob.web.trade.request.ReadTradesRequest;
@@ -54,6 +58,15 @@ public class TradeController {
     return ResponseEntity.ok(readUseCase.readTradesProcess(ReadTradesQuery.of(memberId, request.key(), request.status()), pageable));
   }
 
+  @GetMapping("/{tradeId}")
+  public ResponseEntity<TradeDetailResponse> handleReadTradeDetail(
+      @PathVariable Long tradeId,
+      @AuthenticationId UUID memberId
+  ) {
+    ReadTradeDetailQuery query = ReadTradeDetailQuery.of(tradeId, memberId);
+    return ResponseEntity.ok(readUseCase.readTradeDetailProcess(query));
+  }
+
   @PatchMapping("/{tradeId}")
   public CommonResponse<ResponseSymbol> handleModifyTradeStatus(
       @PathVariable Long tradeId,
@@ -61,6 +74,17 @@ public class TradeController {
       @AuthenticationId UUID memberId
   ) {
     modifyUseCase.changeTradeStatusProcess(request.toCommand(memberId, tradeId));
+    return new CommonResponse<>(true, UPDATED);
+  }
+
+  @PatchMapping("/{tradeId}/items")
+  public CommonResponse<ResponseSymbol> handleModifyTradeItem(
+      @PathVariable Long tradeId,
+      @Valid @RequestBody ChangeTradeItemsRequest request,
+      @AuthenticationId UUID memberId
+  ) {
+    ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(tradeId, request.itemIds(), memberId);
+    modifyUseCase.changeTradeItemProcess(command);
     return new CommonResponse<>(true, UPDATED);
   }
 }

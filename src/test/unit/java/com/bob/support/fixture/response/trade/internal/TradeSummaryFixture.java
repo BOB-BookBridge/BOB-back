@@ -12,24 +12,24 @@ public class TradeSummaryFixture {
   public static final TradeSummary REQUESTED_RECEIVED_TRADE_SUMMARY1 = TradeSummary.builder()
       .id(1L)
       .status("REQUESTED")
-      .post(TradePostSummary.from(CUSTOM_POST_DETAIL_RESPONSE(1L, MEMBER_ID)))
+      .post(TradePostSummary.from(CUSTOM_POST_DETAIL_RESPONSE(1L, MEMBER_ID, "REQUESTED")))
       .build();
 
   public static final TradeSummary RESERVED_RECEIVED_TRADE_SUMMARY2 = TradeSummary.builder()
       .id(2L)
       .status("RESERVED")
-      .post(TradePostSummary.from(CUSTOM_POST_DETAIL_RESPONSE(2L, MEMBER_ID)))
+      .post(TradePostSummary.from(CUSTOM_POST_DETAIL_RESPONSE(2L, MEMBER_ID, "RESERVED")))
       .build();
 
   public static final TradeSummary REQUESTED_SENT_TRADE_SUMMARY1 = TradeSummary.builder()
       .id(1L)
       .status("REQUESTED")
-      .post(TradePostSummary.from(CUSTOM_POST_DETAIL_RESPONSE(1L, OTHER_MEMBER_ID)))
+      .post(TradePostSummary.from(CUSTOM_POST_DETAIL_RESPONSE(1L, OTHER_MEMBER_ID, "REQUESTED")))
       .build();
 
   public static final TradeSummary RESERVED_SENT_TRADE_SUMMARY2 = TradeSummary.builder()
       .id(2L)
       .status("RESERVED")
-      .post(TradePostSummary.from(CUSTOM_POST_DETAIL_RESPONSE(2L, OTHER_MEMBER_ID)))
+      .post(TradePostSummary.from(CUSTOM_POST_DETAIL_RESPONSE(2L, OTHER_MEMBER_ID, "RESERVED")))
       .build();
 }
