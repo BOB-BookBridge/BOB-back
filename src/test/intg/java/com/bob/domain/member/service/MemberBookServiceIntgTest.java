@@ -171,7 +171,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
 
     Long usageId = 1L;
     List<Long> ids = List.of(mb1.getId(), mb2.getId());
-    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(usageId, ids);
+    ChangeMemberBookUsageCommand command = ChangeMemberBookUsageCommand.of(memberId, usageId, ids, false);
 
     // when
     service.changeMemberBookUsageProcess(command);

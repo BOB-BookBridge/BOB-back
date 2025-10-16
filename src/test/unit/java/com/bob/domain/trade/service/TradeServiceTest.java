@@ -115,7 +115,7 @@ class TradeServiceTest {
     assertThat(response.id()).isEqualTo(1L);
     then(tradeRepository).should(times(1)).findIdByPostIdAndBuyerId(anyLong(), any(UUID.class));
     then(tradeRepository).should(times(1)).save(any(Trade.class));
-    then(memberPort).should(times(1)).changeMemberBookUsage(OTHER_MEMBER_ID, command.postId(), command.exchangeBookIds(), false);
+    then(memberPort).should(times(1)).changeMemberBookUsage(OTHER_MEMBER_ID, command.postId(), command.itemIds(), false);
     then(tradeItemService).should(times(2)).createTradeItemsProcess(any(CreateTradeItemsCommand.class));
   }
 
@@ -271,6 +271,7 @@ class TradeServiceTest {
     then(memberPort).should().readTradeMemberProfile(trade.getSellerId());
     then(memberPort).should().readTradeMemberProfile(trade.getBuyerId());
   }
+
   @Test
   void 거래_상세_조회_시_거래_참여자가_아니면_예외가_발생한다() {
     // given

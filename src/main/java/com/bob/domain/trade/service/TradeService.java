@@ -1,9 +1,7 @@
 package com.bob.domain.trade.service;
 
 import static com.bob.domain.trade.entity.status.Status.CANCELED;
-import static com.bob.domain.trade.entity.status.Status.COMPLETED;
 import static com.bob.domain.trade.entity.status.Status.REQUESTED;
-import static com.bob.domain.trade.entity.status.Status.RESERVED;
 import static com.bob.domain.trade.entity.status.Status.valueOf;
 import static com.bob.domain.trade.entity.type.Owner.BUYER;
 import static com.bob.domain.trade.entity.type.Owner.SELLER;
@@ -100,9 +98,9 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   }
 
   private void registerTradeItem(CreateTradeCommand command, Long tradeId, Long sellerItemId) {
-    memberPort.changeMemberBookUsage(command.buyerId(), command.postId(), command.exchangeBookIds(), false);
+    memberPort.changeMemberBookUsage(command.buyerId(), command.postId(), command.itemIds(), false);
     tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(tradeId, List.of(sellerItemId), SELLER));
-    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(tradeId, command.exchangeBookIds(), BUYER));
+    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(tradeId, command.itemIds(), BUYER));
   }
 
   private void verifyBuyer(UUID sellerId, UUID buyerId) {
