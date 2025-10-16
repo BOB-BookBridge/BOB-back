@@ -2,17 +2,18 @@ package com.bob.domain.post.service.dto.response;
 
 import com.bob.domain.post.entity.Post;
 import java.util.List;
+import java.util.UUID;
 
-public record PostsResponse(
+public record PostsResult(
     Long totalCount,
     List<PostSummary> posts
 ) {
 
-  public static PostsResponse of(Long totalCount, List<Post> postList) {
+  public static PostsResult of(Long totalCount, List<Post> postList, UUID memberId) {
     List<PostSummary> summaries = postList.stream()
-        .map(PostSummary::from)
+        .map(post -> PostSummary.from(post, memberId))
         .toList();
 
-    return new PostsResponse(totalCount, summaries);
+    return new PostsResult(totalCount, summaries);
   }
 }

@@ -9,6 +9,7 @@ import lombok.Builder;
 
 @Builder
 public record ReadFilteredPostsQuery(
+    UUID authenticatorId,
     SearchKey key,
     String keyword,
     UUID memberId,

@@ -21,6 +21,7 @@ import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMO
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
 import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
 import static java.time.LocalDateTime.now;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.entity.status.Status;
@@ -30,12 +31,14 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.dto.response.internal.PostTradeSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeItemSummary;
@@ -155,6 +158,13 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
         TradeDetailResponse.Trader.from(seller, sellerItemsWorth, sellerItems),
         TradeDetailResponse.Trader.from(buyer, buyerItemsWorth, buyerItems)
     );
+  }
+
+  @Transactional(readOnly = true)
+  public TradeStatusMapResult readTradeStatusProcess(ReadParticipateTradeStatusQuery query) {
+    List<Trade> trades = tradeReader.readTradesByBuyerIdAndPostId(query.memberId(), query.postIds());
+    Map<Long, String> map = trades.stream().collect(toUnmodifiableMap(Trade::getPostId, t -> t.getStatus().name()));
+    return TradeStatusMapResult.of(map);
   }
 
   @Transactional

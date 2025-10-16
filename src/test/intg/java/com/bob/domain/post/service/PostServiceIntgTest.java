@@ -32,10 +32,10 @@ import static org.mockito.BDDMockito.then;
 import com.bob.domain.book.entity.Book;
 import com.bob.domain.book.repository.BookRepository;
 import com.bob.domain.post.entity.Category;
-import com.bob.domain.post.repository.CategoryRepository;
 import com.bob.domain.post.entity.Post;
 import com.bob.domain.post.entity.PostFavorite;
 import com.bob.domain.post.entity.status.TradeProgress;
+import com.bob.domain.post.repository.CategoryRepository;
 import com.bob.domain.post.repository.PostFavoriteRepository;
 import com.bob.domain.post.repository.PostRepository;
 import com.bob.domain.post.service.dto.command.ChangePostCommand;
@@ -48,12 +48,11 @@ import com.bob.domain.post.service.dto.query.ReadPostDetailQuery;
 import com.bob.domain.post.service.dto.query.ReadPostFavoritesQuery;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostSummary;
-import com.bob.domain.post.service.dto.response.PostsResponse;
+import com.bob.domain.post.service.dto.response.PostsResult;
 import com.bob.domain.post.service.port.out.PostAreaPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.TestContainerSupport;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.time.LocalDateTime;
@@ -173,7 +172,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     ReadPostFavoritesQuery query = ReadPostFavoritesQuery.of(memberId);
 
     // when
-    PostsResponse response = postService.readPostFavoritesProcess(query, pageable);
+    PostsResult response = postService.readPostFavoritesProcess(query, pageable);
 
     // then
     assertThat(response.totalCount()).isEqualTo(2);
@@ -190,7 +189,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     ReadPostFavoritesQuery query = ReadPostFavoritesQuery.of(memberId);
 
     // when
-    PostsResponse response = postService.readPostFavoritesProcess(query, pageable);
+    PostsResult response = postService.readPostFavoritesProcess(query, pageable);
 
     // then
     assertThat(response.totalCount()).isEqualTo(0);
@@ -273,7 +272,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("제목 검색 - '오브젝트' 포함 게시글 조회")
   void 제목으로_게시글을_검색할_수_있다() {
     ReadFilteredPostsQuery query = searchTitleQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     assertThat(result.posts())
         .extracting(PostSummary::postTitle)
@@ -284,7 +283,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("저자 검색 - '김영한' 포함 게시글 조회")
   void 저자로_게시글을_검색할_수_있다() {
     ReadFilteredPostsQuery query = searchAuthorQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     assertThat(result.posts())
         .extracting(PostSummary::postTitle)
@@ -295,7 +294,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("가격 필터 - 5000원 이하 게시글 조회")
   void 가격이_5000원이하인_게시글만_조회할_수_있다() {
     ReadFilteredPostsQuery query = searchUnder5000PriceQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     assertThat(result.posts())
         .extracting(PostSummary::sellPrice)
@@ -306,7 +305,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("가격 필터 - 5000원 이상, 10000원 이하 게시글 조회")
   void 가격이_5000원이상_10000원이하인_게시글만_조회할_수_있다() {
     ReadFilteredPostsQuery query = searchBetween_5000_10000_PriceQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     assertThat(result.posts())
         .extracting(PostSummary::sellPrice)
@@ -317,7 +316,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("카테고리 필터 - categoryId = 1")
   void 카테고리별_게시글을_조회할_수_있다() {
     ReadFilteredPostsQuery query = searchCategoryQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     assertThat(query.categoryIds()).contains(1, 12, 13, 14, 15, 16); // 1의 자식 카테고리는 12, 13, 14, 15, 16
     assertThat(result.posts())
@@ -329,7 +328,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("거래 상태 필터 - 거래 완료")
   void 거래상태로_게시글을_조회할_수_있다() {
     ReadFilteredPostsQuery query = searchTradeStatusQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     assertThat(result.posts())
         .extracting(PostSummary::postStatus)
@@ -351,7 +350,7 @@ class PostServiceIntgTest extends TestContainerSupport {
     pageable = PageRequest.of(0, Integer.MAX_VALUE); // 모든 게시글 개수 조회를 위한 page limit 수정
 
     // when
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     // then
     assertThat(removedPostsCount).isNotZero();
@@ -362,7 +361,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("책 상태 필터 - 최상")
   void 책상태로_게시글을_조회할_수_있다() {
     ReadFilteredPostsQuery query = searchBookStatusQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     assertThat(result.posts())
         .extracting(PostSummary::bookStatus)
@@ -373,7 +372,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("정렬 - 최신순 (createdAt DESC)")
   void 최신순으로_게시글을_정렬할_수_있다() {
     ReadFilteredPostsQuery query = searchNewestQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     List<LocalDateTime> createdAtList = result.posts().stream()
         .map(PostSummary::createdAt)
@@ -386,7 +385,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("정렬 - 오래된 순 (createdAt ASC)")
   void 오래된순으로_게시글을_정렬할_수_있다() {
     ReadFilteredPostsQuery query = searchOldestQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     List<LocalDateTime> createdAtList = result.posts().stream()
         .map(PostSummary::createdAt)
@@ -399,7 +398,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("정렬 - 낮은 가격순")
   void 가격이_낮은_순으로_게시글을_정렬할_수_있다() {
     ReadFilteredPostsQuery query = searchLowPriceQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     List<Integer> prices = result.posts().stream()
         .map(PostSummary::sellPrice)
@@ -412,7 +411,7 @@ class PostServiceIntgTest extends TestContainerSupport {
   @DisplayName("정렬 - 높은 가격순")
   void 가격이_높은_순으로_게시글을_정렬할_수_있다() {
     ReadFilteredPostsQuery query = searchHighPriceQuery();
-    PostsResponse result = postService.readFilteredPostsProcess(query, pageable);
+    PostsResult result = postService.readFilteredPostsProcess(query, pageable);
 
     List<Integer> prices = result.posts().stream()
         .map(PostSummary::sellPrice)

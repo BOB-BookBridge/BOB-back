@@ -43,6 +43,7 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
@@ -50,6 +51,7 @@ import com.bob.domain.trade.service.dto.query.SearchKey;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
+import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
@@ -290,6 +292,28 @@ class TradeServiceTest {
     then(tradeItemService).shouldHaveNoInteractions();
     then(memberPort).shouldHaveNoInteractions();
     then(postPort).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 거래_상태_조회() {
+    // given
+    UUID memberId = MEMBER_ID;
+    List<Long> postIds = List.of(10L, 20L);
+    List<Trade> trades = List.of(REQUESTED_TRADE(1L, 10L), RESERVED_TRADE(2L, 20L));
+    given(tradeReader.readTradesByBuyerIdAndPostId(memberId, postIds)).willReturn(trades);
+
+    ReadParticipateTradeStatusQuery query = ReadParticipateTradeStatusQuery.of(memberId, postIds);
+
+    // when
+    TradeStatusMapResult result = tradeService.readTradeStatusProcess(query);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.statusMap()).hasSize(2)
+        .containsEntry(10L, "REQUESTED")
+        .containsEntry(20L, "RESERVED");
+
+    then(tradeReader).should().readTradesByBuyerIdAndPostId(memberId, postIds);
   }
 
   @Test
