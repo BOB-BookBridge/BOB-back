@@ -1,31 +1,45 @@
 package com.bob.infra.config.registry;
 
+import static com.bob.global.utils.uuid.UuidUtils.UUID_V7_REGEX;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 @Component
 public class PermitAllRegistry {
 
-  private final List<RequestMatcher> whitelistMatchers = List.of(
-      new AntPathRequestMatcher("/h2-console/**"), new AntPathRequestMatcher("/error/**"),
-      new AntPathRequestMatcher("/dummy", POST.name()), // TODO : 개발 종료 시 삭제
-      new AntPathRequestMatcher("/auth/**", POST.name()),
-      new AntPathRequestMatcher("/members", POST.name()),
-      new AntPathRequestMatcher("/ai/**", GET.name()),
-      new AntPathRequestMatcher("/members/{memberId:\\d+}", GET.name()),
-      new AntPathRequestMatcher("/members/temp/**", PATCH.name()),
-      new AntPathRequestMatcher("/members/recover", PATCH.name())
-  );
+  private final List<RequestMatcher> matchers;
+
+  public PermitAllRegistry(HandlerMappingIntrospector spector) {
+    matchers = List.of(
+        mvc(spector, POST, "/dummy"),
+        mvc(spector, POST, "/auth/**"),
+        mvc(spector, POST, "/members"),
+        mvc(spector, GET, "/members/{memberId:" + UUID_V7_REGEX + '}'),
+        mvc(spector, PATCH, "/members/temp/password"),
+        mvc(spector, PATCH, "/members/recover")
+    );
+  }
+
+  private MvcRequestMatcher mvc(HandlerMappingIntrospector introspector, HttpMethod method, String pattern) {
+    MvcRequestMatcher matcher = new MvcRequestMatcher(introspector, pattern);
+    matcher.setMethod(method);
+    return matcher;
+  }
 
   public boolean isWhiteList(HttpServletRequest request) {
-    return whitelistMatchers.stream()
-        .anyMatch(matcher -> matcher.matches(request));
+    return matchers.stream().anyMatch(m -> m.matches(request));
+  }
+
+  public RequestMatcher[] asArray() {
+    return matchers.toArray(RequestMatcher[]::new);
   }
 }

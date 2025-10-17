@@ -13,13 +13,14 @@ import com.bob.infra.auth.oauth.handler.SocialAuthSuccessHandler;
 import com.bob.infra.auth.service.MemberDetailsService;
 import com.bob.infra.auth.service.SocialAuthService;
 import com.bob.infra.config.props.JwtProperties;
+import com.bob.infra.config.registry.OptionalRegistry;
+import com.bob.infra.config.registry.PermitAllRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -43,8 +44,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
-      "/auth/**", "/oauth2/**", "/login/oauth2/**",
-      "/ai/**", "/areas/**", "/members/temp/**",
+      "/oauth2/**", "/login/oauth2/**",
       "/h2-console/**", "/error/**",
   };
 
@@ -65,7 +65,9 @@ public class SecurityConfig {
   private final ObjectMapper objectMapper;
 
   @Bean
-  public SecurityFilterChain configure(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
+  public SecurityFilterChain configure(HttpSecurity http, AuthenticationManager authenticationManager,
+      PermitAllRegistry permitAllRegistry, OptionalRegistry optionalRegistry
+  ) throws Exception {
     return http
         .cors(Customizer.withDefaults())
         .csrf(AbstractHttpConfigurer::disable)
@@ -89,12 +91,8 @@ public class SecurityConfig {
         .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
         .authorizeHttpRequests(request -> request
             .requestMatchers(AUTH_WHITELIST).permitAll()
-            .requestMatchers(HttpMethod.POST, "/dummy").permitAll() // TODO : 개발 종료 시 삭제
-            .requestMatchers(HttpMethod.POST, "/members").permitAll()
-            .requestMatchers(HttpMethod.GET, "/members/{memberId:\\d+}").permitAll()
-            .requestMatchers(HttpMethod.GET, "/posts").permitAll()
-            .requestMatchers(HttpMethod.GET, "/posts/{postId:[\\d]+}").permitAll()
-            .requestMatchers(HttpMethod.PATCH, "/members/recover").permitAll()
+            .requestMatchers(permitAllRegistry.asArray()).permitAll() // 인증 필터 우회
+            .requestMatchers(optionalRegistry.asArray()).permitAll() // 토큰 존재 시 인증 필터 사용
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
