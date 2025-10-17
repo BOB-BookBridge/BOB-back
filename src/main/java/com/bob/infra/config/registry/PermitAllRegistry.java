@@ -1,5 +1,6 @@
 package com.bob.infra.config.registry;
 
+import static com.bob.global.utils.uuid.UuidUtils.UUID_V7_REGEX;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
@@ -22,7 +23,7 @@ public class PermitAllRegistry {
         mvc(spector, POST, "/dummy"),
         mvc(spector, POST, "/auth/**"),
         mvc(spector, POST, "/members"),
-        mvc(spector, GET, "/members/{memberId:\\d+}"),
+        mvc(spector, GET, "/members/{memberId:" + UUID_V7_REGEX + '}'),
         mvc(spector, PATCH, "/members/temp/password"),
         mvc(spector, PATCH, "/members/recover")
     );
