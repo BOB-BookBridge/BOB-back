@@ -29,7 +29,7 @@ import com.bob.domain.chat.service.dto.response.ChatMemberResponse;
 import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
-import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
+import com.bob.domain.chat.service.dto.response.ChatRoomResult;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.service.dto.response.internal.ChatFileSummary;
@@ -153,13 +153,13 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   }
 
   @Transactional(readOnly = true)
-  public ChatRoomDetailResponse readChatRoomDetailProcess(ReadChatRoomDetailQuery query) {
+  public ChatRoomResult readChatRoomDetailProcess(ReadChatRoomDetailQuery query) {
     ChatRoom chatRoom = chatRoomReader.readChatRoomById(query.chatroomId());
     verifyParticipating(query.chatroomId(), query.memberId());
     UUID partnerId = chatRoomMemberReader.readPartnerIdByRequesterId(chatRoom.getId(), query.memberId());
     ChatPostResponse post = from(postPort.readChatPostSummary(chatRoom.getPostId()));
     ChatMemberResponse member = from(memberPort.readChatMemberProfile(partnerId));
-    return ChatRoomDetailResponse.from(chatRoom, post, member);
+    return ChatRoomResult.from(chatRoom, post, member);
   }
 
   @Transactional(readOnly = true)

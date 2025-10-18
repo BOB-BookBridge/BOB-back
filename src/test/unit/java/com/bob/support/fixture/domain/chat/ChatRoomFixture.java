@@ -1,7 +1,6 @@
 package com.bob.support.fixture.domain.chat;
 
 import com.bob.domain.chat.entity.ChatRoom;
-import com.bob.domain.chat.entity.status.TradeStatus;
 import java.time.LocalDateTime;
 
 public class ChatRoomFixture {
@@ -14,7 +13,6 @@ public class ChatRoomFixture {
         .titleSuffix("제목")
         .lastChatMessage("안녕하세요")
         .lastChatAt(LocalDateTime.of(2024, 3, 30, 15, 0))
-        .tradeStatus(TradeStatus.ACCEPTED)
         .build();
   }
 
@@ -26,7 +24,6 @@ public class ChatRoomFixture {
         .titleSuffix("제목")
         .lastChatMessage("거래 감사합니다.")
         .lastChatAt(LocalDateTime.of(2024, 4, 30, 15, 0))
-        .tradeStatus(TradeStatus.ACCEPTED)
         .build();
   }
 
@@ -38,11 +35,10 @@ public class ChatRoomFixture {
         .titleSuffix("제목")
         .lastChatMessage(null)
         .lastChatAt(null)
-        .tradeStatus(TradeStatus.CANCELED)
         .build();
   }
 
-  public static ChatRoom customChatRoom(Long id, String lastMessage, LocalDateTime lastMessageAt, TradeStatus status) {
+  public static ChatRoom customChatRoom(Long id, String lastMessage, LocalDateTime lastMessageAt) {
     return ChatRoom.builder()
         .id(id)
         .postId(1L)
@@ -50,7 +46,6 @@ public class ChatRoomFixture {
         .titleSuffix("제목")
         .lastChatMessage(lastMessage)
         .lastChatAt(lastMessageAt)
-        .tradeStatus(status)
         .build();
   }
 }

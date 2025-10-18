@@ -6,7 +6,7 @@ import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.query.ValidateParticipantQuery;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
-import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
+import com.bob.domain.chat.service.dto.response.ChatRoomResult;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import java.util.List;
 
@@ -16,7 +16,7 @@ public interface ChatRoomReadUseCase {
 
   int countUnreadMessageProcess(ReadUnreadMessageCountQuery query);
 
-  ChatRoomDetailResponse readChatRoomDetailProcess(ReadChatRoomDetailQuery query);
+  ChatRoomResult readChatRoomDetailProcess(ReadChatRoomDetailQuery query);
 
   ChatMessagesResponse readChatMessagesProcess(ReadChatMessagesQuery query);
 

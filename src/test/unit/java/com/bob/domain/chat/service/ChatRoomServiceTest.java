@@ -1,6 +1,5 @@
 package com.bob.domain.chat.service;
 
-import static com.bob.domain.chat.entity.status.TradeStatus.ACCEPTED;
 import static com.bob.global.event.application.dto.type.NotiEventType.CHAT;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_CHAT_PARTNER;
 import static com.bob.support.fixture.command.CreateChatMessageCommandFixture.CUSTOM_CREATE_CHAT_MESSAGE_COMMAND;
@@ -48,9 +47,8 @@ import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
 import com.bob.domain.chat.service.dto.response.ChatPostResponse;
-import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
+import com.bob.domain.chat.service.dto.response.ChatRoomResult;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
-import com.bob.domain.chat.service.dto.response.ChatTradeResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.service.port.out.ChatFilePort;
 import com.bob.domain.chat.service.port.out.ChatMemberPort;
@@ -307,8 +305,8 @@ class ChatRoomServiceTest {
     // given
     UUID memberId = MEMBER_ID;
     UUID partnerId = OTHER_MEMBER_ID;
-    ChatRoom recentRoom = customChatRoom(1L, "최신 메시지", now(), ACCEPTED);
-    ChatRoom oldRoom = customChatRoom(2L, "오래된 메시지", now().minusHours(1), ACCEPTED);
+    ChatRoom recentRoom = customChatRoom(1L, "최신 메시지", now());
+    ChatRoom oldRoom = customChatRoom(2L, "오래된 메시지", now().minusHours(1));
     given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId)).willReturn(List.of(oldRoom, recentRoom));
     given(chatRoomMemberReader.readPartnerIdByRequesterId(anyLong(), eq(memberId))).willReturn(partnerId);
     given(memberPort.readChatMemberProfile(partnerId)).willReturn(OTHER_MEMBER_PROFILE_RESPONSE);
@@ -344,8 +342,8 @@ class ChatRoomServiceTest {
   void 읽지_않은_전체_메시지_개수_조회() {
     // given
     UUID memberId = MEMBER_ID;
-    ChatRoom room1 = customChatRoom(1L, "message", now(), ACCEPTED);
-    ChatRoom room2 = customChatRoom(2L, "message", now().minusMinutes(10), ACCEPTED);
+    ChatRoom room1 = customChatRoom(1L, "message", now());
+    ChatRoom room2 = customChatRoom(2L, "message", now().minusMinutes(10));
 
     given(chatRoomReader.readParticipatingChatRoomsByMemberId(memberId)).willReturn(List.of(room1, room2));
     given(chatMessageReader.readUnreadMessageCountOfChatRoom(room1.getId(), memberId)).willReturn(3);
@@ -367,9 +365,8 @@ class ChatRoomServiceTest {
     Long chatRoomId = 1L;
     UUID memberId = MEMBER_ID;
     UUID partnerId = OTHER_MEMBER_ID;
-    ChatRoom chatRoom = customChatRoom(1L, "lastMessage", now(), ACCEPTED);
+    ChatRoom chatRoom = customChatRoom(1L, "lastMessage", now());
     ChatPostResponse postResponse = ChatPostResponse.from(DEFAULT_POST_DETAIL_RESPONSE(chatRoom.getPostId()));
-    ChatTradeResponse tradeResponse = ChatTradeResponse.of(chatRoom.getTradeId(), chatRoom.getTradeStatus());
     given(chatRoomReader.readChatRoomById(chatRoomId)).willReturn(chatRoom);
     given(chatRoomMemberReader.readChatRoomMember(chatRoomId, MEMBER_ID)).willReturn(CHAT_ROOM_MEMBER_1());
     given(chatRoomMemberReader.readPartnerIdByRequesterId(chatRoomId, memberId)).willReturn(partnerId);
@@ -378,13 +375,12 @@ class ChatRoomServiceTest {
     ReadChatRoomDetailQuery query = ReadChatRoomDetailQuery.of(chatRoomId, memberId);
 
     // when
-    ChatRoomDetailResponse response = chatRoomService.readChatRoomDetailProcess(query);
+    ChatRoomResult response = chatRoomService.readChatRoomDetailProcess(query);
 
     // then
     assertThat(response.chatroomId()).isEqualTo(chatRoomId);
     assertThat(response.partner().id()).isEqualTo(partnerId);
     assertThat(response.post().id()).isEqualTo(postResponse.postId());
-    assertThat(response.trade().status()).isEqualTo(tradeResponse.status().name());
 
     then(chatRoomReader).should().readChatRoomById(chatRoomId);
     then(chatRoomMemberReader).should().readChatRoomMember(chatRoomId, MEMBER_ID);

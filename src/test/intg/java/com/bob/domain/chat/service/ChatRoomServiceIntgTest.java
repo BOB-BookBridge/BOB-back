@@ -23,7 +23,7 @@ import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
-import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
+import com.bob.domain.chat.service.dto.response.ChatRoomResult;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.member.entity.Member;
@@ -239,13 +239,12 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
     ReadChatRoomDetailQuery query = ReadChatRoomDetailQuery.of(chatRoom.getId(), buyer.getId());
 
     // when
-    ChatRoomDetailResponse response = chatRoomService.readChatRoomDetailProcess(query);
+    ChatRoomResult response = chatRoomService.readChatRoomDetailProcess(query);
 
     // then
     assertThat(response.chatroomId()).isEqualTo(chatRoom.getId());
     assertThat(response.partner().id()).isEqualTo(seller.getId());
     assertThat(response.post().id()).isEqualTo(post.getId());
-    assertThat(response.trade().status()).isEqualTo("ACCEPTED");
   }
 
   @Test

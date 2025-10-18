@@ -3,7 +3,7 @@ package com.bob.support.fixture.response;
 import static com.bob.domain.chat.service.dto.response.CreateChatRoomResponse.of;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 
-import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
+import com.bob.domain.chat.service.dto.response.ChatRoomResult;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.CreateChatRoomResponse;
 import com.bob.domain.chat.service.dto.response.internal.ChatPartnerSummary;
@@ -19,10 +19,10 @@ public class ChatRoomResponseFixture {
 
   public static CreateChatRoomResponse DEFAULT_CREATE_CHATROOM_RESPONSE = of(DEFAULT_CHATROOM_ID);
 
-  public static ChatRoomDetailResponse DEFAULT_CHATROOM_DETAIL = ChatRoomDetailResponse.builder()
+  public static ChatRoomResult DEFAULT_CHATROOM_DETAIL = ChatRoomResult.builder()
       .chatroomId(DEFAULT_CHATROOM_ID)
       .title("제목")
-      .trade(new ChatTradeSummary(1L, "REQUESTED"))
+      .trade(new ChatTradeSummary(1L))
       .post(new ChatPostSummary(1L, "READY", MEMBER_ID, "게시글 제목", "image.png", 10000))
       .partner(new ChatPartnerSummary(
           UUID.fromString("00000000-0000-0000-0000-00000000003a"),

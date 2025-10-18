@@ -1,6 +1,5 @@
 package com.bob.domain.trade.service;
 
-import static com.bob.domain.chat.entity.status.TradeStatus.ACCEPTED;
 import static com.bob.domain.trade.entity.status.Status.CANCELED;
 import static com.bob.domain.trade.entity.status.Status.COMPLETED;
 import static com.bob.domain.trade.entity.status.Status.REJECTED;
@@ -317,7 +316,6 @@ class TradeServiceIntgTest extends TestContainerSupport {
         .postId(trade.getPostId())
         .tradeId(trade.getId())
         .titleSuffix("test")
-        .tradeStatus(ACCEPTED)
         .build();
   }
 }
