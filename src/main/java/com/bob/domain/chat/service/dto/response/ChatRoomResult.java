@@ -7,7 +7,7 @@ import com.bob.domain.chat.service.dto.response.internal.ChatTradeSummary;
 import lombok.Builder;
 
 @Builder
-public record ChatRoomDetailResponse(
+public record ChatRoomResult(
     Long chatroomId,
     String title,
     ChatTradeSummary trade,
@@ -15,15 +15,15 @@ public record ChatRoomDetailResponse(
     ChatPartnerSummary partner
 ) {
 
-  public static ChatRoomDetailResponse from(
+  public static ChatRoomResult from(
       ChatRoom chatRoom,
       ChatPostResponse post,
       ChatMemberResponse partner
   ) {
-    return ChatRoomDetailResponse.builder()
+    return ChatRoomResult.builder()
         .chatroomId(chatRoom.getId())
         .title(partner.nickname() + " - [" + post.title() + "]")
-        .trade(ChatTradeSummary.of(chatRoom.getTradeId(), chatRoom.getTradeStatus().name()))
+        .trade(ChatTradeSummary.of(chatRoom.getTradeId()))
         .post(ChatPostSummary.of(post.postId(), post.postStatus() ,post.sellerId(), post.title(), post.thumbnailUrl(), post.sellPrice()))
         .partner(ChatPartnerSummary.of(partner.memberId(), partner.nickname(), partner.profileImageUrl()))
         .build();
