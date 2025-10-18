@@ -20,6 +20,9 @@ import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
+import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
+import com.bob.domain.trade.usecase.TradeReadUseCase;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,7 +48,10 @@ class ChatRoomControllerTest {
   private ChatRoomReadUseCase readUseCase;
 
   @Mock
-  private ChatRoomModifyUseCase memberModifyUseCase;
+  private ChatRoomModifyUseCase modifyUseCase;
+
+  @Mock
+  private TradeReadUseCase tradeReadUseCase;
 
   private MockMvc mvc;
 
@@ -54,9 +60,8 @@ class ChatRoomControllerTest {
     mvc = MockMvcBuilders.standaloneSetup(chatRoomController).build();
   }
 
-  @DisplayName("채팅 메시지 전송 API 호출 테스트")
   @Test
-  void 채팅_메시지_전송_API를_호출할_수_있다() throws Exception {
+  void 채팅_메시지_전송_API_호출() throws Exception {
     // given
     String json = """
         {
@@ -78,8 +83,7 @@ class ChatRoomControllerTest {
   }
 
   @Test
-  @DisplayName("채팅방 목록 조회 API 호출 테스트")
-  void 채팅방_목록_조회_API를_호출할_수_있다() throws Exception {
+  void 채팅방_목록_조회_API_호출() throws Exception {
     // given
     given(readUseCase.readChatRoomListProcess(any())).willReturn(DEFAULT_CHATROOM_SUMMARY_LIST);
 
@@ -95,8 +99,7 @@ class ChatRoomControllerTest {
   }
 
   @Test
-  @DisplayName("읽지 않은 메시지 개수 조회 API 호출 테스트")
-  void 읽지_않은_메시지_개수를_정상적으로_조회할_수_있다() throws Exception {
+  void 읽지_않은_메시지_개수_조회_API_호출() throws Exception {
     // given
     int unreadCount = 5;
     given(readUseCase.countUnreadMessageProcess(any())).willReturn(unreadCount);
@@ -112,11 +115,12 @@ class ChatRoomControllerTest {
   }
 
   @Test
-  @DisplayName("채팅방 상세 조회 API 호출 테스트")
-  void 채팅방_상세_조회_API를_호출할_수_있다() throws Exception {
+  void 채팅방_상세_조회_API_호출() throws Exception {
     // given
     Long chatRoomId = 1L;
+    TradeStatusMapResult tradeStatusResult = TradeStatusMapResult.of(Map.of(1L, "REQUESTED"));
     given(readUseCase.readChatRoomDetailProcess(any())).willReturn(DEFAULT_CHATROOM_DETAIL);
+    given(tradeReadUseCase.readTradeStatusProcess(any())).willReturn(tradeStatusResult);
 
     // when & then
     mvc.perform(get("/chatrooms/{chatroomId}", chatRoomId)
@@ -133,8 +137,7 @@ class ChatRoomControllerTest {
   }
 
   @Test
-  @DisplayName("채팅 메시지 목록 조회 API 호출 테스트")
-  void 채팅_메시지_목록_조회_API를_호출할_수_있다() throws Exception {
+  void 채팅_메시지_목록_조회_API_호출() throws Exception {
     // given
     Long chatRoomId = 1L;
     Long beforeMessageId = 100L;
@@ -157,8 +160,7 @@ class ChatRoomControllerTest {
   }
 
   @Test
-  @DisplayName("채팅방 나가기 API 호출 테스트")
-  void 채팅방_나가기_API를_호출할_수_있다() throws Exception {
+  void 채팅방_나가기_API_호출() throws Exception {
     // given
     Long chatRoomId = 1L;
 
@@ -169,6 +171,6 @@ class ChatRoomControllerTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.result").value(UPDATED.name()));
 
-    then(memberModifyUseCase).should(times(1)).exitChatRoomProcess(any());
+    then(modifyUseCase).should(times(1)).exitChatRoomProcess(any());
   }
 }

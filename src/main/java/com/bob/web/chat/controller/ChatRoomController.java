@@ -10,13 +10,17 @@ import com.bob.domain.chat.service.dto.query.ReadChatRoomListQuery;
 import com.bob.domain.chat.service.dto.query.ReadUnreadMessageCountQuery;
 import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.service.dto.response.ChatMessagesResponse;
-import com.bob.domain.chat.service.dto.response.ChatRoomDetailResponse;
+import com.bob.domain.chat.service.dto.response.ChatRoomResult;
 import com.bob.domain.chat.service.dto.response.ChatRoomSummaryResponse;
 import com.bob.domain.chat.service.dto.response.UnreadMessageCountResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
+import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
+import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
+import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.web.chat.request.CreateChatMessageRequest;
+import com.bob.web.chat.response.ChatRoomResponse;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
 import com.bob.web.common.symbol.ResponseSymbol;
@@ -41,8 +45,9 @@ public class ChatRoomController {
 
   private final ChatRoomWriteUseCase writeUseCase;
   private final ChatRoomReadUseCase readUseCase;
+  private final ChatRoomModifyUseCase modifyUseCase;
 
-  private final ChatRoomModifyUseCase memberModifyUseCase;
+  private final TradeReadUseCase tradeReadUseCase;
 
   @PostMapping("/{chatroomId}/messages")
   @ResponseStatus(CREATED)
@@ -68,11 +73,15 @@ public class ChatRoomController {
   }
 
   @GetMapping("/{chatroomId}")
-  public ResponseEntity<ChatRoomDetailResponse> handleReadChatRoomDetail(
+  public ResponseEntity<ChatRoomResponse> handleReadChatRoomDetail(
       @PathVariable Long chatroomId,
       @AuthenticationId UUID memberId
   ) {
-    return ResponseEntity.ok().body(readUseCase.readChatRoomDetailProcess(ReadChatRoomDetailQuery.of(chatroomId, memberId)));
+    ChatRoomResult result = readUseCase.readChatRoomDetailProcess(ReadChatRoomDetailQuery.of(chatroomId, memberId));
+    Long tradeId = result.trade().id();
+    ReadParticipateTradeStatusQuery query = ReadParticipateTradeStatusQuery.of(memberId, List.of(tradeId));
+    TradeStatusMapResult statusResult = tradeReadUseCase.readTradeStatusProcess(query);
+    return ResponseEntity.ok().body(ChatRoomResponse.from(result, statusResult.statusMap().get(tradeId)));
   }
 
   @GetMapping("/{chatRoomId}/messages")
@@ -88,7 +97,7 @@ public class ChatRoomController {
       @PathVariable Long chatroomId,
       @AuthenticationId UUID memberId
   ) {
-    memberModifyUseCase.exitChatRoomProcess(ExitChatRoomCommand.of(chatroomId, memberId));
+    modifyUseCase.exitChatRoomProcess(ExitChatRoomCommand.of(chatroomId, memberId));
     return new CommonResponse<>(true, UPDATED);
   }
 }
