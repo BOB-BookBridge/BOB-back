@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum ApplicationError {
+  // TODO : message 형식 통일, code 재정립
 
   // 공통 예외
   AUTHENTICATION_FAILED("E000", "인증할 수 없는 요청입니다.", HttpStatus.UNAUTHORIZED),
@@ -64,6 +65,9 @@ public enum ApplicationError {
   TRADE_STATUS_UNCHANGED("E604", "변경하려는 거래 상태와 현재 상태가 동일합니다.", HttpStatus.CONFLICT),
   IS_SAME_TRADE_MEMBER("E605", "자신과의 거래는 불가능합니다.", HttpStatus.BAD_REQUEST),
   TRADE_POST_REMOVED("E606", "삭제 된 게시글은 거래 요청이 불가능합니다.", HttpStatus.BAD_REQUEST),
+  TRADE_STATUS_NOT_CHANGEABLE("E607", "거래 상태를 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
+  TRADE_ALREADY_ABORTED("E608", "이미 중단된 거래입니다.", HttpStatus.BAD_REQUEST),
+  TRADE_ALREADY_COMPLETED("E609", "이미 완료된 거래입니다.", HttpStatus.BAD_REQUEST),
 
   TRADE_ITEMS_UNCHANGED("E611", "거래 물품의 변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
   UNCHANGEABLE_TRADE_ITEM("E612", "예약, 완료 상태의 거래는 거래 물품 변경이 불가능합니다.", HttpStatus.BAD_REQUEST),

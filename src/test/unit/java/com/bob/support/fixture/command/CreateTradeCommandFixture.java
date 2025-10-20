@@ -9,8 +9,8 @@ import java.util.List;
 public class CreateTradeCommandFixture {
 
   public static final CreateTradeCommand DEFAULT_CREATE_TRADE_COMMAND =
-      new CreateTradeCommand(1L, OTHER_MEMBER_ID, List.of(1L, 2L));
+      new CreateTradeCommand(1L, OTHER_MEMBER_ID, List.of(1L, 2L), false);
 
   public static final CreateTradeCommand SAME_MEMBER_CREATE_TRADE_COMMAND =
-      new CreateTradeCommand(1L, MEMBER_ID, List.of(1L, 2L));
+      new CreateTradeCommand(1L, MEMBER_ID, List.of(1L, 2L), false);
 }
