@@ -39,6 +39,9 @@ public class Trade extends BaseTime {
   @Column(nullable = false)
   private UUID buyerId;
 
+  @Column(nullable = false)
+  private boolean isFar;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Status status;
@@ -46,11 +49,12 @@ public class Trade extends BaseTime {
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
-  public static Trade create(Long postId, UUID sellerId, UUID buyerId) {
+  public static Trade create(Long postId, UUID sellerId, UUID buyerId, boolean isFar) {
     return Trade.builder()
         .postId(postId)
         .sellerId(sellerId)
         .buyerId(buyerId)
+        .isFar(isFar)
         .status(Status.REQUESTED)
         .updatedAt(LocalDateTime.now())
         .build();

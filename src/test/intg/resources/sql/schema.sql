@@ -176,6 +176,7 @@ CREATE TABLE IF NOT EXISTS trades (
     post_id BIGINT NOT NULL,
     seller_id BINARY(16) NOT NULL,
     buyer_id BINARY(16) NOT NULL,
+    is_far BOOLEAN DEFAULT FALSE,
     status ENUM('CANCELED', 'REQUESTED', 'ACCEPTED', 'REJECTED', 'RESERVED', 'COMPLETED') NOT NULL,
     updated_at DATETIME NOT NULL,
     created_at DATETIME,
