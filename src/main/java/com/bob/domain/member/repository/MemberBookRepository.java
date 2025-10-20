@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 
 public interface MemberBookRepository extends CrudRepository<MemberBook, Long> {
 
@@ -22,8 +21,18 @@ public interface MemberBookRepository extends CrudRepository<MemberBook, Long> {
   @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query("""
       UPDATE MemberBook m SET m.usageId = null
-      WHERE m.usageId = :usageId
-        AND m.isRemove = false
+       WHERE m.usageId = :usageId
+         AND m.isRemove = false
       """)
-  void clearUsageId(@Param("usageId") Long usageId);
+  void freeUsageByUsageId(Long usageId);
+
+  @Modifying(clearAutomatically = true, flushAutomatically = true)
+  @Query("""
+      UPDATE MemberBook mb SET mb.usageId = null
+       WHERE mb.id IN :ids
+         AND mb.isRemove = false
+      """)
+  void freeUsageByIdIn(List<Long> ids);
+
+  void removeAllByIdIn(List<Long> ids);
 }

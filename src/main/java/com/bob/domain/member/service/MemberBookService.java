@@ -3,10 +3,13 @@ package com.bob.domain.member.service;
 import com.bob.domain.book.service.dto.response.BookResponse;
 import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.repository.MemberBookRepository;
+import com.bob.domain.member.service.dto.command.AllocateMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByIdsCommand;
+import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByUsageIdCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
-import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberBooksCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
@@ -69,6 +72,7 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     return summaries;
   }
 
+  // TODO : 할당, 해제 분리
   @Transactional
   public void changeMemberBookUsageProcess(ChangeMemberBookUsageCommand command) {
     List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.memberBookIds());
@@ -77,6 +81,12 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
       allocate(memberBooks, command.usageId());
     else
       memberBooks.forEach(mb -> mb.updateUsageId(null));
+  }
+
+  @Transactional
+  public void allocateMemberBookUsageProcess(AllocateMemberBookUsageCommand command) {
+    List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.ids());
+    allocate(memberBooks, command.usageId());
   }
 
   private static void verifyMemberBookOwner(UUID memberId, List<MemberBook> memberBooks) {
@@ -98,8 +108,13 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   }
 
   @Transactional
-  public void removeMemberBookUsageProcess(RemoveMemberBookUsageCommand command) {
-    memberBookRepository.clearUsageId(command.usageId());
+  public void freeMemberBookUsageByIdsProcess(FreeMemberBookUsageByIdsCommand command) {
+    memberBookRepository.freeUsageByIdIn(command.ids());
+  }
+
+  @Transactional
+  public void freeMemberBookUsageByUsageIdProcess(FreeMemberBookUsageByUsageIdCommand command) {
+    memberBookRepository.freeUsageByUsageId(command.usageId());
   }
 
   @Transactional
@@ -111,5 +126,10 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     if (!memberBook.isRemovable())
       throw new ApplicationException(ApplicationError.UNREMOVABLE_MEMBER_BOOK, memberBook.getUsageId());
     memberBook.remove();
+  }
+
+  @Transactional
+  public void removeMemberBooksProcess(RemoveMemberBooksCommand command) {
+    memberBookRepository.removeAllByIdIn(command.ids());
   }
 }

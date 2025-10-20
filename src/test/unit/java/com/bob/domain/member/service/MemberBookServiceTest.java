@@ -24,6 +24,8 @@ import com.bob.domain.member.entity.BookStatus;
 import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.repository.MemberBookRepository;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByIdsCommand;
+import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByUsageIdCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
@@ -227,6 +229,34 @@ class MemberBookServiceTest {
     assertThatThrownBy(() -> service.changeMemberBookUsageProcess(command))
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.MEMBER_BOOK_ACCESS_DENIED.getMessage());
+  }
+
+  @Test
+  void 회원_책_ID_기반_사용처_해제() {
+    // given
+    List<Long> ids = List.of(1L, 2L, 3L);
+    FreeMemberBookUsageByIdsCommand command = FreeMemberBookUsageByIdsCommand.of(ids);
+
+    // when
+    service.freeMemberBookUsageByIdsProcess(command);
+
+    // then
+    then(memberBookRepository).should(times(1)).freeUsageByIdIn(ids);
+    then(memberBookRepository).should(never()).freeUsageByUsageId(any());
+  }
+
+  @Test
+  void 회원_책_사용처_매핑_기반_사용처_해제() {
+    // given
+    Long usageId = 1L;
+    FreeMemberBookUsageByUsageIdCommand command = FreeMemberBookUsageByUsageIdCommand.of(usageId);
+
+    // when
+    service.freeMemberBookUsageByUsageIdProcess(command);
+
+    // then
+    then(memberBookRepository).should(times(1)).freeUsageByUsageId(usageId);
+    then(memberBookRepository).should(never()).freeUsageByIdIn(any());
   }
 
   @Test
