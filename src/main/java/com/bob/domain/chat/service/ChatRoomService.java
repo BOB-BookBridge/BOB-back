@@ -117,9 +117,11 @@ public class ChatRoomService implements ChatRoomWriteUseCase, ChatRoomReadUseCas
   @Transactional
   public void createChatRoomSystemMessageProcess(CreateSystemMessageCommand command) {
     Long postId = Long.valueOf(command.refId());
-    Long chatRoomId = chatRoomReader.readExistingChatRoom(postId, command.senderId(), command.partnerId()).get();
-    ChatMessage message = chatMessageService.createSystemChatMessageProcess(of(chatRoomId, command.senderId(), command.body(), null));
-    publishSystemChatEvent(chatRoomId, "SYSTEM", command.senderId(), command.partnerId(), message.getContent());
+    chatRoomReader.readExistingChatRoom(postId, command.senderId(), command.partnerId())
+        .ifPresent(chatRoomId -> {
+          ChatMessage message = chatMessageService.createSystemChatMessageProcess(of(chatRoomId, command.senderId(), command.body(), null));
+          publishSystemChatEvent(chatRoomId, "SYSTEM", command.senderId(), command.partnerId(), message.getContent());
+        });
   }
 
   @Transactional(readOnly = true)

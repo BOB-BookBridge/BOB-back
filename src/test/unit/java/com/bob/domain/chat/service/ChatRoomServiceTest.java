@@ -8,6 +8,7 @@ import static com.bob.support.fixture.command.CreateChatRoomCommandFixture.DEFAU
 import static com.bob.support.fixture.command.CreateChatRoomCommandFixture.DEFAULT_CREATE_CHAT_ROOM_COMMAND_WITH_FAR;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
+import static com.bob.support.fixture.domain.chat.ChatMessageFixture.DEFAULT_SYSTEM_CHAT_MESSAGE;
 import static com.bob.support.fixture.domain.chat.ChatMessageFixture.DEFAULT_TEXT_CHAT_MESSAGE;
 import static com.bob.support.fixture.domain.chat.ChatMessageFixture.WITH_IMAGE_CHAT_MESSAGE;
 import static com.bob.support.fixture.domain.chat.ChatRoomFixture.DEFAULT_CHAT_ROOM_1;
@@ -38,6 +39,7 @@ import com.bob.domain.chat.repository.ChatRoomRepository;
 import com.bob.domain.chat.service.dto.command.CreateChatMessageCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.CreateChatRoomMembersCommand;
+import com.bob.domain.chat.service.dto.command.CreateSystemMessageCommand;
 import com.bob.domain.chat.service.dto.command.EnterChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ExitChatRoomCommand;
 import com.bob.domain.chat.service.dto.command.ReEnterChatRoomCommand;
@@ -274,6 +276,38 @@ class ChatRoomServiceTest {
         .isInstanceOf(ApplicationException.class)
         .hasMessage(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM.getMessage());
 
+    then(chatMessageService).shouldHaveNoInteractions();
+    then(eventPublisher).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 시스템_채팅_생성() {
+    // given
+    CreateSystemMessageCommand command = CreateSystemMessageCommand.of("TRADE", "1", MEMBER_ID, OTHER_MEMBER_ID, "system message");
+    given(chatRoomReader.readExistingChatRoom(anyLong(), any(UUID.class), any(UUID.class)))
+        .willReturn(Optional.of(1L));
+    given(chatMessageService.createSystemChatMessageProcess(any(CreateChatMessageCommand.class)))
+        .willReturn(DEFAULT_SYSTEM_CHAT_MESSAGE());
+
+    // when
+    chatRoomService.createChatRoomSystemMessageProcess(command);
+
+    // then
+    then(chatMessageService).should(times(1)).createSystemChatMessageProcess(any());
+    then(eventPublisher).should(times(1)).publishEvent(any(NotiEvent.class));
+  }
+
+  @Test
+  void 시스템_채팅_생성_시_채팅방이_존재하지_않으면_아무_동작도_하지_않는다() {
+    // given
+    CreateSystemMessageCommand command = CreateSystemMessageCommand.of("TRADE", "1", MEMBER_ID, OTHER_MEMBER_ID, "system message");
+    given(chatRoomReader.readExistingChatRoom(anyLong(), any(UUID.class), any(UUID.class)))
+        .willReturn(Optional.empty());
+
+    // when
+    chatRoomService.createChatRoomSystemMessageProcess(command);
+
+    // then
     then(chatMessageService).shouldHaveNoInteractions();
     then(eventPublisher).shouldHaveNoInteractions();
   }

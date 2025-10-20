@@ -26,4 +26,14 @@ public class ChatMessageFixture {
         .type(ChatMessageType.MIX)
         .build();
   }
+
+  public static ChatMessage DEFAULT_SYSTEM_CHAT_MESSAGE() {
+    return ChatMessage.builder()
+        .id(1L)
+        .chatRoomId(1L)
+        .senderId(MEMBER_ID)
+        .content("system message")
+        .type(ChatMessageType.SYSTEM)
+        .build();
+  }
 }
