@@ -333,7 +333,7 @@ class ChatRoomServiceIntgTest extends TestContainerSupport {
   }
 
   private Trade createMockTrade(Long postId, UUID sellerId, UUID buyerId) {
-    Trade trade = Trade.create(postId, sellerId, buyerId);
+    Trade trade = Trade.create(postId, sellerId, buyerId, false);
     return tradeRepository.save(trade);
   }
 }
