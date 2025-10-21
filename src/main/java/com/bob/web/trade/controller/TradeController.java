@@ -6,6 +6,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
+import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
@@ -19,6 +20,7 @@ import com.bob.web.trade.request.ChangeTradeItemsRequest;
 import com.bob.web.trade.request.ChangeTradeStatusRequest;
 import com.bob.web.trade.request.CreateTradeRequest;
 import com.bob.web.trade.request.ReadTradesRequest;
+import com.bob.web.trade.response.ChangeTradeStatusResponse;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -68,13 +70,13 @@ public class TradeController {
   }
 
   @PatchMapping("/{tradeId}")
-  public CommonResponse<ResponseSymbol> handleModifyTradeStatus(
+  public ResponseEntity<ChangeTradeStatusResponse> handleModifyTradeStatus(
       @PathVariable Long tradeId,
       @Valid @RequestBody ChangeTradeStatusRequest request,
       @AuthenticationId UUID memberId
   ) {
-    modifyUseCase.changeTradeStatusProcess(request.toCommand(memberId, tradeId));
-    return new CommonResponse<>(true, UPDATED);
+    ChangeTradeStatusResult result = modifyUseCase.changeTradeStatusProcess(request.toCommand(memberId, tradeId));
+    return ResponseEntity.ok(ChangeTradeStatusResponse.of(result.chatroomId()));
   }
 
   @PatchMapping("/{tradeId}/items")

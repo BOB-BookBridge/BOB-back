@@ -46,6 +46,10 @@ public class TradeFixture {
     return TRADE(id, postId, Status.REQUESTED);
   }
 
+  public static Trade ACCEPTED_TRADE(Long id, Long postId) {
+    return TRADE(id, postId, Status.ACCEPTED);
+  }
+
   public static Trade RESERVED_TRADE(Long id, Long postId) {
     return TRADE(id, postId, Status.RESERVED);
   }

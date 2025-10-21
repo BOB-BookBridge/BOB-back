@@ -4,6 +4,7 @@ import com.bob.domain.trade.entity.Trade;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -30,4 +31,13 @@ public interface TradeRepository extends CrudRepository<Trade, Long>, CustomTrad
   Optional<Long> findIdByPostIdAndBuyerId(Long postId, UUID buyerId);
 
   List<Trade> findAllByBuyerIdAndPostIdIn(UUID buyerId, List<Long> postIds);
+
+  @Modifying(clearAutomatically = true)
+  @Query("""
+      UPDATE Trade t SET t.status = com.bob.domain.trade.entity.status.Status.CANCELED
+       WHERE t.postId = :postId
+         AND t.id <> :excludeId
+         AND t.status NOT IN (com.bob.domain.trade.entity.status.Status.CANCELED)
+      """)
+  void cancelOtherTrades(Long postId, Long excludeId);
 }

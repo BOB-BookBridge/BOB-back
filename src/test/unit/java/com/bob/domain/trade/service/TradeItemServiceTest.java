@@ -10,17 +10,22 @@ import static com.bob.support.fixture.domain.trade.TradeItemFixture.DEFAULT_TRAD
 import static com.bob.support.fixture.domain.trade.TradeItemFixture.DEFAULT_TRADE_SELLER_ITEM_2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import com.bob.domain.trade.entity.TradeItem;
 import com.bob.domain.trade.entity.type.Owner;
 import com.bob.domain.trade.repository.TradeItemRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.port.out.TradeMemberBookPort;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.global.exception.exceptions.ApplicationException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -43,6 +48,9 @@ class TradeItemServiceTest {
 
   @Mock
   TradeMemberPort memberPort;
+
+  @Mock
+  TradeMemberBookPort memberBookPort;
 
   @Test
   void 거래_물품_생성() {
@@ -157,5 +165,44 @@ class TradeItemServiceTest {
         .hasMessage(TRADE_ITEMS_UNCHANGED.getMessage());
 
     then(memberPort).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 특정_아이템_제외_usage_해제() {
+    // given
+    Long tradeId = 1L;
+    Long mainItemId = 2L;
+    List<Long> allItemIds = new ArrayList<>(List.of(1L, 2L, 3L));
+    given(tradeItemRepository.findItemIdsByTradeId(tradeId)).willReturn(allItemIds);
+
+    // when
+    tradeItemService.freeTraderItemsExcludeMainItem(tradeId, mainItemId);
+
+    // then
+    ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
+    then(tradeItemRepository).should(times(1)).findItemIdsByTradeId(tradeId);
+    then(memberBookPort).should(times(1)).freeUsage(captor.capture());
+
+    // 메인(2L) 제외한 [1,3] 해제
+    assertThat(captor.getValue()).containsExactlyInAnyOrder(1L, 3L);
+    then(memberBookPort).should(never()).remove(anyList());
+  }
+
+  @Test
+  void 모든_거래_아이템_삭제() {
+    // given
+    Long tradeId = 1L;
+    List<Long> allItemIds = List.of(1L, 2L, 3L);
+    given(tradeItemRepository.findItemIdsByTradeId(tradeId)).willReturn(allItemIds);
+
+    // when
+    tradeItemService.removeTraderItems(tradeId);
+
+    // then
+    ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
+    then(tradeItemRepository).should(times(1)).findItemIdsByTradeId(tradeId);
+    then(memberBookPort).should(times(1)).remove(captor.capture());
+    assertThat(captor.getValue()).containsExactlyInAnyOrder(1L, 2L, 3L);
+    then(memberBookPort).should(never()).freeUsage(anyList());
   }
 }

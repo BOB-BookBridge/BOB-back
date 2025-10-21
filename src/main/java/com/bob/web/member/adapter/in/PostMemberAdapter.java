@@ -1,8 +1,8 @@
 package com.bob.web.member.adapter.in;
 
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByUsageIdCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
-import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.usecase.MemberBookModifyUseCase;
@@ -40,6 +40,6 @@ public class PostMemberAdapter implements PostMemberPort {
 
   @Override
   public void removeMemberBookUsage(Long usageId) {
-    bookModifyUseCase.removeMemberBookUsageProcess(RemoveMemberBookUsageCommand.of(usageId));
+    bookModifyUseCase.freeMemberBookUsageByUsageIdProcess(FreeMemberBookUsageByUsageIdCommand.of(usageId));
   }
 }

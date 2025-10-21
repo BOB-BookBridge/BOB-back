@@ -39,7 +39,7 @@ public class PostResponseFixture {
     return PostDetailResponse.builder()
         .postId(postId)
         .sellerId(MEMBER_ID)
-        .sellerBookId(DEFAULT_MEMBER_BOOK.getId())
+        .sellerBookId(DEFAULT_MEMBER_BOOK().getId())
         .sellPrice(10000)
         .bookStatus("BEST")
         .postStatus("READY")

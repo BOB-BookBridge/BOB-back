@@ -10,8 +10,8 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByUsageIdCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
-import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.usecase.MemberBookModifyUseCase;
@@ -92,6 +92,6 @@ class PostMemberAdapterTest {
     postMemberAdapter.removeMemberBookUsage(usageId);
 
     // then
-    then(bookModifyUseCase).should(times(1)).removeMemberBookUsageProcess(any(RemoveMemberBookUsageCommand.class));
+    then(bookModifyUseCase).should(times(1)).freeMemberBookUsageByUsageIdProcess(any(FreeMemberBookUsageByUsageIdCommand.class));
   }
 }

@@ -30,5 +30,16 @@ public class BookResponseFixture {
       .pubDate(LocalDate.now())
       .build();
 
+  public static final BookResponse REMOVED_BOOK_RESPONSE = BookResponse.builder()
+      .id(5L)
+      .isbn13("9791168127012")
+      .title("파쇄")
+      .author("구병모")
+      .description("설명")
+      .priceStandard(16800)
+      .cover("https://image.url")
+      .pubDate(LocalDate.now())
+      .build();
+
   public static final List<BookResponse> DEFAULT_BOOK_RESPONSES = List.of(DEFAULT_BOOK_RESPONSE, SECOND_BOOK_RESPONSE);
 }

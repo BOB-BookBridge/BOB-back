@@ -6,10 +6,11 @@ import java.util.UUID;
 public record CreateTradeCommand(
     Long postId,
     UUID buyerId,
-    List<Long> itemIds
+    List<Long> itemIds,
+    boolean isFar
 ) {
 
-  public static CreateTradeCommand of(Long postId, UUID buyerId, List<Long> itemIds) {
-    return new CreateTradeCommand(postId, buyerId, itemIds);
+  public static CreateTradeCommand of(Long postId, UUID buyerId, List<Long> itemIds, boolean isFar) {
+    return new CreateTradeCommand(postId, buyerId, itemIds, isFar);
   }
 }

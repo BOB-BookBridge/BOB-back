@@ -8,6 +8,7 @@ import com.bob.domain.trade.entity.type.Owner;
 import com.bob.domain.trade.repository.TradeItemRepository;
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.port.out.TradeMemberBookPort;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
@@ -28,6 +29,7 @@ public class TradeItemService {
   private final TradeItemRepository tradeItemRepository;
 
   private final TradeMemberPort memberPort;
+  private final TradeMemberBookPort memberBookPort;
 
   @Transactional
   public void createTradeItemsProcess(CreateTradeItemsCommand command) {
@@ -69,17 +71,37 @@ public class TradeItemService {
 
   private void insertNewItems(UUID memberId, Long tradeId, Long postId, Owner owner, List<Long> current, List<Long> requested) {
     List<Long> toAdd = new ArrayList<>(requested);
+    memberPort.changeMemberBookUsage(memberId, postId, toAdd, false);
+
     toAdd.removeAll(current);
     List<TradeItem> newItems = toAdd.stream().distinct()
         .map(id -> TradeItem.create(tradeId, id, owner))
         .toList();
     tradeItemRepository.saveAll(newItems);
-    memberPort.changeMemberBookUsage(memberId, postId, toAdd, false);
   }
 
   private void verifyItemsChange(List<Long> origin, List<Long> other) {
     if (new HashSet<>(origin).equals(new HashSet<>(other))) {
       throw new ApplicationException(ApplicationError.TRADE_ITEMS_UNCHANGED);
     }
+  }
+
+  @Transactional
+  public void freeTraderItemsExcludeMainItem(Long tradeId, Long mainItemId) {
+    List<Long> itemIds = tradeItemRepository.findItemIdsByTradeId(tradeId);
+    itemIds.remove(mainItemId);
+    memberBookPort.freeUsage(itemIds);
+  }
+
+  @Transactional
+  public void freeOtherTraderItems(Long postId, Long tradeId, Long mainItemId) {
+    List<Long> itemIds = tradeItemRepository.findItemIdsExcludeMainItemByPost(postId, tradeId, mainItemId);
+    memberBookPort.freeUsage(itemIds);
+  }
+
+  @Transactional
+  public void removeTraderItems(Long tradeId) {
+    List<Long> itemIds = tradeItemRepository.findItemIdsByTradeId(tradeId);
+    memberBookPort.remove(itemIds);
   }
 }

@@ -15,8 +15,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
+import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
+import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
@@ -116,9 +118,12 @@ class TradeControllerTest {
     String json = """
         {
           "buyerId": "00000000-0000-0000-0000-000000000000",
-          "status": "RESERVED"
+          "status": "RESERVED",
+          "reason": null
         }
         """;
+    ChangeTradeStatusResult result = ChangeTradeStatusResult.of(1L);
+    given(modifyUseCase.changeTradeStatusProcess(any(ChangeTradeStatusCommand.class))).willReturn(result);
 
     // when & then
     mvc.perform(patch("/trades/{tradeId}", tradeId)
@@ -126,8 +131,8 @@ class TradeControllerTest {
             .content(json)
             .requestAttr("memberId", MEMBER_ID))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.result").value("UPDATED"));
+        .andExpect(jsonPath("$.chatroomId").value(result.chatroomId()));
+
     // then
     verify(modifyUseCase, times(1)).changeTradeStatusProcess(any());
   }

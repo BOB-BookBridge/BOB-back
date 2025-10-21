@@ -1,7 +1,10 @@
 package com.bob.domain.trade.service;
 
+import static com.bob.domain.trade.entity.status.Status.ACCEPTED;
 import static com.bob.domain.trade.entity.status.Status.CANCELED;
+import static com.bob.domain.trade.entity.status.Status.COMPLETED;
 import static com.bob.domain.trade.entity.status.Status.REQUESTED;
+import static com.bob.domain.trade.entity.status.Status.RESERVED;
 import static com.bob.domain.trade.entity.status.Status.valueOf;
 import static com.bob.domain.trade.entity.type.Owner.BUYER;
 import static com.bob.domain.trade.entity.type.Owner.SELLER;
@@ -16,8 +19,11 @@ import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.MAIN_TRADE_ITEM_CONTAINED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_ABORTED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_COMPLETED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_NOT_CHANGEABLE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
 import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
 import static java.time.LocalDateTime.now;
@@ -35,6 +41,7 @@ import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
+import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
@@ -45,6 +52,7 @@ import com.bob.domain.trade.service.dto.response.internal.TradeItemSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
+import com.bob.domain.trade.service.port.out.TradeChatPort;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.port.view.TradeItemView;
@@ -77,6 +85,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
 
   private final TradeMemberPort memberPort;
   private final TradePostPort postPort;
+  private final TradeChatPort chatPort;
 
   private final ApplicationEventPublisher eventPublisher;
 
@@ -89,7 +98,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     return tradeRepository.findIdByPostIdAndBuyerId(post.id(), command.buyerId())
         .map(CreateTradeResponse::of)
         .orElseGet(() -> {
-          Trade trade = tradeRepository.save(Trade.create(command.postId(), post.sellerId(), command.buyerId()));
+          Trade trade = tradeRepository.save(Trade.create(command.postId(), post.sellerId(), command.buyerId(), command.isFar()));
           registerTradeItem(command, trade.getId(), post.sellerBookId());
 
           TradeMemberSummary buyer = TradeMemberSummary.from(memberPort.readTradeMemberProfile(command.buyerId()));
@@ -114,7 +123,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   @Transactional(readOnly = true)
   public PostTradesResponse readPostTradesProcess(ReadPostTradesQuery query) {
     UUID ownerId = postPort.readTradePostSummary(query.postId()).sellerId();
-    verifyTradeOwner(ownerId, query.memberId());
+    verifyTradeOwner(ownerId, query.memberId(), null);
     // TODO : 배치 조회 변경 필요
     return PostTradesResponse.of(tradeReader.readTradesByPostId(query.postId()).stream()
         .map(trade -> PostTradeSummary.from(trade, from(memberPort.readTradeMemberProfile(trade.getBuyerId()))))
@@ -168,22 +177,85 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   }
 
   @Transactional
-  public void changeTradeStatusProcess(ChangeTradeStatusCommand command) {
+  public ChangeTradeStatusResult changeTradeStatusProcess(ChangeTradeStatusCommand command) {
     Trade trade = tradeReader.readTradeById(command.tradeId());
+    Status status = valueOf(command.status());
     TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
-    verifyTradeOwner(post.sellerId(), command.memberId());
-    verifyRequestedOnly(trade.getId(), trade.getPostId(), command.status());
 
-    final Status status = valueOf(command.status());
-    verifyIsSameRequest(trade.getStatus(), status);
+    verifyTradeParticipate(trade, command.memberId());
+    verifyTradeOwner(post.sellerId(), command.memberId(), status);
+    verifyTradeChangeable(trade.getStatus(), status);
+    verifyPostRequested(trade.getId(), trade.getPostId(), command.status());
+    Long chatroomId = changeStatus(trade, status, post);
+
+    String notificationBody = buildChangeStatusNotificationBody(post.title(), status, command.reason());
+    UUID senderId = command.memberId();
+    UUID receiverId = Objects.equals(senderId, trade.getSellerId()) ? trade.getBuyerId() : trade.getSellerId();
+    sendTradeNotification(post, senderId, receiverId, notificationBody);
+
+    if(status.isProcessed() || status.isAborted()) {
+      String chatMessageBody = buildChangeStatusChatMessageBody(status, command.reason());
+      publishSystemMessageEvent(post, senderId, receiverId, chatMessageBody);
+    }
+    return ChangeTradeStatusResult.of(chatroomId);
+  }
+
+  private Long changeStatus(Trade trade, Status status, TradePostSummary post) {
+    return switch (status) {
+      case CANCELED, REJECTED -> onAborted(trade, status, post);
+      case ACCEPTED -> onAccepted(trade);
+      case RESERVED -> onReserved(trade);
+      case COMPLETED -> onCompleted(trade, post);
+      default -> null;
+    };
+  }
+
+  private Long onAborted(Trade trade, Status status, TradePostSummary post) {
+    changePostTradeProgressIfReserved(trade);
     trade.updateTradeStatus(status, now());
-    // TODO: 거래 완료 시 게시글에 관련된 모든 거래 CANCELED 로 변경
-    postPort.changeTradeProgress(trade.getPostId(), status.toPostStatusValue());
+    tradeItemService.freeTraderItemsExcludeMainItem(trade.getId(), post.sellerBookId());
+    return null;
+  }
 
-    final String notificationBody = buildChangeStatusNotificationBody(post.title(), status, command.reason());
-    final String chatMessageBody = buildChangeStatusChatMessageBody(status, command.reason());
-    sendTradeNotification(post, trade.getSellerId(), trade.getBuyerId(), notificationBody);
-    publishSystemMessageEvent(post, command.memberId(), trade.getBuyerId(), chatMessageBody);
+  private Long onAccepted(Trade trade) {
+    changePostTradeProgressIfReserved(trade);
+    trade.updateTradeStatus(ACCEPTED, now());
+    return chatPort.create(trade.getPostId(), trade.getId(), trade.getBuyerId(), trade.isFar());
+  }
+
+  private Long onReserved(Trade trade) {
+    trade.updateTradeStatus(RESERVED, now());
+    postPort.changeTradeProgress(trade.getPostId(), RESERVED.toPostStatusValue());
+    return null;
+  }
+
+  private Long onCompleted(Trade trade, TradePostSummary post) {
+    trade.updateTradeStatus(COMPLETED, now());
+    tradeRepository.cancelOtherTrades(trade.getPostId(), trade.getId());
+    tradeItemService.freeOtherTraderItems(trade.getPostId(), trade.getId(), post.sellerBookId());
+    tradeItemService.freeTraderItemsExcludeMainItem(trade.getId(), post.sellerBookId());
+    tradeItemService.removeTraderItems(trade.getId());
+    postPort.changeTradeProgress(trade.getPostId(), COMPLETED.toPostStatusValue());
+    return null;
+  }
+
+  private static void verifyTradeChangeable(Status current, Status request) {
+    if (current == request)
+      throw new ApplicationException(TRADE_STATUS_UNCHANGED);
+
+    if (current == COMPLETED)
+      throw new ApplicationException(TRADE_ALREADY_COMPLETED);
+
+    if (request == REQUESTED)
+      throw new ApplicationException(TRADE_STATUS_NOT_CHANGEABLE);
+
+    if (request == ACCEPTED && current.isAborted())
+      throw new ApplicationException(TRADE_ALREADY_ABORTED);
+  }
+
+  private void changePostTradeProgressIfReserved(Trade trade) {
+    if (trade.getStatus() == RESERVED)
+      postPort.changeTradeProgress(trade.getPostId(), REQUESTED.toPostStatusValue());
   }
 
   @Transactional
@@ -196,9 +268,9 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     verifyTradeMainItemContains(command.itemIds(), post.sellerBookId());
 
     Owner owner = trade.getBuyerId().equals(command.memberId()) ? BUYER : SELLER;
-    tradeItemService.changeTradeItemsProcess(command, post.id(), owner);
     if (trade.getStatus().isAborted())
       trade.updateTradeStatus(REQUESTED, now());
+    tradeItemService.changeTradeItemsProcess(command, post.id(), owner);
 
     final String messageBody = CHANGED_TRADE_ITEM_CHAT.format();
     UUID receiverId = owner == SELLER ? trade.getBuyerId() : trade.getSellerId();
@@ -216,6 +288,9 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   private void verifyTradePostAccessible(String postStatus) {
     if (Objects.equals(postStatus, "REMOVED"))
       throw new ApplicationException(TRADE_POST_REMOVED);
+
+    if (Objects.equals(postStatus, "COMPLETED"))
+      throw new ApplicationException(TRADE_ALREADY_PROCESSED);
   }
 
   private void verifyTradeItemChangeable(Status status) {
@@ -228,13 +303,13 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
       throw new ApplicationException(MAIN_TRADE_ITEM_CONTAINED);
   }
 
-  private static void verifyTradeOwner(UUID ownerId, UUID memberId) {
-    if (!ownerId.equals(memberId))
+  private static void verifyTradeOwner(UUID ownerId, UUID requesterId, Status status) {
+    if (status != CANCELED && !ownerId.equals(requesterId))
       throw new ApplicationException(TRADE_ACCESS_DENIED);
   }
 
-  private void verifyRequestedOnly(Long requestId, Long postId, String status) {
-    if (valueOf(status) == CANCELED || valueOf(status) == REQUESTED)
+  private void verifyPostRequested(Long requestId, Long postId, String status) {
+    if (!valueOf(status).isProcessed())
       return;
 
     tradeReader.readTradesByPostId(postId).stream()
@@ -242,11 +317,6 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
         .filter(t -> t.getStatus().isProcessed())
         .findAny()
         .ifPresent(t -> { throw new ApplicationException(TRADE_ALREADY_PROCESSED); });
-  }
-
-  private static void verifyIsSameRequest(Status s1, Status s2) {
-    if (s1 == s2)
-      throw new ApplicationException(TRADE_STATUS_UNCHANGED);
   }
 
   private void sendTradeNotification(TradePostSummary post, UUID senderId, UUID receiverId, String body) {
@@ -274,6 +344,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
           : STATUS_CHANGED_CHAT.format(CANCELED.value());
     return STATUS_CHANGED_CHAT.format(status.value());
   }
+
   private static String normalizeReason(String reason) {
     if (reason == null || reason.trim().isEmpty())
       return null;

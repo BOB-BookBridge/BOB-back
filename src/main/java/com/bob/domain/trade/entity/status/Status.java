@@ -29,7 +29,7 @@ public enum Status {
   }
 
   public boolean isAborted() {
-    return this == Status.REJECTED || this == Status.CANCELED;
+    return this == REJECTED || this == CANCELED;
   }
 
   public String toPostStatusValue() {

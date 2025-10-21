@@ -28,6 +28,7 @@ import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
+import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
@@ -104,8 +105,8 @@ class TradeServiceIntgTest extends TestContainerSupport {
   void 거래_생성() {
     // given
     Long postId = 2L;
-    List<Long> requestItemIds = List.of(10L, 11L);
-    CreateTradeCommand command = CreateTradeCommand.of(postId, buyerId1, requestItemIds);
+    List<Long> requestItemIds = List.of(2L, 3L);
+    CreateTradeCommand command = CreateTradeCommand.of(postId, buyerId1, requestItemIds, false);
 
     // when
     CreateTradeResponse response = tradeService.createTradeProcess(command);
@@ -121,7 +122,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     assertThat(saved.getStatus()).isEqualTo(REQUESTED);
 
     List<Long> itemIds = tradeItemService.readTradeItemIdsProcess(saved.getId(), BUYER);
-    assertThat(itemIds).containsExactlyInAnyOrder(10L, 11L);
+    assertThat(itemIds).containsExactlyInAnyOrder(2L, 3L);
   }
 
   @Test
@@ -236,10 +237,27 @@ class TradeServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  void 거래_상태_변경() {
+  void 거래_상태_변경_수락() {
     // given
+    tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now())); // 예약 상태 제거
+    chatRoomRepository.deleteAll(); // 수락 시 채팅방 생성 검증을 위한 채팅방 제거
     Trade trade = testTrade;
+    ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "ACCEPTED", null);
+
+    // when
+    ChangeTradeStatusResult result = tradeService.changeTradeStatusProcess(command);
+
+    // then
+    Trade updated = tradeRepository.findById(trade.getId()).orElseThrow();
+    assertThat(updated.getStatus()).isEqualTo(Status.ACCEPTED);
+    assertThat(result.chatroomId()).isNotNull();
+  }
+
+  @Test
+  void 거래_상태_변경_예약() {
+    // given
     tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now())); // 대기 상태로 변경
+    Trade trade = testTrade;
     given(chatRoomReader.readExistingChatRoom(postId, sellerId, buyerId1)).willReturn(Optional.of(chatRoom.getId()));
     ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "RESERVED", null);
 
@@ -249,6 +267,27 @@ class TradeServiceIntgTest extends TestContainerSupport {
     // then
     Trade updatedTrade = tradeRepository.findById(trade.getId()).orElseThrow();
     assertThat(updatedTrade.getStatus()).isEqualTo(RESERVED);
+  }
+
+  @Test
+  void 거래_상태_변경_완료() {
+    // given
+    tradeRepository.findAllByPostId(postId).forEach(t -> t.updateTradeStatus(REQUESTED, now())); // setup 예약상태 제거
+    Trade trade = testTrade;
+    ChangeTradeStatusCommand command = new ChangeTradeStatusCommand(sellerId, trade.getId(), "COMPLETED", null);
+
+    // when
+    ChangeTradeStatusResult result = tradeService.changeTradeStatusProcess(command);
+
+    // then
+    Trade updated = tradeRepository.findById(trade.getId()).orElseThrow();
+    assertThat(updated.getStatus()).isEqualTo(COMPLETED);
+    assertThat(result.chatroomId()).isNull();
+
+    List<Trade> otherTrades = tradeRepository.findAllByPostId(postId);
+    otherTrades.stream()
+        .filter(t -> !t.getId().equals(trade.getId()))
+        .forEach(t -> assertThat(t.getStatus()).isEqualTo(CANCELED));
   }
 
   @Test

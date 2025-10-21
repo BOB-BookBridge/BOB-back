@@ -3,10 +3,13 @@ package com.bob.domain.member.service;
 import com.bob.domain.book.service.dto.response.BookResponse;
 import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.repository.MemberBookRepository;
+import com.bob.domain.member.service.dto.command.AllocateMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByIdsCommand;
+import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByUsageIdCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
-import com.bob.domain.member.service.dto.command.RemoveMemberBookUsageCommand;
+import com.bob.domain.member.service.dto.command.RemoveMemberBooksCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
@@ -69,37 +72,63 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     return summaries;
   }
 
+  // TODO : 할당, 해제 분리
   @Transactional
   public void changeMemberBookUsageProcess(ChangeMemberBookUsageCommand command) {
     List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.memberBookIds());
-    verifyMemberBookOwner(command.memberId(), memberBooks);
+    verifyMemberBookOwner(command.memberId(), command.memberBookIds(), memberBooks);
     if (!command.release())
       allocate(memberBooks, command.usageId());
     else
       memberBooks.forEach(mb -> mb.updateUsageId(null));
   }
 
-  private static void verifyMemberBookOwner(UUID memberId, List<MemberBook> memberBooks) {
-    boolean isOwner = memberBooks.stream().allMatch(mb -> Objects.equals(mb.getMemberId(), memberId));
-    if (!isOwner)
-      throw new ApplicationException(ApplicationError.MEMBER_BOOK_ACCESS_DENIED);
+  @Transactional
+  public void allocateMemberBookUsageProcess(AllocateMemberBookUsageCommand command) {
+    List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.ids());
+    allocate(memberBooks, command.usageId());
   }
 
   private void allocate(List<MemberBook> memberBooks, Long usageId) {
+    verifyMemberBookAvailable(memberBooks);
+    verifyMemberBookIsFree(memberBooks, usageId);
+    memberBooks.stream()
+        .filter(mb -> !Objects.equals(mb.getUsageId(), usageId))
+        .forEach(mb -> mb.updateUsageId(usageId));
+  }
+
+  private static void verifyMemberBookOwner(UUID memberId, List<Long> requestIds, List<MemberBook> memberBooks) {
+    boolean isOwner = memberBooks.stream().allMatch(mb -> Objects.equals(mb.getMemberId(), memberId));
+    if (!isOwner || requestIds.size() != memberBooks.size())
+      throw new ApplicationException(ApplicationError.MEMBER_BOOK_ACCESS_DENIED);
+  }
+
+  private void verifyMemberBookAvailable(List<MemberBook> memberBooks) {
+    memberBooks.stream()
+        .filter(MemberBook::isRemove)
+        .findFirst().ifPresent(mb -> {
+          BookResponse book = bookPort.readBookSummary(mb.getBookId());
+          throw new ApplicationException(ApplicationError.MEMBER_BOOK_UNAVAILABLE, book.title());
+        });
+  }
+
+  private void verifyMemberBookIsFree(List<MemberBook> memberBooks, Long usageId) {
     memberBooks.stream()
         .filter(mb -> mb.getUsageId() != null && !Objects.equals(mb.getUsageId(), usageId))
         .findFirst().ifPresent(mb -> {
           BookResponse book = bookPort.readBookSummary(mb.getBookId());
           throw new ApplicationException(ApplicationError.MEMBER_BOOK_ALREADY_USE, mb.getUsageId(), book.title());
         });
-    memberBooks.stream()
-        .filter(mb -> !Objects.equals(mb.getUsageId(), usageId))
-        .forEach(mb -> mb.updateUsageId(usageId));
   }
 
   @Transactional
-  public void removeMemberBookUsageProcess(RemoveMemberBookUsageCommand command) {
-    memberBookRepository.clearUsageId(command.usageId());
+  public void freeMemberBookUsageByIdsProcess(FreeMemberBookUsageByIdsCommand command) {
+    memberBookRepository.freeUsageByIdIn(command.ids());
+  }
+
+  @Transactional
+  public void freeMemberBookUsageByUsageIdProcess(FreeMemberBookUsageByUsageIdCommand command) {
+    memberBookRepository.freeUsageByUsageId(command.usageId());
   }
 
   @Transactional
@@ -111,5 +140,11 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     if (!memberBook.isRemovable())
       throw new ApplicationException(ApplicationError.UNREMOVABLE_MEMBER_BOOK, memberBook.getUsageId());
     memberBook.remove();
+  }
+
+  @Transactional
+  public void removeMemberBooksProcess(RemoveMemberBooksCommand command) {
+    List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.ids());
+    memberBooks.forEach(MemberBook::remove);
   }
 }

@@ -6,8 +6,11 @@ import static com.bob.domain.trade.entity.type.Owner.SELLER;
 import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.MAIN_TRADE_ITEM_CONTAINED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_ABORTED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_COMPLETED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_NOT_CHANGEABLE;
 import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND;
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND_WITH_REASON;
@@ -15,6 +18,9 @@ import static com.bob.support.fixture.command.CreateTradeCommandFixture.DEFAULT_
 import static com.bob.support.fixture.command.CreateTradeCommandFixture.SAME_MEMBER_CREATE_TRADE_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
+import static com.bob.support.fixture.domain.TradeFixture.ACCEPTED_TRADE;
+import static com.bob.support.fixture.domain.TradeFixture.CANCELED_TRADE;
+import static com.bob.support.fixture.domain.TradeFixture.COMPLETED_TRADE;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADES;
 import static com.bob.support.fixture.domain.TradeFixture.DEFAULT_TRADE_WITH_ID;
 import static com.bob.support.fixture.domain.TradeFixture.REQUESTED_TRADE;
@@ -48,11 +54,13 @@ import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.query.SearchKey;
+import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
+import com.bob.domain.trade.service.port.out.TradeChatPort;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
@@ -95,6 +103,9 @@ class TradeServiceTest {
 
   @Mock
   private TradePostPort postPort;
+
+  @Mock
+  private TradeChatPort chatPort;
 
   @Mock
   private ApplicationEventPublisher eventPublisher;
@@ -319,19 +330,19 @@ class TradeServiceTest {
   @Test
   void 거래_상태_변경() {
     // given
-    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("ACCEPTED");
     Trade requestTrade = REQUESTED_TRADE(1L, 1L);
     given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
     given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
-    given(tradeReader.readTradesByPostId(requestTrade.getPostId())).willReturn(List.of(REQUESTED_TRADE(1L, 1L), REQUESTED_TRADE(2L, 1L))); // 대기중인 거래만 존재
+    given(chatPort.create(requestTrade.getId(), requestTrade.getPostId(), requestTrade.getBuyerId(), requestTrade.isFar())).willReturn(1L);
 
     // when
-    tradeService.changeTradeStatusProcess(command);
+    ChangeTradeStatusResult result = tradeService.changeTradeStatusProcess(command);
 
     // then
+    assertThat(result.chatroomId()).isEqualTo(1L);
     then(tradeReader).should().readTradeById(command.tradeId());
     then(postPort).should().readTradePostSummary(requestTrade.getPostId());
-    then(postPort).should().changeTradeProgress(requestTrade.getPostId(), "IN_PROGRESS");
   }
 
   @Test
@@ -361,22 +372,41 @@ class TradeServiceTest {
   }
 
   @Test
-  void 거래_상태_변경_시_이미_진행되는_다른_거래가_있다면_예외가_발생한다() {
+  void 거래_상태_변경_예약에서_이하_단계로_변경하면_게시글_거래_진행_상태_READY로_변경() {
     // given
-    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
-    Trade requestTrade = REQUESTED_TRADE(1L, 1L);
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("ACCEPTED");
+    Trade reserved = RESERVED_TRADE(1L, 1L);
 
-    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
-    given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
-    given(tradeReader.readTradesByPostId(requestTrade.getPostId())).willReturn(DEFAULT_TRADES()); // 예약된 거래 존재
+    given(tradeReader.readTradeById(command.tradeId())).willReturn(reserved);
+    given(postPort.readTradePostSummary(reserved.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
 
-    // when & then
-    assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
-        .isInstanceOf(ApplicationException.class)
-        .hasMessageContaining(TRADE_ALREADY_PROCESSED.getMessage());
+    // when
+    ChangeTradeStatusResult result = tradeService.changeTradeStatusProcess(command);
 
-    then(tradeReader).should().readTradeById(command.tradeId());
-    then(tradeReader).should().readTradesByPostId(requestTrade.getPostId());
+    // then
+    then(postPort).should().changeTradeProgress(reserved.getPostId(), "READY");
+  }
+
+  @Test
+  void 거래_상태_변경_완료시_게시글_연관_타_거래_취소_및_거래_아이템_후처리() {
+    // given
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("COMPLETED");
+    Trade reservedTrade = RESERVED_TRADE(1L, 1L);
+
+    given(tradeReader.readTradeById(command.tradeId())).willReturn(reservedTrade);
+    given(postPort.readTradePostSummary(reservedTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+    given(tradeReader.readTradesByPostId(reservedTrade.getPostId())).willReturn(List.of(reservedTrade));
+
+    // when
+    ChangeTradeStatusResult result = tradeService.changeTradeStatusProcess(command);
+
+    // then
+    assertThat(result.chatroomId()).isNull();
+    then(tradeRepository).should().cancelOtherTrades(reservedTrade.getPostId(), reservedTrade.getId());
+    then(tradeItemService).should().freeTraderItemsExcludeMainItem(reservedTrade.getId(), 1L);
+    then(tradeItemService).should().removeTraderItems(reservedTrade.getId());
+    then(postPort).should().changeTradeProgress(reservedTrade.getId(), "COMPLETED");
+    then(chatPort).shouldHaveNoInteractions();
   }
 
   @Test
@@ -413,6 +443,76 @@ class TradeServiceTest {
 
     then(tradeReader).should().readTradeById(command.tradeId());
     then(postPort).should().readTradePostSummary(requestTrade.getPostId());
+  }
+
+  @Test
+  void 거래_상태_변경_시_이미_완료된_거래라면_예외가_발생한다() {
+    // given
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("CANCELED");
+    Trade completed = COMPLETED_TRADE(1L, 1L);
+
+    given(tradeReader.readTradeById(command.tradeId())).willReturn(completed);
+    given(postPort.readTradePostSummary(completed.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(TRADE_ALREADY_COMPLETED.getMessage());
+
+    then(tradeReader).should().readTradeById(command.tradeId());
+    then(postPort).should().readTradePostSummary(completed.getPostId());
+  }
+
+  @Test
+  void 거래_상태_변경_시_요청_상태로_변경을_요청하면_예외가_발생한다() {
+    // given
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("REQUESTED");
+    Trade accepted = ACCEPTED_TRADE(1L, 1L);
+
+    given(tradeReader.readTradeById(command.tradeId())).willReturn(accepted);
+    given(postPort.readTradePostSummary(accepted.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(TRADE_STATUS_NOT_CHANGEABLE.getMessage());
+
+    then(tradeReader).should().readTradeById(command.tradeId());
+    then(postPort).should().readTradePostSummary(accepted.getPostId());
+  }
+
+  @Test
+  void 거래_상태_변경_시_중단된_거래라면_예외가_발생한다() {
+    // given
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("ACCEPTED");
+    Trade canceled = CANCELED_TRADE(1L, 1L);
+
+    given(tradeReader.readTradeById(command.tradeId())).willReturn(canceled);
+    given(postPort.readTradePostSummary(canceled.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(TRADE_ALREADY_ABORTED.getMessage());
+  }
+
+  @Test
+  void 거래_상태_변경_시_이미_진행되는_다른_거래가_있다면_예외가_발생한다() {
+    // given
+    ChangeTradeStatusCommand command = DEFAULT_CHANGE_STATUS_COMMAND("RESERVED");
+    Trade requestTrade = REQUESTED_TRADE(1L, 1L);
+
+    given(postPort.readTradePostSummary(requestTrade.getPostId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+    given(tradeReader.readTradeById(command.tradeId())).willReturn(requestTrade);
+    given(tradeReader.readTradesByPostId(requestTrade.getPostId())).willReturn(DEFAULT_TRADES()); // 예약된 거래 존재
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.changeTradeStatusProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessageContaining(TRADE_ALREADY_PROCESSED.getMessage());
+
+    then(tradeReader).should().readTradeById(command.tradeId());
+    then(tradeReader).should().readTradesByPostId(requestTrade.getPostId());
   }
 
   @Test
