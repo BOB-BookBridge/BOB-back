@@ -182,6 +182,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     Status status = valueOf(command.status());
     TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
 
+    verifyTradeParticipate(trade, command.memberId());
     verifyTradeOwner(post.sellerId(), command.memberId(), status);
     verifyTradeChangeable(trade.getStatus(), status);
     verifyPostRequested(trade.getId(), trade.getPostId(), command.status());
@@ -189,7 +190,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
 
     String notificationBody = buildChangeStatusNotificationBody(post.title(), status, command.reason());
     UUID senderId = command.memberId();
-    UUID receiverId = senderId == trade.getSellerId() ? trade.getBuyerId(): trade.getSellerId();
+    UUID receiverId = Objects.equals(senderId, trade.getSellerId()) ? trade.getBuyerId() : trade.getSellerId();
     sendTradeNotification(post, senderId, receiverId, notificationBody);
 
     if(status.isProcessed() || status.isAborted()) {
@@ -231,6 +232,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   private Long onCompleted(Trade trade, TradePostSummary post) {
     trade.updateTradeStatus(COMPLETED, now());
     tradeRepository.cancelOtherTrades(trade.getPostId(), trade.getId());
+    tradeItemService.freeOtherTraderItems(trade.getPostId(), trade.getId(), post.sellerBookId());
     tradeItemService.freeTraderItemsExcludeMainItem(trade.getId(), post.sellerBookId());
     tradeItemService.removeTraderItems(trade.getId());
     postPort.changeTradeProgress(trade.getPostId(), COMPLETED.toPostStatusValue());

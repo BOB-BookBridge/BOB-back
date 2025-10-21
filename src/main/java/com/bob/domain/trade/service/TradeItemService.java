@@ -71,12 +71,13 @@ public class TradeItemService {
 
   private void insertNewItems(UUID memberId, Long tradeId, Long postId, Owner owner, List<Long> current, List<Long> requested) {
     List<Long> toAdd = new ArrayList<>(requested);
+    memberPort.changeMemberBookUsage(memberId, postId, toAdd, false);
+
     toAdd.removeAll(current);
     List<TradeItem> newItems = toAdd.stream().distinct()
         .map(id -> TradeItem.create(tradeId, id, owner))
         .toList();
     tradeItemRepository.saveAll(newItems);
-    memberPort.changeMemberBookUsage(memberId, postId, toAdd, false);
   }
 
   private void verifyItemsChange(List<Long> origin, List<Long> other) {
@@ -89,6 +90,12 @@ public class TradeItemService {
   public void freeTraderItemsExcludeMainItem(Long tradeId, Long mainItemId) {
     List<Long> itemIds = tradeItemRepository.findItemIdsByTradeId(tradeId);
     itemIds.remove(mainItemId);
+    memberBookPort.freeUsage(itemIds);
+  }
+
+  @Transactional
+  public void freeOtherTraderItems(Long postId, Long tradeId, Long mainItemId) {
+    List<Long> itemIds = tradeItemRepository.findItemIdsExcludeMainItemByPost(postId, tradeId, mainItemId);
     memberBookPort.freeUsage(itemIds);
   }
 

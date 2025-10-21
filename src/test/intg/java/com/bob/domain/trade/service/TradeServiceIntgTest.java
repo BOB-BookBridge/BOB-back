@@ -105,7 +105,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
   void 거래_생성() {
     // given
     Long postId = 2L;
-    List<Long> requestItemIds = List.of(10L, 11L);
+    List<Long> requestItemIds = List.of(2L, 3L);
     CreateTradeCommand command = CreateTradeCommand.of(postId, buyerId1, requestItemIds, false);
 
     // when
@@ -122,7 +122,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
     assertThat(saved.getStatus()).isEqualTo(REQUESTED);
 
     List<Long> itemIds = tradeItemService.readTradeItemIdsProcess(saved.getId(), BUYER);
-    assertThat(itemIds).containsExactlyInAnyOrder(10L, 11L);
+    assertThat(itemIds).containsExactlyInAnyOrder(2L, 3L);
   }
 
   @Test
