@@ -266,9 +266,9 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     verifyTradeMainItemContains(command.itemIds(), post.sellerBookId());
 
     Owner owner = trade.getBuyerId().equals(command.memberId()) ? BUYER : SELLER;
-    tradeItemService.changeTradeItemsProcess(command, post.id(), owner);
     if (trade.getStatus().isAborted())
       trade.updateTradeStatus(REQUESTED, now());
+    tradeItemService.changeTradeItemsProcess(command, post.id(), owner);
 
     final String messageBody = CHANGED_TRADE_ITEM_CHAT.format();
     UUID receiverId = owner == SELLER ? trade.getBuyerId() : trade.getSellerId();

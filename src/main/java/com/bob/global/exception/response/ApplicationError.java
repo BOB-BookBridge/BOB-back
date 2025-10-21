@@ -30,6 +30,7 @@ public enum ApplicationError {
   UNREMOVABLE_MEMBER_BOOK("E106", "교환 물품으로 사용되는 책은 삭제할 수 없습니다. 교환 게시글: [#%d]", HttpStatus.CONFLICT),
   MEMBER_BOOK_ALREADY_USE("E107", "교환 물품으로 사용되는 책이 포함되어 있습니다. 교환 게시글: [#%d], 책: [%s]", HttpStatus.CONFLICT),
   MEMBER_BOOK_ACCESS_DENIED("E108", "다른 사용자의 도서는 사용할 수 없습니다.", HttpStatus.BAD_REQUEST),
+  MEMBER_BOOK_UNAVAILABLE("E109", "사용할 수 없는 책이 포함되어 있습니다. 책: [%s] ", HttpStatus.BAD_REQUEST),
 
   EXPIRED_MAIL_CODE("E111", "인증 코드가 만료되었습니다.", HttpStatus.GONE),
   INVALID_MAIL_CODE("E112", "입력하신 인증 코드가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),

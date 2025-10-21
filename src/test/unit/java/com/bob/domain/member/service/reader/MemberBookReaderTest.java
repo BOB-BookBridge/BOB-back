@@ -35,8 +35,8 @@ class MemberBookReaderTest {
   void 회원_책_목록_조회() {
     // given
     UUID memberId = UUID.randomUUID();
-    MemberBook mb1 = DEFAULT_MEMBER_BOOK;
-    MemberBook mb2 = NEW_MEMBER_BOOK;
+    MemberBook mb1 = DEFAULT_MEMBER_BOOK();
+    MemberBook mb2 = NEW_MEMBER_BOOK();
     List<MemberBook> expected = List.of(mb1, mb2);
     given(repository.findByMemberId(memberId)).willReturn(expected);
 
@@ -66,8 +66,8 @@ class MemberBookReaderTest {
   void 회원_책_ID_목록_기반_목록_조회() {
     // given
     List<Long> bookIds = List.of(1L, 2L);
-    MemberBook mb1 = DEFAULT_MEMBER_BOOK;
-    MemberBook mb2 = NEW_MEMBER_BOOK;
+    MemberBook mb1 = DEFAULT_MEMBER_BOOK();
+    MemberBook mb2 = NEW_MEMBER_BOOK();
     List<MemberBook> expected = List.of(mb1, mb2);
     given(repository.findAllByIdIn(bookIds)).willReturn(expected);
 
@@ -83,7 +83,7 @@ class MemberBookReaderTest {
   void 회원_책_ID_기반_단건_조회() {
     // given
     Long id = 1L;
-    MemberBook mb = DEFAULT_MEMBER_BOOK;
+    MemberBook mb = DEFAULT_MEMBER_BOOK();
     given(repository.findById(id)).willReturn(Optional.of(mb));
 
     // when

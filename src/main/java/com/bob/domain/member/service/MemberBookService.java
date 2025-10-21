@@ -76,7 +76,7 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   @Transactional
   public void changeMemberBookUsageProcess(ChangeMemberBookUsageCommand command) {
     List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.memberBookIds());
-    verifyMemberBookOwner(command.memberId(), memberBooks);
+    verifyMemberBookOwner(command.memberId(), command.memberBookIds(), memberBooks);
     if (!command.release())
       allocate(memberBooks, command.usageId());
     else
@@ -89,22 +89,36 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
     allocate(memberBooks, command.usageId());
   }
 
-  private static void verifyMemberBookOwner(UUID memberId, List<MemberBook> memberBooks) {
+  private void allocate(List<MemberBook> memberBooks, Long usageId) {
+    verifyMemberBookAvailable(memberBooks);
+    verifyMemberBookIsFree(memberBooks, usageId);
+    memberBooks.stream()
+        .filter(mb -> !Objects.equals(mb.getUsageId(), usageId))
+        .forEach(mb -> mb.updateUsageId(usageId));
+  }
+
+  private static void verifyMemberBookOwner(UUID memberId, List<Long> requestIds, List<MemberBook> memberBooks) {
     boolean isOwner = memberBooks.stream().allMatch(mb -> Objects.equals(mb.getMemberId(), memberId));
-    if (!isOwner)
+    if (!isOwner || requestIds.size() != memberBooks.size())
       throw new ApplicationException(ApplicationError.MEMBER_BOOK_ACCESS_DENIED);
   }
 
-  private void allocate(List<MemberBook> memberBooks, Long usageId) {
+  private void verifyMemberBookAvailable(List<MemberBook> memberBooks) {
+    memberBooks.stream()
+        .filter(MemberBook::isRemove)
+        .findFirst().ifPresent(mb -> {
+          BookResponse book = bookPort.readBookSummary(mb.getBookId());
+          throw new ApplicationException(ApplicationError.MEMBER_BOOK_UNAVAILABLE, book.title());
+        });
+  }
+
+  private void verifyMemberBookIsFree(List<MemberBook> memberBooks, Long usageId) {
     memberBooks.stream()
         .filter(mb -> mb.getUsageId() != null && !Objects.equals(mb.getUsageId(), usageId))
         .findFirst().ifPresent(mb -> {
           BookResponse book = bookPort.readBookSummary(mb.getBookId());
           throw new ApplicationException(ApplicationError.MEMBER_BOOK_ALREADY_USE, mb.getUsageId(), book.title());
         });
-    memberBooks.stream()
-        .filter(mb -> !Objects.equals(mb.getUsageId(), usageId))
-        .forEach(mb -> mb.updateUsageId(usageId));
   }
 
   @Transactional
@@ -130,6 +144,7 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
 
   @Transactional
   public void removeMemberBooksProcess(RemoveMemberBooksCommand command) {
-    memberBookRepository.removeAllByIdIn(command.ids());
+    List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(command.ids());
+    memberBooks.forEach(MemberBook::remove);
   }
 }
