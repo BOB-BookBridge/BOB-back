@@ -54,22 +54,23 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
 
   @Transactional(readOnly = true)
   public MemberBooksResponse readMemberBooksProcess(ReadMemberBooksQuery query) {
-    List<MemberBook> memberBooks = memberBookReader.readMemberBooksByMemberId(query.memberId());
-    List<MemberBookSummary> summaries = getMemberBookSummaries(memberBooks);
-    return MemberBooksResponse.of(summaries);
+    List<MemberBook> memberBooks = switch (query.key()) {
+      case ALL -> memberBookReader.readMemberBooksByMemberId(query.memberId());
+      case AVAILABLE -> memberBookReader.readAvailableMemberBooksByMemberId(query.memberId(), query.requires());
+      case UNAVAILABLE -> memberBookReader.readUnavailableMemberBooksByMemberId(query.memberId(), query.requires());
+    };
+    return MemberBooksResponse.of(getMemberBookSummaries(memberBooks));
   }
 
   @Transactional(readOnly = true)
   public MemberBooksResponse readMemberBooksByIdsProcess(ReadMemberBooksByIdQuery query) {
     List<MemberBook> memberBooks = memberBookReader.readMemberBooksByBookIds(query.ids());
-    List<MemberBookSummary> summaries = getMemberBookSummaries(memberBooks);
-    return MemberBooksResponse.of(summaries);
+    return MemberBooksResponse.of(getMemberBookSummaries(memberBooks));
   }
 
   private List<MemberBookSummary> getMemberBookSummaries(List<MemberBook> memberBooks) {
     List<Long> bookIds = memberBooks.stream().map(MemberBook::getBookId).toList();
-    List<MemberBookSummary> summaries = MemberBookSummary.listFrom(memberBooks, bookPort.readBookSummaries(bookIds));
-    return summaries;
+    return MemberBookSummary.listFrom(memberBooks, bookPort.readBookSummaries(bookIds));
   }
 
   // TODO : 할당, 해제 분리

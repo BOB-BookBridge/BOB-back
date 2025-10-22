@@ -9,14 +9,30 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface MemberBookRepository extends CrudRepository<MemberBook, Long> {
 
+  List<MemberBook> findAllByIdIn(List<Long> ids);
+
   @Query("""
       SELECT mb FROM MemberBook mb
-      WHERE mb.memberId = :memberId
-        AND mb.isRemove = false
+       WHERE mb.memberId = :memberId
+         AND mb.isRemove = false
       """)
   List<MemberBook> findByMemberId(UUID memberId);
 
-  List<MemberBook> findAllByIdIn(List<Long> ids);
+  @Query("""
+      SELECT mb FROM MemberBook mb
+       WHERE mb.memberId = :memberId
+         AND mb.isRemove = false
+         AND (mb.usageId IS NULL OR mb.id IN :requires)
+      """)
+  List<MemberBook> findAvailableByMemberId(UUID memberId, List<Long> requires);
+
+  @Query("""
+      SELECT mb FROM MemberBook mb
+       WHERE mb.memberId = :memberId
+         AND mb.isRemove = false
+         AND (mb.usageId IS NOT NULL OR mb.id IN :requires)
+      """)
+  List<MemberBook> findUnavailableByMemberId(UUID memberId, List<Long> requires);
 
   @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query("""

@@ -2,7 +2,6 @@ package com.bob.web.member.controller;
 
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.domain.MemberFixture.OTHER_MEMBER_ID;
-import static com.bob.support.fixture.response.MemberBooksResponseFixture.DEFAULT_MEMBER_BOOKS_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.OTHER_MEMBER_PROFILE_RESPONSE;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,13 +19,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 import com.bob.domain.member.service.dto.command.ChangePasswordCommand;
 import com.bob.domain.member.service.dto.command.CreateMemberCommand;
 import com.bob.domain.member.service.dto.command.IssuePasswordCommand;
-import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
-import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
-import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
-import com.bob.domain.member.usecase.MemberBookReadUseCase;
-import com.bob.domain.member.usecase.MemberBookRemoveUseCase;
-import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.member.usecase.MemberWriteUseCase;
@@ -58,15 +51,6 @@ class MemberControllerTest {
   @Mock
   private MemberModifyUseCase modifyUseCase;
 
-  @Mock
-  private MemberBookWriteUseCase bookWriteUseCase;
-
-  @Mock
-  private MemberBookReadUseCase bookReadUseCase;
-
-  @Mock
-  private MemberBookRemoveUseCase bookRemoveUseCase;
-
   private MockMvc mvc;
 
   @BeforeEach
@@ -97,34 +81,6 @@ class MemberControllerTest {
 
     // then
     verify(writeUseCase, times(1)).signupProcess(any(CreateMemberCommand.class));
-  }
-
-  @Test
-  void 회원_도서_등록_기능_호출() throws Exception {
-    // given
-    String json = """
-        {
-          "status": "BEST",
-          "isbn": "9781234567890",
-          "title": "테스트책",
-          "author": "홍길동",
-          "description": "설명",
-          "priceStandard": 15000,
-          "cover": "http://image.url/cover.jpg",
-          "pubDate": "2024-01-02"
-        }
-        """;
-
-    // when & then
-    mvc.perform(post("/members/books")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json)
-            .requestAttr("memberId", MEMBER_ID))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.result").value("CREATED"));
-
-    verify(bookWriteUseCase, times(1)).registerMemberBookProcess(any(RegisterMemberBookCommand.class));
   }
 
   @Test
@@ -160,26 +116,6 @@ class MemberControllerTest {
         .andExpect(jsonPath("$.area.isAuthentication").value(true));
 
     verify(readUseCase, times(1)).readProfileProcess(any());
-  }
-
-  @Test
-  void 내_보유_도서_목록_조회_기능_호출() throws Exception {
-    // given
-    given(bookReadUseCase.readMemberBooksProcess(any(ReadMemberBooksQuery.class)))
-        .willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
-
-    int expectedSize = DEFAULT_MEMBER_BOOKS_RESPONSE.books().size();
-    var first = DEFAULT_MEMBER_BOOKS_RESPONSE.books().get(0);
-
-    // when & then
-    mvc.perform(get("/members/me/books")
-            .requestAttr("memberId", MEMBER_ID))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.books.length()").value(expectedSize))
-        .andExpect(jsonPath("$.books[0].id").value(first.id().intValue()))
-        .andExpect(jsonPath("$.books[0].title").value(first.title()));
-
-    verify(bookReadUseCase, times(1)).readMemberBooksProcess(any(ReadMemberBooksQuery.class));
   }
 
   @Test
@@ -269,23 +205,6 @@ class MemberControllerTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.result").value("DELETED"));
 
-    verify(modifyUseCase, times(1))
-        .softRemoveMemberProcess(any(RemoveMemberCommand.class), any(HttpServletResponse.class));
-  }
-
-  @Test
-  void 회원_소유_도서_삭제_기능_호출() throws Exception {
-    // given
-    long memberBookId = 1L;
-
-    // when & then
-    mvc.perform(delete("/members/books/{memberBookId}", memberBookId)
-            .requestAttr("memberId", MEMBER_ID))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.result").value("DELETED"));
-
-    verify(bookRemoveUseCase, times(1))
-        .removeMemberBookProcess(any(RemoveMemberBookCommand.class));
+    verify(modifyUseCase, times(1)).softRemoveMemberProcess(any(RemoveMemberCommand.class), any(HttpServletResponse.class));
   }
 }

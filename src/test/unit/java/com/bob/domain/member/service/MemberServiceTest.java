@@ -234,6 +234,7 @@ class MemberServiceTest {
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
     given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
     given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
+    given(memberBookService.readMemberBooksProcess(any(ReadMemberBooksQuery.class))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
 
     // when
     MemberProfileResponse response = memberService.readProfileProcess(query);
@@ -247,9 +248,7 @@ class MemberServiceTest {
     assertThat(response.interests()).hasSize(DEFAULT_INTEREST_DISPLAY_NAMES().size());
     assertThat(response.area().emdId()).isEqualTo(EMD_AREA_ID);
     assertThat(response.area().isAuthentication()).isTrue();
-
-    // 타인 프로필 조회 시 소유 도서 목록은 null.
-    assertThat(response.bookcase()).isNull();
+    assertThat(response.bookcase()).isNotNull();
   }
 
   @Test
@@ -261,6 +260,7 @@ class MemberServiceTest {
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
     given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
     given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
+    given(memberBookService.readMemberBooksProcess(any(ReadMemberBooksQuery.class))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
 
     // when
     MemberProfileResponse response = memberService.readProfileProcess(query);
@@ -272,8 +272,7 @@ class MemberServiceTest {
     assertThat(response.nickname()).isEqualTo("(알 수 없음)");
     assertThat(response.profileImageUrl()).isNull();
     assertThat(response.interests()).hasSize(0);
-
-    assertThat(response.bookcase()).isNull();
+    assertThat(response.bookcase()).isNotNull();
   }
 
   @ParameterizedTest(name = "프로필 변경 성공 케이스: {0}")

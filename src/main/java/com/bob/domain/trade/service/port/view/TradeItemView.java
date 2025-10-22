@@ -11,10 +11,20 @@ public record TradeItemView(
     String author,
     Integer priceStandard,
     String cover,
-    LocalDate pubDate
+    LocalDate pubDate,
+    boolean available
 ) {
 
-  public static TradeItemView of(Long itemId, String status, String title, String author, Integer priceStandard, String cover, LocalDate pubDate) {
+  public static TradeItemView of(
+      Long itemId,
+      String status,
+      String title,
+      String author,
+      Integer priceStandard,
+      String cover,
+      LocalDate pubDate,
+      boolean available
+  ) {
     return TradeItemView.builder()
         .id(itemId)
         .status(status)
@@ -23,6 +33,7 @@ public record TradeItemView(
         .priceStandard(priceStandard)
         .cover(cover)
         .pubDate(pubDate)
+        .available(available)
         .build();
   }
 }

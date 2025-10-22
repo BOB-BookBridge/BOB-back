@@ -6,14 +6,8 @@ import static com.bob.web.common.symbol.ResponseSymbol.SENT;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static com.bob.web.member.request.ReadProfileRequest.toQuery;
 
-import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
-import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
-import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
-import com.bob.domain.member.usecase.MemberBookReadUseCase;
-import com.bob.domain.member.usecase.MemberBookRemoveUseCase;
-import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberModifyUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.member.usecase.MemberWriteUseCase;
@@ -25,7 +19,6 @@ import com.bob.web.member.request.ChangePasswordRequest;
 import com.bob.web.member.request.ChangeProfileRequest;
 import com.bob.web.member.request.IssuePasswordRequest;
 import com.bob.web.member.request.RecoverAccountRequest;
-import com.bob.web.member.request.RegisterMemberBookRequest;
 import com.bob.web.member.request.SignupRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -52,10 +45,6 @@ public class MemberController {
   private final MemberReadUseCase readUseCase;
   private final MemberModifyUseCase modifyUseCase;
 
-  private final MemberBookWriteUseCase bookWriteUseCase;
-  private final MemberBookReadUseCase bookReadUseCase;
-  private final MemberBookRemoveUseCase removeUseCase;
-
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public CommonResponse<ResponseSymbol> handleSignup(@Valid @RequestBody SignupRequest request) {
@@ -63,24 +52,9 @@ public class MemberController {
     return new CommonResponse<>(true, CREATED);
   }
 
-  @PostMapping("/books")
-  @ResponseStatus(HttpStatus.CREATED)
-  public CommonResponse<ResponseSymbol> handleCreateMemberBook(
-      @AuthenticationId UUID memberId,
-      @Valid @RequestBody RegisterMemberBookRequest request
-  ) {
-    bookWriteUseCase.registerMemberBookProcess(request.toCommand(memberId));
-    return new CommonResponse<>(true, CREATED);
-  }
-
   @GetMapping("/me")
   public ResponseEntity<MemberProfileResponse> handleReadProfile(@AuthenticationId UUID memberId) {
     return ResponseEntity.ok(readUseCase.readProfileProcess(toQuery(memberId, true)));
-  }
-
-  @GetMapping("/me/books")
-  public ResponseEntity<MemberBooksResponse> handleReadBooks(@AuthenticationId UUID memberId) {
-    return ResponseEntity.ok(bookReadUseCase.readMemberBooksProcess(ReadMemberBooksQuery.of(memberId)));
   }
 
   @GetMapping("/{memberId}")
@@ -136,15 +110,6 @@ public class MemberController {
   ) {
     RemoveMemberCommand command = new RemoveMemberCommand(memberId);
     modifyUseCase.softRemoveMemberProcess(command, response);
-    return new CommonResponse<>(true, DELETED);
-  }
-
-  @DeleteMapping("/books/{memberBookId}")
-  public CommonResponse<ResponseSymbol> handleRemoveMemberBook(
-      @AuthenticationId UUID memberId,
-      @PathVariable Long memberBookId
-  ) {
-    removeUseCase.removeMemberBookProcess(RemoveMemberBookCommand.of(memberId, memberBookId));
     return new CommonResponse<>(true, DELETED);
   }
 }

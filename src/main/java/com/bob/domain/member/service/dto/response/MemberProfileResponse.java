@@ -32,6 +32,7 @@ public record MemberProfileResponse(
     final String email = removed ? "delete" : member.getEmail();
     final String profileImageUrl = removed ? null : member.getProfileImageUrl();
     final List<String> interests = removed ? List.of() : interestNames;
+    final List<MemberBookSummary> summaries = removed ? List.of() : bookcase;
 
     return MemberProfileResponse.builder()
         .isSocial(member.getProvider() != null)
@@ -41,7 +42,7 @@ public record MemberProfileResponse(
         .profileImageUrl(profileImageUrl)
         .interests(interests)
         .area(Area.of(areaSummary.emdId(), areaSummary.validity(), areaSummary.authenticatedAt()))
-        .bookcase(bookcase)
+        .bookcase(summaries)
         .build();
   }
 

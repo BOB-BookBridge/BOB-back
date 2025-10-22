@@ -14,20 +14,9 @@ public record TradeItemSummary(
     String author,
     Integer priceStandard,
     String cover,
-    LocalDate pubDate
+    LocalDate pubDate,
+    boolean available
 ) {
-
-  public static TradeItemSummary from(TradeItemView tradeItem) {
-    return TradeItemSummary.builder()
-        .id(tradeItem.id())
-        .status(tradeItem.status())
-        .title(tradeItem.title())
-        .author(tradeItem.author())
-        .priceStandard(tradeItem.priceStandard())
-        .cover(tradeItem.cover())
-        .pubDate(tradeItem.pubDate())
-        .build();
-  }
 
   public static List<TradeItemSummary> listFrom(List<TradeItemView> tradeItems, List<Long> itemIds) {
     return tradeItems.stream()
@@ -39,5 +28,18 @@ public record TradeItemSummary(
 
   public static List<TradeItemSummary> listFrom(List<TradeItemView> tradeItems) {
     return listFrom(tradeItems, null);
+  }
+
+  public static TradeItemSummary from(TradeItemView tradeItem) {
+    return TradeItemSummary.builder()
+        .id(tradeItem.id())
+        .status(tradeItem.status())
+        .title(tradeItem.title())
+        .author(tradeItem.author())
+        .priceStandard(tradeItem.priceStandard())
+        .cover(tradeItem.cover())
+        .pubDate(tradeItem.pubDate())
+        .available(tradeItem.available())
+        .build();
   }
 }
