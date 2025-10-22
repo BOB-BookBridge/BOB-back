@@ -81,19 +81,39 @@ class MemberBookControllerTest {
   }
 
   @Test
-  void 내_보유_도서_목록_조회_기능_호출() throws Exception {
+  void 회원_책장_조회_기능_호출() throws Exception {
     // given
     given(readUseCase.readMemberBooksProcess(any(ReadMemberBooksQuery.class))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
 
-    int expectedSize = DEFAULT_MEMBER_BOOKS_RESPONSE.books().size();
-    var first = DEFAULT_MEMBER_BOOKS_RESPONSE.books().get(0);
+    int expectedSize = DEFAULT_MEMBER_BOOKS_RESPONSE.bookcase().size();
+    var first = DEFAULT_MEMBER_BOOKS_RESPONSE.bookcase().get(0);
 
     // when & then
     mvc.perform(get("/members/{memberId}/books", MEMBER_ID))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.books.length()").value(expectedSize))
-        .andExpect(jsonPath("$.books[0].id").value(first.id().intValue()))
-        .andExpect(jsonPath("$.books[0].title").value(first.title()));
+        .andExpect(jsonPath("$.bookcase.length()").value(expectedSize))
+        .andExpect(jsonPath("$.bookcase[0].id").value(first.id().intValue()))
+        .andExpect(jsonPath("$.bookcase[0].title").value(first.title()));
+
+    verify(readUseCase, times(1)).readMemberBooksProcess(any(ReadMemberBooksQuery.class));
+  }
+
+  @Test
+  void 회원_책장_조회_require_포함_기능_호출() throws Exception {
+    // given
+    given(readUseCase.readMemberBooksProcess(any(ReadMemberBooksQuery.class))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
+
+    int expectedSize = DEFAULT_MEMBER_BOOKS_RESPONSE.bookcase().size();
+    var first = DEFAULT_MEMBER_BOOKS_RESPONSE.bookcase().get(0);
+
+    // when & then
+    mvc.perform(get("/members/{memberId}/books", MEMBER_ID)
+            .param("require", "1")
+            .param("require", "2"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.bookcase.length()").value(expectedSize))
+        .andExpect(jsonPath("$.bookcase[0].id").value(first.id().intValue()))
+        .andExpect(jsonPath("$.bookcase[0].title").value(first.title()));
 
     verify(readUseCase, times(1)).readMemberBooksProcess(any(ReadMemberBooksQuery.class));
   }

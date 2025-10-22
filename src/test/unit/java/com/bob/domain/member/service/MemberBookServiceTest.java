@@ -108,7 +108,7 @@ class MemberBookServiceTest {
   }
 
   @Test
-  void 회원_소유_책_목록_조회() {
+  void 회원_책장_모든_책_목록_조회() {
     // given
     UUID memberId = MEMBER_ID;
     MemberBook mb1 = DEFAULT_MEMBER_BOOK();
@@ -123,7 +123,7 @@ class MemberBookServiceTest {
     then(memberBookReader).should().readMemberBooksByMemberId(memberId);
     then(bookPort).should().readBookSummaries(List.of(DEFAULT_MEMBER_BOOK().getBookId(), NEW_MEMBER_BOOK().getBookId()));
 
-    List<MemberBookSummary> summaries = response.books();
+    List<MemberBookSummary> summaries = response.bookcase();
     assertThat(summaries).hasSize(2);
 
     MemberBookSummary s1 = summaries.get(0);
@@ -152,7 +152,7 @@ class MemberBookServiceTest {
     then(memberBookReader).should().readMemberBooksByBookIds(query.ids());
     then(bookPort).should().readBookSummaries(List.of(DEFAULT_MEMBER_BOOK().getBookId(), NEW_MEMBER_BOOK().getBookId()));
 
-    List<MemberBookSummary> summaries = response.books();
+    List<MemberBookSummary> summaries = response.bookcase();
     assertThat(summaries).hasSize(2);
 
     MemberBookSummary s1 = summaries.get(0);

@@ -1,7 +1,10 @@
 package com.bob.domain.member.service.reader;
 
 import static com.bob.support.fixture.domain.MemberBookFixture.DEFAULT_MEMBER_BOOK;
+import static com.bob.support.fixture.domain.MemberBookFixture.DIFF_IN_TRADE_BOOK;
 import static com.bob.support.fixture.domain.MemberBookFixture.NEW_MEMBER_BOOK;
+import static com.bob.support.fixture.domain.MemberBookFixture.SAME_IN_TRADE_BOOK;
+import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -60,6 +63,38 @@ class MemberBookReaderTest {
     // then
     assertThat(actual).isEmpty();
     then(repository).should().findByMemberId(memberId);
+  }
+
+  @Test
+  void 회원_책장_사용_가능_책_목록_조회() {
+    // given
+    UUID memberId = MEMBER_ID;
+    List<Long> requires = List.of(-1L);
+    given(repository.findAvailableByMemberId(memberId, requires)).willReturn(List.of(DEFAULT_MEMBER_BOOK(), NEW_MEMBER_BOOK()));
+
+    // when
+    List<MemberBook> result = reader.readAvailableMemberBooksByMemberId(memberId, requires);
+
+    // then
+    assertThat(result).hasSize(2);
+    assertThat(result.get(0).getUsageId()).isNull();
+    assertThat(result.get(1).getUsageId()).isNull();
+  }
+
+  @Test
+  void 회원_책장_사용_불가능_책_목록_조회() {
+    // given
+    UUID memberId = MEMBER_ID;
+    List<Long> requires = List.of(-1L);
+    given(repository.findUnavailableByMemberId(memberId, requires)).willReturn(List.of(DIFF_IN_TRADE_BOOK(), SAME_IN_TRADE_BOOK()));
+
+    // when
+    List<MemberBook> result = reader.readUnavailableMemberBooksByMemberId(memberId, requires);
+
+    // then
+    assertThat(result).hasSize(2);
+    assertThat(result.get(0).getUsageId()).isNotNull();
+    assertThat(result.get(1).getUsageId()).isNotNull();
   }
 
   @Test

@@ -13,6 +13,7 @@ import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberBookCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksByIdQuery;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
+import com.bob.domain.member.service.dto.query.SearchKey;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
 import com.bob.support.TestContainerSupport;
@@ -112,7 +113,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   }
 
   @Test
-  void 회원_소유_책_목록_정상_조회() {
+  void 회원_책장_모든_책_목록_조회() {
     // given
     UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
     MemberBook mb1 = memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
@@ -122,18 +123,80 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
     MemberBooksResponse response = service.readMemberBooksProcess(ReadMemberBooksQuery.of(memberId));
 
     // then
-    List<MemberBookSummary> summaries = response.books();
-    assertThat(summaries).hasSize(2);
+    List<MemberBookSummary> bookcase = response.bookcase();
+    assertThat(bookcase).hasSize(2);
 
-    MemberBookSummary s1 = summaries.get(0);
+    MemberBookSummary s1 = bookcase.get(0);
     assertThat(s1.id()).isEqualTo(mb1.getId());
     assertThat(s1.status()).isEqualTo(BookStatus.BEST.name());
     assertThat(s1.title()).isEqualTo("자바의 정석");
 
-    MemberBookSummary s2 = summaries.get(1);
+    MemberBookSummary s2 = bookcase.get(1);
     assertThat(s2.id()).isEqualTo(mb2.getId());
     assertThat(s2.status()).isEqualTo(BookStatus.HIGH.name());
     assertThat(s2.title()).isEqualTo("자바 ORM 표준 JPA 프로그래밍");
+  }
+
+  @Test
+  void 회원_책장_사용_가능_책_목록_조회() {
+    // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
+    memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+    MemberBook unavailableBook = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+    unavailableBook.updateUsageId(1L);
+    ReadMemberBooksQuery query = ReadMemberBooksQuery.of(memberId, SearchKey.AVAILABLE.name(), List.of(-1L));
+
+    // when
+    MemberBooksResponse result = service.readMemberBooksProcess(query);
+
+    // then
+    List<MemberBookSummary> bookcase = result.bookcase();
+    assertThat(bookcase).hasSize(2);
+    assertThat(bookcase.get(0).available()).isTrue();
+    assertThat(bookcase.get(1).available()).isTrue();
+  }
+
+  @Test
+  void 회원_책장_사용_불가능_책_목록_조회() {
+    // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
+    memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+    MemberBook unavailableBook = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+    unavailableBook.updateUsageId(1L);
+    ReadMemberBooksQuery query = ReadMemberBooksQuery.of(memberId, SearchKey.UNAVAILABLE.name(), List.of(-1L));
+
+    // when
+    MemberBooksResponse result = service.readMemberBooksProcess(query);
+
+    // then
+    List<MemberBookSummary> bookcase = result.bookcase();
+    assertThat(bookcase).hasSize(1);
+    assertThat(bookcase.get(0).available()).isFalse();
+  }
+
+  @Test
+  void 회원_책장_사용_가능_책_목록_조회_필수_포함() {
+    // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
+    memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+    MemberBook unavailableBook = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
+    unavailableBook.updateUsageId(1L);
+    List<Long> requires = List.of(unavailableBook.getId());
+    ReadMemberBooksQuery.of(memberId, SearchKey.AVAILABLE.name(), requires);
+
+    // when
+    MemberBooksResponse result = service.readMemberBooksProcess(ReadMemberBooksQuery.of(memberId));
+
+    // then
+    assertThat(result.bookcase()).isNotNull();
+
+    List<MemberBookSummary> bookcase = result.bookcase();
+    assertThat(bookcase.get(0).available()).isTrue();
+    assertThat(bookcase.get(1).available()).isTrue();
+    assertThat(bookcase.get(2).available()).isFalse();
   }
 
   @Test
@@ -148,7 +211,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
     MemberBooksResponse response = service.readMemberBooksByIdsProcess(query);
 
     // then
-    List<MemberBookSummary> summaries = response.books();
+    List<MemberBookSummary> summaries = response.bookcase();
     assertThat(summaries).hasSize(2);
 
     MemberBookSummary s1 = summaries.get(0);
