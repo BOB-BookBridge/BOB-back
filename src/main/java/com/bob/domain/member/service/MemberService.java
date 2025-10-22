@@ -27,7 +27,6 @@ import com.bob.domain.member.service.dto.response.MemberAreaSummaryResponse;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.dto.response.SocialLoginResponse;
-import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
@@ -111,11 +110,7 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
     List<String> interests = memberInterestService.readMemberInterests(member.getId());
     MemberAreaSummaryResponse area = areaPort.readMemberAreaSummary(query.memberId());
     MemberBooksResponse books = memberBookService.readMemberBooksProcess(ReadMemberBooksQuery.of(member.getId()));
-    return MemberProfileResponse.from(member, interests, area, allocateMemberBooks(books, query.isMe()));
-  }
-
-  private List<MemberBookSummary> allocateMemberBooks(MemberBooksResponse response, boolean isMe) {
-    return isMe ? response.books() : null;
+    return MemberProfileResponse.from(member, interests, area, books.bookcase());
   }
 
   @Transactional
