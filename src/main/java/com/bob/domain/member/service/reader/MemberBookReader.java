@@ -21,6 +21,14 @@ public class MemberBookReader {
     return repository.findByMemberId(memberId);
   }
 
+  public List<MemberBook> readAvailableMemberBooksByMemberId(UUID memberId, List<Long> requires) {
+    return repository.findAvailableByMemberId(memberId, requires);
+  }
+
+  public List<MemberBook> readUnavailableMemberBooksByMemberId(UUID memberId, List<Long> requires) {
+    return repository.findUnavailableByMemberId(memberId, requires);
+  }
+
   public List<MemberBook> readMemberBooksByBookIds(List<Long> bookIds) {
     return repository.findAllByIdIn(bookIds);
   }

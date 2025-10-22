@@ -18,7 +18,8 @@ public record MemberBookSummary(
     String author,
     Integer priceStandard,
     String cover,
-    LocalDate pubDate
+    LocalDate pubDate,
+    boolean available
 ) {
 
   public static List<MemberBookSummary> listFrom(List<MemberBook> memberBooks, List<BookResponse> books) {
@@ -43,6 +44,7 @@ public record MemberBookSummary(
         .priceStandard(book.priceStandard())
         .cover(book.cover())
         .pubDate(book.pubDate())
+        .available(!memberBook.isRemove() && memberBook.getUsageId() == null)
         .build();
   }
 }

@@ -53,7 +53,7 @@ public class MemberBookController {
       ReadMemberBooksRequest request,
       @PathVariable UUID memberId
   ) {
-    List<Long> requires = request.require() == null ? List.of() : request.require();
+    List<Long> requires = request.require() == null ? List.of(-1L) : request.require();
     ReadMemberBooksQuery query = ReadMemberBooksQuery.of(memberId, request.key(), requires);
     return ResponseEntity.ok(readUseCase.readMemberBooksProcess(query));
   }
