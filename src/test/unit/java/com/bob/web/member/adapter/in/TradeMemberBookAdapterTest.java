@@ -71,7 +71,7 @@ class TradeMemberBookAdapterTest {
   }
 
   @Test
-  void 회원_소유_책_다건_조회시_순서_및_매핑() {
+  void 거래_물품_목록_조회() {
     // given
     List<Long> ids = List.of(1L, 2L);
     given(readUseCase.readMemberBooksByIdsProcess(any(ReadMemberBooksByIdQuery.class))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
