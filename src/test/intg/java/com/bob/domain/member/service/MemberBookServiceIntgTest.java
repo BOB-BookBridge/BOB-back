@@ -44,7 +44,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   @Test
   void 회원_책_등록_시_이미_등록된_책이면_기존_책_정보_사용() {
     // given
-    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca4");
     Optional<Book> findBook = bookRepository.findByIsbn13("9788966261208");
     assertThat(findBook).isPresent();
 
@@ -78,7 +78,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   @Test
   void 회원_책_등록_시_책이_존재하지_않으면_책을_생성하고_해당_ID로_저장한다() {
     // given
-    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca4");
     String unregisterBookIsbn = "9780000000002";
     Optional<Book> exist = bookRepository.findByIsbn13(unregisterBookIsbn);
     assertThat(exist).isNotPresent();
@@ -115,7 +115,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   @Test
   void 회원_책장_모든_책_목록_조회() {
     // given
-    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca4");
     MemberBook mb1 = memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
     MemberBook mb2 = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
 
@@ -140,7 +140,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   @Test
   void 회원_책장_사용_가능_책_목록_조회() {
     // given
-    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca4");
     memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
     memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
     MemberBook unavailableBook = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
@@ -160,7 +160,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   @Test
   void 회원_책장_사용_불가능_책_목록_조회() {
     // given
-    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca4");
     memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
     memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
     MemberBook unavailableBook = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
@@ -179,7 +179,7 @@ class MemberBookServiceIntgTest extends TestContainerSupport {
   @Test
   void 회원_책장_사용_가능_책_목록_조회_필수_포함() {
     // given
-    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca3");
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca4");
     memberBookRepository.save(MemberBook.of(memberId, 1L, "BEST"));
     memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));
     MemberBook unavailableBook = memberBookRepository.save(MemberBook.of(memberId, 2L, "HIGH"));

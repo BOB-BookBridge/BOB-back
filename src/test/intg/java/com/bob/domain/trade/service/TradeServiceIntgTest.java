@@ -85,14 +85,17 @@ class TradeServiceIntgTest extends TestContainerSupport {
 
   @BeforeEach
   void setUp() {
-    testTrade = tradeRepository.save(createTrade(buyerId1, REQUESTED));
-    tradeRepository.save(createTrade(buyerId2, RESERVED));
-    tradeRepository.save(createTrade(buyerId3, REQUESTED));
+    testTrade = tradeRepository.save(createTrade(postId, buyerId1, REQUESTED));
+    insertTradeItem(testTrade.getId(), List.of(1L), List.of(2L, 3L));
+
+    Trade trade2 = tradeRepository.save(createTrade(postId, buyerId2, RESERVED));
+    insertTradeItem(trade2.getId(), List.of(1L), List.of(6L));
+
+    Trade trade3 = tradeRepository.save(createTrade(postId, buyerId3, REQUESTED));
+    insertTradeItem(trade3.getId(), List.of(1L), List.of(7L));
+
     chatRoom = createChatRoom(testTrade);
     chatRoomRepository.save(chatRoom);
-
-    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(testTrade.getId(), List.of(1L), SELLER));
-    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(testTrade.getId(), List.of(2L, 3L), BUYER));
   }
 
   @AfterEach
@@ -153,7 +156,9 @@ class TradeServiceIntgTest extends TestContainerSupport {
   @Test
   void 거래_목록_조회_시_key_null_status_null_이면_모든_거래_응답() {
     // given: sellerId 기준으로 ALL + 상태필터 미적용 → seller의 모든 거래 조회
-    tradeRepository.save(createTrade(buyerId1, COMPLETED)); // 추가 1건(완료 상태)
+    Trade trade = tradeRepository.save(createTrade(2L, buyerId1, COMPLETED)); // 거래 추가 1건(완료 상태)
+    insertTradeItem(trade.getId(), List.of(1L), List.of(5L));
+
     ReadTradesQuery query = KEY_NULL_STATUS_NULL(sellerId);
 
     // when
@@ -167,8 +172,10 @@ class TradeServiceIntgTest extends TestContainerSupport {
   @Test
   void 거래_목록_조회_시_key_SENT_status_REQUESTED_REJECTED_사용자가_보낸_제안_거절_상태의_거래_응답() {
     // given: buyer1 기준 SENT + [REQUESTED, REJECTED] → buyer가 보낸 제안, 거절 상태의 거래 2건
-    tradeRepository.save(createTrade(buyerId1, REJECTED)); // 추가 1건(거절 상태)
-    tradeRepository.save(createTrade(buyerId1, COMPLETED)); // 추가 1건(완료 상태) <- 응답 반영 X
+    Trade trade1 = tradeRepository.save(createTrade(2L, buyerId1, REJECTED));// 추가 1건(거절 상태)
+    insertTradeItem(trade1.getId(), List.of(1L), List.of(3L));
+    Trade trade2 = tradeRepository.save(createTrade(3L, buyerId1, COMPLETED));// 추가 1건(완료 상태) <- 응답 반영 X
+    insertTradeItem(trade2.getId(), List.of(1L), List.of(4L));
     ReadTradesQuery query = SENT_STATUS_REQUESTED_REJECTED(buyerId1);
 
     // when
@@ -184,7 +191,8 @@ class TradeServiceIntgTest extends TestContainerSupport {
   @Test
   void 거래_목록_조회_시_key_RECEIVED_status_REQUESTED_이면_사용자가_받은_제안_상태_거래_응답() {
     // given: seller 기준 RECEIVED + [REQUESTED] → seller가 받은 제안 상태의 거래 2건(by buyer1, by buyer3)
-    tradeRepository.save(createTrade(sellerId, REJECTED)); // 추가 1건(거절 상태) <- 응답 반영 X
+    Trade trade = tradeRepository.save(createTrade(18L, sellerId, REJECTED)); // 추가 1건(거절 상태) <- 응답 반영 X
+    insertTradeItem(trade.getId(), List.of(8L), List.of(1L));
     ReadTradesQuery query = RECEIVED_STATUS_REQUESTED(sellerId);
 
     // when
@@ -340,7 +348,7 @@ class TradeServiceIntgTest extends TestContainerSupport {
         .doesNotContain(3L);
   }
 
-  private Trade createTrade(UUID buyerId, Status status) {
+  private Trade createTrade(Long postId, UUID buyerId, Status status) {
     return Trade.builder()
         .postId(postId)
         .sellerId(sellerId)
@@ -348,6 +356,11 @@ class TradeServiceIntgTest extends TestContainerSupport {
         .status(status)
         .updatedAt(now())
         .build();
+  }
+
+  private void insertTradeItem(Long tradeId, List<Long> sellerItemIds, List<Long> buyerItemIds) {
+    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(tradeId, sellerItemIds, SELLER));
+    tradeItemService.createTradeItemsProcess(CreateTradeItemsCommand.of(tradeId, buyerItemIds, BUYER));
   }
 
   private ChatRoom createChatRoom(Trade trade) {
