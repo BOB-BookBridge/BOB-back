@@ -29,9 +29,12 @@ import static com.bob.support.fixture.domain.TradeFixture.TRADE;
 import static com.bob.support.fixture.query.TradeQueryFixture.KEY_NULL_STATUS_NULL;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.CUSTOM_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
+import static com.bob.support.fixture.response.MemberProfileResponseFixture.OTHER_MEMBER_PROFILE_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.CUSTOM_POST_DETAIL_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_POST_DETAIL_RESPONSE;
 import static com.bob.support.fixture.response.trade.internal.TradeItemViewFixture.ALL_TRADE_ITEM_VIEWS;
+import static com.bob.support.fixture.response.trade.internal.TradeItemViewFixture.DEFAULT_BUYER_ITEM_VIEW;
+import static com.bob.support.fixture.response.trade.internal.TradeItemViewFixture.DEFAULT_SELLER_ITEM_VIEW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,7 +63,9 @@ import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
+import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeChatPort;
+import com.bob.domain.trade.service.port.out.TradeMemberBookPort;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.reader.TradeReader;
@@ -100,6 +105,9 @@ class TradeServiceTest {
 
   @Mock
   private TradeMemberPort memberPort;
+
+  @Mock
+  private TradeMemberBookPort memberBookPort;
 
   @Mock
   private TradePostPort postPort;
@@ -208,15 +216,28 @@ class TradeServiceTest {
     ReadTradesQuery query = KEY_NULL_STATUS_NULL(MEMBER_ID);
     List<Trade> trades = DEFAULT_TRADES();
     given(postPort.readTradePostSummary(1L)).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
-    given(tradeReader.readTradesByQuery(any(ReadTradesQuery.class), eq(pageable))).willReturn(trades);
+    given(tradeReader.readTradesByQuery(any(ReadTradesQuery.class), eq(pageable))).willReturn(List.of(trades.get(0)));
     given(tradeRepository.countTradesByQuery(any(ReadTradesQuery.class))).willReturn((long) trades.size());
+    given(memberPort.readTradeMemberProfile(MEMBER_ID)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
+    given(memberPort.readTradeMemberProfile(OTHER_MEMBER_ID)).willReturn(OTHER_MEMBER_PROFILE_RESPONSE);
+    given(tradeItemService.readTradeItemIdsProcess(1L, SELLER)).willReturn(List.of(1L));
+    given(tradeItemService.readTradeItemIdsProcess(1L, BUYER)).willReturn(List.of(2L, 3L));
+    given(memberBookPort.read(1L)).willReturn(DEFAULT_SELLER_ITEM_VIEW);
+    given(memberBookPort.read(2L)).willReturn(DEFAULT_BUYER_ITEM_VIEW);
 
     // when
     TradesResponse response = tradeService.readTradesProcess(query, pageable);
 
     // then
     assertThat(response).isNotNull();
-    assertThat(response.trades()).hasSize(trades.size());
+    assertThat(response.totalCount()).isEqualTo(3);
+    assertThat(response.trades()).hasSize(1);
+
+    TradeSummary first = response.trades().get(0);
+    assertThat(first.seller().id()).isEqualTo(MEMBER_ID);
+    assertThat(first.seller().item().size()).isEqualTo(1);
+    assertThat(first.buyer().id()).isEqualTo(OTHER_MEMBER_ID);
+    assertThat(first.buyer().item().size()).isEqualTo(2);
 
     ArgumentCaptor<ReadTradesQuery> captor = ArgumentCaptor.forClass(ReadTradesQuery.class);
     then(tradeReader).should(times(1)).readTradesByQuery(captor.capture(), eq(pageable));

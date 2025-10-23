@@ -7,7 +7,6 @@ import com.bob.domain.trade.entity.Trade;
 import com.bob.domain.trade.entity.status.Status;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 public class TradeFixture {
 
@@ -25,18 +24,7 @@ public class TradeFixture {
         .id(id)
         .postId(postId)
         .sellerId(MEMBER_ID)
-        .buyerId(UUID.randomUUID())
-        .status(status)
-        .updatedAt(LocalDateTime.now())
-        .build();
-  }
-
-  public static Trade SENT_TRADE(Long id, Long postId, Status status) {
-    return Trade.builder()
-        .id(id)
-        .postId(postId)
-        .sellerId(UUID.randomUUID())
-        .buyerId(MEMBER_ID)
+        .buyerId(OTHER_MEMBER_ID)
         .status(status)
         .updatedAt(LocalDateTime.now())
         .build();
