@@ -52,7 +52,9 @@ import com.bob.domain.trade.service.dto.response.internal.TradeItemSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeMemberSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradePostSummary;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
+import com.bob.domain.trade.service.dto.response.internal.TraderSummary;
 import com.bob.domain.trade.service.port.out.TradeChatPort;
+import com.bob.domain.trade.service.port.out.TradeMemberBookPort;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.port.view.TradeItemView;
@@ -63,6 +65,7 @@ import com.bob.domain.trade.usecase.TradeWriteUseCase;
 import com.bob.global.event.application.dto.NotiEvent;
 import com.bob.global.event.application.dto.SystemChatMessageEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -84,6 +87,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   private final TradeItemService tradeItemService;
 
   private final TradeMemberPort memberPort;
+  private final TradeMemberBookPort memberBookPort;
   private final TradePostPort postPort;
   private final TradeChatPort chatPort;
 
@@ -134,11 +138,31 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   public TradesResponse readTradesProcess(ReadTradesQuery query, Pageable pageable) {
     List<Trade> trades = tradeReader.readTradesByQuery(query, pageable);
     Long size = tradeRepository.countTradesByQuery(query);
-    // TODO : 배치 조회 변경 필요
-    return TradesResponse.from(trades.stream().map(trade -> {
+
+    Map<UUID, TradeMemberSummary> tradersMap = new HashMap<>();
+    List<TradeSummary> result = trades.stream().map(trade -> {
       TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(trade.getPostId()));
-      return TradeSummary.of(trade.getId(), trade.getStatus(), post);
-    }).toList(), size);
+
+      TradeMemberSummary seller = loadProfile(tradersMap, post.sellerId());
+      TradeMemberSummary buyer = loadProfile(tradersMap, trade.getBuyerId());
+
+      List<Long> sellerItemIds = tradeItemService.readTradeItemIdsProcess(trade.getId(), SELLER);
+      List<Long> buyerItemIds = tradeItemService.readTradeItemIdsProcess(trade.getId(), BUYER);
+      TradeItemView sellerMainItem = memberBookPort.read(post.sellerBookId());
+      TradeItemView buyerMainItem = memberBookPort.read(buyerItemIds.get(0));
+
+      return TradeSummary.of(
+          trade.getId(),
+          trade.getStatus(),
+          TraderSummary.of(seller, sellerMainItem, sellerItemIds.size()),
+          TraderSummary.of(buyer, buyerMainItem, buyerItemIds.size())
+      );
+    }).toList();
+    return TradesResponse.from(size, result);
+  }
+
+  private TradeMemberSummary loadProfile(Map<UUID, TradeMemberSummary> tradersMap, UUID memberId) {
+    return tradersMap.computeIfAbsent(memberId, id -> TradeMemberSummary.from(memberPort.readTradeMemberProfile(id)));
   }
 
   @Transactional(readOnly = true)

@@ -7,14 +7,16 @@ import lombok.Builder;
 public record TradeSummary(
     Long id,
     String status,
-    TradePostSummary post
+    TraderSummary seller,
+    TraderSummary buyer
 ) {
 
-  public static TradeSummary of(Long id, Status status, TradePostSummary post) {
+  public static TradeSummary of(Long id, Status status, TraderSummary seller, TraderSummary buyer) {
     return TradeSummary.builder()
         .id(id)
         .status(status.name())
-        .post(post)
+        .seller(seller)
+        .buyer(buyer)
         .build();
   }
 }
