@@ -5,9 +5,13 @@ import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_
 
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
+import java.util.List;
 
 public class MemberBooksResponseFixture {
 
   public static MemberBooksResponse DEFAULT_MEMBER_BOOKS_RESPONSE =
       MemberBooksResponse.of(MemberBookSummary.listFrom(DEFAULT_MEMBER_BOOK_RESPONSES, DEFAULT_BOOK_RESPONSES));
+
+  public static MemberBooksResponse SINGLE_MEMBER_BOOKS_RESPONSE =
+      MemberBooksResponse.of(MemberBookSummary.listFrom(List.of(DEFAULT_MEMBER_BOOK_RESPONSES.get(0)), List.of(DEFAULT_BOOK_RESPONSES.get(0))));
 }
