@@ -100,6 +100,11 @@ public class TradeItemService {
   }
 
   @Transactional
+  public void removeTradeItems(Long tradeId) {
+    tradeItemRepository.deleteTradeItemsByTradeId(tradeId);
+  }
+
+  @Transactional
   public void removeTraderItems(Long tradeId) {
     List<Long> itemIds = tradeItemRepository.findItemIdsByTradeId(tradeId);
     memberBookPort.remove(itemIds);

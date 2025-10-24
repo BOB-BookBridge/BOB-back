@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,6 +21,7 @@ import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
+import com.bob.domain.trade.usecase.TradeDeleteUseCase;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.domain.trade.usecase.TradeWriteUseCase;
@@ -50,6 +52,9 @@ class TradeControllerTest {
 
   @Mock
   private TradeModifyUseCase modifyUseCase;
+
+  @Mock
+  private TradeDeleteUseCase deleteUseCase;
 
   private MockMvc mvc;
 
@@ -157,5 +162,21 @@ class TradeControllerTest {
         .andExpect(jsonPath("$.result").value("UPDATED"));
     // then
     verify(modifyUseCase, times(1)).changeTradeItemProcess(any(ChangeTradeItemsCommand.class));
+  }
+
+  @Test
+  void 거래_삭제_기능_호출() throws Exception {
+    // given
+    Long tradeId = 1L;
+
+    // when & then
+    mvc.perform(delete("/trades/{tradeId}", tradeId)
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.result").value("DELETED"));
+
+    // verify
+    verify(deleteUseCase, times(1)).deleteTradeProcess(any());
   }
 }

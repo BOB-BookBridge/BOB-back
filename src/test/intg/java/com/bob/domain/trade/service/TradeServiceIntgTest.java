@@ -25,6 +25,7 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.dto.command.DeleteTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
@@ -346,6 +347,25 @@ class TradeServiceIntgTest extends TestContainerSupport {
     List<Long> savedItemIds = tradeItemService.readTradeItemIdsProcess(testTrade.getId(), BUYER);
     assertThat(savedItemIds).containsExactlyInAnyOrder(2L, 4L)
         .doesNotContain(3L);
+  }
+
+  @Test
+  void 거래_삭제() {
+    // given
+    Trade trade = testTrade;
+    trade.updateTradeStatus(CANCELED, now());
+    Long tradeId = trade.getId();
+    assertThat(tradeItemService.readTradeItemIdsProcess(tradeId, BUYER)).isNotEmpty();
+    assertThat(tradeItemService.readTradeItemIdsProcess(tradeId, SELLER)).isNotEmpty();
+    DeleteTradeCommand command = DeleteTradeCommand.of(tradeId, buyerId1);
+
+    // when
+    tradeService.deleteTradeProcess(command);
+
+    // then
+    assertThat(tradeRepository.findById(tradeId)).isEmpty();
+    assertThat(tradeItemService.readTradeItemIdsProcess(tradeId, BUYER)).isEmpty();
+    assertThat(tradeItemService.readTradeItemIdsProcess(tradeId, SELLER)).isEmpty();
   }
 
   private Trade createTrade(Long postId, UUID buyerId, Status status) {

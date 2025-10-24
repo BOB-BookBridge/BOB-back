@@ -1,15 +1,18 @@
 package com.bob.web.trade.controller;
 
+import static com.bob.web.common.symbol.ResponseSymbol.DELETED;
 import static com.bob.web.common.symbol.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
 import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
+import com.bob.domain.trade.service.dto.command.DeleteTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
 import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
+import com.bob.domain.trade.usecase.TradeDeleteUseCase;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.domain.trade.usecase.TradeWriteUseCase;
@@ -26,6 +29,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,6 +46,7 @@ public class TradeController {
   private final TradeWriteUseCase writeUseCase;
   private final TradeReadUseCase readUseCase;
   private final TradeModifyUseCase modifyUseCase;
+  private final TradeDeleteUseCase deleteUseCase;
 
   @PostMapping
   public ResponseEntity<CreateTradeResponse> handleCreateTrade(
@@ -88,5 +93,15 @@ public class TradeController {
     ChangeTradeItemsCommand command = ChangeTradeItemsCommand.of(tradeId, request.itemIds(), memberId);
     modifyUseCase.changeTradeItemProcess(command);
     return new CommonResponse<>(true, UPDATED);
+  }
+
+  @DeleteMapping("/{tradeId}")
+  public CommonResponse<ResponseSymbol> handleDeleteTrade(
+      @PathVariable Long tradeId,
+      @AuthenticationId UUID memberId
+  ) {
+    DeleteTradeCommand command = DeleteTradeCommand.of(tradeId, memberId);
+    deleteUseCase.deleteTradeProcess(command);
+    return new CommonResponse<>(true, DELETED);
   }
 }

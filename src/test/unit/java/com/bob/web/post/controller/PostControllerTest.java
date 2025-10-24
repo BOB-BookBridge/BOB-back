@@ -167,7 +167,7 @@ class PostControllerTest {
     PostsResult result = new PostsResult(2L, DEFAULT_POST_SUMMARY());
     TradeStatusMapResult tradeStatusResult = TradeStatusMapResult.of(Map.of());
     given(readUseCase.readFilteredPostsProcess(any(), any())).willReturn(result);
-    given(tradeReadUseCase.readTradeStatusProcess(any())).willReturn(tradeStatusResult);
+    given(tradeReadUseCase.readTradeStatusMapProcess(any())).willReturn(tradeStatusResult);
 
     // when & then
     mvc.perform(get("/posts")
@@ -187,7 +187,7 @@ class PostControllerTest {
         .andExpect(jsonPath("$.posts[1].postTitle").value("오브젝트"));
 
     verify(readUseCase, times(1)).readFilteredPostsProcess(any(), any());
-    verify(tradeReadUseCase, times(1)).readTradeStatusProcess(any());
+    verify(tradeReadUseCase, times(1)).readTradeStatusMapProcess(any());
   }
 
   @Test

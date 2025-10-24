@@ -35,9 +35,7 @@ CREATE TABLE IF NOT EXISTS member_books (
     book_id BIGINT NOT NULL,
     usage_id BIGINT,
     status ENUM('BEST', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,
-    is_remove BOOLEAN DEFAULT FALSE,
-    CONSTRAINT fk_mb_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
-    CONSTRAINT fk_mb_book FOREIGN KEY (book_id) REFERENCES books(id)
+    is_remove BOOLEAN DEFAULT FALSE
 );
 
 -- ========================
@@ -46,7 +44,7 @@ CREATE TABLE IF NOT EXISTS member_books (
 CREATE TABLE IF NOT EXISTS interests (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     canonical_name VARCHAR(120) NOT NULL,
-    created_at     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     CONSTRAINT uk_interests_canonical UNIQUE KEY (canonical_name)
 );
 
@@ -59,8 +57,6 @@ CREATE TABLE IF NOT EXISTS member_interests (
     interest_id BIGINT     NOT NULL,
     display_name VARCHAR(100) NOT NULL,
     created_at  DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    CONSTRAINT fk_mi_member   FOREIGN KEY (member_id)  REFERENCES members(id)   ON DELETE CASCADE,
-    CONSTRAINT fk_mi_interest FOREIGN KEY (interest_id) REFERENCES interests(id),
     CONSTRAINT uk_member_interest UNIQUE KEY (member_id, interest_id)
 );
 
@@ -70,8 +66,7 @@ CREATE TABLE IF NOT EXISTS member_interests (
 CREATE TABLE IF NOT EXISTS categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(20) NOT NULL,
-    parent_id INT,
-    FOREIGN KEY (parent_id) REFERENCES categories(id)
+    parent_id INT
 );
 
 -- ========================
@@ -93,10 +88,7 @@ CREATE TABLE IF NOT EXISTS posts (
     view_count INT DEFAULT 0,
     scrap_count INT DEFAULT 0,
     status ENUM('ACTIVE', 'WITHHELD', 'HIDDEN', 'REMOVED'),
-    created_at DATETIME,
-    FOREIGN KEY (category_id) REFERENCES categories(id),
-    FOREIGN KEY (seller_id) REFERENCES members(id),
-    FOREIGN KEY (book_id) REFERENCES books(id)
+    created_at DATETIME
 );
 
 -- ========================
@@ -106,9 +98,7 @@ CREATE TABLE IF NOT EXISTS post_favorites (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     member_id BINARY(16) NOT NULL,
     post_id BIGINT NOT NULL,
-    created_at DATETIME,
-    FOREIGN KEY (member_id) REFERENCES members(id),
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    created_at DATETIME
 );
 
 -- ========================
@@ -121,8 +111,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     receiver_id BINARY(16) NOT NULL,
     body VARCHAR(255) NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    created_at DATETIME,
-    FOREIGN KEY (receiver_id) REFERENCES members(id)
+    created_at DATETIME
 );
 
 -- ========================
@@ -141,8 +130,7 @@ CREATE TABLE IF NOT EXISTS sigg_areas (
     id INT PRIMARY KEY,
     sido_area_id INT NOT NULL,
     adm_code VARCHAR(5) NOT NULL,
-    name VARCHAR(50) NOT NULL,
-    FOREIGN KEY (sido_area_id) REFERENCES sido_areas(id)
+    name VARCHAR(50) NOT NULL
 );
 
 -- ========================
@@ -153,8 +141,7 @@ CREATE TABLE IF NOT EXISTS emd_areas (
     sigg_area_id INT NOT NULL,
     adm_code VARCHAR(10) NOT NULL,
     name VARCHAR(50) NOT NULL,
-    geom GEOMETRY SRID 4326,
-    FOREIGN KEY (sigg_area_id) REFERENCES sigg_areas(id)
+    geom GEOMETRY SRID 4326
 );
 
 -- ========================
@@ -164,9 +151,7 @@ CREATE TABLE IF NOT EXISTS activity_areas (
     member_id BINARY(16) NOT NULL,
     emd_area_id INT NOT NULL,
     authentication_at DATE NOT NULL,
-    PRIMARY KEY (member_id, emd_area_id),
-    FOREIGN KEY (member_id) REFERENCES members(id),
-    FOREIGN KEY (emd_area_id) REFERENCES emd_areas(id)
+    PRIMARY KEY (member_id, emd_area_id)
 );
 
 -- ========================
@@ -180,10 +165,7 @@ CREATE TABLE IF NOT EXISTS trades (
     is_far BOOLEAN DEFAULT FALSE,
     status ENUM('CANCELED', 'REQUESTED', 'ACCEPTED', 'REJECTED', 'RESERVED', 'COMPLETED') NOT NULL,
     updated_at DATETIME NOT NULL,
-    created_at DATETIME,
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (seller_id) REFERENCES members(id),
-    FOREIGN KEY (buyer_id) REFERENCES members(id)
+    created_at DATETIME
 );
 
 -- ========================
@@ -208,9 +190,7 @@ CREATE TABLE IF NOT EXISTS chat_rooms (
     title_suffix VARCHAR(100) NOT NULL,
     last_chat_message VARCHAR(500),
     last_chat_at DATETIME,
-    created_at DATETIME NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (trade_id) REFERENCES trades(id)
+    created_at DATETIME NOT NULL
 );
 
 -- ========================
@@ -223,9 +203,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     type ENUM('TEXT', 'IMAGE', 'SYSTEM', 'MIX') NOT NULL,
     content VARCHAR(500),
     is_read BOOLEAN DEFAULT FALSE,
-    created_at DATETIME NOT NULL,
-    FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id),
-    FOREIGN KEY (sender_id) REFERENCES members(id)
+    created_at DATETIME NOT NULL
 );
 
 -- ========================
@@ -235,9 +213,7 @@ CREATE TABLE IF NOT EXISTS chat_room_members (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     chat_room_id BIGINT NOT NULL,
     member_id BINARY(16) NOT NULL,
-    exited_at DATETIME,
-    FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id),
-    FOREIGN KEY (member_id) REFERENCES members(id)
+    exited_at DATETIME
 );
 
 CREATE TABLE IF NOT EXISTS files (

@@ -69,10 +69,12 @@ public enum ApplicationError {
   TRADE_STATUS_NOT_CHANGEABLE("E607", "거래 상태를 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
   TRADE_ALREADY_ABORTED("E608", "이미 중단된 거래입니다.", HttpStatus.BAD_REQUEST),
   TRADE_ALREADY_COMPLETED("E609", "이미 완료된 거래입니다.", HttpStatus.BAD_REQUEST),
+  TRADE_REMOVE_DENIED_BY_REQUESTER("E610", "거래 삭제는 거래 요청자만 가능합니다.", HttpStatus.FORBIDDEN),
+  TRADE_REMOVE_DENIED_BY_STATUS("E611", "거래 삭제는 취소, 거절 단계에서만 가능합니다.", HttpStatus.BAD_REQUEST),
 
-  TRADE_ITEMS_UNCHANGED("E611", "거래 물품의 변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
-  UNCHANGEABLE_TRADE_ITEM("E612", "예약, 완료 상태의 거래는 거래 물품 변경이 불가능합니다.", HttpStatus.BAD_REQUEST),
-  MAIN_TRADE_ITEM_CONTAINED("E613", "거래 대표 물품은 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
+  TRADE_ITEMS_UNCHANGED("E651", "거래 물품의 변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
+  UNCHANGEABLE_TRADE_ITEM("E652", "예약, 완료 상태의 거래는 거래 물품 변경이 불가능합니다.", HttpStatus.BAD_REQUEST),
+  MAIN_TRADE_ITEM_CONTAINED("E653", "거래 대표 물품은 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
 
   // 알림 예외
   NOT_EXISTS_NOTIFICATION("E701", "알림을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),

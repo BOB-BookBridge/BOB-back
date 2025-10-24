@@ -10,6 +10,8 @@ import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_A
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_COMPLETED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_REQUESTER;
+import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_STATUS;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_NOT_CHANGEABLE;
 import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
 import static com.bob.support.fixture.command.ChangeTradeStatusCommandFixture.DEFAULT_CHANGE_STATUS_COMMAND;
@@ -52,9 +54,11 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
-import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
+import com.bob.domain.trade.service.dto.command.DeleteTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradeStatusMapQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradeStatusQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.query.SearchKey;
 import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
@@ -62,6 +66,7 @@ import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
+import com.bob.domain.trade.service.dto.response.TradeStatusResult;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeChatPort;
@@ -327,17 +332,17 @@ class TradeServiceTest {
   }
 
   @Test
-  void 거래_상태_조회() {
+  void 거래_상태_map_조회() {
     // given
     UUID memberId = MEMBER_ID;
     List<Long> postIds = List.of(10L, 20L);
     List<Trade> trades = List.of(REQUESTED_TRADE(1L, 10L), RESERVED_TRADE(2L, 20L));
     given(tradeReader.readTradesByBuyerIdAndPostId(memberId, postIds)).willReturn(trades);
 
-    ReadParticipateTradeStatusQuery query = ReadParticipateTradeStatusQuery.of(memberId, postIds);
+    ReadTradeStatusMapQuery query = ReadTradeStatusMapQuery.of(memberId, postIds);
 
     // when
-    TradeStatusMapResult result = tradeService.readTradeStatusProcess(query);
+    TradeStatusMapResult result = tradeService.readTradeStatusMapProcess(query);
 
     // then
     assertThat(result).isNotNull();
@@ -346,6 +351,23 @@ class TradeServiceTest {
         .containsEntry(20L, "RESERVED");
 
     then(tradeReader).should().readTradesByBuyerIdAndPostId(memberId, postIds);
+  }
+
+  @Test
+  void 거래_상태_조회() {
+    // given
+    Long tradeId = 1L;
+    given(tradeRepository.findById(tradeId)).willReturn(Optional.of(DEFAULT_TRADE_WITH_ID));
+    ReadTradeStatusQuery query = ReadTradeStatusQuery.of(tradeId);
+
+    // when
+    TradeStatusResult result = tradeService.readTradeStatusProcess(query);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.status()).isEqualTo("REQUESTED");
+
+    then(tradeRepository).should().findById(tradeId);
   }
 
   @Test
@@ -649,6 +671,61 @@ class TradeServiceTest {
 
     then(tradeItemService).shouldHaveNoInteractions();
     then(eventPublisher).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 거래_삭제() {
+    // given
+    UUID buyerId = OTHER_MEMBER_ID;
+    Long tradeId = 1L;
+    Trade canceled = CANCELED_TRADE(tradeId, 1L);
+    given(tradeReader.readTradeById(tradeId)).willReturn(canceled);
+
+    // when
+    tradeService.deleteTradeProcess(new DeleteTradeCommand(tradeId, buyerId));
+
+    // then
+    then(tradeReader).should(times(1)).readTradeById(tradeId);
+    then(tradeItemService).should(times(1)).removeTradeItems(tradeId);
+    then(tradeRepository).should(times(1)).deleteById(tradeId);
+  }
+
+  @Test
+  void 거래_삭제_시_구매자가_아니면_예외가_발생한다() {
+    // given
+    UUID sellerId = MEMBER_ID;
+    Long tradeId = 1L;
+    Trade canceled = CANCELED_TRADE(tradeId, 1L);
+    DeleteTradeCommand command = DeleteTradeCommand.of(tradeId, sellerId);
+    given(tradeReader.readTradeById(tradeId)).willReturn(canceled);
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.deleteTradeProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(TRADE_REMOVE_DENIED_BY_REQUESTER.getMessage());
+
+    then(tradeReader).should(times(1)).readTradeById(tradeId);
+    then(tradeItemService).shouldHaveNoInteractions();
+    then(tradeRepository).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void 거래_삭제_시_중단_단계가_아니면_예외가_발생한다() {
+    // given
+    Long tradeId = 1L;
+    UUID buyerId = OTHER_MEMBER_ID;
+    Trade reserved = RESERVED_TRADE(tradeId, 1L);
+    DeleteTradeCommand command = DeleteTradeCommand.of(tradeId, buyerId);
+    given(tradeReader.readTradeById(tradeId)).willReturn(reserved);
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.deleteTradeProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(TRADE_REMOVE_DENIED_BY_STATUS.getMessage());
+
+    then(tradeReader).should(times(1)).readTradeById(tradeId);
+    then(tradeItemService).shouldHaveNoInteractions();
+    then(tradeRepository).shouldHaveNoInteractions();
   }
 
   private static String extractEventBody(Object event) {
