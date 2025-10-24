@@ -23,6 +23,8 @@ import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_A
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_COMPLETED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_REQUESTER;
+import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_STATUS;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_NOT_CHANGEABLE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
 import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
@@ -37,6 +39,7 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
+import com.bob.domain.trade.service.dto.command.DeleteTradeCommand;
 import com.bob.domain.trade.service.dto.query.ReadTradeStatusMapQuery;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
@@ -61,6 +64,7 @@ import com.bob.domain.trade.service.port.out.TradeMemberPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.port.view.TradeItemView;
 import com.bob.domain.trade.service.reader.TradeReader;
+import com.bob.domain.trade.usecase.TradeDeleteUseCase;
 import com.bob.domain.trade.usecase.TradeModifyUseCase;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.domain.trade.usecase.TradeWriteUseCase;
@@ -81,7 +85,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeModifyUseCase {
+public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeModifyUseCase, TradeDeleteUseCase {
 
   private final TradeRepository tradeRepository;
   private final TradeReader tradeReader;
@@ -351,6 +355,25 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
         .filter(t -> t.getStatus().isProcessed())
         .findAny()
         .ifPresent(t -> { throw new ApplicationException(TRADE_ALREADY_PROCESSED); });
+  }
+
+  @Transactional
+  public void deleteTradeProcess(DeleteTradeCommand command) {
+    Trade trade = tradeReader.readTradeById(command.id());
+    verifyTradeBuyer(trade.getBuyerId(), command.requesterId());
+    verifyTradeRemovable(trade);
+    tradeItemService.removeTradeItems(trade.getId());
+    tradeRepository.deleteById(trade.getId());
+  }
+
+  private static void verifyTradeBuyer(UUID buyerId, UUID requesterId) {
+    if (!buyerId.equals(requesterId))
+      throw new ApplicationException(TRADE_REMOVE_DENIED_BY_REQUESTER);
+  }
+
+  private static void verifyTradeRemovable(Trade trade) {
+    if (!trade.getStatus().isAborted())
+      throw new ApplicationException(TRADE_REMOVE_DENIED_BY_STATUS);
   }
 
   private void sendTradeNotification(TradePostSummary post, UUID senderId, UUID receiverId, String body) {

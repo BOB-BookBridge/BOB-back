@@ -44,4 +44,6 @@ public interface TradeItemRepository extends CrudRepository<TradeItem, Long> {
          AND ti.itemId in :itemIds
       """)
   void deleteTradeItem(Long tradeId, Owner owner, Collection<Long> itemIds);
+
+  void deleteTradeItemsByTradeId(Long tradeId);
 }
