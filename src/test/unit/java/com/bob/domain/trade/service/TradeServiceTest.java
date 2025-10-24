@@ -52,9 +52,10 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
-import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradeStatusMapQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradeStatusQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.query.SearchKey;
 import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
@@ -62,6 +63,7 @@ import com.bob.domain.trade.service.dto.response.CreateTradeResponse;
 import com.bob.domain.trade.service.dto.response.PostTradesResponse;
 import com.bob.domain.trade.service.dto.response.TradeDetailResponse;
 import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
+import com.bob.domain.trade.service.dto.response.TradeStatusResult;
 import com.bob.domain.trade.service.dto.response.TradesResponse;
 import com.bob.domain.trade.service.dto.response.internal.TradeSummary;
 import com.bob.domain.trade.service.port.out.TradeChatPort;
@@ -327,17 +329,17 @@ class TradeServiceTest {
   }
 
   @Test
-  void 거래_상태_조회() {
+  void 거래_상태_map_조회() {
     // given
     UUID memberId = MEMBER_ID;
     List<Long> postIds = List.of(10L, 20L);
     List<Trade> trades = List.of(REQUESTED_TRADE(1L, 10L), RESERVED_TRADE(2L, 20L));
     given(tradeReader.readTradesByBuyerIdAndPostId(memberId, postIds)).willReturn(trades);
 
-    ReadParticipateTradeStatusQuery query = ReadParticipateTradeStatusQuery.of(memberId, postIds);
+    ReadTradeStatusMapQuery query = ReadTradeStatusMapQuery.of(memberId, postIds);
 
     // when
-    TradeStatusMapResult result = tradeService.readTradeStatusProcess(query);
+    TradeStatusMapResult result = tradeService.readTradeStatusMapProcess(query);
 
     // then
     assertThat(result).isNotNull();
@@ -346,6 +348,23 @@ class TradeServiceTest {
         .containsEntry(20L, "RESERVED");
 
     then(tradeReader).should().readTradesByBuyerIdAndPostId(memberId, postIds);
+  }
+
+  @Test
+  void 거래_상태_조회() {
+    // given
+    Long tradeId = 1L;
+    given(tradeRepository.findById(tradeId)).willReturn(Optional.of(DEFAULT_TRADE_WITH_ID));
+    ReadTradeStatusQuery query = ReadTradeStatusQuery.of(tradeId);
+
+    // when
+    TradeStatusResult result = tradeService.readTradeStatusProcess(query);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.status()).isEqualTo("REQUESTED");
+
+    then(tradeRepository).should().findById(tradeId);
   }
 
   @Test

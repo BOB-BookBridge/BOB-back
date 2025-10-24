@@ -16,8 +16,8 @@ import com.bob.domain.chat.service.dto.response.UnreadMessageCountResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
-import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
-import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
+import com.bob.domain.trade.service.dto.query.ReadTradeStatusQuery;
+import com.bob.domain.trade.service.dto.response.TradeStatusResult;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.web.chat.request.CreateChatMessageRequest;
 import com.bob.web.chat.response.ChatRoomResponse;
@@ -79,9 +79,9 @@ public class ChatRoomController {
   ) {
     ChatRoomResult result = readUseCase.readChatRoomDetailProcess(ReadChatRoomDetailQuery.of(chatroomId, memberId));
     Long tradeId = result.trade().id();
-    ReadParticipateTradeStatusQuery query = ReadParticipateTradeStatusQuery.of(memberId, List.of(tradeId));
-    TradeStatusMapResult statusResult = tradeReadUseCase.readTradeStatusProcess(query);
-    return ResponseEntity.ok().body(ChatRoomResponse.from(result, statusResult.statusMap().get(tradeId)));
+    ReadTradeStatusQuery query = ReadTradeStatusQuery.of(tradeId);
+    TradeStatusResult statusResult = tradeReadUseCase.readTradeStatusProcess(query);
+    return ResponseEntity.ok().body(ChatRoomResponse.from(result, statusResult.status()));
   }
 
   @GetMapping("/{chatRoomId}/messages")

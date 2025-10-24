@@ -20,9 +20,8 @@ import com.bob.domain.chat.service.dto.response.ChatMessageSendResponse;
 import com.bob.domain.chat.usecase.ChatRoomModifyUseCase;
 import com.bob.domain.chat.usecase.ChatRoomReadUseCase;
 import com.bob.domain.chat.usecase.ChatRoomWriteUseCase;
-import com.bob.domain.trade.service.dto.response.TradeStatusMapResult;
+import com.bob.domain.trade.service.dto.response.TradeStatusResult;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -118,9 +117,9 @@ class ChatRoomControllerTest {
   void 채팅방_상세_조회_API_호출() throws Exception {
     // given
     Long chatRoomId = 1L;
-    TradeStatusMapResult tradeStatusResult = TradeStatusMapResult.of(Map.of(1L, "REQUESTED"));
+    TradeStatusResult statusResult = TradeStatusResult.of("REQUESTED");
     given(readUseCase.readChatRoomDetailProcess(any())).willReturn(DEFAULT_CHATROOM_DETAIL);
-    given(tradeReadUseCase.readTradeStatusProcess(any())).willReturn(tradeStatusResult);
+    given(tradeReadUseCase.readTradeStatusProcess(any())).willReturn(statusResult);
 
     // when & then
     mvc.perform(get("/chatrooms/{chatroomId}", chatRoomId)

@@ -14,7 +14,7 @@ import com.bob.domain.post.usecase.PostDeleteUseCase;
 import com.bob.domain.post.usecase.PostModifyUseCase;
 import com.bob.domain.post.usecase.PostReadUseCase;
 import com.bob.domain.post.usecase.PostWriteUseCase;
-import com.bob.domain.trade.service.dto.query.ReadParticipateTradeStatusQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradeStatusMapQuery;
 import com.bob.domain.trade.usecase.TradeReadUseCase;
 import com.bob.web.common.AuthenticationId;
 import com.bob.web.common.CommonResponse;
@@ -86,8 +86,8 @@ public class PostController {
 
     Map<Long, String> statusMap = new HashMap<>();
     if (memberId != null) {
-      ReadParticipateTradeStatusQuery query = ReadParticipateTradeStatusQuery.of(memberId, ids);
-      statusMap.putAll(tradeReadUseCase.readTradeStatusProcess(query).statusMap());
+      ReadTradeStatusMapQuery query = ReadTradeStatusMapQuery.of(memberId, ids);
+      statusMap.putAll(tradeReadUseCase.readTradeStatusMapProcess(query).statusMap());
     }
     return ResponseEntity.ok(PostsResponse.from(result, statusMap));
   }
