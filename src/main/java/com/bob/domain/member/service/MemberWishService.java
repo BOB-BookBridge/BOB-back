@@ -5,9 +5,14 @@ import static com.bob.global.exception.response.ApplicationError.MEMBER_WISH_DUP
 import com.bob.domain.member.entity.MemberWish;
 import com.bob.domain.member.repository.MemberWishRepository;
 import com.bob.domain.member.service.dto.command.CreateMemberWishCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberWishesQuery;
+import com.bob.domain.member.service.dto.response.MemberWishesResult;
+import com.bob.domain.member.service.dto.response.internal.MemberWishSummary;
 import com.bob.domain.member.service.port.out.MemberBookPort;
+import com.bob.domain.member.usecase.MemberWishReadUseCase;
 import com.bob.domain.member.usecase.MemberWishWriteUseCase;
 import com.bob.global.exception.exceptions.ApplicationException;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class MemberWishService implements MemberWishWriteUseCase {
+public class MemberWishService implements MemberWishWriteUseCase, MemberWishReadUseCase {
 
   private final MemberWishRepository repository;
 
@@ -37,5 +42,17 @@ public class MemberWishService implements MemberWishWriteUseCase {
   private void verifyDuplicated(UUID memberId, Long itemId) {
     if (repository.existsByMemberIdAndBookId(memberId, itemId))
       throw new ApplicationException(MEMBER_WISH_DUPLICATED);
+  }
+
+  @Transactional(readOnly = true)
+  public MemberWishesResult readWishesProcess(ReadMemberWishesQuery query) {
+    List<MemberWish> wishes = repository.findAllByMemberId(query.memberId());
+    List<MemberWishSummary> summaries = getMemberWishSummaries(wishes);
+    return MemberWishesResult.from(summaries);
+  }
+
+  private List<MemberWishSummary> getMemberWishSummaries(List<MemberWish> wishes) {
+    List<Long> bookIds = wishes.stream().map(MemberWish::getBookId).toList();
+    return MemberWishSummary.listFrom(wishes, bookPort.readBookSummaries(bookIds));
   }
 }

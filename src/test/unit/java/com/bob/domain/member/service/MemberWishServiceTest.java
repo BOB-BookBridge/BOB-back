@@ -3,6 +3,9 @@ package com.bob.domain.member.service;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_WISH_DUPLICATED;
 import static com.bob.support.fixture.command.CreateMemberWishCommandFixture.DEFAULT_CREATE_WISH_COMMAND;
 import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
+import static com.bob.support.fixture.domain.MemberWishFixture.DEFAULT_MEMBER_WISHES;
+import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_RESPONSES;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -13,8 +16,11 @@ import static org.mockito.Mockito.times;
 import com.bob.domain.member.entity.MemberWish;
 import com.bob.domain.member.repository.MemberWishRepository;
 import com.bob.domain.member.service.dto.command.CreateMemberWishCommand;
+import com.bob.domain.member.service.dto.query.ReadMemberWishesQuery;
+import com.bob.domain.member.service.dto.response.MemberWishesResult;
 import com.bob.domain.member.service.port.out.MemberBookPort;
 import com.bob.global.exception.exceptions.ApplicationException;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -69,5 +75,26 @@ class MemberWishServiceTest {
         .hasMessage(MEMBER_WISH_DUPLICATED.getMessage());
 
     then(repository).should(never()).save(any(MemberWish.class));
+  }
+
+  @Test
+  void 회원_희망_도서_목록_조회() {
+    // given
+    UUID memberId = MEMBER_ID;
+    ReadMemberWishesQuery query = ReadMemberWishesQuery.of(memberId);
+    given(repository.findAllByMemberId(memberId)).willReturn(DEFAULT_MEMBER_WISHES);
+    given(bookPort.readBookSummaries(List.of(1L, 2L))).willReturn(DEFAULT_BOOK_RESPONSES);
+
+    // when
+    MemberWishesResult result = service.readWishesProcess(query);
+
+    // then
+    then(repository).should(times(1)).findAllByMemberId(memberId);
+    then(bookPort).should(times(1)).readBookSummaries(List.of(1L, 2L));
+
+    assertThat(result).isNotNull();
+    assertThat(result.wishes()).hasSize(2);
+    assertThat(result.wishes().get(0).id()).isEqualTo(1L);
+    assertThat(result.wishes().get(1).id()).isEqualTo(2L);
   }
 }
