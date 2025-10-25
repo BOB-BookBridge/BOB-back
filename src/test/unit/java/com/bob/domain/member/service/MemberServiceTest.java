@@ -20,6 +20,7 @@ import static com.bob.support.fixture.query.MemberQueryFixture.READ_ME_PROFILE_Q
 import static com.bob.support.fixture.query.MemberQueryFixture.READ_OTHER_PROFILE_QUERY;
 import static com.bob.support.fixture.response.MemberAreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY_RESPONSE;
 import static com.bob.support.fixture.response.MemberBooksResponseFixture.DEFAULT_MEMBER_BOOKS_RESPONSE;
+import static com.bob.support.fixture.response.MemberWishesResultFixture.DEFAULT_MEMBER_WISHES_RESULT;
 import static com.bob.support.fixture.response.interest.InterestNamesFixture.DEFAULT_INTEREST_DISPLAY_NAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,6 +42,7 @@ import com.bob.domain.member.service.dto.command.RecoverAccountCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
+import com.bob.domain.member.service.dto.query.ReadMemberWishesQuery;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.dto.response.SocialLoginResponse;
@@ -77,6 +79,9 @@ class MemberServiceTest {
 
   @Mock
   private MemberInterestService memberInterestService;
+
+  @Mock
+  private MemberWishService memberWishService;
 
   @Mock
   private MemberBookService memberBookService;
@@ -202,6 +207,7 @@ class MemberServiceTest {
 
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
     given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
+    given(memberWishService.readWishesProcess(ReadMemberWishesQuery.of(member.getId()))).willReturn(DEFAULT_MEMBER_WISHES_RESULT);
     given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
     given(memberBookService.readMemberBooksProcess(ReadMemberBooksQuery.of(member.getId()))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
 
@@ -223,6 +229,12 @@ class MemberServiceTest {
     assertThat(response.bookcase()).hasSize(2);
     assertThat(response.bookcase().get(0).id()).isEqualTo(1L);
     assertThat(response.bookcase().get(1).id()).isEqualTo(2L);
+
+    // 내 프로필 조회 시 희망 도서 목록 포함
+    assertThat(response.wishes()).isNotNull();
+    assertThat(response.wishes()).hasSize(2);
+    assertThat(response.wishes().get(0).id()).isEqualTo(1L);
+    assertThat(response.wishes().get(1).id()).isEqualTo(2L);
   }
 
   @Test
@@ -233,6 +245,7 @@ class MemberServiceTest {
 
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
     given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
+    given(memberWishService.readWishesProcess(ReadMemberWishesQuery.of(member.getId()))).willReturn(DEFAULT_MEMBER_WISHES_RESULT);
     given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
     given(memberBookService.readMemberBooksProcess(any(ReadMemberBooksQuery.class))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
 
@@ -249,6 +262,7 @@ class MemberServiceTest {
     assertThat(response.area().emdId()).isEqualTo(EMD_AREA_ID);
     assertThat(response.area().isAuthentication()).isTrue();
     assertThat(response.bookcase()).isNotNull();
+    assertThat(response.wishes()).isNotNull();
   }
 
   @Test
@@ -259,6 +273,7 @@ class MemberServiceTest {
 
     given(memberReader.readMemberById(query.memberId())).willReturn(member);
     given(memberInterestService.readMemberInterests(member.getId())).willReturn(DEFAULT_INTEREST_DISPLAY_NAMES());
+    given(memberWishService.readWishesProcess(ReadMemberWishesQuery.of(member.getId()))).willReturn(DEFAULT_MEMBER_WISHES_RESULT);
     given(areaPort.readMemberAreaSummary(MEMBER_ID)).willReturn(DEFAULT_AREA_SUMMARY_RESPONSE);
     given(memberBookService.readMemberBooksProcess(any(ReadMemberBooksQuery.class))).willReturn(DEFAULT_MEMBER_BOOKS_RESPONSE);
 
@@ -272,6 +287,7 @@ class MemberServiceTest {
     assertThat(response.nickname()).isEqualTo("(알 수 없음)");
     assertThat(response.profileImageUrl()).isNull();
     assertThat(response.interests()).hasSize(0);
+    assertThat(response.bookcase()).isNotNull();
     assertThat(response.bookcase()).isNotNull();
   }
 
