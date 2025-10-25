@@ -49,7 +49,8 @@ public class MemberBookService implements MemberBookWriteUseCase, MemberBookRead
   }
 
   private Long createBook(RegisterMemberBookCommand command) {
-    return bookPort.createBook(command.toCreateBookCommand());
+    return bookPort.create(command.isbn(), command.title(), command.author(), command.description(),
+        command.priceStandard(), command.cover(), command.pubDate());
   }
 
   @Transactional(readOnly = true)

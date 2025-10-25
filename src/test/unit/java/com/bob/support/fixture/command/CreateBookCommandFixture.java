@@ -9,8 +9,8 @@ public class CreateBookCommandFixture {
 
   public static CreateBookCommand DEFAULT_CREATE_BOOK_COMMAND = CreateBookCommand.builder()
       .isbn13(DEFAULT_ISBN)
-      .title("객체지향의 사실과 오해")
-      .author("조영호")
+      .title("제목")
+      .author("작가")
       .description("설명")
       .priceStandard(10000)
       .cover("https://image.url")
