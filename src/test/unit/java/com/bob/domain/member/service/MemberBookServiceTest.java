@@ -1,6 +1,5 @@
 package com.bob.domain.member.service;
 
-import static com.bob.support.fixture.command.CreateBookCommandFixture.NEW_CREATE_BOOK_COMMAND;
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.DEFAULT_REGISTER_MEMBER_BOOK_COMMAND;
 import static com.bob.support.fixture.command.RegisterMemberBookCommandFixture.REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID;
 import static com.bob.support.fixture.domain.MemberBookFixture.DEFAULT_MEMBER_BOOK;
@@ -91,14 +90,14 @@ class MemberBookServiceTest {
   void 회원_책_등록_시_책_id가_null이면_책_생성_및_회원_책_등록() {
     // given
     RegisterMemberBookCommand command = REGISTER_MEMBER_BOOK_COMMAND_WITH_NULL_BOOK_ID;
-    given(bookPort.createBook(NEW_CREATE_BOOK_COMMAND)).willReturn(2L);
+    given(bookPort.create(any(), any(), any(), any(), any(), any(), any())).willReturn(2L);
     given(memberBookRepository.save(any(MemberBook.class))).willReturn(NEW_MEMBER_BOOK());
 
     // when
     service.registerMemberBookProcess(command);
 
     // then
-    then(bookPort).should(times(1)).createBook(NEW_CREATE_BOOK_COMMAND);
+    then(bookPort).should(times(1)).create(any(), any(), any(), any(), any(), any(), any());
     then(memberBookRepository).should(times(1)).save(memberBookCaptor.capture());
 
     MemberBook saved = memberBookCaptor.getValue();

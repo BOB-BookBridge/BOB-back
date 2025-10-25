@@ -4,6 +4,7 @@ import static com.bob.domain.member.entity.Status.WITHDRAW;
 
 import com.bob.domain.member.entity.Member;
 import com.bob.domain.member.service.dto.response.internal.MemberBookSummary;
+import com.bob.domain.member.service.dto.response.internal.MemberWishSummary;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -18,14 +19,16 @@ public record MemberProfileResponse(
     String profileImageUrl,
     List<String> interests,
     Area area,
-    List<MemberBookSummary> bookcase
+    List<MemberBookSummary> bookcase,
+    List<MemberWishSummary> wishes
 ) {
 
   public static MemberProfileResponse from(
       Member member,
       List<String> interestNames,
       MemberAreaSummaryResponse areaSummary,
-      List<MemberBookSummary> bookcase
+      List<MemberBookSummary> bookcase,
+      List<MemberWishSummary> wishes
   ) {
     final boolean removed = member.getStatus() == WITHDRAW;
     final String nickname = removed ? "(알 수 없음)" : member.getNickname();
@@ -43,6 +46,7 @@ public record MemberProfileResponse(
         .interests(interests)
         .area(Area.of(areaSummary.emdId(), areaSummary.validity(), areaSummary.authenticatedAt()))
         .bookcase(summaries)
+        .wishes(wishes)
         .build();
   }
 

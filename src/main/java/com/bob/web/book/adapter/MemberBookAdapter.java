@@ -7,6 +7,7 @@ import com.bob.domain.book.service.dto.response.BookResponse;
 import com.bob.domain.book.usecase.BookReadUseCase;
 import com.bob.domain.book.usecase.BookWriteUseCase;
 import com.bob.domain.member.service.port.out.MemberBookPort;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,10 @@ public class MemberBookAdapter implements MemberBookPort {
   private final BookReadUseCase readUseCase;
 
   @Override
-  public Long createBook(CreateBookCommand command) {
+  public Long create(String isbn13, String title, String author, String description, Integer priceStandard,
+      String cover, LocalDate pubDate
+  ) {
+    CreateBookCommand command = CreateBookCommand.of(isbn13, title, author, description, priceStandard, cover, pubDate);
     return writeUseCase.createBookProcess(command);
   }
 

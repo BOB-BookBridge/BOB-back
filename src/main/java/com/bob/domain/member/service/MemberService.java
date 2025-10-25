@@ -22,11 +22,13 @@ import com.bob.domain.member.service.dto.command.RecoverAccountCommand;
 import com.bob.domain.member.service.dto.command.RemoveMemberCommand;
 import com.bob.domain.member.service.dto.command.SocialLoginCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberBooksQuery;
+import com.bob.domain.member.service.dto.query.ReadMemberWishesQuery;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
 import com.bob.domain.member.service.dto.response.MemberAreaSummaryResponse;
 import com.bob.domain.member.service.dto.response.MemberBooksResponse;
 import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.service.dto.response.SocialLoginResponse;
+import com.bob.domain.member.service.dto.response.internal.MemberWishSummary;
 import com.bob.domain.member.service.port.out.MemberAreaPort;
 import com.bob.domain.member.service.port.out.MemberMailPort;
 import com.bob.domain.member.service.port.out.MemberRedisPort;
@@ -58,6 +60,7 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
 
   private final MemberInterestService memberInterestService;
   private final MemberBookService memberBookService;
+  private final MemberWishService memberWishService;
 
   private final MemberAreaPort areaPort;
   private final MemberMailPort mailPort;
@@ -108,9 +111,10 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   public MemberProfileResponse readProfileProcess(ReadProfileQuery query) {
     Member member = memberReader.readMemberById(query.memberId());
     List<String> interests = memberInterestService.readMemberInterests(member.getId());
+    List<MemberWishSummary> wishes = memberWishService.readWishesProcess(ReadMemberWishesQuery.of(member.getId())).wishes();
     MemberAreaSummaryResponse area = areaPort.readMemberAreaSummary(query.memberId());
     MemberBooksResponse books = memberBookService.readMemberBooksProcess(ReadMemberBooksQuery.of(member.getId()));
-    return MemberProfileResponse.from(member, interests, area, books.bookcase());
+    return MemberProfileResponse.from(member, interests, area, books.bookcase(), wishes);
   }
 
   @Transactional

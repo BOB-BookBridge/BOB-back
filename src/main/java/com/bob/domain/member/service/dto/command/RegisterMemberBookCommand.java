@@ -1,6 +1,5 @@
 package com.bob.domain.member.service.dto.command;
 
-import com.bob.domain.book.service.dto.command.CreateBookCommand;
 import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Builder;
@@ -25,9 +24,5 @@ public record RegisterMemberBookCommand(
         .bookId(bookId)
         .status(status)
         .build();
-  }
-
-  public CreateBookCommand toCreateBookCommand() {
-    return CreateBookCommand.of(isbn, title, author, description, priceStandard, cover, pubDate);
   }
 }

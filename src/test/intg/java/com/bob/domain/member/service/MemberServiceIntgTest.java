@@ -65,6 +65,9 @@ class MemberServiceIntgTest extends TestContainerSupport {
   private MemberInterestService memberInterestService;
 
   @Autowired
+  private MemberWishService memberWishService;
+
+  @Autowired
   private MemberInterestRepository memberInterestRepository;
 
   @Autowired

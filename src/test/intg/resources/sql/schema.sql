@@ -39,6 +39,15 @@ CREATE TABLE IF NOT EXISTS member_books (
 );
 
 -- ========================
+-- MEMBER WISHES TABLE
+-- ========================
+CREATE TABLE IF NOT EXISTS member_wishes (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    member_id BINARY(16) NOT NULL,
+    book_id BIGINT NOT NULL
+);
+
+-- ========================
 -- INTERESTS TABLE
 -- ========================
 CREATE TABLE IF NOT EXISTS interests (
