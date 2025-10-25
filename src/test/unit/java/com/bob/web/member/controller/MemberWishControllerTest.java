@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -13,8 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 import com.bob.domain.member.service.dto.command.CreateMemberWishCommand;
+import com.bob.domain.member.service.dto.command.DeleteMemberWishCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberWishesQuery;
 import com.bob.domain.member.service.dto.response.MemberWishesResult;
+import com.bob.domain.member.usecase.MemberWishDeleteUseCase;
 import com.bob.domain.member.usecase.MemberWishReadUseCase;
 import com.bob.domain.member.usecase.MemberWishWriteUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +42,9 @@ class MemberWishControllerTest {
 
   @Mock
   private MemberWishReadUseCase readUseCase;
+
+  @Mock
+  private MemberWishDeleteUseCase deleteUseCase;
 
   private MockMvc mvc;
 
@@ -75,7 +81,7 @@ class MemberWishControllerTest {
   }
 
   @Test
-  void 회원_희망_도서_목록_조회_성공() throws Exception {
+  void 회원_희망_도서_목록_조회_기능_호출() throws Exception {
     // given
     MemberWishesResult result = DEFAULT_MEMBER_WISHES_RESULT;
     given(readUseCase.readWishesProcess(any(ReadMemberWishesQuery.class))).willReturn(result);
@@ -88,5 +94,20 @@ class MemberWishControllerTest {
         .andExpect(jsonPath("$.wishes[1].id").value(result.wishes().get(1).id().intValue()));
 
     verify(readUseCase, times(1)).readWishesProcess(any(ReadMemberWishesQuery.class));
+  }
+
+  @Test
+  void 회원_희망_도서_삭제_기능_호출() throws Exception {
+    // given
+    long wishId = 1L;
+
+    // when & then
+    mvc.perform(delete("/members/wishes/{wishId}", wishId)
+            .requestAttr("memberId", MEMBER_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.result").value("DELETED"));
+
+    verify(deleteUseCase, times(1)).deleteWishProcess(any(DeleteMemberWishCommand.class));
   }
 }

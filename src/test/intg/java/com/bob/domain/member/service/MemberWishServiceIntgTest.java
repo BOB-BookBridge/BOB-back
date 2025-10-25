@@ -6,12 +6,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.bob.domain.member.entity.MemberWish;
 import com.bob.domain.member.repository.MemberWishRepository;
 import com.bob.domain.member.service.dto.command.CreateMemberWishCommand;
+import com.bob.domain.member.service.dto.command.DeleteMemberWishCommand;
 import com.bob.domain.member.service.dto.query.ReadMemberWishesQuery;
 import com.bob.domain.member.service.dto.response.MemberWishesResult;
 import com.bob.domain.member.service.dto.response.internal.MemberWishSummary;
 import com.bob.support.TestContainerSupport;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -82,6 +84,21 @@ class MemberWishServiceIntgTest extends TestContainerSupport {
     assertThat(result.wishes()).hasSize(2);
     List<String> titles = result.wishes().stream().map(MemberWishSummary::title).toList();
     assertThat(titles).containsExactlyInAnyOrder("자바의 정석", "자바 ORM 표준 JPA 프로그래밍");
+  }
+
+  @Test
+  void 회원_희망_도서_삭제() {
+    // given
+    UUID memberId = UUID.fromString("0197365f-8074-7d24-ba91-0c5fc1b37ca4");
+    Long wishId = wish1.getId();
+    DeleteMemberWishCommand command = DeleteMemberWishCommand.of(memberId, wishId);
+
+    // when
+    service.deleteWishProcess(command);
+
+    // then
+    Optional<MemberWish> removed = repository.findById(wishId);
+    assertThat(removed).isNotPresent();
   }
 
   private MemberWish createWish(UUID memberId, Long bookId) {
