@@ -15,7 +15,7 @@ public enum ApplicationError {
   UN_SUPPORTED_CATEGORY("E002", "지원하지 않는 카테고리입니다.", HttpStatus.BAD_REQUEST),
   UN_SUPPORTED_BOOK_STATUS("E003", "지원하지 않는 도서 상태입니다.", HttpStatus.BAD_REQUEST),
   UN_SUPPORTED_DOMAIN("E004", "지원하지 않는 도메인입니다.", HttpStatus.BAD_REQUEST),
-  IS_SAME_REQUEST("E005", "변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
+  NO_CHANGES("E005", "변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
   VALIDATION_ERROR("E006", "요청 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
   TYPE_MISMATCH("E007", "요청 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
   NOT_EXIST_OBJECT("E008", "데이터가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
@@ -50,6 +50,7 @@ public enum ApplicationError {
   ALREADY_REMOVED_POST_STATE("E306", "이미 삭제 된 게시글입니다.", HttpStatus.BAD_REQUEST),
   UNREMOVABLE_POST_STATE("E307", "거래 예약 상태의 게시글을 삭제할 수 없습니다.", HttpStatus.BAD_REQUEST),
   NOT_ACCESSIBLE_POST("E308", "삭제되었거나 보류 중인 게시글은 조회할 수 없습니다.", HttpStatus.NOT_FOUND),
+  NOT_EXIST_REGISTRATION_WISH("E309", "등록된 희망 도서가 없습니다.", HttpStatus.BAD_REQUEST),
 
   // 채팅 예외
   IS_SAME_CHAT_MEMBER("E401", "자신과의 채팅은 불가능합니다.", HttpStatus.BAD_REQUEST),

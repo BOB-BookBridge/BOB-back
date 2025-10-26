@@ -6,7 +6,7 @@ import static com.bob.domain.member.entity.Status.WITHDRAW;
 import static com.bob.global.event.application.dto.member.type.AccountEventType.RECOVER;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_EMAIL;
 import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
-import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
+import static com.bob.global.exception.response.ApplicationError.NO_CHANGES;
 import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
 import static com.bob.global.utils.random.RandomUtils.generateCode;
 import static com.bob.global.utils.web.CookieUtils.removeCookie;
@@ -129,9 +129,8 @@ public class MemberService implements MemberWriteUseCase, MemberReadUseCase, Mem
   private static void verifyIsSameRequest(Member member, String nickname, List<String> oldInterests, List<String> interests) {
     Set<String> oldLower = oldInterests.stream().map(String::toLowerCase).collect(Collectors.toSet());
     Set<String> newLower = interests.stream().map(String::toLowerCase).collect(Collectors.toSet());
-    if (member.isEqualsNickname(nickname) && Objects.equals(oldLower, newLower)) {
-      throw new ApplicationException(IS_SAME_REQUEST);
-    }
+    if (member.isEqualsNickname(nickname) && Objects.equals(oldLower, newLower))
+      throw new ApplicationException(NO_CHANGES);
   }
 
   @Transactional

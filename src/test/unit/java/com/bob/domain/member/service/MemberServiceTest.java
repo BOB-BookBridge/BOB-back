@@ -4,8 +4,8 @@ import static com.bob.domain.member.entity.Status.ACTIVE;
 import static com.bob.domain.member.entity.Status.WITHDRAW;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_EMAIL;
 import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
-import static com.bob.global.exception.response.ApplicationError.IS_SAME_REQUEST;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_MEMBER;
+import static com.bob.global.exception.response.ApplicationError.NO_CHANGES;
 import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
 import static com.bob.support.fixture.command.ChangeProfileCommandFixture.sameChangeProfileCommand;
 import static com.bob.support.fixture.command.MemberCommandFixture.defaultChangePasswordCommand;
@@ -323,7 +323,7 @@ class MemberServiceTest {
     // when & then
     assertThatThrownBy(() -> memberService.changeProfileProcess(command))
         .isInstanceOf(ApplicationException.class)
-        .hasMessage(IS_SAME_REQUEST.getMessage());
+        .hasMessage(NO_CHANGES.getMessage());
 
     then(memberInterestService).should().readMemberInterests(member.getId());
     then(memberInterestService).should(never()).changeMemberInterests(any(UUID.class), anyList());

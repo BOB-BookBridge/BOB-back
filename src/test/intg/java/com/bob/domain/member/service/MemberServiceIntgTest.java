@@ -221,7 +221,7 @@ class MemberServiceIntgTest extends TestContainerSupport {
     // when & then
     assertThatThrownBy(() -> memberService.changeProfileProcess(command))
         .isInstanceOf(ApplicationException.class)
-        .hasMessage(ApplicationError.IS_SAME_REQUEST.getMessage());
+        .hasMessage(ApplicationError.NO_CHANGES.getMessage());
 
     Member reloaded = memberRepository.findById(member.getId()).orElseThrow();
     assertThat(reloaded.getNickname()).isEqualTo(member.getNickname());
