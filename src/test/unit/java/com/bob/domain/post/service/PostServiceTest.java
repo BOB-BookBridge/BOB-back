@@ -145,6 +145,7 @@ class PostServiceTest {
     assertThat(post.getBookId()).isEqualTo(bookId);
     assertThat(post.getSellerId()).isEqualTo(MEMBER_ID);
     assertThat(post.getCategory()).isEqualTo(category);
+    assertThat(post.isWishOnly()).isFalse();
   }
 
   @Test

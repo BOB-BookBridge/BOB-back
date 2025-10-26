@@ -9,6 +9,7 @@ import static com.bob.domain.post.service.dto.response.internal.PostBookSummaryR
 import static com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse.from;
 import static com.bob.domain.post.service.dto.response.internal.PostMemberSummaryResponse.from;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_REMOVED_POST_STATE;
+import static com.bob.global.exception.response.ApplicationError.NOT_EXIST_REGISTRATION_WISH;
 import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
 import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.UNREMOVABLE_POST_STATE;
@@ -39,6 +40,7 @@ import com.bob.domain.post.service.port.out.PostAreaPort;
 import com.bob.domain.post.service.port.out.PostBookPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.domain.post.service.port.out.PostMemberPort;
+import com.bob.domain.post.service.port.out.PostMemberWishPort;
 import com.bob.domain.post.service.reader.CategoryReader;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.domain.post.usecase.PostDeleteUseCase;
@@ -66,12 +68,14 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   private final CategoryReader categoryReader;
 
   private final PostMemberPort memberPort;
+  private final PostMemberWishPort memberWishPort;
   private final PostBookPort bookPort;
   private final PostAreaPort areaPort;
   private final PostFilePort filePort;
 
   @Transactional
   public PostCreateResponse createPostProcess(CreatePostCommand command) {
+    verifyWishOnly(command.memberId(), command.wishOnly());
     PostAreaSummaryResponse areaSummary = from(areaPort.readPostAreaSummary(command.memberId()));
     verifyAreaAuthentication(areaSummary.validity());
     Category category = categoryReader.readCategoryById(command.categoryId());
@@ -87,14 +91,18 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     return postRepository.save(
         Post.create(category, bookId, areaSummary.emdId(),
             command.bookTitle(), command.postDescription(), command.bookCover(),
-            command.bookStatus(), command.memberId(), sellerBookId, command.sellPrice())
+            command.bookStatus(), command.memberId(), sellerBookId, command.sellPrice(), command.wishOnly())
     );
   }
 
-  private void verifyAreaAuthentication(boolean validity) {
-    if (!validity) {
+  private static void verifyAreaAuthentication(boolean validity) {
+    if (!validity)
       throw new ApplicationException(NOT_VERIFIED_MEMBER);
-    }
+  }
+
+  private void verifyWishOnly(UUID memberId, boolean wishOnly) {
+    if (wishOnly && !memberWishPort.exists(memberId))
+      throw new ApplicationException(NOT_EXIST_REGISTRATION_WISH);
   }
 
   private void imageMapping(List<String> fileNames, Long postId) {

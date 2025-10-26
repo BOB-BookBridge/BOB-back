@@ -21,9 +21,11 @@ public record CreatePostCommand(
     Integer bookPriceStandard,
     String bookCover,
     LocalDate bookPubDate,
-    List<String> fileNames
+    List<String> fileNames,
+    boolean wishOnly
 ) {
 
+  // TODO: book 도메인 의존 제거
   public CreateBookCommand toCreateBookCommand() {
     return CreateBookCommand.of(
         bookIsbn,
