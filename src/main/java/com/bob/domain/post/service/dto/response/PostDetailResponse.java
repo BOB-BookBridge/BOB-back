@@ -1,9 +1,9 @@
 package com.bob.domain.post.service.dto.response;
 
 import com.bob.domain.post.entity.Post;
+import com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse;
 import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse;
 import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse.PostFileSummary;
-import com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse;
 import com.bob.domain.post.service.dto.response.internal.PostMemberSummaryResponse;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +29,7 @@ public record PostDetailResponse(
     Integer viewCount,
     Boolean isFavorite,
     Boolean isOwner,
+    Boolean wishOnly,
     LocalDateTime createdAt
 ) {
 
@@ -60,6 +61,7 @@ public record PostDetailResponse(
         .viewCount(post.getViewCount())
         .isFavorite(isFavorite)
         .isOwner(isOwner)
+        .wishOnly(post.isWishOnly())
         .createdAt(post.getCreatedAt())
         .build();
   }

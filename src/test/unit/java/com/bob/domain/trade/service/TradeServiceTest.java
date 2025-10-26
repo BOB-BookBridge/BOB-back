@@ -176,6 +176,18 @@ class TradeServiceTest {
   }
 
   @Test
+  void 거래_생성_및_저장_시_희망_도서만_제안받기_옵션이_활성_상태이면_예외가_발생한다() {
+    // given
+    CreateTradeCommand command = SAME_MEMBER_CREATE_TRADE_COMMAND;
+    given(postPort.readTradePostSummary(command.postId())).willReturn(DEFAULT_POST_DETAIL_RESPONSE(1L));
+
+    // when & then
+    assertThatThrownBy(() -> tradeService.createTradeProcess(command))
+        .isInstanceOf(ApplicationException.class)
+        .hasMessage(IS_SAME_TRADE_MEMBER.getMessage());
+  }
+
+  @Test
   void 게시글_거래_목록_조회() {
     // given
     UUID requesterId = MEMBER_ID;

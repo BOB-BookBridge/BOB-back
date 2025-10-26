@@ -73,6 +73,7 @@ public enum ApplicationError {
   TRADE_ALREADY_COMPLETED("E609", "이미 완료된 거래입니다.", HttpStatus.BAD_REQUEST),
   TRADE_REMOVE_DENIED_BY_REQUESTER("E610", "거래 삭제는 거래 요청자만 가능합니다.", HttpStatus.FORBIDDEN),
   TRADE_REMOVE_DENIED_BY_STATUS("E611", "거래 삭제는 취소, 거절 단계에서만 가능합니다.", HttpStatus.BAD_REQUEST),
+  TRADE_SELLER_WISH_NOT_MATCH("E612", "요청한 거래 물품이 판매자의 희망 도서에 해당하지 않습니다.", HttpStatus.BAD_REQUEST),
 
   TRADE_ITEMS_UNCHANGED("E651", "거래 물품의 변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
   UNCHANGEABLE_TRADE_ITEM("E652", "예약, 완료 상태의 거래는 거래 물품 변경이 불가능합니다.", HttpStatus.BAD_REQUEST),

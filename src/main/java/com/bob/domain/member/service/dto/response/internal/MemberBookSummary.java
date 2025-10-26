@@ -13,6 +13,7 @@ import lombok.Builder;
 @Builder
 public record MemberBookSummary(
     Long id,
+    Long bookId,
     String status,
     String title,
     String author,
@@ -38,6 +39,7 @@ public record MemberBookSummary(
   public static MemberBookSummary from(MemberBook memberBook, BookResponse book) {
     return MemberBookSummary.builder()
         .id(memberBook.getId())
+        .bookId(memberBook.getBookId())
         .status(memberBook.getStatus().name())
         .title(book.title())
         .author(book.author())

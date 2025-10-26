@@ -5,6 +5,7 @@ import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import com.bob.domain.member.entity.MemberBook;
 import com.bob.domain.member.entity.BookStatus;
 import java.util.List;
+import java.util.UUID;
 
 public class MemberBookFixture {
 
@@ -58,6 +59,17 @@ public class MemberBookFixture {
         .status(BookStatus.BEST)
         .usageId(null)
         .isRemove(true)
+        .build();
+  }
+
+  public static MemberBook CUSTOM_MEMBER_BOOK(UUID memberId, Long id, Long bookId) {
+    return MemberBook.builder()
+        .id(id)
+        .memberId(memberId)
+        .bookId(bookId)
+        .status(BookStatus.HIGH)
+        .usageId(null)
+        .isRemove(false)
         .build();
   }
 

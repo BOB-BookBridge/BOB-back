@@ -23,5 +23,13 @@ public class MemberWishFixture {
         .build();
   }
 
+  public static MemberWish CUSTOM_MEMBER_WISH(Long id, Long bookId) {
+    return MemberWish.builder()
+        .id(id)
+        .memberId(MEMBER_ID)
+        .bookId(bookId)
+        .build();
+  }
+
   public static final List<MemberWish> DEFAULT_MEMBER_WISHES = List.of(DEFAULT_MEMBER_WISH(), SECOND_MEMBER_WISH());
 }
