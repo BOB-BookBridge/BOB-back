@@ -11,7 +11,8 @@ public record TradePostSummary(
     UUID sellerId,
     Long sellerBookId,
     String title,
-    String thumbnailUrl
+    String thumbnailUrl,
+    boolean wishOnly
 ) {
 
   public static TradePostSummary from(PostDetailResponse post) {
@@ -22,6 +23,7 @@ public record TradePostSummary(
         .sellerBookId(post.sellerBookId())
         .title(post.book().title())
         .thumbnailUrl(post.thumbnailUrl())
+        .wishOnly(post.wishOnly())
         .build();
   }
 }

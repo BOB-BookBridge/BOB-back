@@ -28,9 +28,12 @@ public record CreatePostRequest(
     @NotNull(message = "책 정보는 필수입니다.")
     BookInfo book,
 
-    List<String> fileNames
+    List<String> fileNames,
+
+    Boolean wishOnly
 ) {
 
+    // TODO: [remove] request to command 변환은 command에서 수행
   public CreatePostCommand toCommand(UUID memberId) {
     return CreatePostCommand.builder()
         .memberId(memberId)
@@ -46,6 +49,7 @@ public record CreatePostRequest(
         .bookCover(book.cover())
         .bookPubDate(book.pubDate())
         .fileNames(fileNames)
+        .wishOnly(wishOnly != null && wishOnly)
         .build();
   }
 }

@@ -13,6 +13,7 @@ import lombok.Builder;
 @Builder
 public record MemberWishSummary(
     Long id,
+    Long bookId,
     String title,
     String author,
     Integer priceStandard,
@@ -22,6 +23,7 @@ public record MemberWishSummary(
 
   public static MemberWishSummary of(
       Long id,
+      Long bookId,
       String title,
       String author,
       Integer priceStandard,
@@ -30,6 +32,7 @@ public record MemberWishSummary(
   ) {
     return MemberWishSummary.builder()
         .id(id)
+        .bookId(bookId)
         .title(title)
         .author(author)
         .priceStandard(priceStandard)
@@ -41,6 +44,7 @@ public record MemberWishSummary(
   public static MemberWishSummary from(MemberWish wish, BookResponse book) {
     return MemberWishSummary.of(
         wish.getId(),
+        wish.getBookId(),
         book.title(),
         book.author(),
         book.priceStandard(),

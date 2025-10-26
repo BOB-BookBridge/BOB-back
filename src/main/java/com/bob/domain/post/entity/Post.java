@@ -86,9 +86,12 @@ public class Post extends BaseTime {
   @Column(nullable = false)
   private TradeProgress tradeProgress;
 
+  @Column(nullable = false)
+  private boolean wishOnly;
+
   public static Post create(Category category, Long bookId, int emdId,
       String title, String description, String thumbnailUrl, String bookStatus,
-      UUID sellerId, Long sellerBookId, int sellPrice
+      UUID sellerId, Long sellerBookId, int sellPrice, boolean wishOnly
   ) {
     return Post.builder()
         .status(ACTIVE)
@@ -103,13 +106,15 @@ public class Post extends BaseTime {
         .tradeProgress(READY)
         .registrationAreaId(emdId)
         .thumbnailUrl(thumbnailUrl)
+        .wishOnly(wishOnly)
         .build();
   }
 
-  public void updateOptionalFields(Integer sellPrice, String bookStatus, String description) {
+  public void update(Integer sellPrice, String bookStatus, String description, Boolean wishOnly) {
     Optional.ofNullable(sellPrice).ifPresent(s -> this.sellPrice = s);
     Optional.ofNullable(bookStatus).ifPresent(b -> this.bookStatus = BookStatus.from(b));
     Optional.ofNullable(description).ifPresent(d -> this.description = d);
+    Optional.ofNullable(wishOnly).ifPresent(d -> this.wishOnly = wishOnly);
   }
 
   public void updateTradeProgress(TradeProgress status) {

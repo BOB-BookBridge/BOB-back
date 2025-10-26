@@ -41,5 +41,22 @@ public class BookResponseFixture {
       .pubDate(LocalDate.now())
       .build();
 
+  public static BookResponse CUSTOM_BOOK_RESPONSE(Long id) {
+    return BookResponse.builder()
+        .id(id)
+        .isbn13("000000000000" + id)
+        .title("제목")
+        .author("작가")
+        .description("설명")
+        .priceStandard(10000)
+        .cover("https://image.url")
+        .pubDate(LocalDate.now())
+        .build();
+  }
+
   public static final List<BookResponse> DEFAULT_BOOK_RESPONSES = List.of(DEFAULT_BOOK_RESPONSE, SECOND_BOOK_RESPONSE);
+
+  public static final List<BookResponse> CUSTOM_BOOK_RESPONSES(Long id) {
+    return List.of(CUSTOM_BOOK_RESPONSE(id));
+  }
 }

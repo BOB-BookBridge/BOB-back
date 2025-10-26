@@ -25,6 +25,7 @@ import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_P
 import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_REQUESTER;
 import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_STATUS;
+import static com.bob.global.exception.response.ApplicationError.TRADE_SELLER_WISH_NOT_MATCH;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_NOT_CHANGEABLE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
 import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
@@ -40,9 +41,9 @@ import com.bob.domain.trade.service.dto.command.ChangeTradeStatusCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeCommand;
 import com.bob.domain.trade.service.dto.command.CreateTradeItemsCommand;
 import com.bob.domain.trade.service.dto.command.DeleteTradeCommand;
-import com.bob.domain.trade.service.dto.query.ReadTradeStatusMapQuery;
 import com.bob.domain.trade.service.dto.query.ReadPostTradesQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeDetailQuery;
+import com.bob.domain.trade.service.dto.query.ReadTradeStatusMapQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradeStatusQuery;
 import com.bob.domain.trade.service.dto.query.ReadTradesQuery;
 import com.bob.domain.trade.service.dto.response.ChangeTradeStatusResult;
@@ -61,6 +62,7 @@ import com.bob.domain.trade.service.dto.response.internal.TraderSummary;
 import com.bob.domain.trade.service.port.out.TradeChatPort;
 import com.bob.domain.trade.service.port.out.TradeMemberBookPort;
 import com.bob.domain.trade.service.port.out.TradeMemberPort;
+import com.bob.domain.trade.service.port.out.TradeMemberWishPort;
 import com.bob.domain.trade.service.port.out.TradePostPort;
 import com.bob.domain.trade.service.port.view.TradeItemView;
 import com.bob.domain.trade.service.reader.TradeReader;
@@ -94,6 +96,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
 
   private final TradeMemberPort memberPort;
   private final TradeMemberBookPort memberBookPort;
+  private final TradeMemberWishPort memberWishPort;
   private final TradePostPort postPort;
   private final TradeChatPort chatPort;
 
@@ -104,6 +107,7 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
     TradePostSummary post = TradePostSummary.from(postPort.readTradePostSummary(command.postId()));
     verifySelfTrade(post.sellerId(), command.buyerId());
     verifyTradePostAccessible(post.status());
+    verifyTradePostWishOnly(post.wishOnly(), post.sellerId(), command.itemIds());
 
     return tradeRepository.findIdByPostIdAndBuyerId(post.id(), command.buyerId())
         .map(CreateTradeResponse::of)
@@ -128,6 +132,11 @@ public class TradeService implements TradeWriteUseCase, TradeReadUseCase, TradeM
   private void verifySelfTrade(UUID sellerId, UUID buyerId) {
     if (Objects.equals(sellerId, buyerId))
       throw new ApplicationException(IS_SAME_TRADE_MEMBER);
+  }
+
+  private void verifyTradePostWishOnly(boolean wishOnly, UUID sellerId, List<Long> itemIds) {
+    if (wishOnly && memberWishPort.allMatch(sellerId, itemIds))
+      throw new ApplicationException(TRADE_SELLER_WISH_NOT_MATCH);
   }
 
   @Transactional(readOnly = true)

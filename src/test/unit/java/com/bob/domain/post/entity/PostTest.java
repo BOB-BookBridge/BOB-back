@@ -22,16 +22,17 @@ class PostTest {
     // given
     Post post = defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID);
 
-    Integer newSellPrice = 8000;
-    String newBookStatus = null;
-    String newDescription = "커피 자국 있음";
+    Integer sellPrice = 8000;
+    String bookStatus = null;
+    String description = "커피 자국 있음";
+    Boolean wishOnly = null;
 
     // when
-    post.updateOptionalFields(newSellPrice, newBookStatus, newDescription);
+    post.update(sellPrice, bookStatus, description, wishOnly);
 
     // then
-    assertThat(post.getSellPrice()).isEqualTo(newSellPrice);
-    assertThat(post.getDescription()).isEqualTo(newDescription);
+    assertThat(post.getSellPrice()).isEqualTo(sellPrice);
+    assertThat(post.getDescription()).isEqualTo(description);
   }
 
   @Test
@@ -42,14 +43,16 @@ class PostTest {
     Integer beforePrice = post.getSellPrice();
     String beforeStatus = post.getBookStatus().name();
     String beforeDescription = post.getDescription();
+    Boolean beforeWishOnly = post.isWishOnly();
 
     // when
-    post.updateOptionalFields(null, null, null);
+    post.update(null, null, null, null);
 
     // then
     assertThat(post.getSellPrice()).isEqualTo(beforePrice);
     assertThat(post.getBookStatus().name()).isEqualTo(beforeStatus);
     assertThat(post.getDescription()).isEqualTo(beforeDescription);
+    assertThat(post.isWishOnly()).isEqualTo(beforeWishOnly);
   }
 
   @Test
@@ -57,17 +60,19 @@ class PostTest {
     // given
     Post post = defaultPost(defaultCategory(), DEFAULT_BOOK, MEMBER_ID, EMD_AREA_ID);
 
-    Integer newSellPrice = 6000;
-    String newBookStatus = "LOW";
-    String newDescription = "찢어진 페이지 있음";
+    Integer sellPrice = 6000;
+    String bookStatus = "LOW";
+    String description = "찢어진 페이지 있음";
+    Boolean wishOnly = true;
 
     // when
-    post.updateOptionalFields(newSellPrice, newBookStatus, newDescription);
+    post.update(sellPrice, bookStatus, description, wishOnly);
 
     // then
-    assertThat(post.getSellPrice()).isEqualTo(newSellPrice);
-    assertThat(post.getBookStatus().name()).isEqualTo(newBookStatus);
-    assertThat(post.getDescription()).isEqualTo(newDescription);
+    assertThat(post.getSellPrice()).isEqualTo(sellPrice);
+    assertThat(post.getBookStatus().name()).isEqualTo(bookStatus);
+    assertThat(post.getDescription()).isEqualTo(description);
+    assertThat(post.isWishOnly()).isEqualTo(wishOnly);
   }
 
   @Test

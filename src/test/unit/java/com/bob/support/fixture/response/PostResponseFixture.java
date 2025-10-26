@@ -62,6 +62,7 @@ public class PostResponseFixture {
         .viewCount(24)
         .isFavorite(true)
         .isOwner(false)
+        .wishOnly(false)
         .createdAt(LocalDateTime.of(2024, 3, 29, 12, 0))
         .build();
   }
@@ -94,13 +95,10 @@ public class PostResponseFixture {
         .viewCount(24)
         .isFavorite(true)
         .isOwner(false)
+        .wishOnly(false)
         .createdAt(LocalDateTime.of(2024, 3, 29, 12, 0))
         .build();
   }
-
-  public static PostDetailResponse REMOVED_POST_DETAIL_RESPONSE = PostDetailResponse.builder()
-      .status("REMOVED")
-      .build();
 
   public static List<PostSummary> DEFAULT_POST_SUMMARY() {
     return List.of(FIRST_POST, SECOND_POST);
