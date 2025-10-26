@@ -110,10 +110,11 @@ public class Post extends BaseTime {
         .build();
   }
 
-  public void updateOptionalFields(Integer sellPrice, String bookStatus, String description) {
+  public void update(Integer sellPrice, String bookStatus, String description, Boolean wishOnly) {
     Optional.ofNullable(sellPrice).ifPresent(s -> this.sellPrice = s);
     Optional.ofNullable(bookStatus).ifPresent(b -> this.bookStatus = BookStatus.from(b));
     Optional.ofNullable(description).ifPresent(d -> this.description = d);
+    Optional.ofNullable(wishOnly).ifPresent(d -> this.wishOnly = wishOnly);
   }
 
   public void updateTradeProgress(TradeProgress status) {

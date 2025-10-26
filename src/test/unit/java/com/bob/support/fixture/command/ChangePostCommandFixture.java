@@ -11,7 +11,8 @@ public class ChangePostCommandFixture {
         memberId,
         12000,
         "MEDIUM",
-        "상태 좋음"
+        "상태 좋음",
+        false
     );
   }
 }

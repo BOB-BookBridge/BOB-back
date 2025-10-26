@@ -187,7 +187,7 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
   public void changePostProcess(ChangePostCommand command) {
     Post post = postReader.readPostById(command.postId());
     verifyPostOwner(command.memberId(), post.getSellerId());
-    post.updateOptionalFields(command.sellPrice(), command.bookStatus(), command.description());
+    post.update(command.sellPrice(), command.bookStatus(), command.description(), command.wishOnly());
   }
 
   @Transactional
