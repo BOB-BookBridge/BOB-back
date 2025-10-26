@@ -6,9 +6,9 @@ import static com.bob.support.fixture.domain.MemberFixture.MEMBER_ID;
 import com.bob.domain.post.entity.status.BookStatus;
 import com.bob.domain.post.service.dto.response.PostDetailResponse;
 import com.bob.domain.post.service.dto.response.PostDetailResponse.BookInfo;
-import com.bob.domain.post.service.dto.response.PostDetailResponse.WriterInfo;
 import com.bob.domain.post.service.dto.response.PostFavoritesResponse;
 import com.bob.domain.post.service.dto.response.PostSummary;
+import com.bob.domain.post.service.port.view.PostMemberView;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -52,11 +52,13 @@ public class PostResponseFixture {
             .pubDate("2018-04-16")
             .build())
         .description("책 상태 양호하고 밑줄 없음")
-        .writer(WriterInfo.builder()
+        .writer(PostMemberView.builder()
             .memberId(MEMBER_ID)
             .nickname("booklover")
             .emdId(309)
             .profileUrl("https://s3.bucket.com/default.jpg")
+            .interests(List.of())
+            .wishes(List.of())
             .build())
         .scrapCount(2)
         .viewCount(24)
@@ -85,11 +87,13 @@ public class PostResponseFixture {
             .pubDate("2018-04-16")
             .build())
         .description("책 상태 양호하고 밑줄 없음")
-        .writer(WriterInfo.builder()
+        .writer(PostMemberView.builder()
             .memberId(memberId)
             .nickname("bookhater")
             .emdId(213)
             .profileUrl("https://s3.bucket.com/default.jpg")
+            .interests(List.of())
+            .wishes(List.of())
             .build())
         .scrapCount(2)
         .viewCount(24)

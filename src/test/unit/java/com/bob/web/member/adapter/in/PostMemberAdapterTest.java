@@ -13,10 +13,10 @@ import com.bob.domain.member.service.dto.command.ChangeMemberBookUsageCommand;
 import com.bob.domain.member.service.dto.command.FreeMemberBookUsageByUsageIdCommand;
 import com.bob.domain.member.service.dto.command.RegisterMemberBookCommand;
 import com.bob.domain.member.service.dto.query.ReadProfileQuery;
-import com.bob.domain.member.service.dto.response.MemberProfileResponse;
 import com.bob.domain.member.usecase.MemberBookModifyUseCase;
 import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
+import com.bob.domain.post.service.port.view.PostMemberView;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,11 +50,13 @@ class PostMemberAdapterTest {
     given(readUseCase.readProfileProcess(query)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
 
     // when
-    MemberProfileResponse response = postMemberAdapter.readPostMemberSummary(memberId);
+    PostMemberView view = postMemberAdapter.readPostMemberSummary(memberId);
 
     // then
-    assertThat(response.nickname()).isEqualTo("tester");
-    assertThat(response.profileImageUrl()).isEqualTo("http://image.url");
+    assertThat(view.nickname()).isEqualTo("tester");
+    assertThat(view.profileUrl()).isEqualTo("http://image.url");
+    assertThat(view.interests()).isNotNull();
+    assertThat(view.wishes()).isNotNull();
     then(readUseCase).should().readProfileProcess(query);
   }
 

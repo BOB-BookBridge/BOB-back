@@ -9,6 +9,9 @@ import com.bob.domain.member.usecase.MemberBookModifyUseCase;
 import com.bob.domain.member.usecase.MemberBookWriteUseCase;
 import com.bob.domain.member.usecase.MemberReadUseCase;
 import com.bob.domain.post.service.port.out.PostMemberPort;
+import com.bob.domain.post.service.port.view.PostMemberView;
+import com.bob.domain.post.service.port.view.PostMemberWishView;
+import com.bob.domain.post.service.port.view.PostMemberWishesView;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +27,20 @@ public class PostMemberAdapter implements PostMemberPort {
   private final MemberBookModifyUseCase bookModifyUseCase;
 
   @Override
-  public MemberProfileResponse readPostMemberSummary(UUID memberId) {
-    return readUseCase.readProfileProcess(ReadProfileQuery.of(memberId, false));
+  public PostMemberView readPostMemberSummary(UUID memberId) {
+    MemberProfileResponse response = readUseCase.readProfileProcess(ReadProfileQuery.of(memberId, false));
+    List<PostMemberWishView> wishes = response.wishes().stream()
+        .map((wish) -> PostMemberWishView.of(wish.id(), wish.title(), wish.author(), wish.cover()))
+        .toList();
+
+    return PostMemberView.of(
+        response.memberId(),
+        response.nickname(),
+        response.area().emdId(),
+        response.profileImageUrl(),
+        response.interests(),
+        PostMemberWishesView.from(wishes)
+    );
   }
 
   @Override

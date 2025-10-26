@@ -7,7 +7,6 @@ import static com.bob.domain.post.entity.status.TradeProgress.valueOf;
 import static com.bob.domain.post.service.dto.response.internal.PostAreaSummaryResponse.from;
 import static com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse.from;
 import static com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse.from;
-import static com.bob.domain.post.service.dto.response.internal.PostMemberSummaryResponse.from;
 import static com.bob.global.exception.response.ApplicationError.ALREADY_REMOVED_POST_STATE;
 import static com.bob.global.exception.response.ApplicationError.NOT_EXIST_REGISTRATION_WISH;
 import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
@@ -35,13 +34,12 @@ import com.bob.domain.post.service.dto.response.PostsResult;
 import com.bob.domain.post.service.dto.response.internal.PostAreaSummaryResponse;
 import com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse;
 import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse;
-import com.bob.domain.post.service.dto.response.internal.PostMemberSummaryResponse;
 import com.bob.domain.post.service.port.out.PostAreaPort;
 import com.bob.domain.post.service.port.out.PostBookPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.domain.post.service.port.out.PostMemberPort;
 import com.bob.domain.post.service.port.out.PostMemberWishPort;
-import com.bob.domain.post.service.port.view.PostMemberWishesView;
+import com.bob.domain.post.service.port.view.PostMemberView;
 import com.bob.domain.post.service.reader.CategoryReader;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.domain.post.usecase.PostDeleteUseCase;
@@ -171,12 +169,11 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     Post post = postReader.readPostById(query.postId());
     verifyAccessiblePost(post, query.isClient());
     PostBookSummaryResponse bookSummary = from(bookPort.readBookSummary(post.getBookId()));
-    PostMemberSummaryResponse memberSummary = from(memberPort.readPostMemberSummary(post.getSellerId()));
+    PostMemberView poster = memberPort.readPostMemberSummary(post.getSellerId());
     PostFileSummaryResponse fileSummary = from(filePort.readPostFileSummaries(post.getId()));
-    PostMemberWishesView sellerWish = memberWishPort.read(post.getSellerId());
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
-    return PostDetailResponse.from(post, bookSummary, memberSummary, fileSummary, sellerWish, isFavorite, isOwner);
+    return PostDetailResponse.from(post, bookSummary, poster, fileSummary, isFavorite, isOwner);
   }
 
   private static void verifyAccessiblePost(Post post, boolean isClient) {

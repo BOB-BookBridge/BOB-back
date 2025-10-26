@@ -27,10 +27,9 @@ import static com.bob.support.fixture.query.PostQueryFixture.searchCategoryQuery
 import static com.bob.support.fixture.response.AreaSummaryResponseFixture.DEFAULT_AREA_SUMMARY;
 import static com.bob.support.fixture.response.AreaSummaryResponseFixture.NOT_VALID_AREA_SUMMARY;
 import static com.bob.support.fixture.response.BookResponseFixture.DEFAULT_BOOK_RESPONSE;
-import static com.bob.support.fixture.response.MemberProfileResponseFixture.DEFAULT_MEMBER_PROFILE_RESPONSE;
-import static com.bob.support.fixture.response.MemberWishesResultFixture.DEFAULT_POST_MEMBER_WISHES_VIEW;
 import static com.bob.support.fixture.response.PostFileSummaryResponseFixture.DEFAULT_READ_FILES_RESPONSE;
 import static com.bob.support.fixture.response.PostResponseFixture.DEFAULT_FAVORITE_RESPONSE;
+import static com.bob.support.fixture.response.post.PostMemberViewFixture.DEFAULT_POST_MEMBER_VIEW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,7 +63,6 @@ import com.bob.domain.post.service.port.out.PostAreaPort;
 import com.bob.domain.post.service.port.out.PostBookPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.domain.post.service.port.out.PostMemberPort;
-import com.bob.domain.post.service.port.out.PostMemberWishPort;
 import com.bob.domain.post.service.reader.CategoryReader;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.global.exception.exceptions.ApplicationException;
@@ -110,9 +108,6 @@ class PostServiceTest {
 
   @Mock
   private PostMemberPort memberPort;
-
-  @Mock
-  private PostMemberWishPort memberWishPort;
 
   @Mock
   private PostAreaPort areaPort;
@@ -391,8 +386,7 @@ class PostServiceTest {
     ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, post.getId(), true);
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(bookPort.readBookSummary(DEFAULT_BOOK.getId())).willReturn(DEFAULT_BOOK_RESPONSE);
-    given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
-    given(memberWishPort.read(MEMBER_ID)).willReturn(DEFAULT_POST_MEMBER_WISHES_VIEW);
+    given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_POST_MEMBER_VIEW);
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_READ_FILES_RESPONSE);
     willDoNothing().given(postRepository).increaseViewCount(post.getId());
 
@@ -415,8 +409,7 @@ class PostServiceTest {
     ReadPostDetailQuery query = new ReadPostDetailQuery(otherMemberId, post.getId(), true);
     given(postReader.readPostById(post.getId())).willReturn(post);
     given(bookPort.readBookSummary(post.getBookId())).willReturn(DEFAULT_BOOK_RESPONSE);
-    given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_MEMBER_PROFILE_RESPONSE);
-    given(memberWishPort.read(MEMBER_ID)).willReturn(DEFAULT_POST_MEMBER_WISHES_VIEW);
+    given(memberPort.readPostMemberSummary(MEMBER_ID)).willReturn(DEFAULT_POST_MEMBER_VIEW);
     given(filePort.readPostFileSummaries(post.getId())).willReturn(DEFAULT_READ_FILES_RESPONSE);
     willDoNothing().given(postRepository).increaseViewCount(post.getId());
 
