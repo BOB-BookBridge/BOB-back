@@ -41,6 +41,7 @@ import com.bob.domain.post.service.port.out.PostBookPort;
 import com.bob.domain.post.service.port.out.PostFilePort;
 import com.bob.domain.post.service.port.out.PostMemberPort;
 import com.bob.domain.post.service.port.out.PostMemberWishPort;
+import com.bob.domain.post.service.port.view.PostMemberWishesView;
 import com.bob.domain.post.service.reader.CategoryReader;
 import com.bob.domain.post.service.reader.PostReader;
 import com.bob.domain.post.usecase.PostDeleteUseCase;
@@ -172,9 +173,10 @@ public class PostService implements PostWriteUseCase, PostReadUseCase, PostModif
     PostBookSummaryResponse bookSummary = from(bookPort.readBookSummary(post.getBookId()));
     PostMemberSummaryResponse memberSummary = from(memberPort.readPostMemberSummary(post.getSellerId()));
     PostFileSummaryResponse fileSummary = from(filePort.readPostFileSummaries(post.getId()));
+    PostMemberWishesView sellerWish = memberWishPort.read(post.getSellerId());
     boolean isOwner = query.memberId() != null && post.getSellerId().equals(query.memberId());
     boolean isFavorite = postFavoriteService.isFavorite(query.memberId(), post.getId());
-    return PostDetailResponse.from(post, bookSummary, memberSummary, fileSummary, isFavorite, isOwner);
+    return PostDetailResponse.from(post, bookSummary, memberSummary, fileSummary, sellerWish, isFavorite, isOwner);
   }
 
   private static void verifyAccessiblePost(Post post, boolean isClient) {

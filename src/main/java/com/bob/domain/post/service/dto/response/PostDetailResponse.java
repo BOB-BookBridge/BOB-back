@@ -5,6 +5,7 @@ import com.bob.domain.post.service.dto.response.internal.PostBookSummaryResponse
 import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse;
 import com.bob.domain.post.service.dto.response.internal.PostFileSummaryResponse.PostFileSummary;
 import com.bob.domain.post.service.dto.response.internal.PostMemberSummaryResponse;
+import com.bob.domain.post.service.port.view.PostMemberWishesView;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +39,7 @@ public record PostDetailResponse(
       PostBookSummaryResponse bookSummary,
       PostMemberSummaryResponse memberSummary,
       PostFileSummaryResponse fileSummary,
+      PostMemberWishesView wishes,
       boolean isFavorite,
       boolean isOwner
   ) {
@@ -55,7 +57,12 @@ public record PostDetailResponse(
         .description(post.getDescription())
         .images(fileSummary.images())
         .writer(WriterInfo.of(
-            post.getSellerId(), memberSummary.nickname(), post.getRegistrationAreaId(), memberSummary.profileImageUrl()
+            post.getSellerId(),
+            memberSummary.nickname(),
+            post.getRegistrationAreaId(),
+            memberSummary.profileImageUrl(),
+            memberSummary.interests(),
+            wishes
         ))
         .scrapCount(post.getScrapCount())
         .viewCount(post.getViewCount())
@@ -91,15 +98,26 @@ public record PostDetailResponse(
       UUID memberId,
       String nickname,
       Integer emdId,
-      String profileUrl
+      String profileUrl,
+      List<String> interests,
+      PostMemberWishesView wishes
   ) {
 
-    public static WriterInfo of(UUID memberId, String nickname, Integer registrationAreaId, String profileUrl) {
+    public static WriterInfo of(
+        UUID memberId,
+        String nickname,
+        Integer registrationAreaId,
+        String profileUrl,
+        List<String> interests,
+        PostMemberWishesView wishes
+    ) {
       return WriterInfo.builder()
           .memberId(memberId)
           .nickname(nickname)
           .emdId(registrationAreaId)
           .profileUrl(profileUrl)
+          .interests(interests)
+          .wishes(wishes)
           .build();
     }
   }
