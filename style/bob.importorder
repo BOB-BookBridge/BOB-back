@@ -1,0 +1,9 @@
+# bob coding convention
+# [blankline-between-import-group]
+0=java
+1=javax
+2=jakarta
+3=
+4=org.springframework
+5=com.fasterxml
+6=com.bob

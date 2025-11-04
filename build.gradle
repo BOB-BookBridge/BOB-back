@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
+    id 'checkstyle'
 }
 
 group = 'bob'
@@ -197,4 +198,16 @@ jacocoTestReport {
                 fileTree(dir: it, exclude: jacocoExcludesForReport)
             })
     )
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+checkstyle {
+    configFile = file("${rootDir}/style/rule/bob-checkstyle.xml")
+    configProperties = ["suppressionFile": file("${rootDir}/style/rule/bob-checkstyle-suppressions.xml").absolutePath]
 }
