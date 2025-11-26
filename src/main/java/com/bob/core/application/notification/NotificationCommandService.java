@@ -2,6 +2,7 @@ package com.bob.core.application.notification;
 
 import static com.bob.core.domain.notification.Notification.createNotification;
 
+import java.util.List;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.application.notification.dto.command.CreateNotificationCommand;
 import com.bob.core.application.notification.dto.command.MarkAsReadCommand;
+import com.bob.core.application.notification.dto.query.ReadByMemberQuery;
 import com.bob.core.application.notification.port.in.NotificationCreator;
 import com.bob.core.application.notification.port.in.NotificationMarker;
 import com.bob.core.application.notification.port.in.NotificationReader;
@@ -55,6 +57,13 @@ public class NotificationCommandService implements NotificationCreator, Notifica
         notification.markAsRead();
 
         return notification;
+    }
+
+    @Override
+    public List<Notification> markAllAsRead(MarkAsReadCommand command) {
+        notificationRepository.markAllAsReadByReceiverId(command.memberId());
+
+        return notificationReader.readByMember(new ReadByMemberQuery(command.memberId()));
     }
 
     private void verifyOwner(UUID requesterId, UUID ownerId) {

@@ -3,6 +3,7 @@ package com.bob.core.application.notification.port.in;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.notification.domain.NotificationFixture.createNotification;
+import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -60,10 +61,11 @@ record NotificationReaderTest(NotificationReader notificationReader, Notificatio
     }
 
     @Test
-    void 회원별_알림_목록_조회_2주_이내() {
-        Notification oldNotification = createNotification(MEMBER_ID, LocalDateTime.now().minusWeeks(2).minusDays(1));
-        notificationRepository.save(createNotification("recent", MEMBER_ID, "최근 알림", false));
+    void 알림_목록_조회_1달_이내() {
+        Notification oldNotification = createNotification(MEMBER_ID, now().minusMonths(1).minusDays(1));
         notificationRepository.save(oldNotification);
+
+        notificationRepository.save(createNotification("recent", MEMBER_ID, "최근 알림", false));
 
         ReadByMemberQuery query = new ReadByMemberQuery(MEMBER_ID);
 
@@ -72,9 +74,20 @@ record NotificationReaderTest(NotificationReader notificationReader, Notificatio
         assertThat(notifications).hasSize(1);
         assertThat(notifications.get(0).getBody()).isEqualTo("최근 알림");
 
-        LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
+        LocalDateTime oneMonth = now().minusMonths(1);
 
         assertThat(notifications)
-            .allSatisfy(notification -> assertThat(notification.getCreatedAt()).isAfter(twoWeeksAgo));
+            .allSatisfy(notification -> assertThat(notification.getCreatedAt()).isAfter(oneMonth));
+    }
+
+    @Test
+    void 알림_목록_조회_최신순() {
+        Notification current = notificationRepository.save(createNotification(MEMBER_ID, now().minusDays(1)));
+        Notification old = notificationRepository.save(createNotification(MEMBER_ID, now().minusDays(2)));
+
+        List<Notification> notifications = notificationReader.readByMember(new ReadByMemberQuery(MEMBER_ID));
+
+        assertThat(notifications.get(0).getId()).isEqualTo(current.getId());
+        assertThat(notifications.get(1).getId()).isEqualTo(old.getId());
     }
 }

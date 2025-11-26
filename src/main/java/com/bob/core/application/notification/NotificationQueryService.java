@@ -30,8 +30,8 @@ public class NotificationQueryService implements NotificationReader {
 
     @Override
     public List<Notification> readByMember(ReadByMemberQuery query) {
-        LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
+        LocalDateTime oneMonth = LocalDateTime.now().minusMonths(1);
 
-        return notificationRepository.findByReceiverIdAndCreatedAtAfter(query.memberId(), twoWeeksAgo);
+        return notificationRepository.findByReceiverIdAndCreatedAtAfterOrderByCreatedAtDesc(query.memberId(), oneMonth);
     }
 }
