@@ -55,4 +55,13 @@ public class NotificationApi {
 
         return new CommonResponse<>(true, UPDATED);
     }
+
+    @PatchMapping
+    public CommonResponse<ResponseSymbol> markNotificationsAsRead(@AuthenticationId UUID memberId) {
+        MarkAsReadCommand command = new MarkAsReadCommand(memberId);
+
+        notificationMarker.markAllAsRead(command);
+
+        return new CommonResponse<>(true, UPDATED);
+    }
 }

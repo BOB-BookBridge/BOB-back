@@ -6,6 +6,10 @@ import static com.bob.support.fixture.notification.domain.NotificationFixture.cr
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
+
+import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +22,9 @@ import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("알림 수정 테스트")
 @ContainerTest
-record NotificationMarkerTest(NotificationMarker notificationMarker, NotificationRepository notificationRepository) {
+record NotificationMarkerTest(
+    NotificationMarker notificationMarker, NotificationRepository notificationRepository, EntityManager em
+) {
 
     @Test
     void 알림_읽음_처리() {
@@ -41,5 +47,24 @@ record NotificationMarkerTest(NotificationMarker notificationMarker, Notificatio
         assertThatThrownBy(() -> notificationMarker.markAsRead(saved.getId(), command))
             .isInstanceOf(ApplicationException.class)
             .hasMessage(ApplicationError.NOTIFICATION_ACCESS_DENIED.getMessage());
+    }
+
+    @Test
+    void 모든_알림_읽음_처리() {
+        Notification noti1 = notificationRepository.save(createNotification(false));
+        Notification noti2 = notificationRepository.save(createNotification(false));
+        assertThat(noti1.getIsRead()).isFalse();
+        assertThat(noti2.getIsRead()).isFalse();
+
+        MarkAsReadCommand command = new MarkAsReadCommand(MEMBER_ID);
+
+        em.flush();
+        em.clear();
+
+        List<Notification> notifications = notificationMarker.markAllAsRead(command);
+
+        assertThat(notifications).hasSize(2);
+        assertThat(notifications.get(0).getIsRead()).isTrue();
+        assertThat(notifications.get(1).getIsRead()).isTrue();
     }
 }

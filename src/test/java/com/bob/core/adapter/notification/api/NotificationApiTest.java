@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +32,7 @@ import com.bob.support.annotation.BobApiTest;
 @DisplayName("알림 API 테스트")
 @BobApiTest
 record NotificationApiTest(
-    MockMvcTester mvcTester, NotificationRepository notificationRepository, ObjectMapper objectMapper
+    MockMvcTester mvcTester, NotificationRepository notificationRepository, EntityManager em, ObjectMapper objectMapper
 ) {
 
     @Test
@@ -88,6 +90,28 @@ record NotificationApiTest(
 
         Notification unchanged = notificationRepository.findById(notification.getId()).orElseThrow();
         assertThat(unchanged.getIsRead()).isFalse();
+    }
+
+    @Test
+    void 모든_알림_읽음_처리() {
+        Notification notification1 = notificationRepository.save(createNotification(false));
+        Notification notification2 = notificationRepository.save(createNotification(false));
+
+        setAuthentication();
+
+        MvcTestResult result = mvcTester.patch()
+            .uri("/notifications")
+            .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        em.flush();
+        em.clear();
+
+        Notification updated1 = notificationRepository.findById(notification1.getId()).orElseThrow();
+        Notification updated2 = notificationRepository.findById(notification2.getId()).orElseThrow();
+        assertThat(updated1.getIsRead()).isTrue();
+        assertThat(updated2.getIsRead()).isTrue();
     }
 
     void setAuthentication() {
