@@ -12,7 +12,7 @@ import com.bob.core.domain.notification.Notification;
 
 public interface NotificationRepository extends CrudRepository<Notification, Long> {
 
-    List<Notification> findByReceiverIdAndCreatedAtAfter(UUID receiverId, LocalDateTime createdAt);
+    List<Notification> findByReceiverIdAndCreatedAtAfterOrderByCreatedAtDesc(UUID receiverId, LocalDateTime createdAt);
 
     @Modifying
     @Query("""
