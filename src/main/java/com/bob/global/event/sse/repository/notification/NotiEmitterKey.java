@@ -6,12 +6,12 @@ public record NotiEmitterKey(
     UUID memberId
 ) {
 
-  @Override
-  public String toString() {
-    return "noti:" + memberId;
-  }
+    public static NotiEmitterKey of(UUID memberId) {
+        return new NotiEmitterKey(memberId);
+    }
 
-  public static NotiEmitterKey of(UUID memberId) {
-    return new NotiEmitterKey(memberId);
-  }
+    @Override
+    public String toString() {
+        return "noti:" + memberId;
+    }
 }

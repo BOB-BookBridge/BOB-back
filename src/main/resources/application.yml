@@ -8,3 +8,7 @@ sse:
   heartbeat-interval: 30 # 30초
   default-timeout: 1800 # 30분
 
+mail:
+  from:
+    address: noreply@bob.com
+    personal: Bookbridge

@@ -7,17 +7,17 @@ import org.locationtech.jts.geom.PrecisionModel;
 
 public class GeometryUtils {
 
-  private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+    private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
-  public static Point createPoint(double latitude, double longitude) {
-    return geometryFactory.createPoint(new Coordinate(longitude, latitude));
-  }
+    public static Point createPoint(double latitude, double longitude) {
+        return geometryFactory.createPoint(new Coordinate(longitude, latitude));
+    }
 
-  public static double getLatitude(Point point) {
-    return point.getY();
-  }
+    public static double getLatitude(Point point) {
+        return point.getY();
+    }
 
-  public static double getLongitude(Point point) {
-    return point.getX();
-  }
+    public static double getLongitude(Point point) {
+        return point.getX();
+    }
 }

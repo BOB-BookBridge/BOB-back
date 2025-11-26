@@ -1,0 +1,58 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: id
+            client-secret: secret
+            scope: profile
+            redirect-uri: redirect
+            client-authentication-method: method
+            authorization-grant-type: grant
+
+  mail:
+    username: "test"
+    password: "test"
+
+  cloud:
+    aws:
+      credentials:
+        access-key: access
+        secret-key: secret
+      region:
+        static: region
+      s3:
+        bucket: bucket
+
+jwt:
+  secret-key: verysecretverysecretverysecretve
+  access-name: AUTHORIZATION
+  refresh-name: REFRESH_KEY
+  access-token-expire-time: 1
+  refresh-token-expire-time: 1
+
+sse:
+  heartbeat-interval: 10
+  default-timeout: 60000
+
+app:
+  base-url: "https://base"
+
+oauth:
+  entrance: entrance
+
+mail:
+  from:
+    address: noreply@bob.com
+    personal: Bookbridge

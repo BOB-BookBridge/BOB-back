@@ -1,17 +1,18 @@
 package com.bob.global.event.sse.repository;
 
 import java.util.Map;
+
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface EmitterRepository<T> {
 
-  SseEmitter save(T key, SseEmitter emitter);
+    SseEmitter save(T key, SseEmitter emitter);
 
-  SseEmitter get(T key);
+    SseEmitter get(T key);
 
-  Map<T, SseEmitter> findAll();
+    Map<T, SseEmitter> findAll();
 
-  void remove(T key);
+    void remove(T key);
 
-  boolean exists(T key);
+    boolean exists(T key);
 }

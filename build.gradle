@@ -41,7 +41,6 @@ dependencies {
     annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
-    runtimeOnly 'com.h2database:h2'
 
     // AWS
     implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.3.0'
@@ -62,16 +61,20 @@ dependencies {
     // TEST
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // TEST CONTAINER
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
     testImplementation 'org.testcontainers:mysql:1.19.3'
+    testRuntimeOnly 'com.mysql:mysql-connector-j'
 
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 }
 
 tasks.named('test') {
@@ -79,74 +82,18 @@ tasks.named('test') {
     finalizedBy 'jacocoTestReport', 'jacocoTestCoverageVerification'
 }
 
-configurations {
-    unitTestImplementation.extendsFrom testImplementation, implementation
-    unitTestAnnotationProcessor.extendsFrom annotationProcessor
-    integrationTestImplementation.extendsFrom testImplementation, implementation
-    integrationTestAnnotationProcessor.extendsFrom annotationProcessor
-}
-
-sourceSets {
-    test {
-        java.srcDirs = ['src/test/unit/java']
-        resources {
-            srcDirs = ['src/test/unit/resources']
-        }
-    }
-
-    unitTest {
-        java.srcDirs = ['src/test/unit/java']
-        resources {
-            srcDir 'src/test/unit/resources'
-        }
-        compileClasspath += main.output + test.output
-        runtimeClasspath += main.output + test.output
-    }
-
-    integrationTest {
-        java.srcDirs = ['src/test/intg/java']
-        resources {
-            srcDir 'src/test/intg/resources'
-        }
-        compileClasspath += main.output + test.output
-        runtimeClasspath += main.output + test.output
-    }
-}
-
-tasks.register('unitTest', Test) {
-    description = "Runs unit tests"
-    group = "verification"
-    testClassesDirs = sourceSets.unitTest.output.classesDirs
-    classpath = sourceSets.unitTest.runtimeClasspath
-    useJUnitPlatform()
-}
-unitTest.finalizedBy(clean)
-
-tasks.register('integrationTest', Test) {
-    description = "Runs integration tests"
-    group = "verification"
-    testClassesDirs = sourceSets.integrationTest.output.classesDirs
-    classpath = sourceSets.integrationTest.runtimeClasspath
-    useJUnitPlatform()
-}
-integrationTest.finalizedBy(clean)
-
 def jacocoExcludes = [
-        'com.bob.BookBridgeApplication',
-        'com.bob.global.audit.BaseTime',
         'com.bob.global.utils.uuid.UuidV7Generator',
+        'com.bob.core.domain.AbstractEntity',
         'com.bob.**.config.**',
         'com.bob.**.request.**',
         'com.bob.**.response.**',
         'com.bob.**.dto.**',
-        'com.bob.**.view.**',
         'com.bob.**.symbol.**',
         'com.bob.**.type.**',
         'com.bob.**.provider.**',
         'com.bob.**.dsl.**',
         'com.bob.**.Q*',
-        'com.bob.**.projection.**',
-        'com.bob.**.dummy.**'
 ]
 
 jacocoTestCoverageVerification {
@@ -169,21 +116,17 @@ jacocoTestCoverageVerification {
 }
 
 def jacocoExcludesForReport = [
-        "com/bob/BookBridgeApplication",
-        "com/bob/global/audit/BaseTime",
         'com/bob/global/utils/uuid/UuidV7Generator',
+        'com/bob/core/domain/AbstractEntity',
         "**/*config*/**",
         "**/*request*/**",
         "**/*response*/**",
         "**/*dto*/**",
-        "**/*view*/**",
         "**/*symbol*/**",
         "**/*type*/**",
         "**/*provider*/**",
         "**/*dsl*/**",
         "**/Q*",
-        "**/*projection*/**",
-        "**/*dummy*/**"
 ]
 
 jacocoTestReport {

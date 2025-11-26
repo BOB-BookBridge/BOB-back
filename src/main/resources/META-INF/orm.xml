@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                                     https://hibernate.org/xsd/orm/mapping/mapping-3.1.0.xsd">
+    <access>FIELD</access>
+
+    <mapped-superclass class="com.bob.core.domain.AbstractEntity">
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+        </attributes>
+    </mapped-superclass>
+
+    <entity class="com.bob.core.domain.category.Category">
+        <table name="categories"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+            </id>
+            <basic name="name">
+                <column name="name" length="20" nullable="false"/>
+            </basic>
+            <many-to-one name="parent" fetch="LAZY">
+                <join-column name="parent_id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.area.SiggArea">
+        <table name="sigg_areas"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+            </id>
+            <basic name="admCode">
+                <column name="adm_code" nullable="false" length="5"/>
+            </basic>
+            <basic name="name">
+                <column name="name" nullable="false" length="50"/>
+            </basic>
+            <many-to-one name="sidoArea" fetch="LAZY">
+                <join-column name="sido_area_id" nullable="false"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.area.SidoArea">
+        <table name="sido_areas"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+            </id>
+            <basic name="admCode">
+                <column name="adm_code" nullable="false" length="2"/>
+            </basic>
+            <basic name="name">
+                <column name="name" nullable="false" length="50"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.area.EmdArea">
+        <table name="emd_areas"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+            </id>
+            <basic name="admCode">
+                <column name="adm_code" nullable="false" length="10"/>
+            </basic>
+            <basic name="name">
+                <column name="name" nullable="false" length="50"/>
+            </basic>
+            <basic name="geom">
+                <column name="geom" column-definition="geometry SRID 4326"/>
+            </basic>
+            <many-to-one name="siggArea" fetch="LAZY">
+                <join-column name="sigg_area_id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.member.Member">
+        <table name="members">
+            <unique-constraint name="UK_MEMBER_EMAIL">
+                <column-name>email</column-name>
+            </unique-constraint>
+            <unique-constraint name="UK_MEMBER_AREA_ID">
+                <column-name>area_id</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <basic name="provider">
+                <column name="provider"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="email">
+                <column name="email" nullable="false" length="150"/>
+            </basic>
+            <basic name="password">
+                <column name="password" length="200"/>
+            </basic>
+            <basic name="nickname">
+                <column name="nickname" nullable="false" length="100"/>
+            </basic>
+            <basic name="profileImageUrl">
+                <column name="profile_image_url"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+            <one-to-many name="interests" fetch="LAZY" orphan-removal="true">
+                <join-column name="member_id" nullable="false"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="wishes" fetch="LAZY" orphan-removal="true">
+                <join-column name="member_id" nullable="false"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <one-to-one name="area" fetch="LAZY">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.member.MemberArea">
+        <table name="member_areas"/>
+        <attributes>
+            <basic name="emdId">
+                <column name="emd_id" nullable="false"/>
+            </basic>
+            <basic name="authenticatedAt">
+                <column name="authenticated_at" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.member.MemberWish">
+        <table name="member_wishes">
+            <unique-constraint name="UK_MEMBER_WISH_BOOK">
+                <column-name>member_id</column-name>
+                <column-name>book_id</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <basic name="bookId">
+                <column name="book_id" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.member.MemberInterest">
+        <table name="member_interests"/>
+        <attributes>
+            <basic name="interestId">
+                <column name="interest_id" nullable="false"/>
+            </basic>
+            <basic name="displayName">
+                <column name="display_name" nullable="false" length="20"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.interest.Interest">
+        <table name="interests">
+            <unique-constraint name="UK_INTEREST_NAME">
+                <column-name>name</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <basic name="name">
+                <column name="name" nullable="false" length="20"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.book.Book">
+        <table name="books"/>
+        <attributes>
+            <basic name="isbn">
+                <column name="isbn" nullable="false" unique="true" length="13"/>
+            </basic>
+            <basic name="title">
+                <column name="title" nullable="false" length="200"/>
+            </basic>
+            <basic name="author">
+                <column name="author" nullable="false" length="200"/>
+            </basic>
+            <basic name="description">
+                <column name="description"/>
+            </basic>
+            <basic name="priceStandard">
+                <column name="price_standard"/>
+            </basic>
+            <basic name="cover">
+                <column name="cover"/>
+            </basic>
+            <basic name="pubDate">
+                <column name="pub_date"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.chat.Chatroom">
+        <table name="chatrooms"/>
+        <attributes>
+            <basic name="postId">
+                <column name="post_id"/>
+            </basic>
+            <basic name="tradeId">
+                <column name="trade_id"/>
+            </basic>
+            <basic name="titleSuffix">
+                <column name="title_suffix" length="100"/>
+            </basic>
+            <basic name="lastChatMessage">
+                <column name="last_chat_message"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+            <basic name="lastChatAt">
+                <column name="last_chat_at"/>
+            </basic>
+            <one-to-many name="members" fetch="LAZY" orphan-removal="true">
+                <join-column name="chatroom_id" nullable="false"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="messages" fetch="LAZY" orphan-removal="true">
+                <join-column name="chatroom_id" nullable="false"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.chat.ChatroomMember">
+        <table name="chatroom_members"/>
+        <attributes>
+            <basic name="memberId">
+                <column name="member_id" nullable="false"/>
+            </basic>
+            <basic name="enteredAt">
+                <column name="entered_at" nullable="false"/>
+            </basic>
+            <basic name="exitedAt">
+                <column name="exited_at"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.chat.ChatMessage">
+        <table name="chat_messages"/>
+        <attributes>
+            <basic name="senderId">
+                <column name="sender_id" nullable="false"/>
+            </basic>
+            <basic name="type">
+                <column name="type" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="content">
+                <column name="content" length="500"/>
+            </basic>
+            <basic name="isRead">
+                <column name="is_read" nullable="false"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.file.File">
+        <table name="files"/>
+        <attributes>
+            <basic name="domain">
+                <column name="domain" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="referenceId">
+                <column name="reference_id"/>
+            </basic>
+            <basic name="name">
+                <column name="name" nullable="false"/>
+            </basic>
+            <basic name="sequence">
+                <column name="sequence"/>
+            </basic>
+            <basic name="uploader">
+                <column name="uploader"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.bookcase.BookcaseItem">
+        <table name="bookcase_items"/>
+        <attributes>
+            <basic name="memberId">
+                <column name="member_id" nullable="false"/>
+            </basic>
+            <basic name="bookId">
+                <column name="book_id" nullable="false"/>
+            </basic>
+            <basic name="usageId">
+                <column name="usage_id"/>
+            </basic>
+            <basic name="deletedAt">
+                <column name="deleted_at"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.notification.Notification">
+        <table name="notifications"/>
+        <attributes>
+            <basic name="type">
+                <column name="type" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="referenceId">
+                <column name="reference_id"/>
+            </basic>
+            <basic name="receiverId">
+                <column name="receiver_id" nullable="false"/>
+            </basic>
+            <basic name="body">
+                <column name="body" nullable="false"/>
+            </basic>
+            <basic name="isRead">
+                <column name="is_read" nullable="false"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.post.Post">
+        <table name="posts"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="status">
+                <column name="status" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="bookId">
+                <column name="book_id" nullable="false"/>
+            </basic>
+            <basic name="title">
+                <column name="title" nullable="false" length="50"/>
+            </basic>
+            <basic name="categoryId">
+                <column name="category_id" nullable="false"/>
+            </basic>
+            <basic name="bookStatus">
+                <column name="book_status" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="writerId">
+                <column name="writer_id" nullable="false"/>
+            </basic>
+            <basic name="writerBookId">
+                <column name="writer_book_id" nullable="false"/>
+            </basic>
+            <basic name="price">
+                <column name="price" nullable="false"/>
+            </basic>
+            <basic name="thumbnailUrl">
+                <column name="thumbnail_url" nullable="false"/>
+            </basic>
+            <basic name="description">
+                <column name="description" length="200"/>
+            </basic>
+            <basic name="registrationAreaId">
+                <column name="registration_area_id" nullable="false"/>
+            </basic>
+            <basic name="viewCount">
+                <column name="view_count" nullable="false"/>
+            </basic>
+            <basic name="scrapCount">
+                <column name="scrap_count" nullable="false"/>
+            </basic>
+            <basic name="tradeProgress">
+                <column name="trade_progress" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="wishOnly">
+                <column name="wish_only" nullable="false"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+            <one-to-many name="favorites" fetch="LAZY" orphan-removal="true">
+                <join-column name="post_id" nullable="false"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.post.PostFavorite">
+        <table name="post_favorites">
+            <unique-constraint name="UK_POST_FAVORITE_MEMBER_POST">
+                <column-name>member_id</column-name>
+                <column-name>post_id</column-name>
+            </unique-constraint>
+        </table>
+
+        <attributes>
+            <basic name="memberId">
+                <column name="member_id" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.trade.Trade">
+        <table name="trades"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="postId">
+                <column name="post_id" nullable="false"/>
+            </basic>
+            <basic name="sellerId">
+                <column name="seller_id" nullable="false"/>
+            </basic>
+            <basic name="buyerId">
+                <column name="buyer_id" nullable="false"/>
+            </basic>
+            <basic name="isFar">
+                <column name="is_far" nullable="false"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+            <basic name="updatedAt">
+                <column name="updated_at" nullable="false"/>
+            </basic>
+            <one-to-many name="items" fetch="LAZY" orphan-removal="true">
+                <join-column name="trade_id" nullable="false"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.trade.TradeItem">
+        <attributes>
+            <basic name="itemId">
+                <column name="item_id" nullable="false"/>
+            </basic>
+            <basic name="owner">
+                <column name="owner" nullable="false" length="16"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+</entity-mappings>

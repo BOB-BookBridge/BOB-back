@@ -1,0 +1,43 @@
+package com.bob.core.application.book;
+
+import java.util.List;
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.stereotype.Component;
+
+import com.bob.core.application.book.dto.query.ReadBooksQuery;
+import com.bob.core.application.book.port.in.BookReader;
+import com.bob.core.domain.book.Book;
+import com.bob.core.domain.book.repository.BookRepository;
+import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.exception.response.ApplicationError;
+
+@Component
+@RequiredArgsConstructor
+public class BookQueryService implements BookReader {
+
+    private final BookRepository bookRepository;
+
+    @Override
+    public List<Book> readAll(List<Long> ids) {
+        return bookRepository.findAllByIdIn(ids);
+    }
+
+    @Override
+    public Book read(Long id) {
+        return bookRepository.findById(id)
+            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_OBJECT));
+    }
+
+    @Override
+    public Optional<Book> read(String isbn) {
+        return bookRepository.findByIsbn(isbn);
+    }
+
+    @Override
+    public List<Long> readAllIdsByQuery(ReadBooksQuery query) {
+        return bookRepository.findIdsByKeyword(query.key(), query.keyword());
+    }
+}
