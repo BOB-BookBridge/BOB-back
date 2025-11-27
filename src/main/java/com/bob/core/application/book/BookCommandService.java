@@ -13,14 +13,14 @@ import com.bob.core.application.book.port.in.BookRegister;
 import com.bob.core.domain.book.Book;
 import com.bob.core.domain.book.repository.BookRepository;
 
-@RequiredArgsConstructor
 @Service
+@Transactional
+@RequiredArgsConstructor
 public class BookCommandService implements BookRegister {
 
     private final BookRepository bookRepository;
     private final BookReader bookReader;
 
-    @Transactional
     public Book register(RegisterBookCommand command) {
         return bookReader.read(command.isbn())
             .orElseGet(() -> bookRepository.save(createBook(

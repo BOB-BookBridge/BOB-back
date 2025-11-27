@@ -1,11 +1,11 @@
-package com.bob.core.domain.trade.repository;
+package com.bob.core.domain.trade.repository.dsl;
 
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 
-import com.bob.core.application.trade.dto.query.ReadTradesQuery;
 import com.bob.core.domain.trade.Trade;
+import com.bob.core.domain.trade.repository.dsl.query.ReadTradesQuery;
 
 public interface CustomTradeRepository {
 

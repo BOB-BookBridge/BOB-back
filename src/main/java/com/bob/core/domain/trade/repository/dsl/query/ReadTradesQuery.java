@@ -1,4 +1,4 @@
-package com.bob.core.application.trade.dto.query;
+package com.bob.core.domain.trade.repository.dsl.query;
 
 import java.util.List;
 import java.util.UUID;

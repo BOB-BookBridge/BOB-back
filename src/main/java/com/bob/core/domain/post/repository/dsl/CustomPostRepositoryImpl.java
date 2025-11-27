@@ -15,10 +15,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import com.bob.core.application.post.dto.query.ReadPostsQuery;
-import com.bob.core.application.post.dto.query.condition.SearchPrice;
-import com.bob.core.application.post.dto.query.condition.SortKey;
 import com.bob.core.domain.post.Post;
+import com.bob.core.domain.post.repository.dsl.query.ReadPostsQuery;
+import com.bob.core.domain.post.repository.dsl.query.SearchPrice;
+import com.bob.core.domain.post.repository.dsl.query.SortKey;
 import com.bob.core.domain.post.status.BookStatus;
 import com.bob.core.domain.post.status.Status;
 import com.bob.core.domain.post.status.TradeProgress;

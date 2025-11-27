@@ -1,4 +1,4 @@
-package com.bob.core.application.post.dto.query.condition;
+package com.bob.core.domain.post.repository.dsl.query;
 
 import java.util.Arrays;
 import java.util.Optional;

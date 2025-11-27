@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.bob.core.application.post.dto.query.ReadPostsQuery;
-import com.bob.core.application.post.dto.query.condition.SearchKey;
-import com.bob.core.application.post.dto.query.condition.SearchPrice;
-import com.bob.core.application.post.dto.query.condition.SortKey;
+import com.bob.core.domain.post.repository.dsl.query.ReadPostsQuery;
+import com.bob.core.domain.post.repository.dsl.query.SearchKey;
+import com.bob.core.domain.post.repository.dsl.query.SearchPrice;
+import com.bob.core.domain.post.repository.dsl.query.SortKey;
 
 public record ReadPostsRequest(
     String key,

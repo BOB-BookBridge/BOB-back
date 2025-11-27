@@ -14,12 +14,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.bob.core.application.post.dto.query.ReadPostsQuery;
 import com.bob.core.application.post.dto.result.PostSummaries;
 import com.bob.core.application.post.dto.result.PostSummary;
 import com.bob.core.application.post.port.in.PostReader;
 import com.bob.core.domain.post.Post;
 import com.bob.core.domain.post.repository.PostRepository;
+import com.bob.core.domain.post.repository.dsl.query.ReadPostsQuery;
 import com.bob.core.domain.post.status.TradeProgress;
 import com.bob.support.annotation.ContainerTest;
 import com.bob.support.fixture.post.dto.query.PostQueryFixture;

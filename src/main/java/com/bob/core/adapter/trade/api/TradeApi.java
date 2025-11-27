@@ -35,7 +35,6 @@ import com.bob.core.application.trade.dto.command.ChangeTradeStatusCommand;
 import com.bob.core.application.trade.dto.command.CreateTradeCommand;
 import com.bob.core.application.trade.dto.command.RemoveTradeCommand;
 import com.bob.core.application.trade.dto.query.ReadTradeDetailQuery;
-import com.bob.core.application.trade.dto.query.ReadTradesQuery;
 import com.bob.core.application.trade.dto.result.ChangeTradeStatusResult;
 import com.bob.core.application.trade.dto.result.TradeDetail;
 import com.bob.core.application.trade.dto.result.TradeSummaries;
@@ -44,6 +43,7 @@ import com.bob.core.application.trade.port.in.TradeModifier;
 import com.bob.core.application.trade.port.in.TradeReader;
 import com.bob.core.application.trade.port.in.TradeRemover;
 import com.bob.core.domain.trade.Trade;
+import com.bob.core.domain.trade.repository.dsl.query.ReadTradesQuery;
 
 @RequiredArgsConstructor
 @RestController

@@ -38,7 +38,6 @@ import com.bob.core.application.post.dto.command.ChangePostInfoCommand;
 import com.bob.core.application.post.dto.command.CreatePostCommand;
 import com.bob.core.application.post.dto.command.RemovePostCommand;
 import com.bob.core.application.post.dto.query.ReadPostDetailQuery;
-import com.bob.core.application.post.dto.query.ReadPostsQuery;
 import com.bob.core.application.post.dto.result.PostDetail;
 import com.bob.core.application.post.dto.result.PostSummaries;
 import com.bob.core.application.post.dto.result.PostSummary;
@@ -48,6 +47,7 @@ import com.bob.core.application.post.port.in.PostReader;
 import com.bob.core.application.trade.dto.query.ReadPostTradeQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeStatusMapQuery;
 import com.bob.core.application.trade.port.in.TradeReader;
+import com.bob.core.domain.post.repository.dsl.query.ReadPostsQuery;
 
 @RequiredArgsConstructor
 @RestController

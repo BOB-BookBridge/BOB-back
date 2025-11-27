@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import com.bob.core.domain.trade.Trade;
+import com.bob.core.domain.trade.repository.dsl.CustomTradeRepository;
 
 public interface TradeRepository extends CrudRepository<Trade, Long>, CustomTradeRepository {
 
