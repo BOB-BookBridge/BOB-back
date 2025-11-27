@@ -1,5 +1,6 @@
 package com.bob.core.application.chat;
 
+import static com.bob.core.application.chat.dto.result.ChatMessageSummary.of;
 import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 
 import java.util.List;
@@ -73,9 +74,11 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
 
         ChatroomMember member = chatroom.getMember(query.memberId());
         List<ChatMessage> messages = chatroom.getMessagesAfter(member.getEnteredAt());
+        UUID partnerId = chatroom.getPartnerId(query.memberId());
+        ChatroomMember partner = chatroom.getMember(partnerId);
 
         return messages.stream()
-            .map(message -> ChatMessageSummary.of(message, query.memberId(), readChatFiles(message)))
+            .map(message -> of(message, query.memberId(), readChatFiles(message), partner.getLastReadMessageId()))
             .toList();
     }
 

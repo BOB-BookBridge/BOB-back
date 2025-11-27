@@ -1,7 +1,7 @@
 package com.bob.core.application.chat.port.in;
 
 import static com.bob.global.exception.response.ApplicationError.NOT_PARTICIPATED_CHAT_ROOM;
-import static com.bob.support.fixture.chat.domain.ChatRoomFixture.createChatroom;
+import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.chat.dto.query.ValidateParticipateQueryFixture.validateParticipantQuery;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;

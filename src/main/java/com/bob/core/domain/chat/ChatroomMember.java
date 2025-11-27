@@ -22,6 +22,8 @@ public class ChatroomMember extends AbstractEntity {
 
     private UUID memberId;
 
+    private Long lastReadMessageId;
+
     private LocalDateTime enteredAt;
 
     private LocalDateTime exitedAt;
@@ -40,5 +42,9 @@ public class ChatroomMember extends AbstractEntity {
     public void enter() {
         this.enteredAt = LocalDateTime.now();
         this.exitedAt = null;
+    }
+
+    public void updateLastReadMessage(Long messageId) {
+        this.lastReadMessageId = messageId;
     }
 }

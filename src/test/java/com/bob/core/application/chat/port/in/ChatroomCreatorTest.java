@@ -1,6 +1,6 @@
 package com.bob.core.application.chat.port.in;
 
-import static com.bob.support.fixture.chat.domain.ChatRoomFixture.createChatroom;
+import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.chat.dto.command.CreateChatroomCommandFixture.createChatroomCommand;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;

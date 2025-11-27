@@ -33,9 +33,6 @@ public class ChatMessage extends AbstractEntity {
 
     private String content;
 
-    @Builder.Default
-    private Boolean isRead = false;
-
     private LocalDateTime createdAt;
 
     public static ChatMessage createChatMessage(UUID memberId, String content, ChatMessageType type) {
@@ -52,7 +49,6 @@ public class ChatMessage extends AbstractEntity {
             .senderId(memberId)
             .content(content)
             .type(SYSTEM)
-            .isRead(true)
             .createdAt(LocalDateTime.now())
             .build();
     }
@@ -68,9 +64,5 @@ public class ChatMessage extends AbstractEntity {
             return TEXT;
 
         return IMAGE;
-    }
-
-    public void read() {
-        this.isRead = true;
     }
 }

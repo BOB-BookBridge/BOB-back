@@ -1,5 +1,8 @@
 package com.bob.core.domain.chat;
 
+import static com.bob.core.domain.chat.type.ChatMessageType.IMAGE;
+import static com.bob.core.domain.chat.type.ChatMessageType.SYSTEM;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,12 +62,12 @@ public class Chatroom extends AbstractEntity {
         return chatroom;
     }
 
-    public ChatMessage addMessage(UUID senderId, String content, ChatMessageType type, boolean isPartnerConnected) {
+    public ChatMessage addMessage(UUID senderId, String content, ChatMessageType type) {
+        if (type == IMAGE)
+            content = "사진";
+
         ChatMessage message = ChatMessage.createChatMessage(senderId, content, type);
         messages.add(message);
-
-        if (isPartnerConnected)
-            message.read();
 
         updateLastMessageInfo(content, message.getCreatedAt());
 
@@ -80,9 +83,12 @@ public class Chatroom extends AbstractEntity {
     }
 
     public void markMessagesAsRead(UUID receiverId) {
+        ChatroomMember member = getMember(receiverId);
+
         messages.stream()
-            .filter(message -> !message.getSenderId().equals(receiverId) && !message.getIsRead())
-            .forEach(ChatMessage::read);
+            .filter(message -> !message.getSenderId().equals(receiverId))
+            .reduce((first, second) -> second)
+            .ifPresent(lastMessage -> member.updateLastReadMessage(lastMessage.getId()));
     }
 
     private void updateLastMessageInfo(String content, LocalDateTime time) {
@@ -133,9 +139,20 @@ public class Chatroom extends AbstractEntity {
             .toList();
     }
 
-    public int countUnreadMessages(UUID senderId) {
+    public int countUnreadMessages(UUID memberId) {
+        ChatroomMember member = getMember(memberId);
+        Long lastReadMessageId = member.getLastReadMessageId();
+
+        if (lastReadMessageId == null) {
+            return (int)messages.stream()
+                .filter(message -> !message.getSenderId().equals(memberId))
+                .filter(message -> message.getType() != SYSTEM)
+                .count();
+        }
+
         return (int)messages.stream()
-            .filter(message -> !message.getSenderId().equals(senderId) && !message.getIsRead())
+            .filter(message -> !message.getSenderId().equals(memberId) && message.getId() > lastReadMessageId)
+            .filter(message -> message.getType() != SYSTEM)
             .count();
     }
 

@@ -3,7 +3,7 @@ package com.bob.core.application.chat.port.in;
 import static com.bob.core.domain.chat.type.ChatMessageType.TEXT;
 import static com.bob.core.domain.file.type.FileDomain.CHAT;
 import static com.bob.global.exception.response.ApplicationError.NOT_PARTICIPATED_CHAT_ROOM;
-import static com.bob.support.fixture.chat.domain.ChatRoomFixture.createChatroom;
+import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.chat.dto.command.ChatMessageCommandFixture.createMessageCommand;
 import static com.bob.support.fixture.chat.dto.query.ReadChatMessagesQueryFixture.readChatMessagesQuery;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
@@ -87,8 +87,8 @@ record ChatMessageReaderTest(
     @Test
     void 안읽은_메시지_개수_조회() {
         Chatroom chatroom = createChatroom();
-        chatroom.addMessage(OTHER_MEMBER_ID, "메시지1", TEXT, false);
-        chatroom.addMessage(OTHER_MEMBER_ID, "메시지2", TEXT, false);
+        chatroom.addMessage(OTHER_MEMBER_ID, "메시지1", TEXT);
+        chatroom.addMessage(OTHER_MEMBER_ID, "메시지2", TEXT);
         chatroomRepository.save(chatroom);
 
         ReadUnreadMessageCountQuery query = new ReadUnreadMessageCountQuery(MEMBER_ID);

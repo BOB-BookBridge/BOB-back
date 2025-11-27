@@ -1,6 +1,6 @@
 package com.bob.core.adapter.chat.api;
 
-import static com.bob.support.fixture.chat.domain.ChatRoomFixture.createChatroom;
+import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,9 +99,9 @@ class ChatApiTest {
     @Test
     void 읽지않은_메시지_수_조회() throws Exception {
         Chatroom chatroom = createChatroom();
-        chatroom.addMessage(OTHER_MEMBER_ID, "읽지 않은 메시지1", ChatMessageType.TEXT, false);
-        chatroom.addMessage(OTHER_MEMBER_ID, "읽지 않은 메시지2", ChatMessageType.TEXT, false);
-        chatroom.addMessage(MEMBER_ID, "내가 보낸 메시지", ChatMessageType.TEXT, false);
+        chatroom.addMessage(OTHER_MEMBER_ID, "읽지 않은 메시지1", ChatMessageType.TEXT);
+        chatroom.addMessage(OTHER_MEMBER_ID, "읽지 않은 메시지2", ChatMessageType.TEXT);
+        chatroom.addMessage(MEMBER_ID, "내가 보낸 메시지", ChatMessageType.TEXT);
         chatroomRepository.save(chatroom);
 
         setAuthentication();
@@ -145,8 +145,8 @@ class ChatApiTest {
     @Test
     void 채팅_메시지_목록_조회() throws Exception {
         Chatroom chatroom = createChatroom();
-        chatroom.addMessage(MEMBER_ID, "메시지1", ChatMessageType.TEXT, false);
-        chatroom.addMessage(OTHER_MEMBER_ID, "메시지2", ChatMessageType.TEXT, false);
+        chatroom.addMessage(MEMBER_ID, "메시지1", ChatMessageType.TEXT);
+        chatroom.addMessage(OTHER_MEMBER_ID, "메시지2", ChatMessageType.TEXT);
         chatroomRepository.save(chatroom);
 
         setAuthentication();

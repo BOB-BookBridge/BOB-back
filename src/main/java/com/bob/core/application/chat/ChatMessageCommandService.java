@@ -16,11 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bob.core.application.chat.dto.command.CreateMessageCommand;
 import com.bob.core.application.chat.dto.command.CreateSystemMessageCommand;
 import com.bob.core.application.chat.dto.query.ReadChatroomByPostAndMemberQuery;
+import com.bob.core.application.chat.dto.result.ChatMessageCreationResult;
 import com.bob.core.application.chat.port.in.ChatMessageCreator;
 import com.bob.core.application.chat.port.in.ChatroomReader;
 import com.bob.core.application.chat.port.out.ChatFilePort;
 import com.bob.core.domain.chat.ChatMessage;
 import com.bob.core.domain.chat.Chatroom;
+import com.bob.core.domain.chat.ChatroomMember;
 import com.bob.core.domain.chat.repository.ChatroomRepository;
 import com.bob.core.domain.chat.type.ChatMessageType;
 import com.bob.global.event.application.dto.NotificationEvent;
@@ -44,23 +46,25 @@ public class ChatMessageCommandService implements ChatMessageCreator {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public ChatMessage createChatMessage(Long chatroomId, CreateMessageCommand command) {
+    public ChatMessageCreationResult createChatMessage(Long chatroomId, CreateMessageCommand command) {
         Chatroom chatroom = chatroomReader.read(chatroomId);
         verifyParticipating(chatroom, command.memberId());
 
         UUID partnerId = chatroom.getPartnerId(command.memberId());
         chatroom.reEnterMember(partnerId);
 
-        boolean connected = emitterManager.isExistConnection(EmitterType.CHAT, of(chatroomId, partnerId));
-
         ChatMessageType type = resolveMessageType(command.fileNames(), command.content());
-        ChatMessage message = chatroom.addMessage(command.memberId(), command.content(), type, connected);
+        ChatMessage message = chatroom.addMessage(command.memberId(), command.content(), type);
         chatroomRepository.flush();
+
+        ChatroomMember partner = chatroom.getMember(partnerId);
+        if (emitterManager.isExistConnection(EmitterType.CHAT, of(chatroomId, partnerId)))
+            partner.updateLastReadMessage(message.getId());
 
         imageMapping(command.fileNames(), message.getId());
         publishChatMessageEvent(chatroom.getId(), command, message, partnerId);
 
-        return message;
+        return ChatMessageCreationResult.of(message, partner.getLastReadMessageId());
     }
 
     @Override
