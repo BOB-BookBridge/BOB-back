@@ -256,6 +256,9 @@
             <basic name="memberId">
                 <column name="member_id" nullable="false"/>
             </basic>
+            <basic name="lastReadMessageId">
+                <column name="last_read_message_id"/>
+            </basic>
             <basic name="enteredAt">
                 <column name="entered_at" nullable="false"/>
             </basic>
@@ -277,9 +280,6 @@
             </basic>
             <basic name="content">
                 <column name="content" length="500"/>
-            </basic>
-            <basic name="isRead">
-                <column name="is_read" nullable="false"/>
             </basic>
             <basic name="createdAt">
                 <column name="created_at" nullable="false"/>

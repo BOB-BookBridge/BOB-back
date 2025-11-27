@@ -230,7 +230,6 @@ CREATE TABLE IF NOT EXISTS chat_messages
     sender_id    BINARY(16)                              NOT NULL,
     type         ENUM ('TEXT', 'IMAGE', 'SYSTEM', 'MIX') NOT NULL,
     content      VARCHAR(500),
-    is_read      BOOLEAN DEFAULT FALSE,
     created_at   DATETIME
 );
 
@@ -239,10 +238,12 @@ CREATE TABLE IF NOT EXISTS chat_messages
 -- ========================
 CREATE TABLE IF NOT EXISTS chatroom_members
 (
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    chatroom_id  BIGINT     NOT NULL,
-    member_id    BINARY(16) NOT NULL,
-    exited_at    DATETIME
+    id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    chatroom_id             BIGINT     NOT NULL,
+    member_id               BINARY(16) NOT NULL,
+    last_read_message_id    BIGINT,
+    entered_at              DATETIME,
+    exited_at               DATETIME
 );
 
 CREATE TABLE IF NOT EXISTS files
