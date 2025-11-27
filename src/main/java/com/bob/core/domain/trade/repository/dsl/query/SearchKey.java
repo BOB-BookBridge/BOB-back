@@ -1,4 +1,4 @@
-package com.bob.core.application.trade.dto.query;
+package com.bob.core.domain.trade.repository.dsl.query;
 
 public enum SearchKey {
     ALL, SENT, RECEIVED;

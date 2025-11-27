@@ -10,11 +10,11 @@ import com.bob.core.application.trade.dto.query.ReadPostTradeQuery;
 import com.bob.core.application.trade.dto.query.ReadPostTradesQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeDetailQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeStatusMapQuery;
-import com.bob.core.application.trade.dto.query.ReadTradesQuery;
 import com.bob.core.application.trade.dto.result.TradeDetail;
 import com.bob.core.application.trade.dto.result.TradeSummaries;
 import com.bob.core.application.trade.dto.result.internal.PostTrade;
 import com.bob.core.domain.trade.Trade;
+import com.bob.core.domain.trade.repository.dsl.query.ReadTradesQuery;
 
 public interface TradeReader {
 

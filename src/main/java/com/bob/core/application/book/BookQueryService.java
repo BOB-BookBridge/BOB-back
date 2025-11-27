@@ -5,7 +5,8 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.application.book.dto.query.ReadBooksQuery;
 import com.bob.core.application.book.port.in.BookReader;
@@ -14,7 +15,8 @@ import com.bob.core.domain.book.repository.BookRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 
-@Component
+@Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BookQueryService implements BookReader {
 

@@ -1,4 +1,4 @@
-package com.bob.core.domain.trade.repository;
+package com.bob.core.domain.trade.repository.dsl;
 
 import static com.bob.core.domain.trade.QTrade.trade;
 
@@ -12,9 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import com.bob.core.application.trade.dto.query.ReadTradesQuery;
-import com.bob.core.application.trade.dto.query.SearchKey;
 import com.bob.core.domain.trade.Trade;
+import com.bob.core.domain.trade.repository.dsl.query.ReadTradesQuery;
+import com.bob.core.domain.trade.repository.dsl.query.SearchKey;
 import com.bob.core.domain.trade.status.Status;
 
 @RequiredArgsConstructor

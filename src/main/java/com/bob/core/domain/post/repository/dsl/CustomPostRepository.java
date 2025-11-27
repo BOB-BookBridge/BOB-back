@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 
-import com.bob.core.application.post.dto.query.ReadPostsQuery;
 import com.bob.core.domain.post.Post;
+import com.bob.core.domain.post.repository.dsl.query.ReadPostsQuery;
 
 public interface CustomPostRepository {
 

@@ -1,13 +1,9 @@
-package com.bob.core.application.post.dto.query;
+package com.bob.core.domain.post.repository.dsl.query;
 
 import java.util.List;
 import java.util.UUID;
 
 import lombok.Builder;
-
-import com.bob.core.application.post.dto.query.condition.SearchKey;
-import com.bob.core.application.post.dto.query.condition.SearchPrice;
-import com.bob.core.application.post.dto.query.condition.SortKey;
 
 @Builder
 public record ReadPostsQuery(
