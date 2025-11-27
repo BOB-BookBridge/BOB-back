@@ -2,9 +2,11 @@ package com.bob.core.application.trade.port.in;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 
+import com.bob.core.application.trade.dto.query.ReadPostTradeQuery;
 import com.bob.core.application.trade.dto.query.ReadPostTradesQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeDetailQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeStatusMapQuery;
@@ -17,6 +19,8 @@ import com.bob.core.domain.trade.Trade;
 public interface TradeReader {
 
     Trade read(Long id);
+
+    Optional<Trade> readByPostAndMember(ReadPostTradeQuery query);
 
     List<PostTrade> readPostTradeSummaries(ReadPostTradesQuery query);
 

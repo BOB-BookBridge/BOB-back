@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import lombok.Builder;
 
+import com.bob.core.adapter.post.api.response.internal.PostTrade;
 import com.bob.core.application.post.dto.result.PostDetail;
 import com.bob.core.application.post.port.result.PostFile;
 import com.bob.core.application.post.port.result.PostMember;
@@ -23,6 +24,7 @@ public record PostDetailResponse(
     List<PostFile> images,
     WriterInfo writer,
     BookInfo book,
+    PostTrade trade,
     String bookStatus,
     String tradeStatus,
     Integer scrapCount,
@@ -33,7 +35,7 @@ public record PostDetailResponse(
     LocalDateTime createdAt
 ) {
 
-    public static PostDetailResponse of(PostDetail detail) {
+    public static PostDetailResponse of(PostDetail detail, PostTrade trade) {
         return PostDetailResponse.builder()
             .id(detail.id())
             .status(detail.status())
@@ -44,7 +46,8 @@ public record PostDetailResponse(
             .price(detail.price())
             .images(detail.images())
             .writer(WriterInfo.of(detail.writer()))
-            .book(BookInfo.from(detail.book()))
+            .book(BookInfo.of(detail.book()))
+            .trade(trade)
             .bookStatus(detail.bookStatus())
             .tradeStatus(detail.tradeStatus())
             .scrapCount(detail.scrapCount())
@@ -79,15 +82,9 @@ public record PostDetailResponse(
     }
 
     @Builder
-    public record BookInfo(
-        String isbn,
-        String title,
-        String author,
-        String description,
-        String pubDate
-    ) {
+    public record BookInfo(String isbn, String title, String author, String description, String pubDate) {
 
-        public static BookInfo from(PostDetail.BookInfo book) {
+        public static BookInfo of(PostDetail.BookInfo book) {
             return BookInfo.builder()
                 .isbn(book.isbn())
                 .title(book.title())
