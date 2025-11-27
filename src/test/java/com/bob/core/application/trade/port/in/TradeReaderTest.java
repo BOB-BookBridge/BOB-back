@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
 
 import com.bob.core.application.trade.dto.command.CreateTradeCommand;
+import com.bob.core.application.trade.dto.query.ReadPostTradeQuery;
 import com.bob.core.application.trade.dto.query.ReadPostTradesQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeDetailQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeStatusMapQuery;
@@ -55,6 +57,19 @@ record TradeReaderTest(TradeReader tradeReader, TradeCreator tradeCreator) {
         assertThatThrownBy(() -> tradeReader.readPostTradeSummaries(query))
             .isInstanceOf(ApplicationException.class)
             .hasMessage(TRADE_ACCESS_DENIED.getMessage());
+    }
+
+    @Test
+    void 게시글_거래_조회() {
+        Long postId = 1L;
+        tradeCreator.create(new CreateTradeCommand(postId, OTHER_MEMBER_ID, List.of(5L), false));
+
+        var query = new ReadPostTradeQuery(postId, OTHER_MEMBER_ID);
+
+        Optional<Trade> found = tradeReader.readByPostAndMember(query);
+        assertThat(found).isPresent();
+        assertThat(found.get().getPostId()).isEqualTo(postId);
+        assertThat(found.get().getBuyerId()).isEqualTo(OTHER_MEMBER_ID);
     }
 
     @Test
