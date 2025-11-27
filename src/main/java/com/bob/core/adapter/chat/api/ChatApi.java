@@ -33,6 +33,7 @@ import com.bob.core.application.chat.dto.query.ReadChatMessagesQuery;
 import com.bob.core.application.chat.dto.query.ReadChatroomDetailQuery;
 import com.bob.core.application.chat.dto.query.ReadChatroomSummariesQuery;
 import com.bob.core.application.chat.dto.query.ReadUnreadMessageCountQuery;
+import com.bob.core.application.chat.dto.result.ChatMessageCreationResult;
 import com.bob.core.application.chat.dto.result.ChatMessageSummary;
 import com.bob.core.application.chat.dto.result.ChatroomDetail;
 import com.bob.core.application.chat.dto.result.ChatroomSummary;
@@ -41,7 +42,6 @@ import com.bob.core.application.chat.port.in.ChatMessageReader;
 import com.bob.core.application.chat.port.in.ChatroomModifier;
 import com.bob.core.application.chat.port.in.ChatroomReader;
 import com.bob.core.application.trade.port.in.TradeReader;
-import com.bob.core.domain.chat.ChatMessage;
 
 @RequiredArgsConstructor
 @RequestMapping("/chatrooms")
@@ -65,9 +65,10 @@ public class ChatApi {
     ) {
         CreateMessageCommand command = new CreateMessageCommand(memberId, request.message(), request.fileNames());
 
-        ChatMessage message = messageCreator.createChatMessage(chatroomId, command);
+        ChatMessageCreationResult result = messageCreator.createChatMessage(chatroomId, command);
 
-        return ResponseEntity.status(CREATED).body(ChatMessageSendResponse.of(message));
+        return ResponseEntity.status(CREATED)
+            .body(ChatMessageSendResponse.of(result.message(), result.partnerLastReadMessageId()));
     }
 
     @GetMapping
