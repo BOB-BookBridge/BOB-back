@@ -1,7 +1,7 @@
 package com.bob.core.application.chat.port.in;
 
 import static com.bob.core.domain.chat.type.ChatMessageType.TEXT;
-import static com.bob.support.fixture.chat.domain.ChatRoomFixture.createChatroom;
+import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,8 +22,8 @@ record ChatroomModifierTest(ChatroomModifier chatroomModifier, ChatroomRepositor
     @Test
     void 채팅방_입장() {
         Chatroom chatroom = createChatroom();
-        chatroom.addMessage(OTHER_MEMBER_ID, "메시지1", TEXT, false);
-        chatroom.addMessage(OTHER_MEMBER_ID, "메시지2", TEXT, false);
+        chatroom.addMessage(OTHER_MEMBER_ID, "메시지1", TEXT);
+        chatroom.addMessage(OTHER_MEMBER_ID, "메시지2", TEXT);
         Chatroom saved = chatroomRepository.save(chatroom);
 
         var command = new JoinChatroomCommand(MEMBER_ID);
@@ -37,7 +37,7 @@ record ChatroomModifierTest(ChatroomModifier chatroomModifier, ChatroomRepositor
     @Test
     void 채팅방_퇴장() {
         Chatroom chatroom = createChatroom();
-        chatroom.addMessage(OTHER_MEMBER_ID, "메시지1", TEXT, false);
+        chatroom.addMessage(OTHER_MEMBER_ID, "메시지1", TEXT);
         Chatroom saved = chatroomRepository.save(chatroom);
 
         var command = new ExitChatroomCommand(MEMBER_ID);

@@ -2,7 +2,8 @@ package com.bob.core.domain.chat;
 
 import static com.bob.core.domain.chat.type.ChatMessageType.IMAGE;
 import static com.bob.core.domain.chat.type.ChatMessageType.TEXT;
-import static com.bob.support.fixture.chat.domain.ChatRoomFixture.createChatroom;
+import static com.bob.support.fixture.chat.domain.ChatMessageFixture.addMessage;
+import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,27 +35,14 @@ class ChatroomTest {
     }
 
     @Test
-    void 채팅_메시지_추가_상대방_접속() {
+    void 채팅_메시지_추가() {
         Chatroom chatroom = createChatroom();
         String content = "안녕하세요";
 
-        ChatMessage message = chatroom.addMessage(MEMBER_ID, content, TEXT, true);
+        ChatMessage message = chatroom.addMessage(MEMBER_ID, content, TEXT);
 
         assertThat(chatroom.getMessages()).hasSize(1);
-        assertThat(message.getIsRead()).isTrue();
-    }
-
-    @Test
-    void 채팅_메시지_추가_상대방_미접속() {
-        Chatroom chatroom = createChatroom();
-        String content = "안녕하세요";
-
-        ChatMessage message = chatroom.addMessage(MEMBER_ID, content, TEXT, false);
-
-        assertThat(chatroom.getMessages()).hasSize(1);
-        assertThat(message.getIsRead()).isFalse();
-        assertThat(chatroom.getLastChatMessage()).isEqualTo(content);
-        assertThat(chatroom.getLastChatAt()).isNotNull();
+        assertThat(message.getContent()).isEqualTo(content);
     }
 
     @Test
@@ -62,9 +50,11 @@ class ChatroomTest {
         Chatroom chatroom = createChatroom();
         UUID senderId = UUID.randomUUID();
 
-        chatroom.addMessage(senderId, "", IMAGE, false);
+        ChatMessage message1 = chatroom.addMessage(senderId, "", IMAGE);
+        ChatMessage message2 = chatroom.addMessage(senderId, null, IMAGE);
 
-        assertThat(chatroom.getLastChatMessage()).isEqualTo("사진");
+        assertThat(message1.getContent()).isEqualTo("사진");
+        assertThat(message2.getContent()).isEqualTo("사진");
     }
 
     @Test
@@ -75,7 +65,7 @@ class ChatroomTest {
         ChatMessage message = chatroom.addSystemMessage(MEMBER_ID, content);
 
         assertThat(chatroom.getMessages()).hasSize(1);
-        assertThat(message.getIsRead()).isTrue();
+        assertThat(message.getType().name()).isEqualTo("SYSTEM");
     }
 
     @Test
@@ -84,16 +74,15 @@ class ChatroomTest {
         UUID senderId = MEMBER_ID;
         UUID receiverId = OTHER_MEMBER_ID;
 
-        chatroom.addMessage(senderId, "메시지1", TEXT, false);
-        chatroom.addMessage(senderId, "메시지2", TEXT, false);
-        chatroom.addMessage(receiverId, "내가 보낸 메시지", TEXT, false);
+        addMessage(chatroom, 1L, senderId);
+        addMessage(chatroom, 2L, senderId);
+        addMessage(chatroom, 3L, receiverId);
 
         chatroom.markMessagesAsRead(receiverId);
 
-        List<ChatMessage> messages = chatroom.getMessages();
-        assertThat(messages.get(0).getIsRead()).isTrue();
-        assertThat(messages.get(1).getIsRead()).isTrue();
-        assertThat(messages.get(2).getIsRead()).isFalse();
+        ChatroomMember receiver = chatroom.getMember(receiverId);
+        assertThat(receiver.getLastReadMessageId()).isEqualTo(2L);
+        assertThat(chatroom.countUnreadMessages(receiverId)).isZero();
     }
 
     @Test
@@ -149,8 +138,8 @@ class ChatroomTest {
         UUID senderId = MEMBER_ID;
 
         LocalDateTime beforeTime = LocalDateTime.now().minusMinutes(10);
-        chatroom.addMessage(senderId, "메시지1", TEXT, false);
-        chatroom.addMessage(senderId, "메시지2", TEXT, false);
+        chatroom.addMessage(senderId, "메시지1", TEXT);
+        chatroom.addMessage(senderId, "메시지2", TEXT);
         LocalDateTime afterTime = LocalDateTime.now().plusMinutes(10);
 
         List<ChatMessage> messagesAfter = chatroom.getMessagesAfter(beforeTime);
@@ -165,9 +154,30 @@ class ChatroomTest {
         UUID senderId = MEMBER_ID;
         UUID receiverId = OTHER_MEMBER_ID;
 
-        chatroom.addMessage(senderId, "메시지1", TEXT, false);
-        chatroom.addMessage(senderId, "메시지2", TEXT, false);
-        chatroom.addMessage(receiverId, "내가 보낸 메시지", TEXT, false);
+        addMessage(chatroom, 1L, senderId);
+        addMessage(chatroom, 2L, senderId);
+
+        chatroom.markMessagesAsRead(receiverId);
+
+        addMessage(chatroom, 3L, receiverId);
+        addMessage(chatroom, 4L, senderId);
+        addMessage(chatroom, 5L, senderId);
+
+        int unreadCount = chatroom.countUnreadMessages(receiverId);
+
+        assertThat(unreadCount).isEqualTo(2);
+    }
+
+    @Test
+    void 읽지않은_메시지_개수_조회_시_시스템_메시지는_포함되지_않음() {
+        Chatroom chatroom = createChatroom();
+        UUID senderId = MEMBER_ID;
+        UUID receiverId = OTHER_MEMBER_ID;
+
+        chatroom.addMessage(senderId, "메시지", TEXT);
+        chatroom.addMessage(senderId, "메시지", TEXT);
+        chatroom.addMessage(receiverId, "상대방 메시지", TEXT); // 상대방 메시지 포함 X
+        chatroom.addSystemMessage(senderId, "시스템 메시지"); // 시스템 메시지 포함 X
 
         int unreadCount = chatroom.countUnreadMessages(receiverId);
 

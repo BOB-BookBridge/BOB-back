@@ -25,7 +25,6 @@ class ChatMessageTest {
         assertThat(message.getSenderId()).isEqualTo(senderId);
         assertThat(message.getContent()).isEqualTo(content);
         assertThat(message.getType()).isEqualTo(TEXT);
-        assertThat(message.getIsRead()).isFalse();
         assertThat(message.getCreatedAt()).isNotNull();
     }
 
@@ -39,17 +38,7 @@ class ChatMessageTest {
         assertThat(message.getSenderId()).isEqualTo(senderId);
         assertThat(message.getContent()).isEqualTo(content);
         assertThat(message.getType()).isEqualTo(SYSTEM);
-        assertThat(message.getIsRead()).isTrue();
         assertThat(message.getCreatedAt()).isNotNull();
-    }
-
-    @Test
-    void 메시지_읽음_처리() {
-        ChatMessage message = ChatMessage.createChatMessage(UUID.randomUUID(), "테스트", TEXT);
-
-        message.read();
-
-        assertThat(message.getIsRead()).isTrue();
     }
 
     @Test
