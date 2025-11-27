@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bob.core.application.trade.dto.query.ReadPostTradeQuery;
 import com.bob.core.application.trade.dto.query.ReadPostTradesQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeDetailQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeStatusMapQuery;
@@ -53,6 +55,11 @@ public class TradeQueryService implements TradeReader {
     public Trade read(Long id) {
         return tradeRepository.findById(id)
             .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXISTS_TRADE));
+    }
+
+    @Override
+    public Optional<Trade> readByPostAndMember(ReadPostTradeQuery query) {
+        return tradeRepository.findByPostIdAndBuyerId(query.postId(), query.memberId());
     }
 
     @Override

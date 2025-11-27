@@ -33,6 +33,7 @@ import com.bob.core.adapter.post.api.request.ReadPostsRequest;
 import com.bob.core.adapter.post.api.response.CreatePostResponse;
 import com.bob.core.adapter.post.api.response.PostDetailResponse;
 import com.bob.core.adapter.post.api.response.PostsResponse;
+import com.bob.core.adapter.post.api.response.internal.PostTrade;
 import com.bob.core.application.post.dto.command.ChangePostInfoCommand;
 import com.bob.core.application.post.dto.command.CreatePostCommand;
 import com.bob.core.application.post.dto.command.RemovePostCommand;
@@ -44,6 +45,7 @@ import com.bob.core.application.post.dto.result.PostSummary;
 import com.bob.core.application.post.port.in.PostCreator;
 import com.bob.core.application.post.port.in.PostModifier;
 import com.bob.core.application.post.port.in.PostReader;
+import com.bob.core.application.trade.dto.query.ReadPostTradeQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeStatusMapQuery;
 import com.bob.core.application.trade.port.in.TradeReader;
 
@@ -95,7 +97,11 @@ public class PostApi {
 
         PostDetail detail = postReader.readDetail(postId, query);
 
-        return ResponseEntity.ok(PostDetailResponse.of(detail));
+        PostTrade postTrade = tradeReader.readByPostAndMember(new ReadPostTradeQuery(postId, memberId))
+            .map(t -> new PostTrade(t.getId(), t.getStatus().name()))
+            .orElse(null);
+
+        return ResponseEntity.ok(PostDetailResponse.of(detail, postTrade));
     }
 
     @PatchMapping("/{postId}")
