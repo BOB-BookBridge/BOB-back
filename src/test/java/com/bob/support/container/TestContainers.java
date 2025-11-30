@@ -22,5 +22,8 @@ public class TestContainers {
 
     static {
         Startables.deepStart(Stream.of(MYSQL, REDIS)).join();
+        System.setProperty("spring.data.redis.host", REDIS.getHost());
+        System.setProperty("spring.data.redis.port", String.valueOf(REDIS.getMappedPort(6379)));
+        System.setProperty("spring.data.redis.password", "password");
     }
 }
