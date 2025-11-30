@@ -66,7 +66,7 @@ class RateLimiterAspectTest {
 
     @Test
     void 전역_제한_요청_허용() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 30; i++) {
             assertThat(mvc.post().uri("/auth/global-limit").header("X-Forwarded-For", "10.0.0.6"))
                 .hasStatusOk();
         }
@@ -95,7 +95,7 @@ class RateLimiterAspectTest {
 
     @Test
     void 전역_제한_초과_시_예외가_발생한다() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 30; i++) {
             assertThat(mvc.post().uri("/auth/global-limit").header("X-Forwarded-For", "10.0.0.7"))
                 .hasStatusOk();
         }

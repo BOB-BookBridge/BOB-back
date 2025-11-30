@@ -31,7 +31,7 @@ import com.bob.global.ratelimit.repository.RateLimitRepository;
 public class RateLimiterAspect {
 
     private static final long GLOBAL_WINDOW_SECOND = 5L;
-    private static final int GLOBAL_MAX_REQUEST = 10;
+    private static final int GLOBAL_MAX_REQUEST = 30;
 
     private final RateLimitRepository repository;
     private final RateLimiterProperties properties;
