@@ -48,6 +48,7 @@ import com.bob.core.application.trade.dto.query.ReadPostTradeQuery;
 import com.bob.core.application.trade.dto.query.ReadTradeStatusMapQuery;
 import com.bob.core.application.trade.port.in.TradeReader;
 import com.bob.core.domain.post.repository.dsl.query.ReadPostsQuery;
+import com.bob.global.ratelimit.annotation.RateLimit;
 
 @RequiredArgsConstructor
 @RestController
@@ -60,6 +61,12 @@ public class PostApi {
 
     private final TradeReader tradeReader;
 
+    @RateLimit(
+        name = "create-post",
+        windowSecond = 60, maxRequest = 5,
+        target = RateLimit.LimitTarget.MEMBER_ID,
+        value = "#memberId"
+    )
     @PostMapping
     public ResponseEntity<CreatePostResponse> createPost(
         @Valid @RequestBody CreatePostRequest request,

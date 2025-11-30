@@ -26,31 +26,43 @@ public class TokenAuthenticationEntryPoint implements AuthenticationEntryPoint {
     /* @formatter:off */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
-        setHeader(response);
-        String body = objectMapper.writeValueAsString(setBody(exception));
+        AuthenticationError error = getAuthenticationError(exception);
+        setHeader(response, error);
+        String body = objectMapper.writeValueAsString(setBody(exception, error));
         response.getWriter().print(body);
     }
-    /* @formatter:on */
 
-    private void setHeader(HttpServletResponse response) {
-        response.setContentType("application/json; charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    private AuthenticationError getAuthenticationError(AuthenticationException ex) {
+        if (ex instanceof ApplicationAuthenticationException exception)
+            return exception.getError();
+
+        return AuthenticationError.FAILED_AUTHENTICATION;
     }
 
-    private Map<String, Object> setBody(AuthenticationException ex) {
+    private void setHeader(HttpServletResponse response, AuthenticationError error) {
+        response.setContentType("application/json; charset=UTF-8");
+        response.setStatus(error.getStatus().value());
+    }
+
+    private Map<String, Object> setBody(AuthenticationException ex, AuthenticationError error) {
         if (ex instanceof ApplicationAuthenticationException exception)
             return createCustomErrorResponse(exception);
 
-        return createDefaultErrorResponse();
+        return createDefaultErrorResponse(error);
     }
 
     private Map<String, Object> createCustomErrorResponse(ApplicationAuthenticationException authException) {
         AuthenticationError error = authException.getError();
-        return Map.of("code", error.getCode(), "message", error.getMessage());
+
+        String message = authException.getCustomMessage() != null
+            ? authException.getCustomMessage()
+            : error.getMessage();
+
+        return Map.of("code", error.getCode(), "message", message);
     }
 
-    private Map<String, Object> createDefaultErrorResponse() {
-        AuthenticationError error = AuthenticationError.FAILED_AUTHENTICATION;
+    private Map<String, Object> createDefaultErrorResponse(AuthenticationError error) {
         return Map.of("code", error.getCode(), "message", error.getMessage());
     }
+    /* @formatter:on */
 }

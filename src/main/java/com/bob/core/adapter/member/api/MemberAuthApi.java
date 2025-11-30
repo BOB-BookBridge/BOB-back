@@ -13,6 +13,7 @@ import com.bob.core.adapter.member.api.request.SendAuthenticationCodeRequest;
 import com.bob.core.adapter.member.api.request.VerifyMailRequest;
 import com.bob.core.application.member.dto.command.VerifyMailCommand;
 import com.bob.core.application.member.port.in.MemberAuthenticator;
+import com.bob.global.ratelimit.annotation.RateLimit;
 
 @RequiredArgsConstructor
 @RequestMapping("/auth/email")
@@ -21,6 +22,10 @@ public class MemberAuthApi {
 
     private final MemberAuthenticator authenticator;
 
+    @RateLimit(
+        name = "send-auth-code",
+        windowSecond = 180, maxRequest = 5
+    )
     @PostMapping
     public CommonResponse<ResponseSymbol> sendAuthenticationCode(@RequestBody SendAuthenticationCodeRequest request) {
         authenticator.sendAuthenticationCode(request.email());
@@ -28,6 +33,10 @@ public class MemberAuthApi {
         return new CommonResponse<>(true, ResponseSymbol.SENT);
     }
 
+    @RateLimit(
+        name = "verify-email",
+        windowSecond = 180, maxRequest = 5
+    )
     @PostMapping("/confirm")
     public CommonResponse<ResponseSymbol> verifyMail(@RequestBody VerifyMailRequest request) {
         VerifyMailCommand command = new VerifyMailCommand(request.code());

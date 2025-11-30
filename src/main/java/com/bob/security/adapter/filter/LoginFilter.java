@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.global.exception.response.AuthenticationError;
+import com.bob.global.ratelimit.repository.RateLimitRepository;
 import com.bob.security.adapter.filter.request.LoginRequest;
 import com.bob.security.application.port.out.AuthCachePort;
 import com.bob.security.application.port.out.TokenManager;
@@ -42,6 +43,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final TokenManager tokenManager;
 
+    private final RateLimitRepository rateLimitRepository;
+
     private final HeaderProperties headerProperties;
 
     private final ObjectMapper objectMapper;
@@ -49,6 +52,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     /* @formatter:off */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+        checkRateLimit(request);
+
         LoginRequest loginRequest = readLoginData(request);
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password());
         return authenticationManager.authenticate(authToken);
@@ -68,8 +73,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
-        AuthenticationError error = setAuthenticationError(failed);
-        authenticationEntryPoint.commence(request, response, new ApplicationAuthenticationException(error) {});
+        if (failed instanceof ApplicationAuthenticationException)
+            authenticationEntryPoint.commence(request, response, failed);
+        else
+            authenticationEntryPoint.commence(request, response, new ApplicationAuthenticationException(setAuthenticationError(failed)));
     }
 
     private static AuthenticationError setAuthenticationError(AuthenticationException ex) {
@@ -87,4 +94,26 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         }
     }
     /* @formatter:on */
+
+    private void checkRateLimit(HttpServletRequest request) {
+        String clientIp = getClientIp(request);
+        String rateLimitKey = "login:" + clientIp;
+
+        boolean allowed = rateLimitRepository.isAllowed(rateLimitKey, 60, 5);
+
+        if (!allowed) {
+            long waitSeconds = rateLimitRepository.getWaitForRefill(rateLimitKey, 60, 5);
+            String message = "로그인 시도가 너무 많습니다. " + waitSeconds + "초 후 다시 시도해주세요.";
+
+            throw new ApplicationAuthenticationException(AuthenticationError.LOGIN_RATE_LIMIT_EXCEEDED, message);
+        }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getRemoteAddr();
+
+        return ip;
+    }
 }

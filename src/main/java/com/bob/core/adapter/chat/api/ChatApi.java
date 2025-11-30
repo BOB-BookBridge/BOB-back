@@ -42,6 +42,7 @@ import com.bob.core.application.chat.port.in.ChatMessageReader;
 import com.bob.core.application.chat.port.in.ChatroomModifier;
 import com.bob.core.application.chat.port.in.ChatroomReader;
 import com.bob.core.application.trade.port.in.TradeReader;
+import com.bob.global.ratelimit.annotation.DisableRateLimit;
 
 @RequiredArgsConstructor
 @RequestMapping("/chatrooms")
@@ -56,6 +57,7 @@ public class ChatApi {
 
     private final TradeReader tradeReader;
 
+    @DisableRateLimit
     @PostMapping("/{chatroomId}/messages")
     @ResponseStatus(CREATED)
     public ResponseEntity<ChatMessageSendResponse> sendChatMessage(
