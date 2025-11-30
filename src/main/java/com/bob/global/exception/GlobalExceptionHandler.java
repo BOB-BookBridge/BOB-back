@@ -3,6 +3,9 @@ package com.bob.global.exception;
 import static com.bob.global.exception.response.ApplicationError.TYPE_MISMATCH;
 import static com.bob.global.exception.response.ApplicationError.VALIDATION_ERROR;
 
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +16,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.global.exception.response.ErrorResponse;
+import com.bob.global.ratelimit.exception.RateLimitExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -45,6 +49,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(TYPE_MISMATCH.getStatus())
             .body(new ErrorResponse(TYPE_MISMATCH.getCode(), message));
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(RateLimitExceededException ex, HttpServletResponse response) {
+        response.addHeader("Retry-After", String.valueOf(ex.getRetryAfterSeconds()));
+        ErrorResponse errorResponse = new ErrorResponse("RATE_LIMIT_EXCEEDED", ex.getMessage());
+
+        return ResponseEntity
+            .status(HttpStatus.TOO_MANY_REQUESTS)
+            .body(errorResponse);
     }
 
     // TODO : Parameter 기반 요청 시 ConstraintViolationException.class 추가
