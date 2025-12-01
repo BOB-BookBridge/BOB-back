@@ -42,6 +42,7 @@ import com.bob.core.application.member.dto.result.MemberDetail;
 import com.bob.core.application.member.port.in.MemberModifier;
 import com.bob.core.application.member.port.in.MemberReader;
 import com.bob.core.application.member.port.in.MemberRegister;
+import com.bob.global.ratelimit.annotation.RateLimit;
 
 @RequiredArgsConstructor
 @RequestMapping("/members")
@@ -52,6 +53,10 @@ public class MemberApi {
     private final MemberReader memberReader;
     private final MemberModifier memberModifier;
 
+    @RateLimit(
+        name = "signup",
+        windowSecond = 60, maxRequest = 5
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CommonResponse<ResponseSymbol> signup(@Valid @RequestBody SignupRequest request) {
@@ -93,6 +98,12 @@ public class MemberApi {
         return new CommonResponse<>(true, UPDATED);
     }
 
+    @RateLimit(
+        name = "change-password",
+        windowSecond = 60, maxRequest = 1,
+        target = RateLimit.LimitTarget.MEMBER_ID,
+        value = "#memberId"
+    )
     @PatchMapping("/me/password")
     public CommonResponse<ResponseSymbol> changePassword(
         @Valid @RequestBody ChangePasswordRequest request,
@@ -105,6 +116,10 @@ public class MemberApi {
         return new CommonResponse<>(true, UPDATED);
     }
 
+    @RateLimit(
+        name = "issue-temp-password",
+        windowSecond = 60, maxRequest = 1
+    )
     @PatchMapping("/temp/password")
     public CommonResponse<ResponseSymbol> sendTempPassword(@Valid @RequestBody IssuePasswordRequest request) {
         memberModifier.issueTempPassword(request.email());

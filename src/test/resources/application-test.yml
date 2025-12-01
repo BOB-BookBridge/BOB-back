@@ -56,3 +56,7 @@ mail:
   from:
     address: noreply@bob.com
     personal: Bookbridge
+
+rate-limiter:
+  distributed: false
+  global: false

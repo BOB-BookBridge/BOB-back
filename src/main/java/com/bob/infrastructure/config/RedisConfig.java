@@ -20,6 +20,8 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 import com.bob.infrastructure.messaging.subscriber.RedisSubscriber;
 
@@ -48,28 +50,24 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer(
-        RedisConnectionFactory connectionFactory,
-        RedisSubscriber redisEventSubscriber,
-        Map<String, ChannelTopic> topicMap
-    ) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        new HashSet<>(topicMap.values()).forEach(topic -> container.addMessageListener(redisEventSubscriber, topic));
-        return container;
-    }
-
-    @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
-        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+        ObjectMapper redisObjectMapper = objectMapper.copy();
+        PolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
+            .allowIfSubType(Object.class)
+            .build();
+
+        redisObjectMapper.activateDefaultTyping(typeValidator, ObjectMapper.DefaultTyping.NON_FINAL);
+
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+
+        template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(serializer);
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(serializer);
+
         return template;
     }
 
@@ -82,7 +80,19 @@ public class RedisConfig {
     }
 
     @Bean
-    public Map<String, ChannelTopic> topicMap() {
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+        RedisConnectionFactory connectionFactory,
+        RedisSubscriber redisEventSubscriber
+    ) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+
+        new HashSet<>(topicMap().values()).forEach(topic -> container.addMessageListener(redisEventSubscriber, topic));
+
+        return container;
+    }
+
+    private static Map<String, ChannelTopic> topicMap() {
         return Map.of(
             "CHAT", new ChannelTopic("notification"),
             "TRADE", new ChannelTopic("notification"),

@@ -31,6 +31,7 @@ import com.bob.core.application.file.dto.command.UpdateFilesCommand;
 import com.bob.core.application.file.dto.result.FileUploadUrl;
 import com.bob.core.application.file.port.in.FileModifier;
 import com.bob.core.application.file.port.in.FileRegister;
+import com.bob.global.ratelimit.annotation.RateLimit;
 
 @RequiredArgsConstructor
 @RequestMapping("/files")
@@ -40,6 +41,12 @@ public class FileApi {
     private final FileRegister fileRegister;
     private final FileModifier fileModifier;
 
+    @RateLimit(
+        name = "register-files",
+        windowSecond = 60, maxRequest = 10,
+        target = RateLimit.LimitTarget.MEMBER_ID,
+        value = "#memberId"
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CommonResponse<ResponseSymbol> registerFiles(
@@ -53,6 +60,10 @@ public class FileApi {
         return new CommonResponse<>(true, CREATED);
     }
 
+    @RateLimit(
+        name = "generate-upload-url",
+        windowSecond = 60, maxRequest = 10
+    )
     @PostMapping("/urls")
     public ResponseEntity<List<FileUploadUrl>> generateFileUploadUrl(
         @Valid @RequestBody GenerateFileUploadUrlRequest request
