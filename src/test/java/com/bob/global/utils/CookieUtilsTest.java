@@ -52,6 +52,7 @@ class CookieUtilsTest {
         CookieUtils.addCookie(response, AUTH_COOKIE_NAME, ACCESS_TOKEN, 3600L);
 
         then(response).should().addHeader(eq(SET_COOKIE_HEADER), contains(AUTH_COOKIE_HEADER));
+        then(response).should().addHeader(eq(SET_COOKIE_HEADER), contains("Domain=.bookbridge.kr"));
     }
 
     @Test
