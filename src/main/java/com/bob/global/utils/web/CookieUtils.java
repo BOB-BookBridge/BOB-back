@@ -28,6 +28,7 @@ public class CookieUtils {
     public static void addCookie(HttpServletResponse response, String name, String value, Long maxAge) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
             .path("/")
+            .domain(".bookbridge.kr")
             .sameSite(sameSite)
             .httpOnly(true)
             .secure(true)
@@ -40,6 +41,7 @@ public class CookieUtils {
     public static void removeCookie(HttpServletResponse response, String name) {
         ResponseCookie cookie = ResponseCookie.from(name, "")
             .path("/")
+            .domain(".bookbridge.kr")
             .sameSite(sameSite)
             .httpOnly(true)
             .secure(true)
