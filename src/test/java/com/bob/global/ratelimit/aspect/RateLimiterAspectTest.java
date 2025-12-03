@@ -90,7 +90,7 @@ class RateLimiterAspectTest {
                 return true;
             })
             .bodyJson()
-            .extractingPath("$.message").asString().contains("요청 한도를 초과했습니다");
+            .extractingPath("$.detail").asString().contains("요청 한도를 초과했습니다");
     }
 
     @Test
@@ -109,7 +109,7 @@ class RateLimiterAspectTest {
                 return true;
             })
             .bodyJson()
-            .extractingPath("$.message").asString().contains("요청 한도를 초과했습니다");
+            .extractingPath("$.detail").asString().contains("요청 한도를 초과했습니다");
     }
 
     @Test

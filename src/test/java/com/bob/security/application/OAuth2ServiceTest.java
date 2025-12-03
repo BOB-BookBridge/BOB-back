@@ -112,7 +112,7 @@ class OAuth2ServiceTest {
 
         assertThatThrownBy(() -> oAuth2Service.loadUser(request))
             .isInstanceOf(ApplicationAuthenticationException.class)
-            .hasMessage(AuthenticationError.IS_DEACTIVATED_MEMBER.getMessage());
+            .hasMessage(AuthenticationError.MEMBER_DEACTIVATED.getMessage());
     }
 
     @Test
@@ -127,7 +127,7 @@ class OAuth2ServiceTest {
 
         assertThatThrownBy(() -> oAuth2Service.loadUser(request))
             .isInstanceOf(ApplicationAuthenticationException.class)
-            .hasMessage(AuthenticationError.IS_BANNED_MEMBER.getMessage());
+            .hasMessage(AuthenticationError.MEMBER_BANNED.getMessage());
     }
 
     private static OAuth2UserRequest requestOf(ClientRegistration registration) {

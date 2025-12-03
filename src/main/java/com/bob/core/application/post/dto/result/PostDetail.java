@@ -24,7 +24,7 @@ public record PostDetail(
 
     String bookStatus, String tradeStatus,
 
-    Integer scrapCount, Integer viewCount,
+    Integer registrationAreaId, Integer scrapCount, Integer viewCount,
 
     Boolean isFavorite, Boolean isOwner, Boolean wishOnly,
 
@@ -51,6 +51,7 @@ public record PostDetail(
             .tradeStatus(post.getTradeProgress().name())
             .scrapCount(post.getScrapCount())
             .viewCount(post.getViewCount())
+            .registrationAreaId(post.getRegistrationAreaId())
             .isFavorite(isFavorite)
             .isOwner(isOwner)
             .wishOnly(post.isWishOnly())

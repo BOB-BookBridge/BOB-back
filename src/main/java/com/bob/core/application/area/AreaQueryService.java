@@ -1,5 +1,6 @@
 package com.bob.core.application.area;
 
+import static com.bob.global.exception.response.ApplicationError.AREA_AUTHENTICATION_FAILED;
 import static com.bob.global.utils.geo.GeometryUtils.createPoint;
 
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,6 @@ import com.bob.core.application.area.port.in.AreaReader;
 import com.bob.core.domain.area.EmdArea;
 import com.bob.core.domain.area.repository.AreaRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,7 +26,7 @@ public class AreaQueryService implements AreaReader, AreaAuthenticator {
     @Override
     public EmdArea read(Integer emdAreaId) {
         return areaRepository.findById(emdAreaId)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_OBJECT));
+            .orElseThrow(() -> new IllegalArgumentException("지역을 찾을 수 없습니다. id : " + emdAreaId));
     }
 
     @Override
@@ -35,6 +35,6 @@ public class AreaQueryService implements AreaReader, AreaAuthenticator {
         Point point = createPoint(query.lat(), query.lon());
 
         if (!emdArea.getGeom().contains(point))
-            throw new ApplicationException(ApplicationError.INVALID_AREA_AUTHENTICATION);
+            throw new ApplicationException(AREA_AUTHENTICATION_FAILED);
     }
 }

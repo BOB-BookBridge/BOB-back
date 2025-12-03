@@ -1,6 +1,5 @@
 package com.bob.core.application.interest.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.INTEREST_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import com.bob.core.application.interest.dto.query.FindInterestByNameQuery;
 import com.bob.core.domain.interest.Interest;
 import com.bob.core.domain.interest.repository.InterestRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("관심사 조회 테스트")
@@ -37,8 +35,8 @@ record InterestReaderTest(InterestReader interestReader, InterestRepository inte
         Long nonExistentId = 999L;
 
         assertThatThrownBy(() -> interestReader.read(nonExistentId))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(INTEREST_NOT_FOUND.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("관심사를 찾을 수 없습니다.");
     }
 
     @Test
@@ -59,7 +57,7 @@ record InterestReaderTest(InterestReader interestReader, InterestRepository inte
         FindInterestByNameQuery query = FindInterestByNameQuery.of("nonexistent");
 
         assertThatThrownBy(() -> interestReader.readByName(query))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(INTEREST_NOT_FOUND.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("관심사를 찾을 수 없습니다.");
     }
 }

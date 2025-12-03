@@ -20,8 +20,6 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 import com.bob.infrastructure.messaging.subscriber.RedisSubscriber;
 
@@ -54,14 +52,7 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        ObjectMapper redisObjectMapper = objectMapper.copy();
-        PolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
-            .allowIfSubType(Object.class)
-            .build();
-
-        redisObjectMapper.activateDefaultTyping(typeValidator, ObjectMapper.DefaultTyping.NON_FINAL);
-
-        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
 
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(serializer);
@@ -92,7 +83,8 @@ public class RedisConfig {
         return container;
     }
 
-    private static Map<String, ChannelTopic> topicMap() {
+    @Bean
+    public Map<String, ChannelTopic> topicMap() {
         return Map.of(
             "CHAT", new ChannelTopic("notification"),
             "TRADE", new ChannelTopic("notification"),

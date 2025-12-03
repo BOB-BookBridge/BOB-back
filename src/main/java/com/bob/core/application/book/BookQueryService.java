@@ -12,8 +12,6 @@ import com.bob.core.application.book.dto.query.ReadBooksQuery;
 import com.bob.core.application.book.port.in.BookReader;
 import com.bob.core.domain.book.Book;
 import com.bob.core.domain.book.repository.BookRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -30,7 +28,7 @@ public class BookQueryService implements BookReader {
     @Override
     public Book read(Long id) {
         return bookRepository.findById(id)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_OBJECT));
+            .orElseThrow(() -> new IllegalArgumentException("책을 찾을 수 없습니다. id : " + id));
     }
 
     @Override

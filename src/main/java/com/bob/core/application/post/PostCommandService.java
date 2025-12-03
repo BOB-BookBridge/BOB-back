@@ -2,10 +2,9 @@ package com.bob.core.application.post;
 
 import static com.bob.core.domain.post.status.Status.DEACTIVATED;
 import static com.bob.core.domain.post.status.TradeProgress.valueOf;
-import static com.bob.global.exception.response.ApplicationError.ALREADY_REMOVED_POST_STATE;
-import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
-import static com.bob.global.exception.response.ApplicationError.NOT_VERIFIED_MEMBER;
-import static com.bob.global.exception.response.ApplicationError.UNREMOVABLE_POST_STATE;
+import static com.bob.global.exception.response.ApplicationError.POST_OWNER_REQUIRED;
+import static com.bob.global.exception.response.ApplicationError.POST_UNREMOVABLE_STATE;
+import static com.bob.global.exception.response.ApplicationError.POST_VERIFIED_AREA_REQUIRED;
 
 import java.util.List;
 import java.util.Objects;
@@ -69,7 +68,7 @@ public class PostCommandService implements PostCreator, PostModifier {
 
     private static void verifyAreaAuthentication(boolean validity) {
         if (!validity)
-            throw new ApplicationException(NOT_VERIFIED_MEMBER);
+            throw new ApplicationException(POST_VERIFIED_AREA_REQUIRED);
     }
 
     private Post savePost(CreatePostCommand command, Long bookId, Long sellerBookId, PostArea areaSummary) {
@@ -131,21 +130,18 @@ public class PostCommandService implements PostCreator, PostModifier {
 
     private static void verifyPostOwner(UUID requestMemberId, UUID postMemberId) {
         if (!Objects.equals(requestMemberId, postMemberId))
-            throw new ApplicationException(NOT_POST_OWNER);
+            throw new ApplicationException(POST_OWNER_REQUIRED);
     }
 
     private static void verifyDeletable(Post post) {
-        if (!post.isActive())
-            throw new ApplicationException(ALREADY_REMOVED_POST_STATE);
-
         if (post.isReserved())
-            throw new ApplicationException(UNREMOVABLE_POST_STATE);
+            throw new ApplicationException(POST_UNREMOVABLE_STATE);
     }
 
     @Override
     public void changeStatusByAccountEvent(ChangeMemberPostStatusCommand command) {
         postReader.readByMember(new ReadMemberPostsQuery(command.memberId())).forEach(p -> {
-            if (command.status() == DEACTIVATED)
+            if (command.status() == DEACTIVATED && p.isActive())
                 p.deactivate();
             else
                 p.activate();

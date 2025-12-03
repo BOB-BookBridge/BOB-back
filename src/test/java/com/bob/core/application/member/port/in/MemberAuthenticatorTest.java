@@ -1,7 +1,7 @@
 package com.bob.core.application.member.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.EXPIRED_MAIL_CODE;
-import static com.bob.global.exception.response.ApplicationError.INVALID_MAIL_CODE;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_MAIL_CODE_EXPIRED;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_MAIL_CODE_MISMATCH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -52,7 +52,7 @@ record MemberAuthenticatorTest(MemberAuthenticator memberAuthenticator, KeyValue
         VerifyMailCommand command = new VerifyMailCommand(code);
         assertThatThrownBy(() -> memberAuthenticator.verifyMail(email, command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(EXPIRED_MAIL_CODE.getMessage());
+            .hasMessage(MEMBER_MAIL_CODE_EXPIRED.getMessage());
     }
 
     @Test
@@ -63,6 +63,6 @@ record MemberAuthenticatorTest(MemberAuthenticator memberAuthenticator, KeyValue
         VerifyMailCommand command = new VerifyMailCommand("!" + code);
         assertThatThrownBy(() -> memberAuthenticator.verifyMail(email, command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(INVALID_MAIL_CODE.getMessage());
+            .hasMessage(MEMBER_MAIL_CODE_MISMATCH.getMessage());
     }
 }

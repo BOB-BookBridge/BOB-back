@@ -1,8 +1,8 @@
 package com.bob.core.application.bookcase.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.MEMBER_BOOK_ACCESS_DENIED;
-import static com.bob.global.exception.response.ApplicationError.MEMBER_BOOK_ALREADY_USE;
-import static com.bob.global.exception.response.ApplicationError.MEMBER_BOOK_UNAVAILABLE;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_ALREADY_USE;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_UNAVAILABLE;
 import static com.bob.support.fixture.bookcase.domain.BookcaseItemFixture.createBookcaseItem;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
@@ -57,7 +57,7 @@ record BookcaseModifierTest(
 
         assertThatThrownBy(() -> bookcaseModifier.allocate(List.of(item.getId()), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(MEMBER_BOOK_ACCESS_DENIED.getMessage());
+            .hasMessage(BOOKCASE_ITEM_ACCESS_DENIED.getMessage());
     }
 
     @Test
@@ -70,7 +70,7 @@ record BookcaseModifierTest(
 
         assertThatThrownBy(() -> bookcaseModifier.allocate(List.of(item.getId()), exCommand))
             .isInstanceOf(ApplicationException.class)
-            .hasMessageContaining(MEMBER_BOOK_UNAVAILABLE.getMessage().split("\\.")[0]);
+            .hasMessageContaining(BOOKCASE_ITEM_UNAVAILABLE.getMessage().split("\\.")[0]);
     }
 
     @Test
@@ -83,7 +83,7 @@ record BookcaseModifierTest(
 
         assertThatThrownBy(() -> bookcaseModifier.allocate(List.of(item.getId()), exCommand))
             .isInstanceOf(ApplicationException.class)
-            .hasMessageContaining(MEMBER_BOOK_ALREADY_USE.getMessage().split("\\.")[0]);
+            .hasMessageContaining(BOOKCASE_ITEM_ALREADY_USE.getMessage().split("\\.")[0]);
 
         // 같은 사용처인 경우 예외가 발생하지 않는다.
         AllocateUsageCommand command = new AllocateUsageCommand(MEMBER_ID, 1L);
@@ -117,7 +117,7 @@ record BookcaseModifierTest(
 
         assertThatThrownBy(() -> bookcaseModifier.free(List.of(item.getId()), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(MEMBER_BOOK_ACCESS_DENIED.getMessage());
+            .hasMessage(BOOKCASE_ITEM_ACCESS_DENIED.getMessage());
     }
 
     @Test

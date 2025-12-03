@@ -20,8 +20,6 @@ import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.MemberInterest;
 import com.bob.core.domain.member.MemberWish;
 import com.bob.core.domain.member.repository.MemberRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -35,12 +33,12 @@ public class MemberQueryService implements MemberReader {
 
     public Member read(UUID memberId) {
         return memberRepository.findById(memberId)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXISTS_MEMBER));
+            .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. id : " + memberId));
     }
 
     public Member read(String email) {
         return memberRepository.findByEmail(email)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXISTS_MEMBER));
+            .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. email : " + email));
     }
 
     @Transactional(readOnly = true)

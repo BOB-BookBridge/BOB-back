@@ -1,7 +1,7 @@
 package com.bob.core.application.trade.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_REQUESTER;
-import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_STATUS;
+import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_ONLY_ABORTED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_ONLY_REQUESTER;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,7 +47,7 @@ record TradeRemoverTest(TradeRemover tradeRemover, TradeModifier tradeModifier, 
 
         assertThatThrownBy(() -> tradeRemover.remove(trade.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(TRADE_REMOVE_DENIED_BY_REQUESTER.getMessage());
+            .hasMessage(TRADE_REMOVE_ONLY_REQUESTER.getMessage());
     }
 
     @Test
@@ -57,6 +57,6 @@ record TradeRemoverTest(TradeRemover tradeRemover, TradeModifier tradeModifier, 
 
         assertThatThrownBy(() -> tradeRemover.remove(trade.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(TRADE_REMOVE_DENIED_BY_STATUS.getMessage());
+            .hasMessage(TRADE_REMOVE_ONLY_ABORTED.getMessage());
     }
 }

@@ -1,7 +1,7 @@
 package com.bob.security.adapter.filter;
 
-import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
-import static com.bob.global.exception.response.AuthenticationError.IS_EXPIRED_TOKEN;
+import static com.bob.global.exception.response.AuthenticationError.ACCESS_TOKEN_EXPIRED;
+import static com.bob.global.exception.response.AuthenticationError.AUTHENTICATION_FAILED;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_TOKEN;
 import static com.bob.support.fixture.auth.CookieFixture.defaultAuthCookie;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,7 +100,7 @@ class TokenAuthorizationFilterTest {
 
         then(tokenAuthenticationEntryPoint).should().commence(eq(request), eq(response),
             argThat(e -> (
-                (ApplicationAuthenticationException)e).getError() == FAILED_AUTHENTICATION
+                (ApplicationAuthenticationException)e).getError() == AUTHENTICATION_FAILED
             )
         );
     }
@@ -115,7 +115,7 @@ class TokenAuthorizationFilterTest {
 
         then(tokenAuthenticationEntryPoint).should().commence(eq(request), eq(response),
             argThat(e -> (
-                (ApplicationAuthenticationException)e).getError() == FAILED_AUTHENTICATION
+                (ApplicationAuthenticationException)e).getError() == AUTHENTICATION_FAILED
             )
         );
     }
@@ -131,7 +131,7 @@ class TokenAuthorizationFilterTest {
 
         then(tokenAuthenticationEntryPoint).should().commence(eq(request), eq(response),
             argThat(e -> (
-                (ApplicationAuthenticationException)e).getError() == IS_EXPIRED_TOKEN
+                (ApplicationAuthenticationException)e).getError() == ACCESS_TOKEN_EXPIRED
             )
         );
     }

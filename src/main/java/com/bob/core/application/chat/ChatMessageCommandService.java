@@ -3,6 +3,7 @@ package com.bob.core.application.chat;
 import static com.bob.core.domain.chat.ChatMessage.resolveMessageType;
 import static com.bob.global.event.application.dto.type.NotiEventType.CHAT;
 import static com.bob.global.event.sse.repository.chat.ChatEmitterKey.of;
+import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS_DENIED;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +30,6 @@ import com.bob.global.event.application.dto.NotificationEvent;
 import com.bob.global.event.sse.manager.EmitterManager;
 import com.bob.global.event.sse.manager.type.EmitterType;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional
@@ -84,7 +84,7 @@ public class ChatMessageCommandService implements ChatMessageCreator {
 
     private void verifyParticipating(Chatroom chatroom, UUID memberId) {
         if (!chatroom.hasMember(memberId) || chatroom.isMemberExited(memberId))
-            throw new ApplicationException(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM);
+            throw new ApplicationException(CHATROOM_ACCESS_DENIED);
     }
 
     private void publishChatMessageEvent(Long id, CreateMessageCommand command, ChatMessage message, UUID partnerId) {

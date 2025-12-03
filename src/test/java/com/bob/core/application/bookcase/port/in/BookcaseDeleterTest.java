@@ -1,7 +1,7 @@
 package com.bob.core.application.bookcase.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.MEMBER_BOOK_ACCESS_DENIED;
-import static com.bob.global.exception.response.ApplicationError.UNREMOVABLE_MEMBER_BOOK;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_UNREMOVABLE;
 import static com.bob.support.fixture.bookcase.domain.BookcaseItemFixture.createBookcaseItem;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
@@ -49,7 +49,7 @@ record BookcaseDeleterTest(BookcaseDeleter bookcaseDeleter, BookcaseItemReposito
 
         assertThatThrownBy(() -> bookcaseDeleter.delete(item.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessageContaining(UNREMOVABLE_MEMBER_BOOK.getMessage().split("\\.")[0]);
+            .hasMessageContaining(BOOKCASE_ITEM_UNREMOVABLE.getMessage().split("\\.")[0]);
     }
 
     @Test
@@ -60,7 +60,7 @@ record BookcaseDeleterTest(BookcaseDeleter bookcaseDeleter, BookcaseItemReposito
 
         assertThatThrownBy(() -> bookcaseDeleter.delete(item.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(MEMBER_BOOK_ACCESS_DENIED.getMessage());
+            .hasMessage(BOOKCASE_ITEM_ACCESS_DENIED.getMessage());
     }
 
     @Test

@@ -39,7 +39,6 @@ import com.bob.core.domain.trade.Trade;
 import com.bob.core.domain.trade.repository.TradeRepository;
 import com.bob.core.domain.trade.repository.dsl.query.ReadTradesQuery;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -54,7 +53,7 @@ public class TradeQueryService implements TradeReader {
     @Override
     public Trade read(Long id) {
         return tradeRepository.findById(id)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXISTS_TRADE));
+            .orElseThrow(() -> new IllegalArgumentException("거래를 찾을 수 없습니다. id : " + id));
     }
 
     @Override

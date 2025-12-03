@@ -10,7 +10,6 @@ import com.bob.core.application.member.dto.command.SocialLoginCommand;
 import com.bob.core.application.member.port.in.MemberReader;
 import com.bob.core.application.member.port.in.MemberRegister;
 import com.bob.core.domain.member.Member;
-import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.security.application.port.dto.AuthMember;
 import com.bob.security.application.port.dto.SocialAuthMember;
 import com.bob.security.application.port.out.MemberLoader;
@@ -28,7 +27,7 @@ public class MemberLoaderAdapter implements MemberLoader {
             Member member = memberReader.read(email);
             return Optional.of(
                 AuthMember.of(member.getId(), member.getEmail(), member.getPassword(), member.getStatus().name()));
-        } catch (ApplicationException e) {
+        } catch (Exception e) {
             return Optional.empty();
         }
     }

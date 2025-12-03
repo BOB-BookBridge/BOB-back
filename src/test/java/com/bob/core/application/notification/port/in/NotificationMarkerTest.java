@@ -1,5 +1,6 @@
 package com.bob.core.application.notification.port.in;
 
+import static com.bob.global.exception.response.ApplicationError.NOTIFICATION_ACCESS_DENIED;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.notification.domain.NotificationFixture.createNotification;
@@ -17,7 +18,6 @@ import com.bob.core.application.notification.dto.command.MarkAsReadCommand;
 import com.bob.core.domain.notification.Notification;
 import com.bob.core.domain.notification.repository.NotificationRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("알림 수정 테스트")
@@ -46,7 +46,7 @@ record NotificationMarkerTest(
 
         assertThatThrownBy(() -> notificationMarker.markAsRead(saved.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.NOTIFICATION_ACCESS_DENIED.getMessage());
+            .hasMessage(NOTIFICATION_ACCESS_DENIED.getMessage());
     }
 
     @Test

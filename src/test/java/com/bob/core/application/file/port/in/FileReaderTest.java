@@ -1,6 +1,5 @@
 package com.bob.core.application.file.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.NOT_EXIST_OBJECT;
 import static com.bob.support.fixture.file.domain.FileFixture.createFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import com.bob.core.application.file.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.core.domain.file.File;
 import com.bob.core.domain.file.repository.FileRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("파일 조회 테스트")
@@ -51,8 +49,8 @@ record FileReaderTest(FileReader fileReader, FileRepository fileRepository) {
         String nonExistentName = "post/nonexistent.jpg";
 
         assertThatThrownBy(() -> fileReader.readByName(nonExistentName))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_EXIST_OBJECT.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("파일을 찾을 수 없습니다.");
     }
 
     @Test

@@ -1,6 +1,6 @@
 package com.bob.core.application.area.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.INVALID_AREA_AUTHENTICATION;
+import static com.bob.global.exception.response.ApplicationError.AREA_AUTHENTICATION_FAILED;
 import static com.bob.support.fixture.area.domain.AreaFixture.CENTER_LAT;
 import static com.bob.support.fixture.area.domain.AreaFixture.CENTER_LON;
 import static com.bob.support.fixture.area.domain.AreaFixture.createEmdArea;
@@ -44,6 +44,6 @@ record AreaAuthenticatorTest(AreaAuthenticator areaAuthenticator, AreaRepository
 
         assertThatThrownBy(() -> areaAuthenticator.authenticate(emdArea.getId(), query))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(INVALID_AREA_AUTHENTICATION.getMessage());
+            .hasMessage(AREA_AUTHENTICATION_FAILED.getMessage());
     }
 }

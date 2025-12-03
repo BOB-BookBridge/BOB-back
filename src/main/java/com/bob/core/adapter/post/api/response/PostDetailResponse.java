@@ -45,7 +45,7 @@ public record PostDetailResponse(
             .description(detail.description())
             .price(detail.price())
             .images(detail.images())
-            .writer(WriterInfo.of(detail.writer()))
+            .writer(WriterInfo.of(detail.writer(), detail.registrationAreaId()))
             .book(BookInfo.of(detail.book()))
             .trade(trade)
             .bookStatus(detail.bookStatus())
@@ -69,11 +69,11 @@ public record PostDetailResponse(
         List<PostMemberWishResult> wishes
     ) {
 
-        public static WriterInfo of(PostMember member) {
+        public static WriterInfo of(PostMember member, int registrationEmdId) {
             return WriterInfo.builder()
                 .id(member.id())
                 .nickname(member.nickname())
-                .emdId(member.emdId())
+                .emdId(registrationEmdId)
                 .profileImageUrl(member.profileImageUrl())
                 .interests(member.interests())
                 .wishes(member.wishes())

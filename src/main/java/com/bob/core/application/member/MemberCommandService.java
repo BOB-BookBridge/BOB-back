@@ -3,10 +3,11 @@ package com.bob.core.application.member;
 import static com.bob.core.domain.member.Member.createMember;
 import static com.bob.core.domain.member.Member.createSocialMember;
 import static com.bob.global.event.application.dto.member.type.AccountEventType.RECOVER;
-import static com.bob.global.exception.response.ApplicationError.ALREADY_EXISTS_EMAIL;
-import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_BANNED;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_DUPLICATED;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_UNVERIFIED;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_PASSWORD_MISMATCH;
 import static com.bob.global.exception.response.ApplicationError.NO_CHANGES;
-import static com.bob.global.exception.response.ApplicationError.UNVERIFIED_EMAIL;
 import static com.bob.global.utils.random.RandomUtils.generateCode;
 import static com.bob.global.utils.web.CookieUtils.removeCookie;
 
@@ -45,7 +46,6 @@ import com.bob.core.domain.member.repository.MemberRepository;
 import com.bob.global.event.application.dto.member.AccountEvent;
 import com.bob.global.event.application.dto.member.type.AccountEventType;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional
@@ -81,12 +81,12 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
 
     private void verifyEmailConfirm(String email) {
         if (!cachePort.checkAuthenticationSuccess(email))
-            throw new ApplicationException(UNVERIFIED_EMAIL);
+            throw new ApplicationException(MEMBER_EMAIL_UNVERIFIED);
     }
 
     private void verifyEmailDuplicate(String email) {
         if (memberRepository.existsByEmail(email))
-            throw new ApplicationException(ALREADY_EXISTS_EMAIL);
+            throw new ApplicationException(MEMBER_EMAIL_DUPLICATED);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
 
     private void verifyPasswordMatches(String password, String oldPassword) {
         if (!encoder.matches(oldPassword, password))
-            throw new ApplicationException(INVALID_OLD_PASSWORD);
+            throw new ApplicationException(MEMBER_PASSWORD_MISMATCH);
     }
 
     @Override
@@ -182,7 +182,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
 
     private static void verifyIsNotBannedMember(Member member) {
         if (member.isBanned())
-            throw new ApplicationException(ApplicationError.IS_BANNED_MEMBER);
+            throw new ApplicationException(MEMBER_BANNED);
     }
 
     @Override

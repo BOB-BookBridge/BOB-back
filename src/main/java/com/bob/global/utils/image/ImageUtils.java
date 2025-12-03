@@ -5,9 +5,6 @@ import static com.bob.global.utils.uuid.UuidUtils.randomV7;
 import java.util.List;
 import java.util.Locale;
 
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
-
 public class ImageUtils {
 
     public static String generateImageFileName(ImageDirectory directory, String contentType) {
@@ -27,7 +24,7 @@ public class ImageUtils {
             case "image/jpeg" -> "jpg";
             case "image/png" -> "png";
             case "image/gif" -> "gif";
-            default -> throw new ApplicationException(ApplicationError.UN_SUPPORTED_TYPE);
+            default -> throw new IllegalArgumentException("지원하지 않는 파일 형식입니다.");
         };
     }
 }

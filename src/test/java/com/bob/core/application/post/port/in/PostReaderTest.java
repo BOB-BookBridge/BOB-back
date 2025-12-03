@@ -1,7 +1,6 @@
 package com.bob.core.application.post.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.NOT_ACCESSIBLE_POST;
-import static com.bob.global.exception.response.ApplicationError.NOT_EXIST_POST;
+import static com.bob.global.exception.response.ApplicationError.POST_ACCESS_DENIED;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
 import static com.bob.support.fixture.post.dto.query.PostQueryFixture.defaultReadFilteredPostsQuery;
@@ -50,8 +49,8 @@ record PostReaderTest(PostReader postReader, PostRepository postRepository, File
         Long nonExistentId = 999L;
 
         assertThatThrownBy(() -> postReader.read(nonExistentId))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_EXIST_POST.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("게시글을 찾을 수 없습니다.");
     }
 
     @Test
@@ -148,8 +147,8 @@ record PostReaderTest(PostReader postReader, PostRepository postRepository, File
         ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, true);
 
         assertThatThrownBy(() -> postReader.readDetail(nonExistentId, query))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_EXIST_POST.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("게시글을 찾을 수 없습니다.");
     }
 
     @Test
@@ -162,7 +161,7 @@ record PostReaderTest(PostReader postReader, PostRepository postRepository, File
 
         assertThatThrownBy(() -> postReader.readDetail(post.getId(), query))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_ACCESSIBLE_POST.getMessage());
+            .hasMessage(POST_ACCESS_DENIED.getMessage());
     }
 
     @Test
@@ -175,7 +174,7 @@ record PostReaderTest(PostReader postReader, PostRepository postRepository, File
 
         assertThatThrownBy(() -> postReader.readDetail(post.getId(), query))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_ACCESSIBLE_POST.getMessage());
+            .hasMessage(POST_ACCESS_DENIED.getMessage());
     }
 
     @Test

@@ -8,83 +8,63 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum ApplicationError {
-    // TODO : message 형식 통일, code 재정립
 
     // 공통 예외
-    AUTHENTICATION_FAILED("E000", "인증할 수 없는 요청입니다.", HttpStatus.UNAUTHORIZED),
-    UN_SUPPORTED_TYPE("E001", "지원하지 않는 형식입니다.", HttpStatus.BAD_REQUEST),
-    UN_SUPPORTED_CATEGORY("E002", "지원하지 않는 카테고리입니다.", HttpStatus.BAD_REQUEST),
-    UN_SUPPORTED_BOOK_STATUS("E003", "지원하지 않는 도서 상태입니다.", HttpStatus.BAD_REQUEST),
-    UN_SUPPORTED_DOMAIN("E004", "지원하지 않는 도메인입니다.", HttpStatus.BAD_REQUEST),
-    NO_CHANGES("E005", "변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
-    VALIDATION_ERROR("E006", "요청 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-    TYPE_MISMATCH("E007", "요청 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-    NOT_EXIST_OBJECT("E008", "데이터가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
-    OBJECT_ACCESS_DENIED("E009", "데이터에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN),
+    SERVER_ERROR("요청을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.", HttpStatus.INTERNAL_SERVER_ERROR),
+    NO_CHANGES("변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
 
-    // 사용자 예외
-    UNVERIFIED_EMAIL("E101", "이메일 인증이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),
-    ALREADY_EXISTS_EMAIL("E102", "해당 이메일로 가입된 계정이 존재합니다.", HttpStatus.CONFLICT),
-    NOT_EXISTS_MEMBER("E103", "사용자를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
-    INVALID_OLD_PASSWORD("E104", "비밀번호가 틀립니다.", HttpStatus.BAD_REQUEST),
-    IS_BANNED_MEMBER("E105", "제한 조치된 계정입니다.", HttpStatus.BAD_REQUEST),
-    UNREMOVABLE_MEMBER_BOOK("E106", "교환 물품으로 사용되는 책은 삭제할 수 없습니다. 교환 게시글: [#%d]", HttpStatus.CONFLICT),
-    MEMBER_BOOK_ALREADY_USE("E107", "교환 물품으로 사용되는 책이 포함되어 있습니다. 교환 게시글: [#%d], 책: [%s]", HttpStatus.CONFLICT),
-    MEMBER_BOOK_ACCESS_DENIED("E108", "다른 사용자의 도서는 사용할 수 없습니다.", HttpStatus.BAD_REQUEST),
-    MEMBER_BOOK_UNAVAILABLE("E109", "사용할 수 없는 책이 포함되어 있습니다. 책: [%s] ", HttpStatus.BAD_REQUEST),
-    MEMBER_WISH_DUPLICATE("E110", "희망 도서가 이미 등록되어 있습니다.", HttpStatus.BAD_REQUEST),
+    // 회원 예외
+    MEMBER_BANNED("제한 조치된 계정입니다.", HttpStatus.FORBIDDEN),
+    MEMBER_MAIL_CODE_EXPIRED("이메일 인증 코드가 만료되었습니다.", HttpStatus.GONE),
+    MEMBER_MAIL_CODE_MISMATCH("이메일 인증 코드가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+    MEMBER_EMAIL_UNVERIFIED("인증되지 않은 이메일입니다.", HttpStatus.UNAUTHORIZED),
+    MEMBER_EMAIL_DUPLICATED("중복된 이메일입니다.", HttpStatus.CONFLICT),
+    MEMBER_PASSWORD_MISMATCH("이전 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+    MEMBER_WISH_DUPLICATED("희망 도서가 이미 등록되어 있습니다.", HttpStatus.CONFLICT),
 
-    EXPIRED_MAIL_CODE("E111", "인증 코드가 만료되었습니다.", HttpStatus.GONE),
-    INVALID_MAIL_CODE("E112", "입력하신 인증 코드가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
-    INTEREST_NOT_FOUND("E113", "관심사를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    // 책장 예외
+    BOOKCASE_ITEM_ACCESS_DENIED("다른 사용자의 도서는 사용할 수 없습니다.", HttpStatus.FORBIDDEN),
+    BOOKCASE_ITEM_UNAVAILABLE("사용할 수 없는 책이 포함되어 있습니다. 책: [%s]", HttpStatus.BAD_REQUEST),
+    BOOKCASE_ITEM_ALREADY_USE("교환 물품으로 사용되는 책이 포함되어 있습니다. 교환 게시글: [#%d], 책: [%s]", HttpStatus.CONFLICT),
+    BOOKCASE_ITEM_UNREMOVABLE("교환 물품으로 사용되는 책은 삭제할 수 없습니다. 교환 게시글: [#%d]", HttpStatus.CONFLICT),
 
     // 지역 예외
-    NOT_EXISTS_AREA("E201", "존재하지 않는 읍/면/동 입니다.", HttpStatus.BAD_REQUEST),
-    NOT_EXISTS_ACTIVITY_AREA("E202", "활동지역을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
-    INVALID_AREA_AUTHENTICATION("E211", "현재 위치를 인증할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    AREA_AUTHENTICATION_FAILED("현재 위치를 인증할 수 없습니다.", HttpStatus.BAD_REQUEST),
 
     // 게시글 예외
-    NOT_VERIFIED_MEMBER("E301", "위치 인증을 하지 않은 사용자는 게시글을 작성할 수 없습니다.", HttpStatus.FORBIDDEN),
-    NOT_EXIST_POST("E302", "게시글을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
-    NOT_POST_OWNER("E303", "게시글 작성자가 아닙니다.", HttpStatus.FORBIDDEN),
-    ALREADY_POST_FAVORITE("E304", "이미 좋아요한 게시글입니다.", HttpStatus.BAD_REQUEST),
-    INVALID_POST_FAVORITE("E305", "좋아요 하지 않은 게시글입니다.", HttpStatus.BAD_REQUEST),
-    ALREADY_REMOVED_POST_STATE("E306", "이미 삭제 된 게시글입니다.", HttpStatus.BAD_REQUEST),
-    UNREMOVABLE_POST_STATE("E307", "거래 예약 상태의 게시글을 삭제할 수 없습니다.", HttpStatus.BAD_REQUEST),
-    NOT_ACCESSIBLE_POST("E308", "삭제되었거나 보류 중인 게시글은 조회할 수 없습니다.", HttpStatus.NOT_FOUND),
+    POST_ACCESS_DENIED("게시글에 접근할 수 없습니다.", HttpStatus.FORBIDDEN),
+    POST_OWNER_REQUIRED("게시글 작성자만 수정할 수 있습니다.", HttpStatus.FORBIDDEN),
+    POST_VERIFIED_AREA_REQUIRED("위치 인증을 한 회원만이 게시글을 작성할 수 있습니다.", HttpStatus.FORBIDDEN),
+    POST_UNREMOVABLE_STATE("예약중인 게시글은 삭제할 수 없습니다.", HttpStatus.CONFLICT),
+
+    // 게시글 찜 예외
+    POST_FAVORITE_EXIST("이미 찜한 게시글입니다.", HttpStatus.CONFLICT),
+    POST_FAVORITE_NOT_EXIST("찜하지 않은 게시글입니다.", HttpStatus.CONFLICT),
 
     // 채팅 예외
-    IS_SAME_CHAT_MEMBER("E401", "자신과의 채팅은 불가능합니다.", HttpStatus.BAD_REQUEST),
-    NOT_EXISTS_CHAT_PARTNER("E402", "상대방을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
-    NOT_EXISTS_CHAT_ROOM("E403", "채팅방을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
-    NOT_PARTICIPATED_CHAT_ROOM("E404", "해당 채팅방에 참여중이지 않습니다.", HttpStatus.BAD_REQUEST),
+    CHATROOM_ACCESS_DENIED("참여중이지 않은 채팅방에 접근할 수 없습니다.", HttpStatus.FORBIDDEN),
 
     // 파일 예외
-    FILE_UNAUTHORIZED("E501", "파일을 수정할 권한이 없습니다.", HttpStatus.BAD_REQUEST),
+    FILE_ACCESS_DENIED("파일을 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN),
 
     // 거래 예외
-    NOT_EXISTS_TRADE("E601", "거래를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
-    TRADE_ACCESS_DENIED("E602", "거래에 접근할 권한이 없습니다.", HttpStatus.BAD_REQUEST),
-    TRADE_ALREADY_PROCESSED("E603", "다른 회원과 거래가 진행중이거나 완료된 상태입니다.", HttpStatus.CONFLICT),
-    TRADE_STATUS_UNCHANGED("E604", "변경하려는 거래 상태와 현재 상태가 동일합니다.", HttpStatus.CONFLICT),
-    IS_SAME_TRADE_MEMBER("E605", "자신과의 거래는 불가능합니다.", HttpStatus.BAD_REQUEST),
-    TRADE_POST_REMOVED("E606", "삭제 된 게시글은 거래 요청이 불가능합니다.", HttpStatus.BAD_REQUEST),
-    TRADE_STATUS_NOT_CHANGEABLE("E607", "거래 상태를 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
-    TRADE_ALREADY_ABORTED("E608", "이미 중단된 거래입니다.", HttpStatus.BAD_REQUEST),
-    TRADE_ALREADY_COMPLETED("E609", "이미 완료된 거래입니다.", HttpStatus.BAD_REQUEST),
-    TRADE_REMOVE_DENIED_BY_REQUESTER("E610", "거래 삭제는 거래 요청자만 가능합니다.", HttpStatus.FORBIDDEN),
-    TRADE_REMOVE_DENIED_BY_STATUS("E611", "거래 삭제는 취소, 거절 단계에서만 가능합니다.", HttpStatus.BAD_REQUEST),
-    TRADE_SELLER_WISH_NOT_MATCH("E612", "요청한 거래 물품이 판매자의 희망 도서에 해당하지 않습니다.", HttpStatus.BAD_REQUEST),
-
-    TRADE_ITEMS_UNCHANGED("E651", "거래 물품의 변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
-    UNCHANGEABLE_TRADE_ITEM("E652", "예약, 완료 상태의 거래는 거래 물품 변경이 불가능합니다.", HttpStatus.BAD_REQUEST),
-    TRADE_MAIN_ITEM_NOT_CONTAINED("E653", "거래 대표 물품은 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    TRADE_ACCESS_DENIED("거래에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN),
+    TRADE_SELF_NOT_ALLOWED("자신과의 거래는 불가능합니다.", HttpStatus.BAD_REQUEST),
+    TRADE_POST_REMOVED("삭제된 게시글은 거래 요청이 불가능합니다.", HttpStatus.BAD_REQUEST),
+    TRADE_ALREADY_PROCESSED("다른 회원과 거래가 진행중이거나 완료된 상태입니다.", HttpStatus.CONFLICT),
+    TRADE_STATUS_UNCHANGED("변경하려는 거래 상태와 현재 상태가 동일합니다.", HttpStatus.BAD_REQUEST),
+    TRADE_STATUS_NOT_CHANGEABLE("거래 상태를 변경할 수 없습니다.", HttpStatus.CONFLICT),
+    TRADE_STATUS_ALREADY_ABORTED("거래가 이미 중단되었습니다.", HttpStatus.CONFLICT),
+    TRADE_STATUS_ALREADY_COMPLETED("거래가 이미 완료되었습니다.", HttpStatus.CONFLICT),
+    TRADE_REMOVE_ONLY_REQUESTER("거래 삭제는 거래 요청자만 가능합니다.", HttpStatus.FORBIDDEN),
+    TRADE_REMOVE_ONLY_ABORTED("거래 삭제는 취소, 거절 단계에서만 가능합니다.", HttpStatus.CONFLICT),
+    TRADE_MAIN_ITEM_UNCHANGEABLE("거래 대표 물품은 변경할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    TRADE_ITEM_UNCHANGEABLE("예약, 완료 상태의 거래는 거래 물품 변경이 불가능합니다.", HttpStatus.CONFLICT),
+    TRADE_SELLER_WISH_NOT_MATCH("요청한 거래 물품이 판매자의 희망 도서에 해당하지 않습니다.", HttpStatus.BAD_REQUEST),
 
     // 알림 예외
-    NOT_EXISTS_NOTIFICATION("E701", "알림을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
-    NOTIFICATION_ACCESS_DENIED("E702", "알림에 접근할 권한이 없습니다.", HttpStatus.BAD_REQUEST);
+    NOTIFICATION_ACCESS_DENIED("알림에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN);
 
-    private String code;
-    private String message;
-    private HttpStatus status;
+    private final String message;
+    private final HttpStatus status;
 }

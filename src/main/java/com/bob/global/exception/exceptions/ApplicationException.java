@@ -14,6 +14,7 @@ public class ApplicationException extends RuntimeException {
         super((args == null || args.length == 0)
             ? error.getMessage()
             : String.format(error.getMessage(), args));
+
         this.error = error;
         this.args = args;
     }

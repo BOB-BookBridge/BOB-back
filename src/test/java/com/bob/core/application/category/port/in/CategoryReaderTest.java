@@ -1,6 +1,5 @@
 package com.bob.core.application.category.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.UN_SUPPORTED_CATEGORY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.Test;
 
 import com.bob.core.domain.category.Category;
 import com.bob.core.domain.category.repository.CategoryRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("카테고리 조회 테스트")
@@ -31,8 +29,8 @@ record CategoryReaderTest(CategoryReader categoryReader, CategoryRepository cate
     @Test
     void 카테고리_조회_시_존재하지_않으면_예외가_발생한다() {
         assertThatThrownBy(() -> categoryReader.read(-1))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(UN_SUPPORTED_CATEGORY.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("카테고리를 찾을 수 없습니다.");
     }
 
     @Test

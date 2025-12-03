@@ -1,5 +1,8 @@
 package com.bob.core.application.post;
 
+import static com.bob.global.exception.response.ApplicationError.POST_FAVORITE_EXIST;
+import static com.bob.global.exception.response.ApplicationError.POST_FAVORITE_NOT_EXIST;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -12,7 +15,6 @@ import com.bob.core.application.post.port.in.PostReader;
 import com.bob.core.domain.post.Post;
 import com.bob.core.domain.post.repository.PostRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional
@@ -28,7 +30,7 @@ public class PostFavoriteCommandService implements PostFavoriteManager {
         Post post = postReader.read(postId);
 
         if (post.isFavorite(command.memberId()))
-            throw new ApplicationException(ApplicationError.ALREADY_POST_FAVORITE);
+            throw new ApplicationException(POST_FAVORITE_EXIST);
 
         post.addFavorite(command.memberId());
 
@@ -40,7 +42,7 @@ public class PostFavoriteCommandService implements PostFavoriteManager {
         Post post = postReader.read(postId);
 
         if (!post.isFavorite(command.memberId()))
-            throw new ApplicationException(ApplicationError.INVALID_POST_FAVORITE);
+            throw new ApplicationException(POST_FAVORITE_NOT_EXIST);
 
         post.removeFavorite(command.memberId());
 

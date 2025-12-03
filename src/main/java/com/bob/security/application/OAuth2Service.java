@@ -46,8 +46,8 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
         SocialAuthMember member = memberLoader.load(provider.toUpperCase(), profile.email(), profile.nickname());
 
         switch (member.status()) {
-            case "DEACTIVATED" -> throw new ApplicationAuthenticationException(AuthenticationError.IS_DEACTIVATED_MEMBER) {};
-            case "BANNED" -> throw new ApplicationAuthenticationException(AuthenticationError.IS_BANNED_MEMBER) {};
+            case "DEACTIVATED" -> throw new ApplicationAuthenticationException(AuthenticationError.MEMBER_DEACTIVATED) {};
+            case "BANNED" -> throw new ApplicationAuthenticationException(AuthenticationError.MEMBER_BANNED) {};
             default -> {
                 final Map<String, Object> principalAttrs = Map.of("memberId", member.id().toString());
                 return new DefaultOAuth2User(null, principalAttrs, "memberId");
