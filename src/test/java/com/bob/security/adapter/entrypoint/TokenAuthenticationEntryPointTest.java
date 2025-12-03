@@ -1,7 +1,7 @@
 package com.bob.security.adapter.entrypoint;
 
+import static com.bob.global.exception.response.AuthenticationError.ACCESS_TOKEN_EXPIRED;
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
-import static com.bob.global.exception.response.AuthenticationError.IS_EXPIRED_TOKEN;
 import static com.bob.global.exception.response.AuthenticationError.LOGIN_RATE_LIMIT_EXCEEDED;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,20 +49,18 @@ class TokenAuthenticationEntryPointTest {
 
         String content = response.getContentAsString();
         assertThat(response.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
-        assertThat(content).contains(FAILED_AUTHENTICATION.getCode());
         assertThat(content).contains(FAILED_AUTHENTICATION.getMessage());
     }
 
     @Test
     void ApplicationAuthenticationException_발생_시_커스텀_예외_반환() throws IOException {
-        AuthenticationException exception = new ApplicationAuthenticationException(IS_EXPIRED_TOKEN);
+        AuthenticationException exception = new ApplicationAuthenticationException(ACCESS_TOKEN_EXPIRED);
 
         tokenAuthenticationEntryPoint.commence(null, response, exception);
 
         String content = response.getContentAsString();
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
-        assertThat(content).contains(IS_EXPIRED_TOKEN.getCode());
-        assertThat(content).contains(IS_EXPIRED_TOKEN.getMessage());
+        assertThat(response.getStatus()).isEqualTo(ACCESS_TOKEN_EXPIRED.getStatus().value());
+        assertThat(content).contains(ACCESS_TOKEN_EXPIRED.getMessage());
     }
 
     @Test
@@ -75,21 +73,19 @@ class TokenAuthenticationEntryPointTest {
 
         String content = response.getContentAsString();
         assertThat(response.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
-        assertThat(content).contains(LOGIN_RATE_LIMIT_EXCEEDED.getCode());
         assertThat(content).contains(customMessage);
     }
 
     @Test
     void ApplicationAuthenticationException_커스텀_메시지_사용() throws IOException {
         String customMessage = "커스텀 에러 메시지";
-        AuthenticationException exception = new ApplicationAuthenticationException(IS_EXPIRED_TOKEN, customMessage);
+        AuthenticationException exception = new ApplicationAuthenticationException(ACCESS_TOKEN_EXPIRED, customMessage);
 
         tokenAuthenticationEntryPoint.commence(null, response, exception);
 
         String content = response.getContentAsString();
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
-        assertThat(content).contains(IS_EXPIRED_TOKEN.getCode());
+        assertThat(response.getStatus()).isEqualTo(ACCESS_TOKEN_EXPIRED.getStatus().value());
         assertThat(content).contains(customMessage);
-        assertThat(content).doesNotContain(IS_EXPIRED_TOKEN.getMessage());
+        assertThat(content).doesNotContain(ACCESS_TOKEN_EXPIRED.getMessage());
     }
 }

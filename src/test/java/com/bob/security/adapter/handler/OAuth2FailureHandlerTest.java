@@ -39,24 +39,24 @@ class OAuth2FailureHandlerTest {
 
     @Test
     void 소셜_로그인_시_탈퇴한_계정이라면_예외가_발생한다() throws Exception {
-        AuthenticationException ex = new ApplicationAuthenticationException(AuthenticationError.IS_DEACTIVATED_MEMBER) {
+        AuthenticationException ex = new ApplicationAuthenticationException(AuthenticationError.MEMBER_DEACTIVATED) {
         };
 
         handler.onAuthenticationFailure(request, response, ex);
 
         assertThat(response.getStatus()).isEqualTo(302);
-        assertThat(response.getRedirectedUrl()).isEqualTo("https://base/error?cause=IS_DEACTIVATED_MEMBER");
+        assertThat(response.getRedirectedUrl()).isEqualTo("https://base/error?cause=MEMBER_DEACTIVATED");
     }
 
     @Test
     void 소셜_로그인_시_제재된_계정이라면_예외가_발생한다() throws Exception {
-        AuthenticationException ex = new ApplicationAuthenticationException(AuthenticationError.IS_BANNED_MEMBER) {
+        AuthenticationException ex = new ApplicationAuthenticationException(AuthenticationError.MEMBER_BANNED) {
         };
 
         handler.onAuthenticationFailure(request, response, ex);
 
         assertThat(response.getStatus()).isEqualTo(302);
-        assertThat(response.getRedirectedUrl()).isEqualTo("https://base/error?cause=IS_BANNED_MEMBER");
+        assertThat(response.getRedirectedUrl()).isEqualTo("https://base/error?cause=MEMBER_BANNED");
     }
 
     @Test

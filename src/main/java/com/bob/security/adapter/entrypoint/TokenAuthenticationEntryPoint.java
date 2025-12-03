@@ -58,11 +58,11 @@ public class TokenAuthenticationEntryPoint implements AuthenticationEntryPoint {
             ? authException.getCustomMessage()
             : error.getMessage();
 
-        return Map.of("code", error.getCode(), "message", message);
+        return Map.of("message", message);
     }
 
     private Map<String, Object> createDefaultErrorResponse(AuthenticationError error) {
-        return Map.of("code", error.getCode(), "message", error.getMessage());
+        return Map.of("message", error.getMessage());
     }
     /* @formatter:on */
 }

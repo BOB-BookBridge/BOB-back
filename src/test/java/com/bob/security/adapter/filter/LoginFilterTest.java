@@ -1,8 +1,8 @@
 package com.bob.security.adapter.filter;
 
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
-import static com.bob.global.exception.response.AuthenticationError.IS_DEACTIVATED_MEMBER;
 import static com.bob.global.exception.response.AuthenticationError.LOGIN_RATE_LIMIT_EXCEEDED;
+import static com.bob.global.exception.response.AuthenticationError.MEMBER_DEACTIVATED;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_TOKEN;
 import static com.bob.support.fixture.auth.CookieFixture.AUTH_COOKIE_HEADER;
 import static com.bob.support.fixture.auth.CookieFixture.SET_COOKIE_HEADER;
@@ -157,7 +157,7 @@ class LoginFilterTest {
 
         then(authenticationEntryPoint).should().commence(eq(request), eq(response),
             argThat(e -> (
-                (ApplicationAuthenticationException)e).getError() == IS_DEACTIVATED_MEMBER
+                (ApplicationAuthenticationException)e).getError() == MEMBER_DEACTIVATED
             )
         );
         then(cachePort).shouldHaveNoInteractions();
@@ -246,7 +246,7 @@ class LoginFilterTest {
     @Test
     void 인증_실패_시_ApplicationAuthenticationException이면_그대로_전달() throws Exception {
         ApplicationAuthenticationException appException =
-            new ApplicationAuthenticationException(IS_DEACTIVATED_MEMBER);
+            new ApplicationAuthenticationException(MEMBER_DEACTIVATED);
 
         loginFilter.unsuccessfulAuthentication(request, response, appException);
 

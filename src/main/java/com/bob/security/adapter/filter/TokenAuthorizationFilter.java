@@ -1,7 +1,7 @@
 package com.bob.security.adapter.filter;
 
+import static com.bob.global.exception.response.AuthenticationError.ACCESS_TOKEN_EXPIRED;
 import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
-import static com.bob.global.exception.response.AuthenticationError.IS_EXPIRED_TOKEN;
 import static com.bob.global.utils.web.CookieUtils.getCookie;
 import static com.bob.global.utils.web.CookieUtils.removeCookie;
 
@@ -95,7 +95,7 @@ public class TokenAuthorizationFilter extends OncePerRequestFilter {
 
         // 유효한 토큰이 존재하지만 만료된 토큰
         if (tokenManager.expire(accessToken))
-            jwtAuthEntryPoint.commence(request, response, new ApplicationAuthenticationException(IS_EXPIRED_TOKEN));
+            jwtAuthEntryPoint.commence(request, response, new ApplicationAuthenticationException(ACCESS_TOKEN_EXPIRED));
     }
     /* @formatter:on */
 }

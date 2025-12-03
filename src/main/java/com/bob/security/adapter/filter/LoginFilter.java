@@ -81,7 +81,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private static AuthenticationError setAuthenticationError(AuthenticationException ex) {
         if (ex instanceof DisabledException)
-            return AuthenticationError.IS_DEACTIVATED_MEMBER;
+            return AuthenticationError.MEMBER_DEACTIVATED;
 
         return AuthenticationError.FAILED_AUTHENTICATION;
     }
