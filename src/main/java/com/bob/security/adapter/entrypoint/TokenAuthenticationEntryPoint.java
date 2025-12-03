@@ -1,13 +1,17 @@
 package com.bob.security.adapter.entrypoint;
 
+import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
+import static org.springframework.http.ProblemDetail.forStatusAndDetail;
+
 import java.io.IOException;
-import java.util.Map;
+import java.time.LocalDateTime;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -27,42 +31,34 @@ public class TokenAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
         AuthenticationError error = getAuthenticationError(exception);
-        setHeader(response, error);
-        String body = objectMapper.writeValueAsString(setBody(exception, error));
-        response.getWriter().print(body);
+        String message = getMessage(exception, error);
+
+        ProblemDetail problemDetail = forStatusAndDetail(error.getStatus(), message);
+        setProblemDetailProperties(problemDetail, error.name());
+
+        response.setContentType("application/json; charset=UTF-8");
+        response.setStatus(error.getStatus().value());
+        response.getWriter().print(objectMapper.writeValueAsString(problemDetail));
     }
 
     private AuthenticationError getAuthenticationError(AuthenticationException ex) {
-        if (ex instanceof ApplicationAuthenticationException exception)
-            return exception.getError();
+        if (ex instanceof ApplicationAuthenticationException appException)
+            return appException.getError();
 
-        return AuthenticationError.FAILED_AUTHENTICATION;
+        return FAILED_AUTHENTICATION;
     }
 
-    private void setHeader(HttpServletResponse response, AuthenticationError error) {
-        response.setContentType("application/json; charset=UTF-8");
-        response.setStatus(error.getStatus().value());
+    private String getMessage(AuthenticationException ex, AuthenticationError error) {
+        if (ex instanceof ApplicationAuthenticationException appException) {
+            String customMessage = appException.getCustomMessage();
+            return customMessage != null ? customMessage : error.getMessage();
+        }
+        return error.getMessage();
     }
 
-    private Map<String, Object> setBody(AuthenticationException ex, AuthenticationError error) {
-        if (ex instanceof ApplicationAuthenticationException exception)
-            return createCustomErrorResponse(exception);
-
-        return createDefaultErrorResponse(error);
-    }
-
-    private Map<String, Object> createCustomErrorResponse(ApplicationAuthenticationException authException) {
-        AuthenticationError error = authException.getError();
-
-        String message = authException.getCustomMessage() != null
-            ? authException.getCustomMessage()
-            : error.getMessage();
-
-        return Map.of("message", message);
-    }
-
-    private Map<String, Object> createDefaultErrorResponse(AuthenticationError error) {
-        return Map.of("message", error.getMessage());
+    private static void setProblemDetailProperties(ProblemDetail detail, String title) {
+        detail.setTitle(title);
+        detail.setProperty("timestamp", LocalDateTime.now());
     }
     /* @formatter:on */
 }

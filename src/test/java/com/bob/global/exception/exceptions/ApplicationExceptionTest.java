@@ -12,7 +12,7 @@ class ApplicationExceptionTest {
 
     @Test
     void 원문_메시지_사용() {
-        ApplicationError error = ApplicationError.VALIDATION_ERROR;
+        ApplicationError error = ApplicationError.NO_CHANGES;
 
         ApplicationException ex = new ApplicationException(error);
 

@@ -10,8 +10,7 @@ import org.springframework.http.HttpStatus;
 public enum ApplicationError {
 
     // 공통 예외
-    VALIDATION_ERROR("요청 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-    TYPE_MISMATCH("요청 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    SERVER_ERROR("요청을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.", HttpStatus.INTERNAL_SERVER_ERROR),
     NO_CHANGES("변경 사항이 없습니다.", HttpStatus.BAD_REQUEST),
 
     // 회원 예외
