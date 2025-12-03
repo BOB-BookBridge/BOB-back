@@ -1,6 +1,7 @@
 package com.bob.core.application.chat;
 
 import static com.bob.core.application.chat.dto.result.ChatMessageSummary.of;
+import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS_DENIED;
 import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 
 import java.util.List;
@@ -34,7 +35,6 @@ import com.bob.core.domain.chat.Chatroom;
 import com.bob.core.domain.chat.ChatroomMember;
 import com.bob.core.domain.chat.repository.ChatroomRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -127,6 +127,6 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
 
     private void verifyParticipating(Chatroom chatroom, UUID memberId) {
         if (!chatroom.hasMember(memberId) || chatroom.isMemberExited(memberId))
-            throw new ApplicationException(ApplicationError.CHATROOM_ACCESS_DENIED);
+            throw new ApplicationException(CHATROOM_ACCESS_DENIED);
     }
 }

@@ -3,6 +3,7 @@ package com.bob.core.application.member;
 import static com.bob.core.domain.member.Member.createMember;
 import static com.bob.core.domain.member.Member.createSocialMember;
 import static com.bob.global.event.application.dto.member.type.AccountEventType.RECOVER;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_BANNED;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_DUPLICATED;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_UNVERIFIED;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_PASSWORD_MISMATCH;
@@ -45,7 +46,6 @@ import com.bob.core.domain.member.repository.MemberRepository;
 import com.bob.global.event.application.dto.member.AccountEvent;
 import com.bob.global.event.application.dto.member.type.AccountEventType;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional
@@ -182,7 +182,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
 
     private static void verifyIsNotBannedMember(Member member) {
         if (member.isBanned())
-            throw new ApplicationException(ApplicationError.MEMBER_BANNED);
+            throw new ApplicationException(MEMBER_BANNED);
     }
 
     @Override

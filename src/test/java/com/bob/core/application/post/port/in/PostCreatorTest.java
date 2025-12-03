@@ -2,6 +2,7 @@ package com.bob.core.application.post.port.in;
 
 import static com.bob.core.domain.post.status.Status.ACTIVE;
 import static com.bob.core.domain.post.status.TradeProgress.READY;
+import static com.bob.global.exception.response.ApplicationError.POST_VERIFIED_AREA_REQUIRED;
 import static com.bob.support.fixture.area.domain.AreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.post.dto.command.CreatePostCommandFixture.createPostCommand;
@@ -16,7 +17,6 @@ import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.repository.MemberRepository;
 import com.bob.core.domain.post.Post;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.annotation.ContainerTest;
 import com.bob.support.fixture.member.domain.MemberFixture;
 
@@ -54,6 +54,6 @@ record PostCreatorTest(PostCreator postCreator, MemberRepository memberRepositor
 
         assertThatThrownBy(() -> postCreator.create(command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.POST_VERIFIED_AREA_REQUIRED.getMessage());
+            .hasMessage(POST_VERIFIED_AREA_REQUIRED.getMessage());
     }
 }

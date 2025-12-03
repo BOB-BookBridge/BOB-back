@@ -2,6 +2,7 @@ package com.bob.core.application.post;
 
 import static com.bob.core.domain.post.status.Status.DEACTIVATED;
 import static com.bob.core.domain.post.status.Status.WITHHELD;
+import static com.bob.global.exception.response.ApplicationError.POST_ACCESS_DENIED;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.util.List;
@@ -29,7 +30,6 @@ import com.bob.core.domain.post.Post;
 import com.bob.core.domain.post.repository.PostRepository;
 import com.bob.core.domain.post.repository.dsl.query.ReadPostsQuery;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -115,6 +115,6 @@ public class PostQueryService implements PostReader {
 
     private static void verifyAccessiblePost(Post post, boolean isClient) {
         if (isClient && (post.getStatus() == DEACTIVATED || post.getStatus() == WITHHELD))
-            throw new ApplicationException(ApplicationError.POST_ACCESS_DENIED);
+            throw new ApplicationException(POST_ACCESS_DENIED);
     }
 }

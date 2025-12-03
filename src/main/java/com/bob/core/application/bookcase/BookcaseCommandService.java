@@ -1,6 +1,10 @@
 package com.bob.core.application.bookcase;
 
 import static com.bob.core.domain.bookcase.BookcaseItem.createBookcaseItem;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_ALREADY_USE;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_UNAVAILABLE;
+import static com.bob.global.exception.response.ApplicationError.BOOKCASE_ITEM_UNREMOVABLE;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +29,6 @@ import com.bob.core.application.bookcase.port.result.BookcaseItemResult;
 import com.bob.core.domain.bookcase.BookcaseItem;
 import com.bob.core.domain.bookcase.repository.BookcaseItemRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional
@@ -71,7 +74,7 @@ public class BookcaseCommandService implements BookcaseRegister, BookcaseModifie
             .filter(BookcaseItem::isDeleted)
             .findFirst().ifPresent(item -> {
                 BookcaseItemResult book = bookPort.readBook(item.getBookId());
-                throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_UNAVAILABLE, book.title());
+                throw new ApplicationException(BOOKCASE_ITEM_UNAVAILABLE, book.title());
             });
     }
 
@@ -80,7 +83,7 @@ public class BookcaseCommandService implements BookcaseRegister, BookcaseModifie
             .filter(item -> item.getUsageId() != null && !Objects.equals(item.getUsageId(), usageId))
             .findFirst().ifPresent(bc -> {
                 BookcaseItemResult book = bookPort.readBook(bc.getBookId());
-                throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_ALREADY_USE, bc.getUsageId(), book.title());
+                throw new ApplicationException(BOOKCASE_ITEM_ALREADY_USE, bc.getUsageId(), book.title());
             });
     }
 
@@ -98,7 +101,7 @@ public class BookcaseCommandService implements BookcaseRegister, BookcaseModifie
         boolean isOwner = bookcase.stream().allMatch(bc -> Objects.equals(bc.getMemberId(), memberId));
 
         if (!isOwner || requestIds.size() != bookcase.size())
-            throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_ACCESS_DENIED);
+            throw new ApplicationException(BOOKCASE_ITEM_ACCESS_DENIED);
     }
 
     @Override
@@ -125,11 +128,11 @@ public class BookcaseCommandService implements BookcaseRegister, BookcaseModifie
 
     private static void verifyItemOwn(UUID memberId, BookcaseItem item) {
         if (!item.isOwner(memberId))
-            throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_ACCESS_DENIED);
+            throw new ApplicationException(BOOKCASE_ITEM_ACCESS_DENIED);
     }
 
     private static void verifyItemDeletable(BookcaseItem item) {
         if (!item.isDeletable())
-            throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_UNREMOVABLE, item.getUsageId());
+            throw new ApplicationException(BOOKCASE_ITEM_UNREMOVABLE, item.getUsageId());
     }
 }

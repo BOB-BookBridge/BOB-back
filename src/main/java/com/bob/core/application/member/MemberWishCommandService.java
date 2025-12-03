@@ -1,5 +1,7 @@
 package com.bob.core.application.member;
 
+import static com.bob.global.exception.response.ApplicationError.MEMBER_WISH_DUPLICATED;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -16,7 +18,6 @@ import com.bob.core.application.member.port.out.MemberBookPort;
 import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.MemberWish;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional
@@ -45,7 +46,7 @@ public class MemberWishCommandService implements MemberWishManager {
 
     private static void verifyWishDuplicate(Member member, Long bookId) {
         if (member.getWishes().stream().map(MemberWish::getBookId).anyMatch((exist) -> Objects.equals(exist, bookId)))
-            throw new ApplicationException(ApplicationError.MEMBER_WISH_DUPLICATED);
+            throw new ApplicationException(MEMBER_WISH_DUPLICATED);
     }
 
     @Override

@@ -4,6 +4,7 @@ import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHE
 import static org.springframework.http.ProblemDetail.forStatusAndDetail;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.LocalDateTime;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +35,7 @@ public class TokenAuthenticationEntryPoint implements AuthenticationEntryPoint {
         String message = getMessage(exception, error);
 
         ProblemDetail problemDetail = forStatusAndDetail(error.getStatus(), message);
+        problemDetail.setInstance(URI.create(request.getRequestURI()));
         setProblemDetailProperties(problemDetail, error.name());
 
         response.setContentType("application/json; charset=UTF-8");

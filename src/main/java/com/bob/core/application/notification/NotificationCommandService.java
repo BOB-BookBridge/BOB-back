@@ -1,6 +1,7 @@
 package com.bob.core.application.notification;
 
 import static com.bob.core.domain.notification.Notification.createNotification;
+import static com.bob.global.exception.response.ApplicationError.NOTIFICATION_ACCESS_DENIED;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +23,6 @@ import com.bob.core.application.notification.port.result.NotificationMember;
 import com.bob.core.domain.notification.Notification;
 import com.bob.core.domain.notification.repository.NotificationRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional
@@ -68,7 +68,7 @@ public class NotificationCommandService implements NotificationCreator, Notifica
 
     private void verifyOwner(UUID requesterId, UUID ownerId) {
         if (!ownerId.equals(requesterId))
-            throw new ApplicationException(ApplicationError.NOTIFICATION_ACCESS_DENIED);
+            throw new ApplicationException(NOTIFICATION_ACCESS_DENIED);
     }
 
     private void publish(CreateNotificationCommand command, NotificationMember sender) {

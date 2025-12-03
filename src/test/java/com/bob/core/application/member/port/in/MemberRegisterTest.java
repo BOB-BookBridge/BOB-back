@@ -1,6 +1,8 @@
 package com.bob.core.application.member.port.in;
 
 import static com.bob.core.domain.member.Status.ACTIVE;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_DUPLICATED;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_UNVERIFIED;
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static com.bob.support.fixture.member.dto.command.CreateMemberCommandFixture.createCreateMemberCommand;
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -20,7 +22,6 @@ import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.PasswordEncoder;
 import com.bob.core.domain.member.repository.MemberRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("회원 등록 테스트")
@@ -52,7 +53,7 @@ record MemberRegisterTest(
 
         assertThatThrownBy(() -> memberRegister.signup(command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.MEMBER_EMAIL_UNVERIFIED.getMessage());
+            .hasMessage(MEMBER_EMAIL_UNVERIFIED.getMessage());
     }
 
     @Test
@@ -67,7 +68,7 @@ record MemberRegisterTest(
 
         assertThatThrownBy(() -> memberRegister.signup(command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.MEMBER_EMAIL_DUPLICATED.getMessage());
+            .hasMessage(MEMBER_EMAIL_DUPLICATED.getMessage());
 
         memberCachePort.delete(duplicateEmail);
     }

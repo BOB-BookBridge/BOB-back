@@ -1,5 +1,6 @@
 package com.bob.core.application.area;
 
+import static com.bob.global.exception.response.ApplicationError.AREA_AUTHENTICATION_FAILED;
 import static com.bob.global.utils.geo.GeometryUtils.createPoint;
 
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,6 @@ import com.bob.core.application.area.port.in.AreaReader;
 import com.bob.core.domain.area.EmdArea;
 import com.bob.core.domain.area.repository.AreaRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +35,6 @@ public class AreaQueryService implements AreaReader, AreaAuthenticator {
         Point point = createPoint(query.lat(), query.lon());
 
         if (!emdArea.getGeom().contains(point))
-            throw new ApplicationException(ApplicationError.AREA_AUTHENTICATION_FAILED);
+            throw new ApplicationException(AREA_AUTHENTICATION_FAILED);
     }
 }
