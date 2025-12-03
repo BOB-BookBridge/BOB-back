@@ -1,6 +1,6 @@
 package com.bob.security.adapter.entrypoint;
 
-import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
+import static com.bob.global.exception.response.AuthenticationError.AUTHENTICATION_FAILED;
 import static org.springframework.http.ProblemDetail.forStatusAndDetail;
 
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class TokenAuthenticationEntryPoint implements AuthenticationEntryPoint {
         if (ex instanceof ApplicationAuthenticationException appException)
             return appException.getError();
 
-        return FAILED_AUTHENTICATION;
+        return AUTHENTICATION_FAILED;
     }
 
     private String getMessage(AuthenticationException ex, AuthenticationError error) {

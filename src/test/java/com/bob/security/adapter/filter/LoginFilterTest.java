@@ -1,6 +1,6 @@
 package com.bob.security.adapter.filter;
 
-import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
+import static com.bob.global.exception.response.AuthenticationError.AUTHENTICATION_FAILED;
 import static com.bob.global.exception.response.AuthenticationError.LOGIN_RATE_LIMIT_EXCEEDED;
 import static com.bob.global.exception.response.AuthenticationError.MEMBER_DEACTIVATED;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_TOKEN;
@@ -143,7 +143,7 @@ class LoginFilterTest {
 
         then(authenticationEntryPoint).should().commence(eq(request), eq(response),
             argThat(e -> (
-                (ApplicationAuthenticationException)e).getError() == FAILED_AUTHENTICATION
+                (ApplicationAuthenticationException)e).getError() == AUTHENTICATION_FAILED
             )
         );
         then(cachePort).shouldHaveNoInteractions();
@@ -238,7 +238,7 @@ class LoginFilterTest {
 
         then(authenticationEntryPoint).should().commence(eq(request), eq(response),
             argThat(e -> e instanceof ApplicationAuthenticationException
-                && ((ApplicationAuthenticationException)e).getError() == FAILED_AUTHENTICATION
+                && ((ApplicationAuthenticationException)e).getError() == AUTHENTICATION_FAILED
             )
         );
     }

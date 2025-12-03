@@ -8,10 +8,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum AuthenticationError {
-    FAILED_AUTHENTICATION("인증에 실패하였습니다.", HttpStatus.UNAUTHORIZED),
+    AUTHENTICATION_FAILED("인증에 실패하였습니다.", HttpStatus.UNAUTHORIZED),
 
     ACCESS_TOKEN_EXPIRED("인증 토큰이 만료되었습니다.", HttpStatus.GONE),
-    REFRESH_KEY_EXPIRED("재인증 키가 만료되었습니다. 다시 로그인 해주세요.", HttpStatus.GONE),
 
     MEMBER_DEACTIVATED("탈퇴한 계정입니다.", HttpStatus.FORBIDDEN),
     MEMBER_BANNED("제재된 계정입니다.", HttpStatus.FORBIDDEN),

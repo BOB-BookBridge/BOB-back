@@ -1,7 +1,7 @@
 package com.bob.security.adapter.entrypoint;
 
 import static com.bob.global.exception.response.AuthenticationError.ACCESS_TOKEN_EXPIRED;
-import static com.bob.global.exception.response.AuthenticationError.FAILED_AUTHENTICATION;
+import static com.bob.global.exception.response.AuthenticationError.AUTHENTICATION_FAILED;
 import static com.bob.global.exception.response.AuthenticationError.LOGIN_RATE_LIMIT_EXCEEDED;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,6 +33,8 @@ class TokenAuthenticationEntryPointTest {
     @InjectMocks
     private TokenAuthenticationEntryPoint tokenAuthenticationEntryPoint;
 
+    private MockHttpServletRequest request;
+
     private MockHttpServletResponse response;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -40,32 +43,35 @@ class TokenAuthenticationEntryPointTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(tokenAuthenticationEntryPoint, "objectMapper", objectMapper);
+        request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
     }
 
     @Test
     void 일반_인증_예외_발생_시_기본_예외_반환() throws IOException {
-        // [요청 예시] POST /api/resource with invalid token
+        // [요청 예시] POST /api/test with invalid token
         // [문제 상황] 유효하지 않은 토큰으로 요청
         AuthenticationException exception = new AuthenticationException("") {
         };
+        request.setRequestURI("/api/test");
 
-        tokenAuthenticationEntryPoint.commence(null, response, exception);
+        tokenAuthenticationEntryPoint.commence(request, response, exception);
 
         ProblemDetail problemDetail = objectMapper.readValue(response.getContentAsString(), ProblemDetail.class);
         assertThat(response.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
-        assertThat(problemDetail.getDetail()).isEqualTo(FAILED_AUTHENTICATION.getMessage());
-        assertThat(problemDetail.getTitle()).isEqualTo(FAILED_AUTHENTICATION.name());
+        assertThat(problemDetail.getDetail()).isEqualTo(AUTHENTICATION_FAILED.getMessage());
+        assertThat(problemDetail.getTitle()).isEqualTo(AUTHENTICATION_FAILED.name());
         assertThat(problemDetail.getProperties()).containsKeys("timestamp");
     }
 
     @Test
     void 애플리케이션_인증_예외_발생_시_커스텀_예외_반환() throws IOException {
-        // [요청 예시] POST /api/resource with expired token
+        // [요청 예시] POST /api/test with expired token
         // [문제 상황] 만료된 토큰으로 요청
         AuthenticationException exception = new ApplicationAuthenticationException(ACCESS_TOKEN_EXPIRED);
+        request.setRequestURI("/api/test");
 
-        tokenAuthenticationEntryPoint.commence(null, response, exception);
+        tokenAuthenticationEntryPoint.commence(request, response, exception);
 
         ProblemDetail problemDetail = objectMapper.readValue(response.getContentAsString(), ProblemDetail.class);
         assertThat(response.getStatus()).isEqualTo(ACCESS_TOKEN_EXPIRED.getStatus().value());
@@ -80,8 +86,9 @@ class TokenAuthenticationEntryPointTest {
         // [문제 상황] 로그인 시도 횟수 초과
         String message = "로그인 시도가 너무 많습니다. 30초 후 다시 시도해주세요.";
         AuthenticationException exception = new ApplicationAuthenticationException(LOGIN_RATE_LIMIT_EXCEEDED, message);
+        request.setRequestURI("/auth/login");
 
-        tokenAuthenticationEntryPoint.commence(null, response, exception);
+        tokenAuthenticationEntryPoint.commence(request, response, exception);
 
         ProblemDetail problemDetail = objectMapper.readValue(response.getContentAsString(), ProblemDetail.class);
         assertThat(response.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
@@ -92,12 +99,13 @@ class TokenAuthenticationEntryPointTest {
 
     @Test
     void 커스텀_메시지_사용() throws IOException {
-        // [요청 예시] POST /api/resource with expired token
+        // [요청 예시] POST /api/test with expired token
         // [문제 상황] 토큰이 만료되었으나 커스텀 메시지 반환
         String customMessage = "커스텀 에러 메시지";
         AuthenticationException exception = new ApplicationAuthenticationException(ACCESS_TOKEN_EXPIRED, customMessage);
+        request.setRequestURI("/api/test");
 
-        tokenAuthenticationEntryPoint.commence(null, response, exception);
+        tokenAuthenticationEntryPoint.commence(request, response, exception);
 
         ProblemDetail problemDetail = objectMapper.readValue(response.getContentAsString(), ProblemDetail.class);
         assertThat(response.getStatus()).isEqualTo(ACCESS_TOKEN_EXPIRED.getStatus().value());

@@ -67,6 +67,6 @@ class OAuth2FailureHandlerTest {
         handler.onAuthenticationFailure(request, response, ex);
 
         assertThat(response.getStatus()).isEqualTo(302);
-        assertThat(response.getRedirectedUrl()).isEqualTo("https://base/error?cause=FAILED_AUTHENTICATION");
+        assertThat(response.getRedirectedUrl()).isEqualTo("https://base/error?cause=AUTHENTICATION_FAILED");
     }
 }

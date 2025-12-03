@@ -83,7 +83,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         if (ex instanceof DisabledException)
             return AuthenticationError.MEMBER_DEACTIVATED;
 
-        return AuthenticationError.FAILED_AUTHENTICATION;
+        return AuthenticationError.AUTHENTICATION_FAILED;
     }
 
     private LoginRequest readLoginData(HttpServletRequest request) {

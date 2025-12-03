@@ -79,7 +79,7 @@ class TokenIssuerTest {
 
         assertThatThrownBy(() -> tokenIssuer.reissue(request, response))
             .isInstanceOf(ApplicationAuthenticationException.class)
-            .hasMessage(AuthenticationError.REFRESH_KEY_EXPIRED.getMessage());
+            .hasMessage(AuthenticationError.AUTHENTICATION_FAILED.getMessage());
     }
 
     @Test
@@ -89,7 +89,7 @@ class TokenIssuerTest {
 
         assertThatThrownBy(() -> tokenIssuer.reissue(request, response))
             .isInstanceOf(ApplicationAuthenticationException.class)
-            .hasMessage(AuthenticationError.REFRESH_KEY_EXPIRED.getMessage());
+            .hasMessage(AuthenticationError.AUTHENTICATION_FAILED.getMessage());
     }
 
     private Cookie findCookie(Cookie[] cookies, String name) {

@@ -25,7 +25,7 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
         AuthenticationException exception) throws IOException {
         final AuthenticationError error = (exception instanceof ApplicationAuthenticationException appEx)
             ? appEx.getError()
-            : AuthenticationError.FAILED_AUTHENTICATION;
+            : AuthenticationError.AUTHENTICATION_FAILED;
 
         response.sendRedirect(UriComponentsBuilder.fromUriString(baseUrl)
             .path("/error")

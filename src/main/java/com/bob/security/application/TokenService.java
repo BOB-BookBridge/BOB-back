@@ -1,6 +1,6 @@
 package com.bob.security.application;
 
-import static com.bob.global.exception.response.AuthenticationError.REFRESH_KEY_EXPIRED;
+import static com.bob.global.exception.response.AuthenticationError.AUTHENTICATION_FAILED;
 import static com.bob.global.utils.random.RandomUtils.generateCode;
 import static com.bob.global.utils.web.CookieUtils.addCookie;
 import static com.bob.global.utils.web.CookieUtils.getCookie;
@@ -51,11 +51,11 @@ public class TokenService implements TokenIssuer {
         verifyLoggedIn(key);
 
         return cachePort.get(key)
-            .orElseThrow(() -> new ApplicationAuthenticationException(REFRESH_KEY_EXPIRED));
+            .orElseThrow(() -> new ApplicationAuthenticationException(AUTHENTICATION_FAILED));
     }
 
     private static void verifyLoggedIn(String key) {
         if (key == null)
-            throw new ApplicationAuthenticationException(REFRESH_KEY_EXPIRED);
+            throw new ApplicationAuthenticationException(AUTHENTICATION_FAILED);
     }
 }
