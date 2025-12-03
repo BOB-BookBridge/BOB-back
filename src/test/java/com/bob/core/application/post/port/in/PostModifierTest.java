@@ -5,9 +5,8 @@ import static com.bob.core.domain.post.status.Status.DEACTIVATED;
 import static com.bob.core.domain.post.status.TradeProgress.COMPLETED;
 import static com.bob.core.domain.post.status.TradeProgress.READY;
 import static com.bob.core.domain.post.status.TradeProgress.RESERVED;
-import static com.bob.global.exception.response.ApplicationError.ALREADY_REMOVED_POST_STATE;
-import static com.bob.global.exception.response.ApplicationError.NOT_POST_OWNER;
-import static com.bob.global.exception.response.ApplicationError.UNREMOVABLE_POST_STATE;
+import static com.bob.global.exception.response.ApplicationError.POST_OWNER_REQUIRED;
+import static com.bob.global.exception.response.ApplicationError.POST_UNREMOVABLE_STATE;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
@@ -54,7 +53,7 @@ record PostModifierTest(PostModifier postModifier, PostRepository postRepository
 
         assertThatThrownBy(() -> postModifier.changePostInfo(post.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_POST_OWNER.getMessage());
+            .hasMessage(POST_OWNER_REQUIRED.getMessage());
     }
 
     @Test
@@ -119,18 +118,7 @@ record PostModifierTest(PostModifier postModifier, PostRepository postRepository
 
         assertThatThrownBy(() -> postModifier.deactivate(post.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_POST_OWNER.getMessage());
-    }
-
-    @Test
-    void 게시글_비활성화_시_이미_비활성화된_게시글이면_예외가_발생한다() {
-        Post post = postRepository.save(createPost());
-        post.deactivate();
-        RemovePostCommand command = new RemovePostCommand(MEMBER_ID);
-
-        assertThatThrownBy(() -> postModifier.deactivate(post.getId(), command))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(ALREADY_REMOVED_POST_STATE.getMessage());
+            .hasMessage(POST_OWNER_REQUIRED.getMessage());
     }
 
     @Test
@@ -141,7 +129,7 @@ record PostModifierTest(PostModifier postModifier, PostRepository postRepository
 
         assertThatThrownBy(() -> postModifier.deactivate(post.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(UNREMOVABLE_POST_STATE.getMessage());
+            .hasMessage(POST_UNREMOVABLE_STATE.getMessage());
     }
 
     @Test

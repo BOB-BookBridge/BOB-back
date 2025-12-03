@@ -9,8 +9,6 @@ import com.bob.core.application.interest.dto.query.FindInterestByNameQuery;
 import com.bob.core.application.interest.port.in.InterestReader;
 import com.bob.core.domain.interest.Interest;
 import com.bob.core.domain.interest.repository.InterestRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -22,13 +20,13 @@ public class InterestQueryService implements InterestReader {
     @Override
     public Interest read(Long id) {
         return interestRepository.findById(id)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.INTEREST_NOT_FOUND));
+            .orElseThrow(() -> new IllegalArgumentException("관심사를 찾을 수 없습니다. id : " + id));
     }
 
     @Override
     public Interest readByName(FindInterestByNameQuery query) {
         String name = Interest.normalize(query.name());
         return interestRepository.findByName(name)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.INTEREST_NOT_FOUND));
+            .orElseThrow(() -> new IllegalArgumentException("관심사를 찾을 수 없습니다. name : " + name));
     }
 }

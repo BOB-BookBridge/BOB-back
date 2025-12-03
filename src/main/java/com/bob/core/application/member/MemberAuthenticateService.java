@@ -46,9 +46,9 @@ public class MemberAuthenticateService implements MemberAuthenticator {
     private void checkCode(String email, String code) {
         Optional<String> value = cachePort.get(email);
         if (value.isEmpty())
-            throw new ApplicationException(ApplicationError.EXPIRED_MAIL_CODE);
+            throw new ApplicationException(ApplicationError.MEMBER_MAIL_CODE_EXPIRED);
 
         if (!value.get().equals(code))
-            throw new ApplicationException(ApplicationError.INVALID_MAIL_CODE);
+            throw new ApplicationException(ApplicationError.MEMBER_MAIL_CODE_MISMATCH);
     }
 }

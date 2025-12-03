@@ -1,7 +1,7 @@
 package com.bob.core.application.post.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.ALREADY_POST_FAVORITE;
-import static com.bob.global.exception.response.ApplicationError.INVALID_POST_FAVORITE;
+import static com.bob.global.exception.response.ApplicationError.POST_FAVORITE_EXIST;
+import static com.bob.global.exception.response.ApplicationError.POST_FAVORITE_NOT_EXIST;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
@@ -47,7 +47,7 @@ record PostFavoriteManagerTest(PostFavoriteManager postFavoriteManager, PostRepo
 
         assertThatThrownBy(() -> postFavoriteManager.registerFavorite(post.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(ALREADY_POST_FAVORITE.getMessage());
+            .hasMessage(POST_FAVORITE_EXIST.getMessage());
     }
 
     @Test
@@ -73,7 +73,7 @@ record PostFavoriteManagerTest(PostFavoriteManager postFavoriteManager, PostRepo
 
         assertThatThrownBy(() -> postFavoriteManager.removeFavorite(post.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(INVALID_POST_FAVORITE.getMessage());
+            .hasMessage(POST_FAVORITE_NOT_EXIST.getMessage());
     }
 
     @Test

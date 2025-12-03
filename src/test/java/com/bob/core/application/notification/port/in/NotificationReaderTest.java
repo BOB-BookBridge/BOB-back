@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import com.bob.core.application.notification.dto.query.ReadByMemberQuery;
 import com.bob.core.domain.notification.Notification;
 import com.bob.core.domain.notification.repository.NotificationRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("알림 조회 테스트")
@@ -41,8 +39,8 @@ record NotificationReaderTest(NotificationReader notificationReader, Notificatio
         Long nonExistentId = 999L;
 
         assertThatThrownBy(() -> notificationReader.read(nonExistentId))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.NOT_EXISTS_NOTIFICATION.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("알림을 찾을 수 없습니다.");
     }
 
     @Test

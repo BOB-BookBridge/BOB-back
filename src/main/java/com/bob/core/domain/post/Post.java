@@ -5,6 +5,7 @@ import static com.bob.core.domain.post.status.Status.ACTIVE;
 import static com.bob.core.domain.post.status.Status.DEACTIVATED;
 import static com.bob.core.domain.post.status.TradeProgress.READY;
 import static com.bob.core.domain.post.status.TradeProgress.RESERVED;
+import static org.springframework.util.Assert.state;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -110,6 +111,8 @@ public class Post {
     }
 
     public void deactivate() {
+        state(status == ACTIVE, "활성 상태가 아닙니다.");
+
         this.status = DEACTIVATED;
         this.favorites.clear();
     }
@@ -126,6 +129,10 @@ public class Post {
 
     public boolean isActive() {
         return status == ACTIVE;
+    }
+
+    public boolean isDeactivated() {
+        return status == DEACTIVATED;
     }
 
     public boolean isReserved() {

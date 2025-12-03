@@ -2,7 +2,7 @@ package com.bob.core.application.chat.port.in;
 
 import static com.bob.core.domain.chat.type.ChatMessageType.TEXT;
 import static com.bob.core.domain.file.type.FileDomain.CHAT;
-import static com.bob.global.exception.response.ApplicationError.NOT_PARTICIPATED_CHAT_ROOM;
+import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS_DENIED;
 import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.chat.dto.command.ChatMessageCommandFixture.createMessageCommand;
 import static com.bob.support.fixture.chat.dto.query.ReadChatMessagesQueryFixture.readChatMessagesQuery;
@@ -67,7 +67,7 @@ record ChatMessageReaderTest(
 
         assertThatThrownBy(() -> chatMessageReader.readMessages(saved.getId(), query))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+            .hasMessage(CHATROOM_ACCESS_DENIED.getMessage());
         ;
     }
 
@@ -81,7 +81,7 @@ record ChatMessageReaderTest(
 
         assertThatThrownBy(() -> chatMessageReader.readMessages(saved.getId(), query))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+            .hasMessage(CHATROOM_ACCESS_DENIED.getMessage());
     }
 
     @Test

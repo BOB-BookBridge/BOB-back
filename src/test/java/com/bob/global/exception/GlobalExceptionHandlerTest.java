@@ -33,13 +33,12 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     void 사용자_예외_전역_처리() {
-        ApplicationException ex = new ApplicationException(ApplicationError.ALREADY_EXISTS_EMAIL);
+        ApplicationException ex = new ApplicationException(ApplicationError.MEMBER_EMAIL_DUPLICATED);
 
         ResponseEntity<ErrorResponse> response = handler.handleApplicationException(ex);
 
-        assertThat(response.getStatusCode()).isEqualTo(ApplicationError.ALREADY_EXISTS_EMAIL.getStatus());
+        assertThat(response.getStatusCode()).isEqualTo(ApplicationError.MEMBER_EMAIL_DUPLICATED.getStatus());
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().code()).isEqualTo(ex.getError().getCode());
         assertThat(response.getBody().message()).isEqualTo(ex.getError().getMessage());
     }
 
@@ -59,7 +58,6 @@ public class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(VALIDATION_ERROR.getStatus());
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().code()).isEqualTo(VALIDATION_ERROR.getCode());
     }
 
     @Test
@@ -74,7 +72,6 @@ public class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(TYPE_MISMATCH.getStatus());
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().code()).isEqualTo(TYPE_MISMATCH.getCode());
         assertThat(response.getBody().message()).contains("memberId");
     }
 }

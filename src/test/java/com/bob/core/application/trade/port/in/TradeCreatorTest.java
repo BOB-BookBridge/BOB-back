@@ -1,8 +1,8 @@
 package com.bob.core.application.trade.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_SELF_NOT_ALLOWED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_SELLER_WISH_NOT_MATCH;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MOCK_MEMBER_ID;
@@ -85,7 +85,7 @@ record TradeCreatorTest(
 
         assertThatThrownBy(() -> tradeCreator.create(command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(IS_SAME_TRADE_MEMBER.getMessage());
+            .hasMessage(TRADE_SELF_NOT_ALLOWED.getMessage());
     }
 
     @Test

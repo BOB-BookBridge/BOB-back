@@ -1,6 +1,5 @@
 package com.bob.core.application.area.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.NOT_EXIST_OBJECT;
 import static com.bob.support.fixture.area.domain.AreaFixture.EMD_AREA_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import com.bob.core.domain.area.EmdArea;
 import com.bob.core.domain.area.SidoArea;
 import com.bob.core.domain.area.SiggArea;
-import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("지역 조회 테스트")
@@ -36,7 +34,7 @@ record AreaReaderTest(AreaReader areaReader) {
         int invalidEmdAreaId = -1;
 
         assertThatThrownBy(() -> areaReader.read(invalidEmdAreaId))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_EXIST_OBJECT.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("지역을 찾을 수 없습니다.");
     }
 }

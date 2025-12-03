@@ -50,7 +50,7 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
     @Override
     public Chatroom read(Long id) {
         return chatRoomRepository.findById(id)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXISTS_CHAT_ROOM));
+            .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다. id : " + id));
     }
 
     @Override
@@ -127,6 +127,6 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
 
     private void verifyParticipating(Chatroom chatroom, UUID memberId) {
         if (!chatroom.hasMember(memberId) || chatroom.isMemberExited(memberId))
-            throw new ApplicationException(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM);
+            throw new ApplicationException(ApplicationError.CHATROOM_ACCESS_DENIED);
     }
 }

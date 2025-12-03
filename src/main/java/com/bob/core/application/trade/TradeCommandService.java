@@ -17,19 +17,19 @@ import static com.bob.core.domain.trade.type.Owner.BUYER;
 import static com.bob.core.domain.trade.type.Owner.SELLER;
 import static com.bob.global.event.application.dto.NotificationEvent.toSystemEvent;
 import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
-import static com.bob.global.exception.response.ApplicationError.IS_SAME_TRADE_MEMBER;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
-import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_ABORTED;
-import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_COMPLETED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
-import static com.bob.global.exception.response.ApplicationError.TRADE_MAIN_ITEM_NOT_CONTAINED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ITEM_UNCHANGEABLE;
+import static com.bob.global.exception.response.ApplicationError.TRADE_MAIN_ITEM_UNCHANGEABLE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_POST_REMOVED;
-import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_REQUESTER;
-import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_DENIED_BY_STATUS;
+import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_ONLY_ABORTED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_REMOVE_ONLY_REQUESTER;
+import static com.bob.global.exception.response.ApplicationError.TRADE_SELF_NOT_ALLOWED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_SELLER_WISH_NOT_MATCH;
+import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_ALREADY_ABORTED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_ALREADY_COMPLETED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_NOT_CHANGEABLE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
-import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -271,12 +271,12 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
 
     private void verifyTradeItemChangeable(Trade trade) {
         if (trade.isProcessed())
-            throw new ApplicationException(UNCHANGEABLE_TRADE_ITEM);
+            throw new ApplicationException(TRADE_ITEM_UNCHANGEABLE);
     }
 
     private void verifyTradeMainItemContains(List<Long> itemIds, Long mainItemId) {
         if (!itemIds.contains(mainItemId))
-            throw new ApplicationException(TRADE_MAIN_ITEM_NOT_CONTAINED);
+            throw new ApplicationException(TRADE_MAIN_ITEM_UNCHANGEABLE);
     }
 
     private void verifyPostRequested(Trade trade, String status) {
@@ -304,28 +304,28 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
             throw new ApplicationException(TRADE_STATUS_UNCHANGED);
 
         if (current == COMPLETED)
-            throw new ApplicationException(TRADE_ALREADY_COMPLETED);
+            throw new ApplicationException(TRADE_STATUS_ALREADY_COMPLETED);
 
         if (request == REQUESTED)
             throw new ApplicationException(TRADE_STATUS_NOT_CHANGEABLE);
 
         if (request == ACCEPTED && trade.isAborted())
-            throw new ApplicationException(TRADE_ALREADY_ABORTED);
+            throw new ApplicationException(TRADE_STATUS_ALREADY_ABORTED);
     }
 
     private static void verifyTradeBuyer(UUID buyerId, UUID requesterId) {
         if (!buyerId.equals(requesterId))
-            throw new ApplicationException(TRADE_REMOVE_DENIED_BY_REQUESTER);
+            throw new ApplicationException(TRADE_REMOVE_ONLY_REQUESTER);
     }
 
     private static void verifyTradeRemovable(Trade trade) {
         if (!trade.isAborted())
-            throw new ApplicationException(TRADE_REMOVE_DENIED_BY_STATUS);
+            throw new ApplicationException(TRADE_REMOVE_ONLY_ABORTED);
     }
 
     private void verifySelfTrade(UUID sellerId, UUID buyerId) {
         if (Objects.equals(sellerId, buyerId))
-            throw new ApplicationException(IS_SAME_TRADE_MEMBER);
+            throw new ApplicationException(TRADE_SELF_NOT_ALLOWED);
     }
 
     private void verifyTradePostWishOnly(boolean wishOnly, UUID sellerId, List<Long> itemIds) {
@@ -335,7 +335,7 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
 
     private void verifyItemsChange(List<Long> origin, List<Long> other) {
         if (new HashSet<>(origin).equals(new HashSet<>(other)))
-            throw new ApplicationException(ApplicationError.TRADE_ITEMS_UNCHANGED);
+            throw new ApplicationException(ApplicationError.NO_CHANGES);
     }
 
     private static String buildChangeStatusNotificationBody(String title, Status status, String reason) {

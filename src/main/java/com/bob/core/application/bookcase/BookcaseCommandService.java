@@ -71,7 +71,7 @@ public class BookcaseCommandService implements BookcaseRegister, BookcaseModifie
             .filter(BookcaseItem::isDeleted)
             .findFirst().ifPresent(item -> {
                 BookcaseItemResult book = bookPort.readBook(item.getBookId());
-                throw new ApplicationException(ApplicationError.MEMBER_BOOK_UNAVAILABLE, book.title());
+                throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_UNAVAILABLE, book.title());
             });
     }
 
@@ -80,7 +80,7 @@ public class BookcaseCommandService implements BookcaseRegister, BookcaseModifie
             .filter(item -> item.getUsageId() != null && !Objects.equals(item.getUsageId(), usageId))
             .findFirst().ifPresent(bc -> {
                 BookcaseItemResult book = bookPort.readBook(bc.getBookId());
-                throw new ApplicationException(ApplicationError.MEMBER_BOOK_ALREADY_USE, bc.getUsageId(), book.title());
+                throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_ALREADY_USE, bc.getUsageId(), book.title());
             });
     }
 
@@ -98,7 +98,7 @@ public class BookcaseCommandService implements BookcaseRegister, BookcaseModifie
         boolean isOwner = bookcase.stream().allMatch(bc -> Objects.equals(bc.getMemberId(), memberId));
 
         if (!isOwner || requestIds.size() != bookcase.size())
-            throw new ApplicationException(ApplicationError.MEMBER_BOOK_ACCESS_DENIED);
+            throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_ACCESS_DENIED);
     }
 
     @Override
@@ -125,11 +125,11 @@ public class BookcaseCommandService implements BookcaseRegister, BookcaseModifie
 
     private static void verifyItemOwn(UUID memberId, BookcaseItem item) {
         if (!item.isOwner(memberId))
-            throw new ApplicationException(ApplicationError.MEMBER_BOOK_ACCESS_DENIED);
+            throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_ACCESS_DENIED);
     }
 
     private static void verifyItemDeletable(BookcaseItem item) {
         if (!item.isDeletable())
-            throw new ApplicationException(ApplicationError.UNREMOVABLE_MEMBER_BOOK, item.getUsageId());
+            throw new ApplicationException(ApplicationError.BOOKCASE_ITEM_UNREMOVABLE, item.getUsageId());
     }
 }

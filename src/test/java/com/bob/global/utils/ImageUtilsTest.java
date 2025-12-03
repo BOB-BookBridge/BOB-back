@@ -9,8 +9,6 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 import com.bob.global.utils.image.ImageUtils;
 
 @DisplayName("이미지 Util 테스트")
@@ -26,10 +24,9 @@ class ImageUtilsTest {
     @Test
     void 확장자_추출_시_지원하지_않는_타입이면_예외가_발생한다() {
         assertThatThrownBy(() -> ImageUtils.extractExtension("video/mp4"))
-            .isInstanceOf(ApplicationException.class)
+            .isInstanceOf(IllegalArgumentException.class)
             .satisfies(ex -> {
-                ApplicationException appEx = (ApplicationException)ex;
-                assertThat(appEx.getError()).isEqualTo(ApplicationError.UN_SUPPORTED_TYPE);
+                assertThat(ex.getMessage()).contains("지원하지 않는 파일 형식입니다.");
             });
     }
 

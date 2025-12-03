@@ -28,7 +28,7 @@ public class PostFavoriteCommandService implements PostFavoriteManager {
         Post post = postReader.read(postId);
 
         if (post.isFavorite(command.memberId()))
-            throw new ApplicationException(ApplicationError.ALREADY_POST_FAVORITE);
+            throw new ApplicationException(ApplicationError.POST_FAVORITE_EXIST);
 
         post.addFavorite(command.memberId());
 
@@ -40,7 +40,7 @@ public class PostFavoriteCommandService implements PostFavoriteManager {
         Post post = postReader.read(postId);
 
         if (!post.isFavorite(command.memberId()))
-            throw new ApplicationException(ApplicationError.INVALID_POST_FAVORITE);
+            throw new ApplicationException(ApplicationError.POST_FAVORITE_NOT_EXIST);
 
         post.removeFavorite(command.memberId());
 

@@ -7,15 +7,15 @@ import static com.bob.core.domain.trade.status.Status.REJECTED;
 import static com.bob.core.domain.trade.status.Status.REQUESTED;
 import static com.bob.core.domain.trade.status.Status.RESERVED;
 import static com.bob.core.domain.trade.type.Owner.BUYER;
+import static com.bob.global.exception.response.ApplicationError.NO_CHANGES;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
-import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_ABORTED;
-import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_COMPLETED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
-import static com.bob.global.exception.response.ApplicationError.TRADE_ITEMS_UNCHANGED;
-import static com.bob.global.exception.response.ApplicationError.TRADE_MAIN_ITEM_NOT_CONTAINED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_ITEM_UNCHANGEABLE;
+import static com.bob.global.exception.response.ApplicationError.TRADE_MAIN_ITEM_UNCHANGEABLE;
+import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_ALREADY_ABORTED;
+import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_ALREADY_COMPLETED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_NOT_CHANGEABLE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_STATUS_UNCHANGED;
-import static com.bob.global.exception.response.ApplicationError.UNCHANGEABLE_TRADE_ITEM;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MOCK_MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
@@ -200,7 +200,7 @@ record TradeModifierTest(
 
         assertThatThrownBy(() -> tradeModifier.changeStatus(trade.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(TRADE_ALREADY_COMPLETED.getMessage());
+            .hasMessage(TRADE_STATUS_ALREADY_COMPLETED.getMessage());
     }
 
     @Test
@@ -222,14 +222,14 @@ record TradeModifierTest(
 
         assertThatThrownBy(() -> tradeModifier.changeStatus(trade.getId(), command1))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(TRADE_ALREADY_ABORTED.getMessage());
+            .hasMessage(TRADE_STATUS_ALREADY_ABORTED.getMessage());
 
         trade.updateStatus(CANCELED);
         var command2 = new ChangeTradeStatusCommand(MEMBER_ID, "ACCEPTED", null);
 
         assertThatThrownBy(() -> tradeModifier.changeStatus(trade.getId(), command2))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(TRADE_ALREADY_ABORTED.getMessage());
+            .hasMessage(TRADE_STATUS_ALREADY_ABORTED.getMessage());
     }
 
     @Test
@@ -262,7 +262,7 @@ record TradeModifierTest(
 
         assertThatThrownBy(() -> tradeModifier.changeItems(trade.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(TRADE_MAIN_ITEM_NOT_CONTAINED.getMessage());
+            .hasMessage(TRADE_MAIN_ITEM_UNCHANGEABLE.getMessage());
     }
 
     @Test
@@ -272,7 +272,7 @@ record TradeModifierTest(
 
         assertThatThrownBy(() -> tradeModifier.changeItems(trade.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(TRADE_ITEMS_UNCHANGED.getMessage());
+            .hasMessage(NO_CHANGES.getMessage());
     }
 
     @Test
@@ -284,7 +284,7 @@ record TradeModifierTest(
 
         assertThatThrownBy(() -> tradeModifier.changeItems(trade.getId(), command1))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(UNCHANGEABLE_TRADE_ITEM.getMessage());
+            .hasMessage(TRADE_ITEM_UNCHANGEABLE.getMessage());
 
         trade.updateStatus(COMPLETED);
 
@@ -292,6 +292,6 @@ record TradeModifierTest(
 
         assertThatThrownBy(() -> tradeModifier.changeItems(trade.getId(), command2))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(UNCHANGEABLE_TRADE_ITEM.getMessage());
+            .hasMessage(TRADE_ITEM_UNCHANGEABLE.getMessage());
     }
 }

@@ -1,6 +1,6 @@
 package com.bob.core.application.member.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.MEMBER_WISH_DUPLICATE;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_WISH_DUPLICATED;
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static com.bob.support.fixture.member.dto.command.RegisterMemberWishCommandFixture.createRegisterMemberWishCommand;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +48,7 @@ record MemberWishManagerTest(MemberWishManager memberWishManager, MemberReposito
 
         assertThatThrownBy(() -> memberWishManager.registerWish(member.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(MEMBER_WISH_DUPLICATE.getMessage());
+            .hasMessage(MEMBER_WISH_DUPLICATED.getMessage());
     }
 
     @Test

@@ -9,6 +9,7 @@ import static com.bob.support.fixture.area.domain.AreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
@@ -121,6 +122,16 @@ class PostTest {
     }
 
     @Test
+    void 게시글_비활성화_시_활성_상태가_아니면_예외가_발생한다() {
+        Post post = PostFixture.createPost();
+        post.deactivate();
+
+        assertThatThrownBy(post::deactivate)
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("활성 상태가 아닙니다.");
+    }
+
+    @Test
     void 게시글_찜_추가() {
         Post post = PostFixture.createPost();
         UUID memberId = MEMBER_ID;
@@ -173,5 +184,6 @@ class PostTest {
         post.deactivate();
 
         assertThat(post.isActive()).isFalse();
+        assertThat(post.isDeactivated()).isTrue();
     }
 }

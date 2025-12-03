@@ -26,7 +26,7 @@ public class AreaQueryService implements AreaReader, AreaAuthenticator {
     @Override
     public EmdArea read(Integer emdAreaId) {
         return areaRepository.findById(emdAreaId)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_OBJECT));
+            .orElseThrow(() -> new IllegalArgumentException("지역을 찾을 수 없습니다. id : " + emdAreaId));
     }
 
     @Override
@@ -35,6 +35,6 @@ public class AreaQueryService implements AreaReader, AreaAuthenticator {
         Point point = createPoint(query.lat(), query.lon());
 
         if (!emdArea.getGeom().contains(point))
-            throw new ApplicationException(ApplicationError.INVALID_AREA_AUTHENTICATION);
+            throw new ApplicationException(ApplicationError.AREA_AUTHENTICATION_FAILED);
     }
 }

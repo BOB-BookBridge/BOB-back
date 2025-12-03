@@ -52,7 +52,7 @@ record MemberRegisterTest(
 
         assertThatThrownBy(() -> memberRegister.signup(command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.UNVERIFIED_EMAIL.getMessage());
+            .hasMessage(ApplicationError.MEMBER_EMAIL_UNVERIFIED.getMessage());
     }
 
     @Test
@@ -67,7 +67,7 @@ record MemberRegisterTest(
 
         assertThatThrownBy(() -> memberRegister.signup(command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.ALREADY_EXISTS_EMAIL.getMessage());
+            .hasMessage(ApplicationError.MEMBER_EMAIL_DUPLICATED.getMessage());
 
         memberCachePort.delete(duplicateEmail);
     }

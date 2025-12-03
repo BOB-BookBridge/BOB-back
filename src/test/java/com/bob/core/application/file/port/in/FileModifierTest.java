@@ -1,7 +1,7 @@
 package com.bob.core.application.file.port.in;
 
 import static com.bob.core.domain.file.type.FileDomain.POST;
-import static com.bob.global.exception.response.ApplicationError.FILE_UNAUTHORIZED;
+import static com.bob.global.exception.response.ApplicationError.FILE_ACCESS_DENIED;
 import static com.bob.support.fixture.file.domain.FileFixture.createFile;
 import static com.bob.support.fixture.file.dto.command.MappingFileReferencesCommandFixture.createMappingFileReferencesCommand;
 import static com.bob.support.fixture.file.dto.command.UpdateFilesCommandFixture.createUpdateFilesCommand;
@@ -52,7 +52,7 @@ record FileModifierTest(FileModifier fileModifier, FileRepository fileRepository
 
         assertThatThrownBy(() -> fileModifier.updateFiles(command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(FILE_UNAUTHORIZED.getMessage());
+            .hasMessage(FILE_ACCESS_DENIED.getMessage());
     }
 
     @Test

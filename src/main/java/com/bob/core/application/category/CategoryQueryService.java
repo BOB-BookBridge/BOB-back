@@ -10,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bob.core.application.category.port.in.CategoryReader;
 import com.bob.core.domain.category.Category;
 import com.bob.core.domain.category.repository.CategoryRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -23,7 +21,7 @@ public class CategoryQueryService implements CategoryReader {
     @Override
     public Category read(Integer categoryId) {
         return categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.UN_SUPPORTED_CATEGORY));
+            .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다. id : " + categoryId));
     }
 
     @Override

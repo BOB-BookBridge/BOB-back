@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApplicationException.class)
     public ResponseEntity<ErrorResponse> handleApplicationException(ApplicationException ex) {
         ApplicationError error = ex.getError();
-        ErrorResponse response = new ErrorResponse(error.getCode(), ex.getMessage());
+        ErrorResponse response = new ErrorResponse(ex.getMessage());
         return ResponseEntity.status(error.getStatus()).body(response);
     }
 
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
             .status(VALIDATION_ERROR.getStatus())
-            .body(new ErrorResponse(VALIDATION_ERROR.getCode(), detailMessage));
+            .body(new ErrorResponse(detailMessage));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -48,18 +48,26 @@ public class GlobalExceptionHandler {
         String message = String.format("[%s]의 값 '%s'은(는) 올바른 형식이 아닙니다.", ex.getName(), ex.getValue());
         return ResponseEntity
             .status(TYPE_MISMATCH.getStatus())
-            .body(new ErrorResponse(TYPE_MISMATCH.getCode(), message));
+            .body(new ErrorResponse(message));
     }
 
     @ExceptionHandler(RateLimitExceededException.class)
-    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(RateLimitExceededException ex, HttpServletResponse response) {
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(RateLimitExceededException ex,
+        HttpServletResponse response) {
         response.addHeader("Retry-After", String.valueOf(ex.getRetryAfterSeconds()));
-        ErrorResponse errorResponse = new ErrorResponse("RATE_LIMIT_EXCEEDED", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage());
 
         return ResponseEntity
             .status(HttpStatus.TOO_MANY_REQUESTS)
             .body(errorResponse);
     }
 
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<ErrorResponse> handleServerException(IllegalArgumentException ex) {
+        ErrorResponse response = new ErrorResponse(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    // TODO : Parameter 기반 요청 시 BindException.class 추가
     // TODO : Parameter 기반 요청 시 ConstraintViolationException.class 추가
 }

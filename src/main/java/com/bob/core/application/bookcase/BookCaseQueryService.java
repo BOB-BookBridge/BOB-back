@@ -13,8 +13,6 @@ import com.bob.core.application.bookcase.port.in.BookcaseReader;
 import com.bob.core.application.bookcase.port.out.BookcaseItemBookPort;
 import com.bob.core.domain.bookcase.BookcaseItem;
 import com.bob.core.domain.bookcase.repository.BookcaseItemRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,7 +26,7 @@ public class BookCaseQueryService implements BookcaseReader {
     @Override
     public BookcaseItem read(Long id) {
         return itemRepository.findById(id)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_OBJECT));
+            .orElseThrow(() -> new IllegalArgumentException("책장 도서를 찾을 수 없습니다. id : " + id));
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.bob.core.application.member.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.NOT_EXISTS_MEMBER;
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import com.bob.core.application.member.dto.result.MemberDetail;
 import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.repository.MemberRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("회원 조회 테스트")
@@ -41,8 +39,8 @@ record MemberReaderTest(MemberReader memberReader, MemberRepository memberReposi
         UUID nonExistentId = UUID.randomUUID();
 
         assertThatThrownBy(() -> memberReader.read(nonExistentId))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_EXISTS_MEMBER.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("회원을 찾을 수 없습니다.");
     }
 
     @Test
@@ -62,8 +60,8 @@ record MemberReaderTest(MemberReader memberReader, MemberRepository memberReposi
     @Test
     void 존재하지_않는_회원_이메일_조회_시_예외가_발생한다() {
         assertThatThrownBy(() -> memberReader.read("nonexistent@email.com"))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_EXISTS_MEMBER.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("회원을 찾을 수 없습니다.");
     }
 
     @Test

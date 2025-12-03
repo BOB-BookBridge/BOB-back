@@ -54,6 +54,6 @@ record PostCreatorTest(PostCreator postCreator, MemberRepository memberRepositor
 
         assertThatThrownBy(() -> postCreator.create(command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.NOT_VERIFIED_MEMBER.getMessage());
+            .hasMessage(ApplicationError.POST_VERIFIED_AREA_REQUIRED.getMessage());
     }
 }

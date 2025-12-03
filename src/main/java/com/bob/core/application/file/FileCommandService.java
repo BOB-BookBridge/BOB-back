@@ -1,9 +1,7 @@
 package com.bob.core.application.file;
 
 import static com.bob.core.domain.file.File.createFile;
-import static com.bob.core.domain.file.type.FileDomain.of;
-import static com.bob.global.exception.response.ApplicationError.FILE_UNAUTHORIZED;
-import static com.bob.global.utils.image.ImageDirectory.from;
+import static com.bob.global.exception.response.ApplicationError.FILE_ACCESS_DENIED;
 import static com.bob.global.utils.image.ImageUtils.generateImageFileNames;
 import static com.bob.global.utils.stream.StreamUtils.forEachWithIndex;
 import static java.util.stream.IntStream.range;
@@ -30,7 +28,9 @@ import com.bob.core.application.file.port.in.FileRemover;
 import com.bob.core.application.file.port.out.FileStoragePort;
 import com.bob.core.domain.file.File;
 import com.bob.core.domain.file.repository.FileRepository;
+import com.bob.core.domain.file.type.FileDomain;
 import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.utils.image.ImageDirectory;
 
 @Service
 @Transactional
@@ -44,7 +44,7 @@ public class FileCommandService implements FileRegister, FileModifier, FileRemov
 
     @Override
     public List<FileUploadUrl> generateFileUploadUrl(GenerateFileUploadUrlCommand command) {
-        List<String> fileNames = generateImageFileNames(from(command.domain()), command.contentTypes());
+        List<String> fileNames = generateImageFileNames(ImageDirectory.of(command.domain()), command.contentTypes());
 
         List<String> uploadUrls = storagePort.generateUploadUrls(fileNames, command.contentTypes());
 
@@ -56,7 +56,7 @@ public class FileCommandService implements FileRegister, FileModifier, FileRemov
     @Override
     public List<File> registerFiles(RegisterFilesCommand command) {
         List<File> files = command.fileNames().stream()
-            .map((n) -> createFile(of(command.domain()), n, null, command.memberId()))
+            .map((n) -> createFile(FileDomain.of(command.domain()), n, null, command.memberId()))
             .toList();
 
         fileRepository.saveAll(files);
@@ -75,7 +75,7 @@ public class FileCommandService implements FileRegister, FileModifier, FileRemov
 
         List<File> files = range(0, command.names().size())
             .mapToObj(i -> {
-                File file = createFile(of(command.domain()), command.names().get(i), i, command.memberId());
+                File file = createFile(FileDomain.of(command.domain()), command.names().get(i), i, command.memberId());
                 file.mappingReferenceId(i, command.referenceId());
                 return file;
             })
@@ -88,7 +88,7 @@ public class FileCommandService implements FileRegister, FileModifier, FileRemov
 
     private void verifyOwner(List<File> existingFiles, UUID memberId) {
         if (existingFiles.stream().anyMatch(file -> !Objects.equals(file.getUploader(), memberId)))
-            throw new ApplicationException(FILE_UNAUTHORIZED);
+            throw new ApplicationException(FILE_ACCESS_DENIED);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class FileCommandService implements FileRegister, FileModifier, FileRemov
         forEachWithIndex(command.names(), (index, name) -> {
                 try {
                     fileReader.readByName(name).mappingReferenceId(index, String.valueOf(command.referenceId()));
-                } catch (ApplicationException ignored) {
+                } catch (Exception ignore) {
                 }
             }
         );

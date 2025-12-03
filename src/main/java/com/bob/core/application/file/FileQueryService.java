@@ -13,8 +13,6 @@ import com.bob.core.application.file.dto.query.ReadFilesWithDomainIdQuery;
 import com.bob.core.application.file.port.in.FileReader;
 import com.bob.core.domain.file.File;
 import com.bob.core.domain.file.repository.FileRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -31,7 +29,7 @@ public class FileQueryService implements FileReader {
     @Override
     public File readByName(String name) {
         return fileRepository.findByName(name)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_OBJECT));
+            .orElseThrow(() -> new IllegalArgumentException("파일을 찾을 수 없습니다. name : " + name));
     }
 
     @Override

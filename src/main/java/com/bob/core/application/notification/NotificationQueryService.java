@@ -12,8 +12,6 @@ import com.bob.core.application.notification.dto.query.ReadByMemberQuery;
 import com.bob.core.application.notification.port.in.NotificationReader;
 import com.bob.core.domain.notification.Notification;
 import com.bob.core.domain.notification.repository.NotificationRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 
 @Service
 @Transactional(readOnly = true)
@@ -25,7 +23,7 @@ public class NotificationQueryService implements NotificationReader {
     @Override
     public Notification read(Long id) {
         return notificationRepository.findById(id)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXISTS_NOTIFICATION));
+            .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다. id : " + id));
     }
 
     @Override

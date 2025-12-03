@@ -2,7 +2,7 @@ package com.bob.core.application.chat.port.in;
 
 import static com.bob.global.event.sse.manager.type.EmitterType.CHAT;
 import static com.bob.global.event.sse.repository.chat.ChatEmitterKey.of;
-import static com.bob.global.exception.response.ApplicationError.NOT_PARTICIPATED_CHAT_ROOM;
+import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS_DENIED;
 import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.chat.dto.command.ChatMessageCommandFixture.createMessageCommand;
 import static com.bob.support.fixture.chat.dto.command.ChatMessageCommandFixture.createSystemMessageCommand;
@@ -99,7 +99,7 @@ class ChatMessageCreatorTest {
         assertThatThrownBy(() -> chatMessageCreator.createChatMessage(saved.getId(),
             createMessageCommand(nonParticipantId, "메시지", null)))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+            .hasMessage(CHATROOM_ACCESS_DENIED.getMessage());
     }
 
     @Test
@@ -110,7 +110,7 @@ class ChatMessageCreatorTest {
 
         assertThatThrownBy(() -> chatMessageCreator.createChatMessage(saved.getId(), createMessageCommand()))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+            .hasMessage(CHATROOM_ACCESS_DENIED.getMessage());
     }
 
     @Test

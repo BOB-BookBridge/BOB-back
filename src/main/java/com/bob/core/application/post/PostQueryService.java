@@ -52,7 +52,7 @@ public class PostQueryService implements PostReader {
     @Override
     public Post read(Long postId) {
         return postRepository.findById(postId)
-            .orElseThrow(() -> new ApplicationException(ApplicationError.NOT_EXIST_POST));
+            .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다. id : " + postId));
     }
 
     @Override
@@ -115,6 +115,6 @@ public class PostQueryService implements PostReader {
 
     private static void verifyAccessiblePost(Post post, boolean isClient) {
         if (isClient && (post.getStatus() == DEACTIVATED || post.getStatus() == WITHHELD))
-            throw new ApplicationException(ApplicationError.NOT_ACCESSIBLE_POST);
+            throw new ApplicationException(ApplicationError.POST_ACCESS_DENIED);
     }
 }

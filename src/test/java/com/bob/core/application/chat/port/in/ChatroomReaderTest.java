@@ -1,6 +1,6 @@
 package com.bob.core.application.chat.port.in;
 
-import static com.bob.global.exception.response.ApplicationError.NOT_PARTICIPATED_CHAT_ROOM;
+import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS_DENIED;
 import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.chat.dto.query.ValidateParticipateQueryFixture.validateParticipantQuery;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
@@ -46,7 +46,8 @@ record ChatroomReaderTest(ChatroomReader chatroomReader, ChatroomRepository chat
         Long nonExistentId = 999L;
 
         assertThatThrownBy(() -> chatroomReader.read(nonExistentId))
-            .isInstanceOf(ApplicationException.class);
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("채팅방을 찾을 수 없습니다.");
     }
 
     @Test
@@ -104,7 +105,7 @@ record ChatroomReaderTest(ChatroomReader chatroomReader, ChatroomRepository chat
 
         assertThatThrownBy(() -> chatroomReader.validateParticipant(saved.getId(), query))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+            .hasMessage(CHATROOM_ACCESS_DENIED.getMessage());
     }
 
     @Test
@@ -115,6 +116,6 @@ record ChatroomReaderTest(ChatroomReader chatroomReader, ChatroomRepository chat
 
         assertThatThrownBy(() -> chatroomReader.validateParticipant(saved.getId(), validateParticipantQuery()))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_PARTICIPATED_CHAT_ROOM.getMessage());
+            .hasMessage(CHATROOM_ACCESS_DENIED.getMessage());
     }
 }

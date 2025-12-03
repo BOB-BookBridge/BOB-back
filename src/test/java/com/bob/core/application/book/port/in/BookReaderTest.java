@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import com.bob.core.application.book.dto.query.ReadBooksQuery;
 import com.bob.core.domain.book.Book;
 import com.bob.core.domain.book.repository.BookRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
-import com.bob.global.exception.response.ApplicationError;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("책 조회 테스트")
@@ -60,8 +58,8 @@ record BookReaderTest(BookReader bookReader, BookRepository bookRepository, Enti
         Long id = 999L;
 
         assertThatThrownBy(() -> bookReader.read(id))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(ApplicationError.NOT_EXIST_OBJECT.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("책을 찾을 수 없습니다.");
     }
 
     @Test

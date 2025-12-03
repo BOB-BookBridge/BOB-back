@@ -2,7 +2,6 @@ package com.bob.core.application.bookcase.port.in;
 
 import static com.bob.core.application.bookcase.dto.query.SearchKey.AVAILABLE;
 import static com.bob.core.application.bookcase.dto.query.SearchKey.UNAVAILABLE;
-import static com.bob.global.exception.response.ApplicationError.NOT_EXIST_OBJECT;
 import static com.bob.support.fixture.book.domain.BookFixture.DEFAULT_ISBN;
 import static com.bob.support.fixture.bookcase.domain.BookcaseItemFixture.createBookcaseItem;
 import static com.bob.support.fixture.bookcase.dto.command.BookcaseItemCommandFixture.createRegisterItemCommand;
@@ -21,7 +20,6 @@ import com.bob.core.application.bookcase.dto.query.ReadBookcaseQuery;
 import com.bob.core.application.bookcase.dto.result.BookcaseItemDetail;
 import com.bob.core.domain.bookcase.BookcaseItem;
 import com.bob.core.domain.bookcase.repository.BookcaseItemRepository;
-import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("책장 조회 테스트")
@@ -49,8 +47,8 @@ record BookcaseReaderTest(
     @Test
     void 책장_물품_조회_시_존재하지_않으면_예외가_발생한다() {
         assertThatThrownBy(() -> bookcaseReader.read(99L))
-            .isInstanceOf(ApplicationException.class)
-            .hasMessage(NOT_EXIST_OBJECT.getMessage());
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("책장 도서를 찾을 수 없습니다.");
     }
 
     @Test

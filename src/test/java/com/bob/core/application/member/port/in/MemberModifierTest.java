@@ -2,8 +2,8 @@ package com.bob.core.application.member.port.in;
 
 import static com.bob.core.domain.member.Status.ACTIVE;
 import static com.bob.core.domain.member.Status.DEACTIVATED;
-import static com.bob.global.exception.response.ApplicationError.INVALID_OLD_PASSWORD;
-import static com.bob.global.exception.response.ApplicationError.IS_BANNED_MEMBER;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_BANNED;
+import static com.bob.global.exception.response.ApplicationError.MEMBER_PASSWORD_MISMATCH;
 import static com.bob.global.exception.response.ApplicationError.NO_CHANGES;
 import static com.bob.support.fixture.area.domain.AreaFixture.CENTER_LAT;
 import static com.bob.support.fixture.area.domain.AreaFixture.CENTER_LON;
@@ -56,7 +56,7 @@ record MemberModifierTest(
 
         assertThatThrownBy(() -> memberModifier.changePassword(member.getId(), command))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(INVALID_OLD_PASSWORD.getMessage());
+            .hasMessage(MEMBER_PASSWORD_MISMATCH.getMessage());
     }
 
     @Test
@@ -142,7 +142,7 @@ record MemberModifierTest(
 
         assertThatThrownBy(() -> memberModifier.activate(member.getEmail()))
             .isInstanceOf(ApplicationException.class)
-            .hasMessage(IS_BANNED_MEMBER.getMessage());
+            .hasMessage(MEMBER_BANNED.getMessage());
     }
 
     @Test

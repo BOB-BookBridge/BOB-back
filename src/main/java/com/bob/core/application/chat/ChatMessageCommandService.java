@@ -84,7 +84,7 @@ public class ChatMessageCommandService implements ChatMessageCreator {
 
     private void verifyParticipating(Chatroom chatroom, UUID memberId) {
         if (!chatroom.hasMember(memberId) || chatroom.isMemberExited(memberId))
-            throw new ApplicationException(ApplicationError.NOT_PARTICIPATED_CHAT_ROOM);
+            throw new ApplicationException(ApplicationError.CHATROOM_ACCESS_DENIED);
     }
 
     private void publishChatMessageEvent(Long id, CreateMessageCommand command, ChatMessage message, UUID partnerId) {
