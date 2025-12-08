@@ -71,6 +71,7 @@ record MemberReaderTest(MemberReader memberReader, MemberRepository memberReposi
 
         assertThat(detail).isNotNull();
         assertThat(detail.id()).isEqualTo(member.getId());
+        assertThat(detail.role()).isEqualTo(member.getRole().name());
         assertThat(detail.area()).isNotNull();
         assertThat(detail.bookcase()).isNotNull();
         assertThat(detail.wishes()).isNotNull();
@@ -85,6 +86,7 @@ record MemberReaderTest(MemberReader memberReader, MemberRepository memberReposi
 
         assertThat(detail).isNotNull();
         assertThat(detail.id()).isEqualTo(member.getId());
+        assertThat(detail.role()).isEqualTo(member.getRole().name());
         assertThat(detail.email()).isEqualTo("delete");
         assertThat(detail.nickname()).isEqualTo("(알 수 없음)");
         assertThat(detail.area()).isNotNull();

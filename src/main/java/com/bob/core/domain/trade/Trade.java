@@ -108,8 +108,4 @@ public class Trade extends AbstractEntity {
             .map(TradeItem::getItemId)
             .toList();
     }
-
-    public void clearItems() {
-        items.clear();
-    }
 }

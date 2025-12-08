@@ -1,11 +1,14 @@
 package com.bob.infrastructure.secure.adapter.jwt;
 
 import java.util.Date;
-import java.util.UUID;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -26,35 +29,37 @@ public class JwtTokenManager implements TokenManager {
     @Value("${jwt.access-token-expire-time}")
     private Long accessExpireTime;
 
-    public String create(String claim) {
-        return Jwts.builder()
+    @Override
+    public String create(Map<String, String> claims) {
+        return create(claims, accessExpireTime * 1000);
+    }
+
+    @Override
+    public String create(Map<String, String> claims, Long expiration) {
+        JwtBuilder builder = Jwts.builder()
             .setIssuer("bob")
             .setSubject("access-token")
-            .claim("memberId", claim)
             .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + accessExpireTime * 1000))
+            .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000));
+
+        claims.forEach(builder::claim);
+
+        return builder
             .signWith(getSecretKey(key))
             .compact();
     }
 
-    public String create(String claim, Long expireTime) {
-        return Jwts.builder()
-            .setIssuer("bob")
-            .setSubject("access-token")
-            .claim("memberId", claim)
-            .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + expireTime * 1000))
-            .signWith(getSecretKey(key))
-            .compact();
-    }
-
-    public UUID getClaim(String token) {
-        return UUID.fromString(Jwts.parserBuilder()
+    @Override
+    public Map<String, String> getClaims(String token) {
+        Claims body = Jwts.parserBuilder()
             .setSigningKey(getSecretKey(key))
             .build()
             .parseClaimsJws(token)
-            .getBody()
-            .get("memberId", String.class));
+            .getBody();
+
+        return body.entrySet().stream()
+            .filter(entry -> entry.getValue() instanceof String)
+            .collect(Collectors.toMap(Map.Entry::getKey, entry -> (String)entry.getValue()));
     }
 
     public boolean verify(String token) {

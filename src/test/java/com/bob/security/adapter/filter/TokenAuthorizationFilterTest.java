@@ -4,6 +4,7 @@ import static com.bob.global.exception.response.AuthenticationError.ACCESS_TOKEN
 import static com.bob.global.exception.response.AuthenticationError.AUTHENTICATION_FAILED;
 import static com.bob.support.fixture.auth.CookieFixture.ACCESS_TOKEN;
 import static com.bob.support.fixture.auth.CookieFixture.defaultAuthCookie;
+import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.argThat;
@@ -11,7 +12,7 @@ import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import java.util.UUID;
+import java.util.Map;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
@@ -77,10 +78,11 @@ class TokenAuthorizationFilterTest {
 
     @Test
     void 토큰_인증() throws Exception {
+        Map<String, String> claims = Map.of("memberId", MEMBER_ID.toString(), "role", "USER");
         given(request.getCookies()).willReturn(new Cookie[] {defaultAuthCookie()});
         given(tokenManager.verify(ACCESS_TOKEN)).willReturn(true);
         given(tokenManager.expire(ACCESS_TOKEN)).willReturn(false);
-        given(tokenManager.getClaim(ACCESS_TOKEN)).willReturn(UUID.randomUUID());
+        given(tokenManager.getClaims(ACCESS_TOKEN)).willReturn(claims);
 
         tokenAuthorizationFilter.doFilterInternal(request, response, filterChain);
 
@@ -88,6 +90,11 @@ class TokenAuthorizationFilterTest {
         assertThat(authentication).isNotNull();
         assertThat(authentication.isAuthenticated()).isTrue();
         assertThat(authentication.getPrincipal()).isInstanceOf(MemberDetails.class);
+
+        MemberDetails details = (MemberDetails)authentication.getPrincipal();
+        assertThat(details.getAuthorities())
+            .extracting("authority")
+            .contains("ROLE_USER");
 
         then(filterChain).should().doFilter(request, response);
     }

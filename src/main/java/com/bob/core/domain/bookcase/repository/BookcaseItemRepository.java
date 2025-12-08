@@ -36,7 +36,7 @@ public interface BookcaseItemRepository extends CrudRepository<BookcaseItem, Lon
         """)
     List<BookcaseItem> findUnavailableByMemberId(UUID memberId, List<Long> requires);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying
     @Query("""
         UPDATE BookcaseItem b SET b.usageId = null
          WHERE b.usageId = :usageId
@@ -44,7 +44,7 @@ public interface BookcaseItemRepository extends CrudRepository<BookcaseItem, Lon
         """)
     void freeUsageByUsageId(Long usageId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying
     @Query("""
         UPDATE BookcaseItem b SET b.usageId = null
          WHERE b.id IN :ids

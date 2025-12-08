@@ -1,6 +1,7 @@
 package com.bob.core.adapter.member.out;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,11 +26,30 @@ public class MemberLoaderAdapter implements MemberLoader {
     public Optional<AuthMember> load(String email) {
         try {
             Member member = memberReader.read(email);
-            return Optional.of(
-                AuthMember.of(member.getId(), member.getEmail(), member.getPassword(), member.getStatus().name()));
+            return Optional.of(AuthMember.builder()
+                .id(member.getId())
+                .email(member.getEmail())
+                .password(member.getPassword())
+                .status(member.getStatus().name())
+                .role(member.getRole().name())
+                .build()
+            );
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public AuthMember load(UUID id) {
+        Member member = memberReader.read(id);
+
+        return AuthMember.builder()
+            .id(member.getId())
+            .email(member.getEmail())
+            .password(member.getPassword())
+            .status(member.getStatus().name())
+            .role(member.getRole().name())
+            .build();
     }
 
     @Override

@@ -7,7 +7,13 @@ import com.bob.security.application.port.dto.AuthMember;
 public class AuthMemberFixture {
 
     public static AuthMember createAuthMember(String status) {
-        return AuthMember.of(MEMBER_ID, "test@email.com", "password", status);
+        return AuthMember.builder()
+            .id(MEMBER_ID)
+            .email("test@email.com")
+            .password("password")
+            .status(status)
+            .role("USER")
+            .build();
     }
 
     public static AuthMember createActiveAuthMember() {

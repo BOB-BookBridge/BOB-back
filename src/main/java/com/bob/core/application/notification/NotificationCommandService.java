@@ -39,7 +39,7 @@ public class NotificationCommandService implements NotificationCreator, Notifica
     public Notification create(CreateNotificationCommand command) {
         NotificationMember sender = memberPort.read(command.senderId());
 
-        Notification notification = createNotification(command.type(), command.refId(), sender.id(), command.body());
+        Notification notification = createNotification(command.type(), command.refId(), command.receiverId(), command.body());
         if (!notification.isChatNotification())
             notificationRepository.save(notification);
 

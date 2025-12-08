@@ -14,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.springframework.security.oauth2.core.OAuth2AccessToken.TokenType.BEARER;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -61,7 +63,11 @@ class OAuth2ServiceTest {
         ClientRegistration registration = googleRegistration();
         OAuth2UserRequest request = requestOf(registration);
         Map<String, Object> attrs = Map.of("sub", "1", "email", "test@google.com", "name", "foo");
-        OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "sub");
+        OAuth2User loadedUser = new DefaultOAuth2User(
+            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
+            attrs,
+            "sub"
+        );
         given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
         given(memberLoader.load(eq("GOOGLE"), eq("test@google.com"), eq("foo")))
             .willReturn(createActiveSocialAuthMember());
@@ -79,7 +85,11 @@ class OAuth2ServiceTest {
         OAuth2UserRequest request = requestOf(registration);
         Map<String, Object> response = Map.of("id", "1", "email", "test@naver.com", "nickname", "foo");
         Map<String, Object> attrs = Map.of("response", response);
-        OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "response");
+        OAuth2User loadedUser = new DefaultOAuth2User(
+            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
+            attrs,
+            "response"
+        );
         given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
         given(memberLoader.load(eq("NAVER"), eq("test@naver.com"), eq("foo")))
             .willReturn(createActiveSocialAuthMember());
@@ -106,7 +116,11 @@ class OAuth2ServiceTest {
         ClientRegistration registration = googleRegistration();
         OAuth2UserRequest request = requestOf(registration);
         Map<String, Object> attrs = Map.of("sub", "1", "email", "test@google.com", "name", "tester");
-        OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "sub");
+        OAuth2User loadedUser = new DefaultOAuth2User(
+            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
+            attrs,
+            "sub"
+        );
         given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
         given(memberLoader.load(anyString(), anyString(), anyString())).willReturn(createDeactivatedSocialAuthMember());
 
@@ -121,7 +135,11 @@ class OAuth2ServiceTest {
         OAuth2UserRequest request = requestOf(registration);
         Map<String, Object> response = Map.of("id", "1", "email", "test@naver.com", "nickname", "tester");
         Map<String, Object> attrs = Map.of("response", response);
-        OAuth2User loadedUser = new DefaultOAuth2User(null, attrs, "response");
+        OAuth2User loadedUser = new DefaultOAuth2User(
+            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
+            attrs,
+            "response"
+        );
         given(oAuth2UserService.loadUser(request)).willReturn(loadedUser);
         given(memberLoader.load(anyString(), anyString(), anyString())).willReturn(createBannedSocialAuthMember());
 

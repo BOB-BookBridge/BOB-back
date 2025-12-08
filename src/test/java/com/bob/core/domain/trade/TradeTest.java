@@ -83,19 +83,6 @@ class TradeTest {
     }
 
     @Test
-    void 거래_품목_전체_제거() {
-        Trade trade = Trade.createTrade(1L, MEMBER_ID, OTHER_MEMBER_ID, false);
-        trade.addItem(100L, SELLER);
-        trade.addItem(200L, BUYER);
-        trade.addItem(300L, BUYER);
-
-        trade.clearItems();
-
-        assertThat(trade.getItems()).isEmpty();
-        assertThat(trade.getAllItemIds()).isEmpty();
-    }
-
-    @Test
     void 거래_진행_여부() {
         assertThat(createTrade(REQUESTED).isProcessed()).isFalse();
         assertThat(createTrade(RESERVED).isProcessed()).isTrue();

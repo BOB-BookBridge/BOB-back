@@ -220,11 +220,9 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
         trade.updateStatus(COMPLETED);
         tradeRepository.cancelOtherTrades(trade.getPostId(), trade.getId());
         freeOtherTradeItems(trade.getPostId(), trade.getId(), post.sellerBookId());
-        freeTradeItemsExcludeMainItem(trade, post.sellerBookId());
 
         List<Long> itemIds = trade.getAllItemIds();
         bookcasePort.delete(itemIds);
-        trade.clearItems();
 
         postPort.changeTradeProgress(trade.getPostId(), COMPLETED.toPostStatusValue());
         return null;
@@ -284,7 +282,7 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
             return;
 
         tradeRepository.findAllByPostId(trade.getPostId()).stream()
-            .filter(t -> !Objects.equals(t.getId(), trade.getPostId()))
+            .filter(t -> !Objects.equals(t.getId(), trade.getId()))
             .filter(Trade::isProcessed)
             .findAny()
             .ifPresent(t -> {
@@ -309,7 +307,7 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
         if (request == REQUESTED)
             throw new ApplicationException(TRADE_STATUS_NOT_CHANGEABLE);
 
-        if (request == ACCEPTED && trade.isAborted())
+        if ((request == ACCEPTED || request == RESERVED || request == COMPLETED) && trade.isAborted())
             throw new ApplicationException(TRADE_STATUS_ALREADY_ABORTED);
     }
 

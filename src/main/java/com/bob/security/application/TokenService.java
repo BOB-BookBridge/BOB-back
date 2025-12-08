@@ -5,6 +5,9 @@ import static com.bob.global.utils.random.RandomUtils.generateCode;
 import static com.bob.global.utils.web.CookieUtils.addCookie;
 import static com.bob.global.utils.web.CookieUtils.getCookie;
 
+import java.util.Map;
+import java.util.UUID;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -14,17 +17,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
+import com.bob.security.application.port.dto.AuthMember;
 import com.bob.security.application.port.in.TokenIssuer;
 import com.bob.security.application.port.out.AuthCachePort;
+import com.bob.security.application.port.out.MemberLoader;
 import com.bob.security.application.port.out.TokenManager;
 
 @Service
 @RequiredArgsConstructor
 public class TokenService implements TokenIssuer {
 
-    private final TokenManager tokenProvider;
+    private final TokenManager tokenManager;
 
     private final AuthCachePort cachePort;
+
+    private final MemberLoader memberLoader;
 
     @Value("${jwt.access-name}")
     private String accessName;
@@ -42,7 +49,9 @@ public class TokenService implements TokenIssuer {
         String id = getId(old);
         cachePort.updateRefreshKey(old, current, id);
 
-        String accessToken = tokenProvider.create(id);
+        AuthMember member = memberLoader.load(UUID.fromString(id));
+
+        String accessToken = tokenManager.create(Map.of("memberId", id, "role", member.role()));
         addCookie(response, accessName, accessToken, refreshExpireTime);
         addCookie(response, refreshName, current, refreshExpireTime);
     }

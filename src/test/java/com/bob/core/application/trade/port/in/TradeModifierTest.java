@@ -226,8 +226,17 @@ record TradeModifierTest(
 
         trade.updateStatus(CANCELED);
         var command2 = new ChangeTradeStatusCommand(MEMBER_ID, "ACCEPTED", null);
-
         assertThatThrownBy(() -> tradeModifier.changeStatus(trade.getId(), command2))
+            .isInstanceOf(ApplicationException.class)
+            .hasMessage(TRADE_STATUS_ALREADY_ABORTED.getMessage());
+
+        var command3 = new ChangeTradeStatusCommand(MEMBER_ID, "RESERVED", null);
+        assertThatThrownBy(() -> tradeModifier.changeStatus(trade.getId(), command3))
+            .isInstanceOf(ApplicationException.class)
+            .hasMessage(TRADE_STATUS_ALREADY_ABORTED.getMessage());
+
+        var command4 = new ChangeTradeStatusCommand(MEMBER_ID, "COMPLETED", null);
+        assertThatThrownBy(() -> tradeModifier.changeStatus(trade.getId(), command4))
             .isInstanceOf(ApplicationException.class)
             .hasMessage(TRADE_STATUS_ALREADY_ABORTED.getMessage());
     }

@@ -30,7 +30,7 @@ public interface TradeRepository extends CrudRepository<Trade, Long>, CustomTrad
 
     List<Trade> findAllByBuyerIdAndPostIdIn(UUID buyerId, List<Long> postIds);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying
     @Query("""
         UPDATE Trade t SET t.status = com.bob.core.domain.trade.status.Status.CANCELED
          WHERE t.postId = :postId

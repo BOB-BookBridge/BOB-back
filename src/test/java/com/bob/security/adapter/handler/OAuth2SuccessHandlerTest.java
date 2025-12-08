@@ -5,12 +5,15 @@ import static com.bob.support.fixture.auth.CookieFixture.AUTH_COOKIE_NAME;
 import static com.bob.support.fixture.auth.CookieFixture.REFRESH_COOKIE_NAME;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
 import jakarta.servlet.http.Cookie;
 
@@ -26,6 +29,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.bob.security.application.port.out.AuthCachePort;
@@ -58,7 +64,7 @@ class OAuth2SuccessHandlerTest {
         given(headerProperties.accessName()).willReturn(AUTH_COOKIE_NAME);
         given(headerProperties.refreshName()).willReturn(REFRESH_COOKIE_NAME);
         given(headerProperties.refreshTokenExpireTime()).willReturn(1L);
-        given(tokenManager.create(MEMBER_ID.toString())).willReturn(ACCESS_TOKEN);
+        given(tokenManager.create(anyMap())).willReturn(ACCESS_TOKEN);
 
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
@@ -67,11 +73,19 @@ class OAuth2SuccessHandlerTest {
     @Test
     void 소셜_로그인() throws Exception {
         String memberId = MEMBER_ID.toString();
-        var authentication = new UsernamePasswordAuthenticationToken(memberId, null);
+        Map<String, Object> attributes = Map.of("memberId", memberId, "role", "USER");
+
+        OAuth2User oauth2User = new DefaultOAuth2User(
+            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
+            attributes,
+            "memberId"
+        );
+
+        var authentication = new UsernamePasswordAuthenticationToken(oauth2User, null, oauth2User.getAuthorities());
 
         successHandler.onAuthenticationSuccess(request, response, authentication);
 
-        then(tokenManager).should(times(1)).create(MEMBER_ID.toString());
+        then(tokenManager).should(times(1)).create(anyMap());
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         then(cachePort).should(times(1)).setRefreshKey(captor.capture(), eq(memberId));

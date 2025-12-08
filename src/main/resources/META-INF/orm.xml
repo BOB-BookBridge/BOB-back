@@ -113,6 +113,10 @@
                 <column name="status" nullable="false"/>
                 <enumerated>STRING</enumerated>
             </basic>
+            <basic name="role">
+                <column name="role" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
             <basic name="createdAt">
                 <column name="created_at" nullable="false"/>
             </basic>

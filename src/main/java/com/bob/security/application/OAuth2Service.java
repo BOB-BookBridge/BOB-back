@@ -1,9 +1,12 @@
 package com.bob.security.application;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -49,8 +52,12 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
             case "DEACTIVATED" -> throw new ApplicationAuthenticationException(AuthenticationError.MEMBER_DEACTIVATED) {};
             case "BANNED" -> throw new ApplicationAuthenticationException(AuthenticationError.MEMBER_BANNED) {};
             default -> {
-                final Map<String, Object> principalAttrs = Map.of("memberId", member.id().toString());
-                return new DefaultOAuth2User(null, principalAttrs, "memberId");
+                Map<String, Object> principalAttrs = Map.of("memberId", member.id().toString(), "role", member.role());
+
+                List<SimpleGrantedAuthority> authorities =
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + member.role()));
+
+                return new DefaultOAuth2User(authorities, principalAttrs, "memberId");
             }
         }
     }
