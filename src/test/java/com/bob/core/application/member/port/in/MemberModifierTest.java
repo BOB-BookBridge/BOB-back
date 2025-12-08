@@ -12,6 +12,7 @@ import static com.bob.support.fixture.member.domain.MemberFixture.createCustomPa
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.util.List;
 
@@ -88,6 +89,14 @@ record MemberModifierTest(
 
         assertThat(member.getArea().getEmdId()).isNotEqualTo(999);
         assertThat(member.getArea().getEmdId()).isEqualTo(current);
+    }
+
+    @Test
+    void 프로필_정보_수정_변경사항_없음_및_위치_인증_여부_true() {
+        Member member = memberRepository.save(createMember("test@example.com", "password", "nickname", EMD_AREA_ID));
+        var command = new ChangeProfileCommand("nickname", EMD_AREA_ID, true, CENTER_LAT, CENTER_LON, List.of());
+
+        assertDoesNotThrow(() -> memberModifier.changeProfile(member.getId(), command));
     }
 
     @Test

@@ -124,7 +124,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
         boolean nicknameUnchanged = Objects.equals(member.getNickname(), command.nickname());
 
         MemberArea area = member.getArea();
-        boolean areaUnchanged = !command.authenticateArea() || Objects.equals(area.getEmdId(), command.emdId());
+        boolean areaUnchanged = !command.authenticateArea() && Objects.equals(area.getEmdId(), command.emdId());
 
         if (interestsUnchanged && nicknameUnchanged && areaUnchanged)
             throw new ApplicationException(NO_CHANGES);
