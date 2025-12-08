@@ -53,11 +53,14 @@ public class Member {
 
     private Status status;
 
+    private ROLE role;
+
     private LocalDateTime createdAt;
 
     public static Member createMember(String email, String password, String nickname, Integer emdAreaId) {
         return Member.builder()
             .status(ACTIVE)
+            .role(ROLE.USER)
             .email(requireNonNull(email))
             .password(requireNonNull(password))
             .nickname(requireNonNull(nickname))
@@ -70,6 +73,7 @@ public class Member {
         return Member.builder()
             .provider(SocialProvider.valueOf(requireNonNull(provider)))
             .status(ACTIVE)
+            .role(ROLE.USER)
             .email(requireNonNull(email))
             .password(null)
             .nickname(requireNonNull(nickname))
