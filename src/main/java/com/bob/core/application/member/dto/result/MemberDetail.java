@@ -11,6 +11,7 @@ import com.bob.core.domain.member.SocialProvider;
 @Builder
 public record MemberDetail(
     UUID id,
+    String role,
     String email,
     String nickname,
     String profileImageUrl,
@@ -24,6 +25,7 @@ public record MemberDetail(
     public static MemberDetail deactivateMemberDetail(UUID id, MemberAreaDetail area, SocialProvider provider) {
         return MemberDetail.builder()
             .id(id)
+            .role("USER")
             .email("delete")
             .nickname("(알 수 없음)")
             .profileImageUrl(null)

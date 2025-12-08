@@ -4,6 +4,7 @@ import static com.bob.global.utils.random.RandomUtils.generateCode;
 import static com.bob.global.utils.web.CookieUtils.addCookie;
 
 import java.io.IOException;
+import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +38,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         String memberId = authentication.getName();
-        String accessToken = tokenManager.create(memberId);
+        String role = ((OAuth2User) authentication.getPrincipal()).getAttributes().get("role").toString();
+
+        Map<String, String> claims = Map.of("memberId", memberId, "role", role);
+        String accessToken = tokenManager.create(claims);
         String refreshKey = generateCode(32);
 
         cachePort.setRefreshKey(refreshKey, memberId);

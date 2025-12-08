@@ -22,6 +22,9 @@ public class MemberDetailsService implements UserDetailsService {
         AuthMember member = memberLoader.load(username)
             .orElseThrow(() -> new UsernameNotFoundException(username));
 
-        return new MemberDetails(member.id(), member.email(), member.password(), member.status().equals("ACTIVE"));
+        return new MemberDetails(
+            member.id(), member.email(), member.password(), member.role(),
+            member.status().equals("ACTIVE")
+        );
     }
 }

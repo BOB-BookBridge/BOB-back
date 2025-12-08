@@ -29,6 +29,7 @@ record MemberLoaderAdapterTest(MemberLoaderAdapter memberLoaderAdapter, MemberRe
 
         AuthMember loaded = found.get();
         assertThat(loaded.id()).isEqualTo(member.getId());
+        assertThat(loaded.role()).isEqualTo("USER");
     }
 
     @Test
@@ -45,5 +46,6 @@ record MemberLoaderAdapterTest(MemberLoaderAdapter memberLoaderAdapter, MemberRe
         SocialAuthMember loaded = memberLoaderAdapter.load("GOOGLE", "test@google.com", "tester");
 
         assertThat(loaded.id()).isEqualTo(socialMember.getId());
+        assertThat(loaded.role()).isEqualTo("USER");
     }
 }

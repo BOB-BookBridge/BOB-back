@@ -70,6 +70,7 @@ public class MemberQueryService implements MemberReader {
 
         return MemberDetail.builder()
             .id(member.getId())
+            .role(member.getRole().name())
             .email(member.getEmail())
             .nickname(member.getNickname())
             .profileImageUrl(member.getProfileImageUrl())

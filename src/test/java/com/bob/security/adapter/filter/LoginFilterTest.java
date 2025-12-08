@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.contains;
@@ -120,7 +121,7 @@ class LoginFilterTest {
         Authentication authentication = new UsernamePasswordAuthenticationToken(
             memberDetails, null, memberDetails.getAuthorities()
         );
-        given(tokenManager.create(any(String.class))).willReturn(ACCESS_TOKEN);
+        given(tokenManager.create(anyMap())).willReturn(ACCESS_TOKEN);
         given(headerProperties.refreshName()).willReturn("REFRESH_COOKIE_NAME");
         given(headerProperties.accessName()).willReturn("AUTHORIZATION");
         given(headerProperties.refreshTokenExpireTime()).willReturn(600L);

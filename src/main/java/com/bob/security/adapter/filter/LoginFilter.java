@@ -5,6 +5,7 @@ import static com.bob.global.utils.web.CookieUtils.addCookie;
 import static com.bob.global.utils.web.CookieUtils.getCookie;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 import jakarta.servlet.FilterChain;
@@ -63,11 +64,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
         MemberDetails principal = (MemberDetails)authentication.getPrincipal();
         UUID memberId = principal.id();
-        String accessToken = tokenManager.create(memberId.toString());
+        String role = principal.role();
+        Map<String, String> claims = Map.of("memberId", memberId.toString(), "role", role);
+
+        String accessToken = tokenManager.create(claims);
         String refreshKey = generateCode(32);
+
         authCachePort.updateRefreshKey(getCookie(request, headerProperties.refreshName()), refreshKey, memberId.toString());
+
         addCookie(response, headerProperties.accessName(), accessToken, headerProperties.refreshTokenExpireTime());
         addCookie(response, headerProperties.refreshName(), refreshKey, headerProperties.refreshTokenExpireTime());
+
         response.setStatus(HttpStatus.OK.value());
     }
 

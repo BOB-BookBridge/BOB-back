@@ -6,6 +6,8 @@ import static com.bob.global.utils.web.CookieUtils.getCookie;
 import static com.bob.global.utils.web.CookieUtils.removeCookie;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.UUID;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -73,7 +75,11 @@ public class TokenAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-        MemberDetails memberDetails = new MemberDetails(tokenManager.getClaim(accessToken), true);
+        Map<String, String> claims = tokenManager.getClaims(accessToken);
+        UUID memberId = UUID.fromString(claims.get("memberId"));
+        String role = claims.get("role");
+
+        MemberDetails memberDetails = new MemberDetails(memberId, role, true);
         Authentication authentication = new UsernamePasswordAuthenticationToken(memberDetails, null, memberDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 

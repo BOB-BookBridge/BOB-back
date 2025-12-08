@@ -1,15 +1,14 @@
 package com.bob.security.application.port.out;
 
-import java.util.UUID;
+import java.util.Map;
 
-/* FUTURE : 여러 개의 claim 포함 시 map 파라미터 활용 및 조회 */
 public interface TokenManager {
 
-    String create(String claim);
+    String create(Map<String, String> claims);
 
-    String create(String claim, Long expireTime);
+    String create(Map<String, String> claims, Long expiration);
 
-    UUID getClaim(String token);
+    Map<String, String> getClaims(String token);
 
     boolean verify(String token);
 
