@@ -1,5 +1,6 @@
 package com.bob.security.config;
 
+import static com.bob.global.utils.web.CookieUtils.removeCookie;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 import java.util.List;
@@ -91,9 +92,11 @@ public class SecurityConfig {
             )
             .logout(filter -> filter
                 .logoutUrl("/auth/logout")
-                .logoutSuccessHandler((req, res, auth) -> res.setStatus(SC_OK))
-                .addLogoutHandler((req, res, auth) -> req.getSession().invalidate())
-                .deleteCookies("JSESSIONID", "AUTHORIZATION", "REFRESH_KEY")
+                .logoutSuccessHandler((req, res, auth) -> {
+                    removeCookie(res, "AUTHORIZATION");
+                    removeCookie(res, "REFRESH_KEY");
+                    res.setStatus(SC_OK);
+                })
             )
             .sessionManagement(m -> m.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
