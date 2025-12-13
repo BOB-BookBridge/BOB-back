@@ -22,7 +22,7 @@ public class PermitAllRegistry {
 
     public PermitAllRegistry(HandlerMappingIntrospector spector) {
         matchers = List.of(
-            mvc(spector, POST, "/dummy"),
+            mvc(spector, POST, "/inquiries"),
             mvc(spector, POST, "/auth/**"),
             mvc(spector, POST, "/members"),
             mvc(spector, GET, "/members/{memberId:" + UUID_V7_REGEX + '}'),
