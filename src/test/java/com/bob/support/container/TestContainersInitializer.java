@@ -13,17 +13,26 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 public class TestContainersInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
+    private static boolean dbInitialized = false;
+
     static {
         Startables.deepStart(Stream.of(MYSQL, REDIS)).join();
     }
 
     @Override
     public void initialize(ConfigurableApplicationContext context) {
+        String ddlAuto = dbInitialized ? "none" : "update";
+
         TestPropertyValues.of(
             "spring.datasource.url=" + MYSQL.getJdbcUrl(),
             "spring.datasource.username=" + MYSQL.getUsername(),
             "spring.datasource.password=" + MYSQL.getPassword(),
-            "spring.datasource.driver-class-name=" + MYSQL.getDriverClassName()
+            "spring.datasource.driver-class-name=" + MYSQL.getDriverClassName(),
+
+            "spring.jpa.hibernate.ddl-auto=" + ddlAuto,
+            "spring.sql.init.mode=" + (dbInitialized ? "never" : "always")
         ).applyTo(context.getEnvironment());
+
+        dbInitialized = true;
     }
 }

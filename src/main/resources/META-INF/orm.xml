@@ -118,7 +118,7 @@
                 <enumerated>STRING</enumerated>
             </basic>
             <basic name="createdAt">
-                <column name="created_at" nullable="false"/>
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
             </basic>
             <one-to-many name="interests" fetch="LAZY" orphan-removal="true">
                 <join-column name="member_id" nullable="false"/>
@@ -234,7 +234,7 @@
                 <column name="last_chat_message"/>
             </basic>
             <basic name="createdAt">
-                <column name="created_at" nullable="false"/>
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
             </basic>
             <basic name="lastChatAt">
                 <column name="last_chat_at"/>
@@ -286,7 +286,7 @@
                 <column name="content" length="500"/>
             </basic>
             <basic name="createdAt">
-                <column name="created_at" nullable="false"/>
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
             </basic>
         </attributes>
     </entity>
@@ -311,7 +311,7 @@
                 <column name="uploader"/>
             </basic>
             <basic name="createdAt">
-                <column name="created_at" nullable="false"/>
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
             </basic>
         </attributes>
     </entity>
@@ -355,10 +355,10 @@
                 <column name="body" nullable="false"/>
             </basic>
             <basic name="isRead">
-                <column name="is_read" nullable="false"/>
+                <column name="is_read" nullable="false" column-definition="BOOLEAN DEFAULT FALSE"/>
             </basic>
             <basic name="createdAt">
-                <column name="created_at" nullable="false"/>
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
             </basic>
         </attributes>
     </entity>
@@ -406,20 +406,20 @@
                 <column name="registration_area_id" nullable="false"/>
             </basic>
             <basic name="viewCount">
-                <column name="view_count" nullable="false"/>
+                <column name="view_count" nullable="false" column-definition="INT DEFAULT 0"/>
             </basic>
             <basic name="scrapCount">
-                <column name="scrap_count" nullable="false"/>
+                <column name="scrap_count" nullable="false" column-definition="INT DEFAULT 0"/>
             </basic>
             <basic name="tradeProgress">
                 <column name="trade_progress" nullable="false"/>
                 <enumerated>STRING</enumerated>
             </basic>
             <basic name="wishOnly">
-                <column name="wish_only" nullable="false"/>
+                <column name="wish_only" nullable="false" column-definition="BOOLEAN DEFAULT FALSE"/>
             </basic>
             <basic name="createdAt">
-                <column name="created_at" nullable="false"/>
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
             </basic>
             <one-to-many name="favorites" fetch="LAZY" orphan-removal="true">
                 <join-column name="post_id" nullable="false"/>
@@ -462,17 +462,17 @@
                 <column name="buyer_id" nullable="false"/>
             </basic>
             <basic name="isFar">
-                <column name="is_far" nullable="false"/>
+                <column name="is_far" nullable="false" column-definition="BOOLEAN DEFAULT FALSE"/>
             </basic>
             <basic name="status">
                 <column name="status" nullable="false"/>
                 <enumerated>STRING</enumerated>
             </basic>
             <basic name="createdAt">
-                <column name="created_at" nullable="false"/>
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
             </basic>
             <basic name="updatedAt">
-                <column name="updated_at" nullable="false"/>
+                <column name="updated_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
             </basic>
             <one-to-many name="items" fetch="LAZY" orphan-removal="true">
                 <join-column name="trade_id" nullable="false"/>
@@ -493,7 +493,70 @@
                 <enumerated>STRING</enumerated>
             </basic>
             <basic name="createdAt">
-                <column name="created_at" nullable="false"/>
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.report.Report">
+        <table name="reports"/>
+        <attributes>
+            <basic name="status">
+                <column name="status" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="target">
+                <column name="target" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="targetId">
+                <column name="target_id" nullable="false"/>
+            </basic>
+            <basic name="reason">
+                <column name="reason" nullable="false" length="20"/>
+            </basic>
+            <basic name="reporterId">
+                <column name="reporter_id" nullable="false"/>
+            </basic>
+            <basic name="reportedId">
+                <column name="reported_id" nullable="false"/>
+            </basic>
+            <basic name="managerId">
+                <column name="manager_id"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
+            </basic>
+            <basic name="processedAt">
+                <column name="processed_at"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.bob.core.domain.inquiry.Inquiry">
+        <table name="inquiries"/>
+        <attributes>
+            <basic name="status">
+                <column name="status" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="email">
+                <column name="email" nullable="false" length="150"/>
+            </basic>
+            <basic name="title">
+                <column name="title" nullable="false" length="50"/>
+            </basic>
+            <basic name="content">
+                <column name="content" nullable="false" length="200"/>
+            </basic>
+            <basic name="managerId">
+                <column name="manager_id"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
+            </basic>
+            <basic name="processedAt">
+                <column name="processed_at"/>
             </basic>
         </attributes>
     </entity>
