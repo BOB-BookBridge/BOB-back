@@ -2,10 +2,12 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
+  sql:
+    init:
+      schema-locations: classpath:sql/schema.sql
+
   jpa:
     defer-datasource-initialization: true
-    hibernate:
-      ddl-auto: update
     show-sql: false
     open-in-view: false
 

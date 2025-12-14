@@ -11,16 +11,18 @@ import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.global.ratelimit.exception.RateLimitExceededException;
 
 @ControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler {
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ProblemDetail handleServerException(Exception ex) {
@@ -37,6 +39,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         ProblemDetail problemDetail = forStatusAndDetail(HttpStatus.BAD_REQUEST, detailMessage);
         return setProblemDetailProperties(problemDetail, "CONSTRAINT_VIOLATION");
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
+        BindingResult bindingResult = ex.getBindingResult();
+
+        String detailMessage = bindingResult.getFieldErrors().stream()
+            .map(error -> String.format("%s", error.getDefaultMessage()))
+            .findFirst()
+            .orElse("유효하지 않은 요청값입니다.");
+
+        ProblemDetail problemDetail = forStatusAndDetail(HttpStatus.BAD_REQUEST, detailMessage);
+        return setProblemDetailProperties(problemDetail, "VALIDATION_ERROR");
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String message = String.format("[%s]의 값 '%s'은(는) 올바른 형식이 아닙니다.", ex.getName(), ex.getValue());
+
+        ProblemDetail problemDetail = forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
+        return setProblemDetailProperties(problemDetail, "TYPE_MISMATCH");
     }
 
     @ExceptionHandler(ApplicationException.class)
