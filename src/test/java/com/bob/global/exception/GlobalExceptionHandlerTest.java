@@ -5,6 +5,7 @@ import static com.bob.global.exception.response.ApplicationError.SERVER_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
+import java.util.List;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,6 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.ratelimit.exception.RateLimitExceededException;
@@ -91,6 +96,40 @@ public class GlobalExceptionHandlerTest {
         assertThat(problemDetail.getStatus()).isEqualTo(SERVER_ERROR.getStatus().value());
         assertThat(problemDetail.getTitle()).isEqualTo(SERVER_ERROR.name());
         assertThat(problemDetail.getDetail()).isEqualTo(SERVER_ERROR.getMessage());
+        assertThat(problemDetail.getProperties()).containsKeys("timestamp");
+    }
+
+    @Test
+    void 요청값_검증_예외_처리() {
+        // [요청 예시] POST /reports/posts/1 with {"reportedId": null, "reason": "spam"}
+        // [문제 상황] @Valid @RequestBody로 검증할 때 필드 값이 유효하지 않음
+        BindingResult bindingResult = Mockito.mock(BindingResult.class);
+        FieldError fieldError = new FieldError("registerReportRequest", "reportedId", "신고자 ID는 필수입니다");
+        given(bindingResult.getFieldErrors()).willReturn(List.of(fieldError));
+
+        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(null, bindingResult);
+
+        ProblemDetail problemDetail = handler.handleValidationException(ex);
+
+        assertThat(problemDetail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(problemDetail.getTitle()).isEqualTo("VALIDATION_ERROR");
+        assertThat(problemDetail.getDetail()).isEqualTo("신고자 ID는 필수입니다");
+        assertThat(problemDetail.getProperties()).containsKeys("timestamp");
+    }
+
+    @Test
+    void 타입_불일치_예외_처리() {
+        // [요청 예시] GET /posts/invalid-uuid
+        // [문제 상황] PathVariable이나 RequestParam의 타입이 맞지 않음
+        MethodArgumentTypeMismatchException ex = Mockito.mock(MethodArgumentTypeMismatchException.class);
+        given(ex.getName()).willReturn("postId");
+        given(ex.getValue()).willReturn("invalid-id");
+
+        ProblemDetail problemDetail = handler.handleTypeMismatch(ex);
+
+        assertThat(problemDetail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(problemDetail.getTitle()).isEqualTo("TYPE_MISMATCH");
+        assertThat(problemDetail.getDetail()).isEqualTo("[postId]의 값 'invalid-id'은(는) 올바른 형식이 아닙니다.");
         assertThat(problemDetail.getProperties()).containsKeys("timestamp");
     }
 }
