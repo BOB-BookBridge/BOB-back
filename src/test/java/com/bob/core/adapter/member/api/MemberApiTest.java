@@ -33,6 +33,7 @@ import com.bob.core.application.member.dto.result.MemberDetail;
 import com.bob.core.application.member.port.out.MemberCachePort;
 import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.PasswordEncoder;
+import com.bob.core.domain.member.Role;
 import com.bob.core.domain.member.repository.MemberRepository;
 import com.bob.security.model.MemberDetails;
 import com.bob.support.annotation.BobApiTest;
@@ -95,6 +96,7 @@ record MemberApiTest(
         MemberDetail response = objectMapper.readValue(result.getResponse().getContentAsString(), MemberDetail.class);
 
         assertThat(response.id()).isEqualTo(member.getId());
+        assertThat(response.role()).isEqualTo(Role.USER.name());
         assertThat(response.nickname()).isEqualTo(member.getNickname());
     }
 

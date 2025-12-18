@@ -11,6 +11,7 @@ import com.bob.core.application.member.port.result.MemberBookcaseResult;
 @Builder
 public record MemberDetailResponse(
     UUID id,
+    String role,
     String email,
     String nickname,
     String profileImageUrl,
@@ -24,6 +25,7 @@ public record MemberDetailResponse(
     public static MemberDetailResponse of(MemberDetail detail) {
         return MemberDetailResponse.builder()
             .id(detail.id())
+            .role(detail.role())
             .email(detail.email())
             .nickname(detail.nickname())
             .profileImageUrl(detail.profileImageUrl())
