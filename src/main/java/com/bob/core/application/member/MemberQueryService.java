@@ -41,7 +41,7 @@ public class MemberQueryService implements MemberReader {
             .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. email : " + email));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public MemberDetail readDetail(UUID memberId, boolean me) {
         Member member = read(memberId);
 
@@ -68,6 +68,9 @@ public class MemberQueryService implements MemberReader {
         List<MemberBookResult> books = bookPort.readAll(bookIds);
         List<MemberWishDetail> wishes = MemberWishDetail.listFrom(member.getWishes(), books);
 
+        if (me)
+            member.updateLastActiveTime();
+
         return MemberDetail.builder()
             .id(member.getId())
             .role(member.getRole().name())
@@ -83,6 +86,8 @@ public class MemberQueryService implements MemberReader {
             .bookcase(bookcase)
             .wishes(wishes)
             .isSocial(member.getProvider() != null)
+            .lastActiveAt(member.getLastActiveAt())
+            .createdAt(member.getCreatedAt())
             .build();
     }
 }

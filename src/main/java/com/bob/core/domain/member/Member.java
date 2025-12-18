@@ -35,12 +35,13 @@ public class Member {
 
     private SocialProvider provider;
 
+    private Status status;
+
+    private Role role;
+
     private String email;
-
     private String password;
-
     private String nickname;
-
     private String profileImageUrl;
 
     private MemberArea area;
@@ -51,10 +52,7 @@ public class Member {
     @Builder.Default
     private List<MemberWish> wishes = new ArrayList<>();
 
-    private Status status;
-
-    private Role role;
-
+    private LocalDateTime lastActiveAt;
     private LocalDateTime createdAt;
 
     public static Member createMember(String email, String password, String nickname, Integer emdAreaId) {
@@ -122,6 +120,10 @@ public class Member {
 
     public void ban() {
         this.status = Status.BANNED;
+    }
+
+    public void updateLastActiveTime() {
+        this.lastActiveAt = LocalDateTime.now();
     }
 
     public boolean isDeactivated() {

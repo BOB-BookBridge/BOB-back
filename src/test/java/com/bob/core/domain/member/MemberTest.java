@@ -134,4 +134,14 @@ class MemberTest {
 
         assertThat(member.isBanned()).isTrue();
     }
+
+    @Test
+    void 회원_마지막_활동시간_갱신() {
+        Member member = MemberFixture.createMember();
+        assertThat(member.getLastActiveAt()).isNull();
+
+        member.updateLastActiveTime();
+
+        assertThat(member.getLastActiveAt()).isNotNull();
+    }
 }

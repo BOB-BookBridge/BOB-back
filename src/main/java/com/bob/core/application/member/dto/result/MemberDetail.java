@@ -1,5 +1,6 @@
 package com.bob.core.application.member.dto.result;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +20,9 @@ public record MemberDetail(
     List<String> interests,
     List<MemberBookcaseResult> bookcase,
     List<MemberWishDetail> wishes,
-    boolean isSocial
+    boolean isSocial,
+    LocalDateTime lastActiveAt,
+    LocalDateTime createdAt
 ) {
 
     public static MemberDetail deactivateMemberDetail(UUID id, MemberAreaDetail area, SocialProvider provider) {
@@ -34,6 +37,8 @@ public record MemberDetail(
             .bookcase(List.of())
             .wishes(List.of())
             .isSocial(provider != null)
+            .lastActiveAt(null)
+            .createdAt(null)
             .build();
     }
 }

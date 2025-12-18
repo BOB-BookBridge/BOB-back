@@ -4,6 +4,7 @@ import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
@@ -64,6 +65,22 @@ record MemberReaderTest(MemberReader memberReader, MemberRepository memberReposi
             .hasMessageContaining("회원을 찾을 수 없습니다.");
     }
 
+    @Test
+    void 내_정보_상세_조회() {
+        Member member = memberRepository.save(createMember());
+        LocalDateTime standardTime = LocalDateTime.now();
+
+        MemberDetail detail = memberReader.readDetail(member.getId(), true);
+
+        assertThat(detail).isNotNull();
+        assertThat(detail.id()).isEqualTo(member.getId());
+        assertThat(detail.role()).isEqualTo(member.getRole().name());
+        assertThat(detail.area()).isNotNull();
+        assertThat(detail.bookcase()).isNotNull();
+        assertThat(detail.wishes()).isNotNull();
+        assertThat(detail.lastActiveAt()).isAfter(standardTime);
+    }
+    
     @Test
     void 회원_상세_조회() {
         Member member = memberRepository.save(createMember());
