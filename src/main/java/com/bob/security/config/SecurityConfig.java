@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -34,6 +35,7 @@ import com.bob.security.adapter.entrypoint.TokenAuthenticationEntryPoint;
 import com.bob.security.adapter.filter.LoginFilter;
 import com.bob.security.adapter.filter.OAuth2ProviderValidateFilter;
 import com.bob.security.adapter.filter.TokenAuthorizationFilter;
+import com.bob.security.adapter.handler.AccessDeniedHandler;
 import com.bob.security.adapter.handler.OAuth2FailureHandler;
 import com.bob.security.adapter.handler.OAuth2SuccessHandler;
 import com.bob.security.application.MemberDetailsService;
@@ -44,10 +46,11 @@ import com.bob.security.config.props.HeaderProperties;
 import com.bob.security.config.registry.OptionalRegistry;
 import com.bob.security.config.registry.PermitAllRegistry;
 
-@RequiredArgsConstructor
-@EnableWebSecurity
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
 @EnableConfigurationProperties(HeaderProperties.class)
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private static final String[] AUTH_WHITELIST = {
@@ -66,6 +69,8 @@ public class SecurityConfig {
     private final TokenAuthenticationEntryPoint tokenAuthenticationEntryPoint;
     private final TokenAuthorizationFilter tokenAuthorizationFilter;
     private final TokenManager tokenManager;
+
+    private final AccessDeniedHandler accessDeniedHandler;
 
     private final RateLimitRepository rateLimitRepository;
 
@@ -109,7 +114,10 @@ public class SecurityConfig {
             .addFilterBefore(tokenAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(OAuth2ProviderValidateFilter, OAuth2AuthorizationRequestRedirectFilter.class)
             .addFilterAt(loginFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(handler -> handler.authenticationEntryPoint(tokenAuthenticationEntryPoint))
+            .exceptionHandling(handler -> handler
+                .authenticationEntryPoint(tokenAuthenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler)
+            )
             .build();
     }
 
