@@ -144,4 +144,14 @@ class MemberTest {
 
         assertThat(member.getLastActiveAt()).isNotNull();
     }
+
+    @Test
+    void 회원_메모_갱신() {
+        Member member = MemberFixture.createMember();
+        assertThat(member.getMemo()).isNull();
+
+        member.updateMemo("memo");
+
+        assertThat(member.getMemo()).isEqualTo("memo");
+    }
 }

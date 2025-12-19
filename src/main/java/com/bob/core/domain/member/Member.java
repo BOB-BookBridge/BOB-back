@@ -52,6 +52,8 @@ public class Member {
     @Builder.Default
     private List<MemberWish> wishes = new ArrayList<>();
 
+    private String memo;
+
     private LocalDateTime lastActiveAt;
     private LocalDateTime createdAt;
 
@@ -124,6 +126,10 @@ public class Member {
 
     public void updateLastActiveTime() {
         this.lastActiveAt = LocalDateTime.now();
+    }
+
+    public void updateMemo(String memo) {
+        this.memo = memo;
     }
 
     public boolean isDeactivated() {

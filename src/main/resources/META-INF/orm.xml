@@ -117,6 +117,9 @@
                 <column name="role" nullable="false"/>
                 <enumerated>STRING</enumerated>
             </basic>
+            <basic name="memo">
+                <column name="memo" length="200"/>
+            </basic>
             <basic name="lastActiveAt">
                 <column name="last_active_at"/>
             </basic>
