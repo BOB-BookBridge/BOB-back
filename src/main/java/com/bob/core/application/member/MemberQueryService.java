@@ -77,6 +77,7 @@ public class MemberQueryService implements MemberReader, MemberSearcher {
 
         return MemberDetail.builder()
             .id(member.getId())
+            .status(member.getStatus().name())
             .role(member.getRole().name())
             .email(member.getEmail())
             .nickname(member.getNickname())
@@ -89,6 +90,7 @@ public class MemberQueryService implements MemberReader, MemberSearcher {
             .interests(interests)
             .bookcase(bookcase)
             .wishes(wishes)
+            .memo(member.getMemo())
             .isSocial(member.getProvider() != null)
             .lastActiveAt(member.getLastActiveAt())
             .createdAt(member.getCreatedAt())
