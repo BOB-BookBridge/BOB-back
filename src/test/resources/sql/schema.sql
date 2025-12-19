@@ -98,13 +98,15 @@ WHERE adm_code = '570' AND name = '신곡동';
 INSERT INTO member_areas (id, emd_id, authenticated_at) VALUES
 (1, 213, CURDATE()),
 (2, 213, CURDATE()),
-(3, 213, CURDATE());
+(3, 213, CURDATE()),
+(4, 213, CURDATE());
 
 -- 회원
 INSERT INTO members (id, email, password, nickname, area_id, status, role) VALUES
 (UUID_TO_BIN('0199f8c2-30ed-7ee3-a757-16196412518c'), 'test@test.com', '{bcrypt}$2a$10$0wsmn7K4OYal.QNhW5.26.nmNROkJ4utkzCPjgzZS.sPyLnjVx5sa', 'tester', 1, 'ACTIVE', 'USER'),
 (UUID_TO_BIN('019a6928-6f73-79f7-bd1b-6bfd4771a302'), 'other@test.com', '{bcrypt}$2a$10$0wsmn7K4OYal.QNhW5.26.nmNROkJ4utkzCPjgzZS.sPyLnjVx5sa', 'other', 2, 'ACTIVE', 'USER'),
-(UUID_TO_BIN('019a6928-6f73-79f7-bd1b-6bfd4771a303'), 'mock@test.com', '{bcrypt}$2a$10$0wsmn7K4OYal.QNhW5.26.nmNROkJ4utkzCPjgzZS.sPyLnjVx5sa', 'mock', 3, 'ACTIVE', 'USER');
+(UUID_TO_BIN('019a6928-6f73-79f7-bd1b-6bfd4771a303'), 'mock@test.com', '{bcrypt}$2a$10$0wsmn7K4OYal.QNhW5.26.nmNROkJ4utkzCPjgzZS.sPyLnjVx5sa', 'mock', 3, 'ACTIVE', 'USER'),
+(UUID_TO_BIN('021a6930-6f73-14c6-cf0a-2fd17132f102'), 'manager@test.com', '{bcrypt}$2a$10$0wsmn7K4OYal.QNhW5.26.nmNROkJ4utkzCPjgzZS.sPyLnjVx5sa', 'manager', 4, 'ACTIVE', 'ADMIN');
 
 INSERT INTO member_wishes (id, member_id, book_id) VALUES
 (1, UUID_TO_BIN('019a6928-6f73-79f7-bd1b-6bfd4771a302'), 2);

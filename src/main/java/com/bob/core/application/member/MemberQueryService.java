@@ -5,13 +5,16 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.application.member.dto.result.MemberAreaDetail;
 import com.bob.core.application.member.dto.result.MemberDetail;
+import com.bob.core.application.member.dto.result.MemberSummaries;
 import com.bob.core.application.member.dto.result.MemberWishDetail;
 import com.bob.core.application.member.port.in.MemberReader;
+import com.bob.core.application.member.port.in.MemberSearcher;
 import com.bob.core.application.member.port.out.MemberBookPort;
 import com.bob.core.application.member.port.out.MemberBookcasePort;
 import com.bob.core.application.member.port.result.MemberBookResult;
@@ -20,11 +23,12 @@ import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.MemberInterest;
 import com.bob.core.domain.member.MemberWish;
 import com.bob.core.domain.member.repository.MemberRepository;
+import com.bob.core.domain.member.repository.dsl.query.SearchMembersQuery;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class MemberQueryService implements MemberReader {
+public class MemberQueryService implements MemberReader, MemberSearcher {
 
     private final MemberRepository memberRepository;
 
@@ -89,5 +93,12 @@ public class MemberQueryService implements MemberReader {
             .lastActiveAt(member.getLastActiveAt())
             .createdAt(member.getCreatedAt())
             .build();
+    }
+
+    public MemberSummaries searchByQuery(SearchMembersQuery query, Pageable pageable) {
+        List<Member> members = memberRepository.findMembers(query, pageable);
+        Long totalCount = memberRepository.countMembers(query);
+
+        return new MemberSummaries(totalCount, members);
     }
 }
