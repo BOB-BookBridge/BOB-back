@@ -11,6 +11,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.bob.core.application.report.dto.query.ReadReportCountQuery;
+import com.bob.core.application.report.dto.query.ReadReportQuery;
+import com.bob.core.domain.report.Report;
 import com.bob.core.domain.report.repository.ReportRepository;
 import com.bob.core.domain.report.repository.projection.ReportCount;
 import com.bob.support.annotation.ContainerTest;
@@ -21,20 +23,28 @@ import com.bob.support.fixture.report.domain.ReportFixture;
 record ReportReaderTest(ReportReader reportReader, ReportRepository reportRepository) {
 
     @Test
-    void 신고_횟수_조회() {
+    void 신고_내역_조회() {
         reportRepository.save(ReportFixture.createReport());
+        ReadReportQuery query = new ReadReportQuery(OTHER_MEMBER_ID);
+
+        List<Report> reports = reportReader.read(query);
+
+        assertThat(reports).hasSize(1);
+        assertThat(reports.get(0).getReportedId()).isEqualTo(OTHER_MEMBER_ID);
+    }
+
+    @Test
+    void 신고_처리_횟수_조회() {
+        reportRepository.save(ReportFixture.createReport()); // 제외
+        reportRepository.save(ReportFixture.createProcessedReport()); // 포함
         List<UUID> reportedIds = List.of(MEMBER_ID, OTHER_MEMBER_ID);
 
         var query = new ReadReportCountQuery(reportedIds);
 
-        List<ReportCount> result = reportReader.readReportedCounts(query);
+        List<ReportCount> result = reportReader.readProcessedReportCounts(query);
 
-        assertThat(result).hasSize(2)
+        assertThat(result).hasSize(1)
             .satisfiesExactlyInAnyOrder(
-                reportCount -> {
-                    assertThat(reportCount.getReportedId()).isEqualTo(MEMBER_ID);
-                    assertThat(reportCount.getCount()).isEqualTo(0);
-                },
                 reportCount -> {
                     assertThat(reportCount.getReportedId()).isEqualTo(OTHER_MEMBER_ID);
                     assertThat(reportCount.getCount()).isEqualTo(1);

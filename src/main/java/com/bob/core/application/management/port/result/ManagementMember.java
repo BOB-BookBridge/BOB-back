@@ -1,5 +1,6 @@
 package com.bob.core.application.management.port.result;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -21,10 +22,16 @@ public class ManagementMember {
     String email;
     String nickname;
     Integer reportCount;
+    Area area;
+    String memo;
     LocalDateTime lastActiveAt;
     LocalDateTime createdAt;
 
     public void updateReportCount(Integer count) {
         this.reportCount = count;
+    }
+
+    public record Area(Integer emdId, boolean isAuthentication, LocalDate authenticatedAt) {
+
     }
 }

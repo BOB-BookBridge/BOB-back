@@ -11,12 +11,14 @@ import com.bob.core.domain.report.repository.projection.ReportCount;
 
 public interface ReportRepository extends CrudRepository<Report, Long> {
 
+    List<Report> findAllByReportedId(UUID reportedId);
+
     @Query("""
           SELECT r.reportedId AS reportedId, COUNT(r) AS count
             FROM Report r
-           WHERE r.reportedId IN :reportedIds
+           WHERE r.reportedId IN :reportedIds AND r.status = "PROCESSED"
            GROUP BY r.reportedId
         """
     )
-    List<ReportCount> countByReportedIds(List<UUID> reportedIds);
+    List<ReportCount> countProcessedByReportedIds(List<UUID> reportedIds);
 }

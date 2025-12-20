@@ -10,8 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import com.bob.core.application.management.port.out.ManagementReportPort;
+import com.bob.core.application.management.port.result.ManagementMemberReport;
 import com.bob.core.application.report.dto.query.ReadReportCountQuery;
+import com.bob.core.application.report.dto.query.ReadReportQuery;
 import com.bob.core.application.report.port.in.ReportReader;
+import com.bob.core.domain.report.Report;
+import com.bob.core.domain.report.ReportStatus;
+import com.bob.core.domain.report.ReportTarget;
 import com.bob.core.domain.report.repository.projection.ReportCount;
 
 @Component
@@ -21,10 +26,32 @@ public class ManagementReportAdapter implements ManagementReportPort {
     private final ReportReader reportReader;
 
     @Override
+    public ManagementMemberReport read(UUID reportedId) {
+        ReadReportQuery query = new ReadReportQuery(reportedId);
+
+        List<Report> reports = reportReader.read(query);
+
+        Map<ReportTarget, List<Report>> reportsByTarget = reports.stream()
+            .filter(report -> report.getStatus() == ReportStatus.PROCESSED)
+            .collect(Collectors.groupingBy(Report::getTarget));
+
+        List<Report> chatReports = reportsByTarget.getOrDefault(ReportTarget.CHAT, List.of());
+        List<Report> postReports = reportsByTarget.getOrDefault(ReportTarget.POST, List.of());
+
+        return ManagementMemberReport.of(
+            chatReports.size(), chatReports.stream().map(Report::getReason).collect(Collectors.toSet()),
+            chatReports.stream().map(Report::getTargetId).toList(),
+
+            postReports.size(), postReports.stream().map(Report::getReason).collect(Collectors.toSet()),
+            postReports.stream().map(Report::getTargetId).toList()
+        );
+    }
+
+    @Override
     public Map<UUID, Integer> readCounts(List<UUID> reportedIds) {
         ReadReportCountQuery query = new ReadReportCountQuery(reportedIds);
 
-        return reportReader.readReportedCounts(query).stream()
+        return reportReader.readProcessedReportCounts(query).stream()
             .collect(Collectors.toMap(ReportCount::getReportedId, ReportCount::getCount));
     }
 }

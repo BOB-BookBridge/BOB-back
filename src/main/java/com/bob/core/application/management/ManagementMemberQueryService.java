@@ -10,11 +10,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bob.core.application.management.dto.result.ManagementMemberDetail;
 import com.bob.core.application.management.port.in.ManagementMemberReader;
 import com.bob.core.application.management.port.out.ManagementMemberPort;
+import com.bob.core.application.management.port.out.ManagementPostPort;
 import com.bob.core.application.management.port.out.ManagementReportPort;
+import com.bob.core.application.management.port.out.ManagementTradePort;
 import com.bob.core.application.management.port.result.ManagementMember;
-import com.bob.core.application.management.port.result.ManagementMembersResult;
+import com.bob.core.application.management.port.result.ManagementMemberActivity;
+import com.bob.core.application.management.port.result.ManagementMemberReport;
+import com.bob.core.application.management.port.result.ManagementMemberSummaries;
+import com.bob.core.application.management.port.result.activity.ManagementMemberPost;
+import com.bob.core.application.management.port.result.activity.ManagementMemberTrade;
 
 @Service
 @Transactional(readOnly = true)
@@ -23,20 +30,33 @@ public class ManagementMemberQueryService implements ManagementMemberReader {
 
     private final ManagementMemberPort memberPort;
     private final ManagementReportPort reportPort;
+    private final ManagementPostPort postPort;
+    private final ManagementTradePort tradePort;
 
     @Override
-    public ManagementMembersResult readMembers(String key, String keyword, Pageable pageable) {
-        ManagementMembersResult result = memberPort.search(key, keyword, pageable);
+    public ManagementMemberSummaries readAll(String key, String keyword, Pageable pageable) {
+        ManagementMemberSummaries summaries = memberPort.search(key, keyword, pageable);
 
-        List<UUID> memberIds = result.members().stream()
-            .map(ManagementMember::getId)
-            .toList();
+        List<UUID> memberIds = summaries.members().stream().map(ManagementMember::getId).toList();
 
         Map<UUID, Integer> reportCounts = reportPort.readCounts(memberIds);
-        result.members().forEach(member ->
-            member.updateReportCount(reportCounts.getOrDefault(member.getId(), 0))
-        );
+        summaries.members().forEach(member -> member.updateReportCount(reportCounts.getOrDefault(member.getId(), 0)));
 
-        return result;
+        return summaries;
+    }
+
+    @Override
+    public ManagementMemberDetail readDetail(UUID memberId) {
+        ManagementMember member = memberPort.read(memberId);
+
+        ManagementMemberPost posts = postPort.read(memberId);
+        ManagementMemberTrade trades = tradePort.read(memberId);
+        ManagementMemberActivity activity = new ManagementMemberActivity(posts, trades);
+
+        ManagementMemberReport reports = reportPort.read(memberId);
+
+        member.updateReportCount(reports.chat().count() + reports.post().count());
+
+        return new ManagementMemberDetail(member, activity, reports);
     }
 }

@@ -1,6 +1,7 @@
 package com.bob.core.adapter.management.api;
 
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
+import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.UnsupportedEncodingException;
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.bob.core.application.management.dto.result.ManagementMemberDetail;
 import com.bob.core.application.management.port.result.ManagementMemberSummaries;
 import com.bob.security.model.MemberDetails;
 import com.bob.support.annotation.BobApiTest;
@@ -49,6 +51,27 @@ record ManagementMemberApiTest(MockMvcTester mvcTester, ObjectMapper objectMappe
 
         assertThat(response.totalCount()).isNotZero();
         assertThat(response.members()).isNotNull();
+    }
+
+    @Test
+    void 관리_회원_상세_조회() throws JsonProcessingException, UnsupportedEncodingException {
+        MvcTestResult result = mvcTester.get().uri("/management/members/{memberId}", OTHER_MEMBER_ID)
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.member", AssertThatUtils.notNull())
+            .hasPathSatisfying("$.member.id", AssertThatUtils.equalsTo(OTHER_MEMBER_ID.toString()))
+            .hasPathSatisfying("$.activities", AssertThatUtils.notNull())
+            .hasPathSatisfying("$.reports", AssertThatUtils.notNull());
+
+        ManagementMemberDetail response =
+            objectMapper.readValue(result.getResponse().getContentAsString(), ManagementMemberDetail.class);
+
+        assertThat(response.member()).isNotNull();
+        assertThat(response.activities()).isNotNull();
+        assertThat(response.reports()).isNotNull();
     }
 
     void setAuthentication() {
