@@ -1,5 +1,5 @@
 package com.bob.core.domain.member;
 
-public enum ROLE {
+public enum Role {
     ADMIN, USER
 }

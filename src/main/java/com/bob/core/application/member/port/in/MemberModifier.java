@@ -7,9 +7,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import com.bob.core.application.member.dto.command.ChangePasswordCommand;
 import com.bob.core.application.member.dto.command.ChangeProfileCommand;
 import com.bob.core.application.member.dto.command.ChangeProfileImageCommand;
+import com.bob.core.application.member.dto.command.ChangeStatusCommand;
 import com.bob.core.domain.member.Member;
 
 public interface MemberModifier {
+
+    Member changeStatus(UUID memberId, ChangeStatusCommand command);
 
     Member changePassword(UUID memberId, ChangePasswordCommand command);
 

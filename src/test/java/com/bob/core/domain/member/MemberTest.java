@@ -2,6 +2,7 @@ package com.bob.core.domain.member;
 
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
@@ -43,6 +44,28 @@ class MemberTest {
         assertThat(member.getNickname()).isEqualTo(nickname);
         assertThat(member.getInterests()).isEmpty();
         assertThat(member.getWishes()).isEmpty();
+    }
+
+    @Test
+    void 회원_상태_강제_변경() {
+        Member member = MemberFixture.createMember();
+        member.updateStatusFromAdmin(Status.DEACTIVATED, "비활성화");
+        assertThat(member.isDeactivated()).isTrue();
+        assertThat(member.getMemo()).isEqualTo("비활성화");
+
+        member.updateStatusFromAdmin(Status.BANNED, "제한");
+        assertThat(member.isBanned()).isTrue();
+        assertThat(member.getMemo()).isEqualTo("제한");
+    }
+
+    @Test
+    void 회원_상태_강제_변경_시_동일한_상태로_변경하면_예외가_발생한다() {
+        Member member = MemberFixture.createMember();
+        assertThat(member.getStatus()).isEqualTo(Status.ACTIVE);
+
+        assertThatThrownBy(() -> member.updateStatusFromAdmin(Status.ACTIVE, "동일 상태로 변경"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("현재 상태와 변경하려는 상태가 동일합니다");
     }
 
     @Test
@@ -133,5 +156,25 @@ class MemberTest {
         member.ban();
 
         assertThat(member.isBanned()).isTrue();
+    }
+
+    @Test
+    void 회원_마지막_활동시간_갱신() {
+        Member member = MemberFixture.createMember();
+        assertThat(member.getLastActiveAt()).isNull();
+
+        member.updateLastActiveTime();
+
+        assertThat(member.getLastActiveAt()).isNotNull();
+    }
+
+    @Test
+    void 회원_메모_갱신() {
+        Member member = MemberFixture.createMember();
+        assertThat(member.getMemo()).isNull();
+
+        member.updateMemo("memo");
+
+        assertThat(member.getMemo()).isEqualTo("memo");
     }
 }

@@ -20,6 +20,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import org.springframework.util.Assert;
+
 import com.bob.global.utils.uuid.GeneratedUuidV7;
 
 @Entity
@@ -35,12 +37,13 @@ public class Member {
 
     private SocialProvider provider;
 
+    private Status status;
+
+    private Role role;
+
     private String email;
-
     private String password;
-
     private String nickname;
-
     private String profileImageUrl;
 
     private MemberArea area;
@@ -51,16 +54,15 @@ public class Member {
     @Builder.Default
     private List<MemberWish> wishes = new ArrayList<>();
 
-    private Status status;
+    private String memo;
 
-    private ROLE role;
-
+    private LocalDateTime lastActiveAt;
     private LocalDateTime createdAt;
 
     public static Member createMember(String email, String password, String nickname, Integer emdAreaId) {
         return Member.builder()
             .status(ACTIVE)
-            .role(ROLE.USER)
+            .role(Role.USER)
             .email(requireNonNull(email))
             .password(requireNonNull(password))
             .nickname(requireNonNull(nickname))
@@ -73,13 +75,20 @@ public class Member {
         return Member.builder()
             .provider(SocialProvider.valueOf(requireNonNull(provider)))
             .status(ACTIVE)
-            .role(ROLE.USER)
+            .role(Role.USER)
             .email(requireNonNull(email))
             .password(null)
             .nickname(requireNonNull(nickname))
             .area(MemberArea.createNonAuthenticateArea(213))
             .createdAt(LocalDateTime.now())
             .build();
+    }
+
+    public void updateStatusFromAdmin(Status status, String memo) {
+        Assert.state(this.status != status, "현재 상태와 변경하려는 상태가 동일합니다");
+
+        this.status = status;
+        this.memo = memo;
     }
 
     public void updateInfo(String nickname, Integer emdId, List<Long> interestIds, List<String> interestNames) {
@@ -122,6 +131,14 @@ public class Member {
 
     public void ban() {
         this.status = Status.BANNED;
+    }
+
+    public void updateLastActiveTime() {
+        this.lastActiveAt = LocalDateTime.now();
+    }
+
+    public void updateMemo(String memo) {
+        this.memo = memo;
     }
 
     public boolean isDeactivated() {

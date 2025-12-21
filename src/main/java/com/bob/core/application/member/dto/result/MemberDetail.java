@@ -1,5 +1,6 @@
 package com.bob.core.application.member.dto.result;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ import com.bob.core.domain.member.SocialProvider;
 @Builder
 public record MemberDetail(
     UUID id,
+    String status,
     String role,
     String email,
     String nickname,
@@ -19,12 +21,16 @@ public record MemberDetail(
     List<String> interests,
     List<MemberBookcaseResult> bookcase,
     List<MemberWishDetail> wishes,
-    boolean isSocial
+    String memo,
+    boolean isSocial,
+    LocalDateTime lastActiveAt,
+    LocalDateTime createdAt
 ) {
 
     public static MemberDetail deactivateMemberDetail(UUID id, MemberAreaDetail area, SocialProvider provider) {
         return MemberDetail.builder()
             .id(id)
+            .status("DEACTIVATED")
             .role("USER")
             .email("delete")
             .nickname("(알 수 없음)")
@@ -34,6 +40,8 @@ public record MemberDetail(
             .bookcase(List.of())
             .wishes(List.of())
             .isSocial(provider != null)
+            .lastActiveAt(null)
+            .createdAt(null)
             .build();
     }
 }
