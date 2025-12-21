@@ -12,4 +12,6 @@ public interface ManagementMemberPort {
     ManagementMember read(UUID memberId);
 
     ManagementMemberSummaries search(String key, String keyword, Pageable pageable);
+
+    ManagementMember changeStatus(UUID memberId, String status, String memo);
 }

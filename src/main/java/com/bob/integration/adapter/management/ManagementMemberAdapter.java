@@ -13,8 +13,10 @@ import org.springframework.stereotype.Component;
 import com.bob.core.application.management.port.out.ManagementMemberPort;
 import com.bob.core.application.management.port.result.ManagementMember;
 import com.bob.core.application.management.port.result.ManagementMemberSummaries;
+import com.bob.core.application.member.dto.command.ChangeStatusCommand;
 import com.bob.core.application.member.dto.result.MemberDetail;
 import com.bob.core.application.member.dto.result.MemberSummaries;
+import com.bob.core.application.member.port.in.MemberModifier;
 import com.bob.core.application.member.port.in.MemberReader;
 import com.bob.core.application.member.port.in.MemberSearcher;
 import com.bob.core.domain.member.Member;
@@ -27,6 +29,7 @@ public class ManagementMemberAdapter implements ManagementMemberPort {
 
     private final MemberReader memberReader;
     private final MemberSearcher memberSearcher;
+    private final MemberModifier memberModifier;
 
     @Override
     public ManagementMember read(UUID memberId) {
@@ -46,6 +49,15 @@ public class ManagementMemberAdapter implements ManagementMemberPort {
             .toList();
 
         return new ManagementMemberSummaries(summaries.totalCount(), members);
+    }
+
+    @Override
+    public ManagementMember changeStatus(UUID memberId, String status, String memo) {
+        ChangeStatusCommand command = new ChangeStatusCommand(status, memo);
+
+        Member member = memberModifier.changeStatus(memberId, command);
+
+        return convert(member);
     }
 
     private static ManagementMember convert(Member member) {

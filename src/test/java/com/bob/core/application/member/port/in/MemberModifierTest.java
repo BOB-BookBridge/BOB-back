@@ -1,6 +1,7 @@
 package com.bob.core.application.member.port.in;
 
 import static com.bob.core.domain.member.Status.ACTIVE;
+import static com.bob.core.domain.member.Status.BANNED;
 import static com.bob.core.domain.member.Status.DEACTIVATED;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_BANNED;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_PASSWORD_MISMATCH;
@@ -24,6 +25,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import com.bob.core.application.member.dto.command.ChangePasswordCommand;
 import com.bob.core.application.member.dto.command.ChangeProfileCommand;
 import com.bob.core.application.member.dto.command.ChangeProfileImageCommand;
+import com.bob.core.application.member.dto.command.ChangeStatusCommand;
 import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.MemberArea;
 import com.bob.core.domain.member.PasswordEncoder;
@@ -37,6 +39,17 @@ record MemberModifierTest(
     MemberModifier memberModifier, MemberRepository memberRepository,
     PasswordEncoder passwordEncoder
 ) {
+
+    @Test
+    void 상태_변경() {
+        Member member = memberRepository.save(createMember());
+        ChangeStatusCommand command = new ChangeStatusCommand("BANNED", "신고 누적");
+
+        member = memberModifier.changeStatus(member.getId(), command);
+
+        assertThat(member.getStatus()).isEqualTo(BANNED);
+        assertThat(member.getMemo()).isEqualTo("신고 누적");
+    }
 
     @Test
     void 비밀번호_수정() {

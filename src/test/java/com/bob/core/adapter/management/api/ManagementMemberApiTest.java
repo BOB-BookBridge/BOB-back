@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.bob.core.adapter.management.api.request.ChangeManagementMemberStatusRequest;
 import com.bob.core.application.management.dto.result.ManagementMemberDetail;
 import com.bob.core.application.management.port.result.ManagementMemberSummaries;
 import com.bob.security.model.MemberDetails;
@@ -72,6 +74,22 @@ record ManagementMemberApiTest(MockMvcTester mvcTester, ObjectMapper objectMappe
         assertThat(response.member()).isNotNull();
         assertThat(response.activities()).isNotNull();
         assertThat(response.reports()).isNotNull();
+    }
+
+    @Test
+    void 관리_회원_상태_강제_변경() throws JsonProcessingException {
+        var request = new ChangeManagementMemberStatusRequest("BANNED", "신고 누적");
+        String json = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.patch().uri("/management/members/{memberId}", OTHER_MEMBER_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.result", AssertThatUtils.equalsTo("UPDATED"));
     }
 
     void setAuthentication() {

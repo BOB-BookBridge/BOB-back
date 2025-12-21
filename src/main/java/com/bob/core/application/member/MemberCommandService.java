@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bob.core.application.member.dto.command.ChangePasswordCommand;
 import com.bob.core.application.member.dto.command.ChangeProfileCommand;
 import com.bob.core.application.member.dto.command.ChangeProfileImageCommand;
+import com.bob.core.application.member.dto.command.ChangeStatusCommand;
 import com.bob.core.application.member.dto.command.CreateMemberCommand;
 import com.bob.core.application.member.dto.command.SocialLoginCommand;
 import com.bob.core.application.member.port.in.MemberModifier;
@@ -42,6 +43,7 @@ import com.bob.core.domain.member.Member;
 import com.bob.core.domain.member.MemberArea;
 import com.bob.core.domain.member.MemberInterest;
 import com.bob.core.domain.member.PasswordEncoder;
+import com.bob.core.domain.member.Status;
 import com.bob.core.domain.member.repository.MemberRepository;
 import com.bob.global.event.application.dto.member.AccountEvent;
 import com.bob.global.event.application.dto.member.type.AccountEventType;
@@ -95,6 +97,16 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
 
         return memberRepository.findByEmail(email)
             .orElseGet(() -> memberRepository.save(createSocialMember(email, command.provider(), command.nickname())));
+    }
+
+    @Override
+    public Member changeStatus(UUID memberId, ChangeStatusCommand command) {
+        Status status = Status.valueOf(command.status());
+
+        Member member = memberReader.read(memberId);
+        member.updateStatusFromAdmin(status, command.memo());
+
+        return memberRepository.save(member);
     }
 
     @Override

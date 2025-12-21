@@ -20,6 +20,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import org.springframework.util.Assert;
+
 import com.bob.global.utils.uuid.GeneratedUuidV7;
 
 @Entity
@@ -80,6 +82,13 @@ public class Member {
             .area(MemberArea.createNonAuthenticateArea(213))
             .createdAt(LocalDateTime.now())
             .build();
+    }
+
+    public void updateStatusFromAdmin(Status status, String memo) {
+        Assert.state(this.status != status, "현재 상태와 변경하려는 상태가 동일합니다");
+
+        this.status = status;
+        this.memo = memo;
     }
 
     public void updateInfo(String nickname, Integer emdId, List<Long> interestIds, List<String> interestNames) {
