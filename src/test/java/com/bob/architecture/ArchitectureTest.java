@@ -15,7 +15,7 @@ import com.tngtech.archunit.lang.ArchRule;
  * 아키텍처 검증
  *
  * BOB 아키텍처 구조:
- * - security: 독립적인 보안(표현) 계층
+ * - security, admin: 독립적인 계층
  * - core.{module}.adapter: 프레젠테이션 계층 (Inbound Adapter - REST API)
  * - core.{module}.application: 애플리케이션 서비스 계층
  *   - port.in: Inbound Port (외부로부터 들어오는 요청)
@@ -141,8 +141,8 @@ public class ArchitectureTest {
             .that()
             .haveSimpleNameEndingWith("Service")
             .should()
-            .resideInAnyPackage("..core.*.application..", "..security.application..")
-            .because("Service는 Application 계층(core.*.application 또는 security.application)에 위치");
+            .resideInAnyPackage("..*.application..")
+            .because("Service는 Application 계층에 위치");
 
     @ArchTest
     public static final ArchRule services_should_implement_inbound_ports =
@@ -186,16 +186,5 @@ public class ArchitectureTest {
             .resideInAPackage("..core.*.adapter..out..")
             .should()
             .implement(resideInAPackage("..core.*.application..port.out.."))
-            .because("core 도메인 간 협력은 integration 패키지에서 구현");
-
-    @ArchTest
-    public static final ArchRule security_outbound_port_can_be_implemented_in_core_adapter =
-        classes()
-            .that()
-            .resideInAPackage("..core.*.adapter..out..")
-            .and()
-            .haveSimpleNameEndingWith("Adapter")
-            .should()
-            .implement(resideInAPackage("..security.application.port.out.."))
-            .because("Security는 독립적인 계층이므로 Security의 Outbound Port는 core에 구현 가능 (예: MemberLoaderAdapter)");
+            .because("core 도메인 간 협력은 integration 패키지에서 구현. 외부 모듈의 Outbound Port는 구현 가능");
 }
