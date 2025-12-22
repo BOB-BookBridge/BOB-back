@@ -4,7 +4,7 @@ import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_I
 
 import java.util.UUID;
 
-import com.bob.core.application.chat.dto.command.CreateChatroomCommand;
+import com.bob.core.chat.application.dto.command.CreateChatroomCommand;
 
 public class CreateChatroomCommandFixture {
 

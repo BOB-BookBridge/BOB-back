@@ -3,10 +3,10 @@ package com.bob.support.fixture.post.dto.query;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.bob.core.domain.post.repository.dsl.query.ReadPostsQuery;
-import com.bob.core.domain.post.repository.dsl.query.SearchKey;
-import com.bob.core.domain.post.repository.dsl.query.SearchPrice;
-import com.bob.core.domain.post.repository.dsl.query.SortKey;
+import com.bob.core.post.domain.repository.dsl.query.ReadPostsQuery;
+import com.bob.core.post.domain.repository.dsl.query.SearchKey;
+import com.bob.core.post.domain.repository.dsl.query.SearchPrice;
+import com.bob.core.post.domain.repository.dsl.query.SortKey;
 
 public class PostQueryFixture {
 

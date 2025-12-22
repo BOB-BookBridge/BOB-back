@@ -16,11 +16,11 @@ import com.tngtech.archunit.lang.ArchRule;
  *
  * BOB 아키텍처 구조:
  * - security: 독립적인 보안(표현) 계층
- * - core.adapter: 프레젠테이션 계층 (Inbound Adapter - REST API)
- * - core.application: 애플리케이션 서비스 계층
+ * - core.{module}.adapter: 프레젠테이션 계층 (Inbound Adapter - REST API)
+ * - core.{module}.application: 애플리케이션 서비스 계층
  *   - port.in: Inbound Port (외부로부터 들어오는 요청)
  *   - port.out: Outbound Port (다른 도메인/인프라로 나가는 요청)
- * - core.domain: 도메인 모델 계층 (비즈니스 로직)
+ * - core.{module}.domain: 도메인 모델 계층 (비즈니스 로직)
  * - integration: 도메인 간 통합 어댑터 (Outbound Adapter)
  * - infrastructure: 인프라 어댑터 (Outbound Adapter - 메일, 캐시, 스토리지 등)
  */
@@ -35,7 +35,7 @@ public class ArchitectureTest {
     public static final ArchRule adapter_should_not_depend_on_service =
         noClasses()
             .that()
-            .resideInAPackage("..core.adapter..")
+            .resideInAPackage("..core.*.adapter..")
             .should()
             .dependOnClassesThat()
             .haveNameMatching(".*(Service)$")
@@ -49,17 +49,17 @@ public class ArchitectureTest {
     public static final ArchRule application_should_not_depend_on_outer_layers =
         noClasses()
             .that()
-            .resideInAPackage("..core.application..")
+            .resideInAPackage("..core.*.application..")
             .should()
             .dependOnClassesThat()
-            .resideInAnyPackage("..core.adapter..", "..infrastructure..", "..integration..")
+            .resideInAnyPackage("..core.*.adapter..", "..infrastructure..", "..integration..")
             .because("Application은 외부 계층(Adapter, Infrastructure, Integration)에 의존 금지. Outbound Port만 사용");
 
     @ArchTest
     public static final ArchRule adapter_should_only_call_getters_on_domain_entities =
         noClasses()
             .that()
-            .resideInAPackage("..core.adapter..")
+            .resideInAPackage("..core.*.adapter..")
             .should()
             .callCodeUnitWhere(callToDomainBusinessLogicMethod())
             .because("Adapter는 Domain 엔티티의 getter/is 메서드만 호출 가능. 비즈니스 로직은 Application 계층에서 실행");
@@ -72,17 +72,17 @@ public class ArchitectureTest {
     public static final ArchRule domain_should_not_depend_on_upper_layers =
         noClasses()
             .that()
-            .resideInAPackage("..core.domain..")
+            .resideInAPackage("..core.*.domain..")
             .should()
             .dependOnClassesThat()
-            .resideInAnyPackage("..core.adapter..", "..core.application..", "..infrastructure..", "..integration..")
+            .resideInAnyPackage("..core.*.adapter..", "..core.*.application..", "..infrastructure..", "..integration..")
             .because("Domain은 상위 계층(Adapter, Application, Infrastructure, Integration)에 의존 금지");
 
     @ArchTest
     public static final ArchRule domain_should_not_depend_on_servlet_api =
         noClasses()
             .that()
-            .resideInAPackage("..core.domain..")
+            .resideInAPackage("..core.*.domain..")
             .should()
             .dependOnClassesThat()
             .resideInAPackage("jakarta.servlet..")
@@ -95,7 +95,7 @@ public class ArchitectureTest {
     @ArchTest
     public static final ArchRule domains_should_not_have_cycles =
         slices()
-            .matching("..core.domain.(*)..")
+            .matching("..core.(*).domain..")
             .should()
             .beFreeOfCycles()
             .because("Domain 간 순환 의존성 발생 금지");
@@ -103,7 +103,7 @@ public class ArchitectureTest {
     @ArchTest
     public static final ArchRule application_domains_should_not_have_cycles =
         slices()
-            .matching("..core.application.(*)..")
+            .matching("..core.(*).application..")
             .should()
             .beFreeOfCycles()
             .because("Application 간 순환 의존성 발생 금지, Application 간 상호작용은 Outbound Port를 통해서만 이루어짐");
@@ -111,7 +111,7 @@ public class ArchitectureTest {
     @ArchTest
     public static final ArchRule layers_should_not_have_cycles =
         slices()
-            .matching("..core.(domain|application|adapter).(*)..")
+            .matching("..core.(*).(domain|application|adapter)..")
             .should()
             .beFreeOfCycles()
             .because("계층 간 순환 의존성 발생 금지");
@@ -128,7 +128,7 @@ public class ArchitectureTest {
             .and()
             .haveSimpleNameEndingWith("Adapter")
             .should()
-            .implement(resideInAPackage("..core.application..port.out.."))
+            .implement(resideInAPackage("..core.*.application..port.out.."))
             .because("Integration 어댑터는 도메인 간 상호작용을 위한 Outbound Port를 구현");
 
     // ================================
@@ -141,8 +141,8 @@ public class ArchitectureTest {
             .that()
             .haveSimpleNameEndingWith("Service")
             .should()
-            .resideInAnyPackage("..core.application..", "..security.application..")
-            .because("Service는 Application 계층(core.application 또는 security.application)에 위치");
+            .resideInAnyPackage("..core.*.application..", "..security.application..")
+            .because("Service는 Application 계층(core.*.application 또는 security.application)에 위치");
 
     @ArchTest
     public static final ArchRule services_should_implement_inbound_ports =
@@ -150,9 +150,9 @@ public class ArchitectureTest {
             .that()
             .haveNameMatching(".*(Service)$")
             .and()
-            .resideInAPackage("..core.application..")
+            .resideInAPackage("..core.*.application..")
             .should()
-            .implement(resideInAPackage("..core.application..port.in.."))
+            .implement(resideInAPackage("..core.*.application..port.in.."))
             .because("Service는 Inbound Port를 구현");
 
     @ArchTest
@@ -161,7 +161,7 @@ public class ArchitectureTest {
             .that()
             .haveSimpleNameEndingWith("Adapter")
             .should()
-            .resideInAPackage("..core.application..")
+            .resideInAPackage("..core.*.application..")
             .because("Adapter는 Application 계층이 아닌 security || integration || infrastructure에 위치");
 
     @ArchTest
@@ -183,16 +183,16 @@ public class ArchitectureTest {
     public static final ArchRule core_adapter_out_should_not_implement_core_outbound_ports =
         noClasses()
             .that()
-            .resideInAPackage("..core.adapter..out..")
+            .resideInAPackage("..core.*.adapter..out..")
             .should()
-            .implement(resideInAPackage("..core.application..port.out.."))
+            .implement(resideInAPackage("..core.*.application..port.out.."))
             .because("core 도메인 간 협력은 integration 패키지에서 구현");
 
     @ArchTest
     public static final ArchRule security_outbound_port_can_be_implemented_in_core_adapter =
         classes()
             .that()
-            .resideInAPackage("..core.adapter..out..")
+            .resideInAPackage("..core.*.adapter..out..")
             .and()
             .haveSimpleNameEndingWith("Adapter")
             .should()

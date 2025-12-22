@@ -1,6 +1,6 @@
 package com.bob.integration.adapter.post;
 
-import static com.bob.core.application.post.port.result.PostMemberWishResult.of;
+import static com.bob.core.post.application.port.result.PostMemberWishResult.of;
 
 import java.util.List;
 import java.util.UUID;
@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.member.dto.result.MemberDetail;
-import com.bob.core.application.member.port.in.MemberReader;
-import com.bob.core.application.post.port.out.PostMemberPort;
-import com.bob.core.application.post.port.result.PostMember;
-import com.bob.core.application.post.port.result.PostMemberWishResult;
+import com.bob.core.member.application.dto.result.MemberDetail;
+import com.bob.core.member.application.port.in.MemberReader;
+import com.bob.core.post.application.port.out.PostMemberPort;
+import com.bob.core.post.application.port.result.PostMember;
+import com.bob.core.post.application.port.result.PostMemberWishResult;
 
 @Component
 @RequiredArgsConstructor

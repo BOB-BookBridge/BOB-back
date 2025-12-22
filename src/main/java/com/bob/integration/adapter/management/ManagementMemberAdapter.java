@@ -1,6 +1,6 @@
 package com.bob.integration.adapter.management;
 
-import static com.bob.core.application.management.port.result.ManagementMember.Area;
+import static com.bob.core.management.application.port.result.ManagementMember.Area;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,18 +10,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.management.port.out.ManagementMemberPort;
-import com.bob.core.application.management.port.result.ManagementMember;
-import com.bob.core.application.management.port.result.ManagementMemberSummaries;
-import com.bob.core.application.member.dto.command.ChangeStatusCommand;
-import com.bob.core.application.member.dto.result.MemberDetail;
-import com.bob.core.application.member.dto.result.MemberSummaries;
-import com.bob.core.application.member.port.in.MemberModifier;
-import com.bob.core.application.member.port.in.MemberReader;
-import com.bob.core.application.member.port.in.MemberSearcher;
-import com.bob.core.domain.member.Member;
-import com.bob.core.domain.member.repository.dsl.query.SearchKey;
-import com.bob.core.domain.member.repository.dsl.query.SearchMembersQuery;
+import com.bob.core.management.application.port.out.ManagementMemberPort;
+import com.bob.core.management.application.port.result.ManagementMember;
+import com.bob.core.management.application.port.result.ManagementMemberSummaries;
+import com.bob.core.member.application.dto.command.ChangeStatusCommand;
+import com.bob.core.member.application.dto.result.MemberDetail;
+import com.bob.core.member.application.dto.result.MemberSummaries;
+import com.bob.core.member.application.port.in.MemberModifier;
+import com.bob.core.member.application.port.in.MemberReader;
+import com.bob.core.member.application.port.in.MemberSearcher;
+import com.bob.core.member.domain.Member;
+import com.bob.core.member.domain.repository.dsl.query.SearchKey;
+import com.bob.core.member.domain.repository.dsl.query.SearchMembersQuery;
 
 @Component
 @RequiredArgsConstructor

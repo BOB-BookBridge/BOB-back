@@ -6,13 +6,13 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.file.dto.command.MappingFileReferencesCommand;
-import com.bob.core.application.file.dto.query.ReadFilesWithDomainIdQuery;
-import com.bob.core.application.file.port.in.FileModifier;
-import com.bob.core.application.file.port.in.FileReader;
-import com.bob.core.application.post.port.out.PostFilePort;
-import com.bob.core.application.post.port.result.PostFile;
-import com.bob.core.domain.file.File;
+import com.bob.core.file.application.dto.command.MappingFileReferencesCommand;
+import com.bob.core.file.application.dto.query.ReadFilesWithDomainIdQuery;
+import com.bob.core.file.application.port.in.FileModifier;
+import com.bob.core.file.application.port.in.FileReader;
+import com.bob.core.file.domain.File;
+import com.bob.core.post.application.port.out.PostFilePort;
+import com.bob.core.post.application.port.result.PostFile;
 
 @Component
 @RequiredArgsConstructor

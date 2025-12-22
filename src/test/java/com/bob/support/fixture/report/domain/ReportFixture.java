@@ -1,11 +1,11 @@
 package com.bob.support.fixture.report.domain;
 
-import static com.bob.core.domain.report.ReportTarget.POST;
+import static com.bob.core.report.domain.ReportTarget.POST;
 import static com.bob.support.fixture.member.domain.MemberFixture.MANAGER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 
-import com.bob.core.domain.report.Report;
+import com.bob.core.report.domain.Report;
 
 public class ReportFixture {
 

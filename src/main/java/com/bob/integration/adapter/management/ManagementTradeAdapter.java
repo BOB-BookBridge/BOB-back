@@ -1,6 +1,6 @@
 package com.bob.integration.adapter.management;
 
-import static com.bob.core.domain.trade.status.Status.COMPLETED;
+import static com.bob.core.trade.domain.status.Status.COMPLETED;
 
 import java.util.List;
 import java.util.Map;
@@ -12,13 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.management.port.out.ManagementTradePort;
-import com.bob.core.application.management.port.result.activity.ManagementMemberTrade;
-import com.bob.core.application.trade.dto.result.TradeSummaries;
-import com.bob.core.application.trade.dto.result.TradeSummary;
-import com.bob.core.application.trade.port.in.TradeReader;
-import com.bob.core.domain.trade.repository.dsl.query.ReadTradesQuery;
-import com.bob.core.domain.trade.repository.dsl.query.SearchKey;
+import com.bob.core.management.application.port.out.ManagementTradePort;
+import com.bob.core.management.application.port.result.activity.ManagementMemberTrade;
+import com.bob.core.trade.application.dto.result.TradeSummaries;
+import com.bob.core.trade.application.dto.result.TradeSummary;
+import com.bob.core.trade.application.port.in.TradeReader;
+import com.bob.core.trade.domain.repository.dsl.query.ReadTradesQuery;
+import com.bob.core.trade.domain.repository.dsl.query.SearchKey;
 
 @Component
 @RequiredArgsConstructor

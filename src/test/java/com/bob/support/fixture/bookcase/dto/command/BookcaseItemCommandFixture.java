@@ -6,7 +6,7 @@ import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.bob.core.application.bookcase.dto.command.RegisterBookcaseItemCommand;
+import com.bob.core.bookcase.application.dto.command.RegisterBookcaseItemCommand;
 
 public class BookcaseItemCommandFixture {
 

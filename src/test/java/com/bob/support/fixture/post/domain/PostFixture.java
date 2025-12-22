@@ -5,7 +5,7 @@ import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 
 import java.util.UUID;
 
-import com.bob.core.domain.post.Post;
+import com.bob.core.post.domain.Post;
 
 public class PostFixture {
 

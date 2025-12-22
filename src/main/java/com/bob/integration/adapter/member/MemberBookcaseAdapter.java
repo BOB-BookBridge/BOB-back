@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.bookcase.dto.query.ReadBookcaseQuery;
-import com.bob.core.application.bookcase.dto.result.BookcaseItemDetail;
-import com.bob.core.application.bookcase.port.in.BookcaseReader;
-import com.bob.core.application.member.port.out.MemberBookcasePort;
-import com.bob.core.application.member.port.result.MemberBookcaseResult;
+import com.bob.core.bookcase.application.dto.query.ReadBookcaseQuery;
+import com.bob.core.bookcase.application.dto.result.BookcaseItemDetail;
+import com.bob.core.bookcase.application.port.in.BookcaseReader;
+import com.bob.core.member.application.port.out.MemberBookcasePort;
+import com.bob.core.member.application.port.result.MemberBookcaseResult;
 
 @Component
 @RequiredArgsConstructor

@@ -4,7 +4,7 @@ import static com.bob.support.fixture.area.domain.AreaFixture.EMD_AREA_ID;
 
 import java.time.LocalDate;
 
-import com.bob.core.domain.member.MemberArea;
+import com.bob.core.member.domain.MemberArea;
 
 public class MemberAreaFixture {
 

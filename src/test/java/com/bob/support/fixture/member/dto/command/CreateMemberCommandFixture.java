@@ -1,6 +1,6 @@
 package com.bob.support.fixture.member.dto.command;
 
-import com.bob.core.application.member.dto.command.CreateMemberCommand;
+import com.bob.core.member.application.dto.command.CreateMemberCommand;
 
 public class CreateMemberCommandFixture {
 

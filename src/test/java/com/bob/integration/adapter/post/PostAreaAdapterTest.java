@@ -10,9 +10,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.bob.core.application.area.port.in.AreaReader;
-import com.bob.core.application.post.port.result.PostArea;
-import com.bob.core.domain.area.EmdArea;
+import com.bob.core.area.application.port.in.AreaReader;
+import com.bob.core.area.domain.EmdArea;
+import com.bob.core.post.application.port.result.PostArea;
 
 @ExtendWith(MockitoExtension.class)
 class PostAreaAdapterTest {

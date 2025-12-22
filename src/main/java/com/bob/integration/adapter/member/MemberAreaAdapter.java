@@ -4,14 +4,14 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.area.dto.command.MatchAreaQuery;
-import com.bob.core.application.area.port.in.AreaAuthenticator;
-import com.bob.core.application.area.port.in.AreaReader;
-import com.bob.core.application.member.port.out.MemberAreaPort;
-import com.bob.core.application.member.port.result.MemberAreaResult;
-import com.bob.core.domain.area.EmdArea;
-import com.bob.core.domain.area.SidoArea;
-import com.bob.core.domain.area.SiggArea;
+import com.bob.core.area.application.dto.command.MatchAreaQuery;
+import com.bob.core.area.application.port.in.AreaAuthenticator;
+import com.bob.core.area.application.port.in.AreaReader;
+import com.bob.core.area.domain.EmdArea;
+import com.bob.core.area.domain.SidoArea;
+import com.bob.core.area.domain.SiggArea;
+import com.bob.core.member.application.port.out.MemberAreaPort;
+import com.bob.core.member.application.port.result.MemberAreaResult;
 
 @Component
 @RequiredArgsConstructor

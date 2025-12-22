@@ -1,13 +1,13 @@
 package com.bob.support.fixture.chat.domain;
 
-import static com.bob.core.domain.chat.type.ChatMessageType.TEXT;
+import static com.bob.core.chat.domain.type.ChatMessageType.TEXT;
 
 import java.util.UUID;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.bob.core.domain.chat.ChatMessage;
-import com.bob.core.domain.chat.Chatroom;
+import com.bob.core.chat.domain.ChatMessage;
+import com.bob.core.chat.domain.Chatroom;
 
 public class ChatMessageFixture {
 

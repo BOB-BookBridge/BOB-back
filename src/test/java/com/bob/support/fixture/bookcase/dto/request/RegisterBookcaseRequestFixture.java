@@ -4,7 +4,7 @@ import static com.bob.support.fixture.book.domain.BookFixture.DEFAULT_ISBN;
 
 import java.time.LocalDate;
 
-import com.bob.core.adapter.bookcase.api.request.RegisterBookcaseRequest;
+import com.bob.core.bookcase.adapter.api.request.RegisterBookcaseRequest;
 
 public class RegisterBookcaseRequestFixture {
 

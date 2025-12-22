@@ -6,8 +6,8 @@ import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_I
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.bob.core.domain.trade.Trade;
-import com.bob.core.domain.trade.status.Status;
+import com.bob.core.trade.domain.Trade;
+import com.bob.core.trade.domain.status.Status;
 
 public class TradeFixture {
 

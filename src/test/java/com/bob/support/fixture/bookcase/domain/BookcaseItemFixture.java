@@ -2,7 +2,7 @@ package com.bob.support.fixture.bookcase.domain;
 
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 
-import com.bob.core.domain.bookcase.BookcaseItem;
+import com.bob.core.bookcase.domain.BookcaseItem;
 
 public class BookcaseItemFixture {
 

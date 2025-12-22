@@ -4,7 +4,7 @@ import static com.bob.support.fixture.area.domain.AreaFixture.EMD_AREA_ID;
 
 import java.util.UUID;
 
-import com.bob.core.domain.member.Member;
+import com.bob.core.member.domain.Member;
 
 public class MemberFixture {
 

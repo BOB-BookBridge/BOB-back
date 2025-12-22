@@ -3,7 +3,7 @@ package com.bob.support.fixture.chat.domain;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 
-import com.bob.core.domain.chat.Chatroom;
+import com.bob.core.chat.domain.Chatroom;
 
 public class ChatroomFixture {
 

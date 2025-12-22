@@ -1,8 +1,8 @@
 package com.bob.support.fixture.area.domain;
 
-import com.bob.core.domain.area.EmdArea;
-import com.bob.core.domain.area.SidoArea;
-import com.bob.core.domain.area.SiggArea;
+import com.bob.core.area.domain.EmdArea;
+import com.bob.core.area.domain.SidoArea;
+import com.bob.core.area.domain.SiggArea;
 import com.bob.support.fixture.util.GeometryUtils;
 
 public class AreaFixture {

@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.category.port.in.CategoryReader;
-import com.bob.core.application.post.port.out.PostCategoryPort;
+import com.bob.core.category.application.port.in.CategoryReader;
+import com.bob.core.post.application.port.out.PostCategoryPort;
 
 @Component
 @RequiredArgsConstructor

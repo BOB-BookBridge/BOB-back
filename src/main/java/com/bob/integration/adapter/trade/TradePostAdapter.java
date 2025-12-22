@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.post.dto.command.ChangePostTradeProgressCommand;
-import com.bob.core.application.post.dto.query.ReadPostDetailQuery;
-import com.bob.core.application.post.dto.result.PostDetail;
-import com.bob.core.application.post.port.in.PostModifier;
-import com.bob.core.application.post.port.in.PostReader;
-import com.bob.core.application.trade.port.out.TradePostPort;
-import com.bob.core.application.trade.port.result.TradePost;
+import com.bob.core.post.application.dto.command.ChangePostTradeProgressCommand;
+import com.bob.core.post.application.dto.query.ReadPostDetailQuery;
+import com.bob.core.post.application.dto.result.PostDetail;
+import com.bob.core.post.application.port.in.PostModifier;
+import com.bob.core.post.application.port.in.PostReader;
+import com.bob.core.trade.application.port.out.TradePostPort;
+import com.bob.core.trade.application.port.result.TradePost;
 
 @Component
 @RequiredArgsConstructor

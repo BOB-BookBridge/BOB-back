@@ -2,7 +2,7 @@ package com.bob.support.fixture.book.domain;
 
 import java.time.LocalDate;
 
-import com.bob.core.domain.book.Book;
+import com.bob.core.book.domain.Book;
 
 public class BookFixture {
 

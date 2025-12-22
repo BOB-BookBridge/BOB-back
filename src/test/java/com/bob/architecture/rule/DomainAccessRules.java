@@ -22,7 +22,9 @@ public class DomainAccessRules {
         return new DescribedPredicate<>("call to domain business logic method") {
             @Override
             public boolean test(JavaCall<?> call) {
-                if (!call.getTargetOwner().getPackageName().contains("core.domain")) {
+                String packageName = call.getTargetOwner().getPackageName();
+
+                if (!packageName.matches(".*\\.core\\.[^.]+\\.domain.*")) {
                     return false;
                 }
 

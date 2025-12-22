@@ -3,8 +3,8 @@ package com.bob.support.fixture.notification.dto.command;
 import java.util.List;
 import java.util.UUID;
 
-import com.bob.core.application.notification.dto.command.CreateNotificationCommand;
-import com.bob.core.domain.notification.NotificationType;
+import com.bob.core.notification.application.dto.command.CreateNotificationCommand;
+import com.bob.core.notification.domain.NotificationType;
 
 public class CreateNotificationCommandFixture {
 

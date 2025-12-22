@@ -3,7 +3,7 @@ package com.bob.infrastructure.secure.adapter.encoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.stereotype.Component;
 
-import com.bob.core.domain.member.PasswordEncoder;
+import com.bob.core.member.domain.PasswordEncoder;
 
 @Component
 public class SecurePasswordEncoder implements PasswordEncoder {

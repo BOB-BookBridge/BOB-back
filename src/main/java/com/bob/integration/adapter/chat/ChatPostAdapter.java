@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.chat.port.out.ChatPostPort;
-import com.bob.core.application.chat.port.result.ChatPost;
-import com.bob.core.application.post.dto.query.ReadPostDetailQuery;
-import com.bob.core.application.post.dto.result.PostDetail;
-import com.bob.core.application.post.port.in.PostReader;
+import com.bob.core.chat.application.port.out.ChatPostPort;
+import com.bob.core.chat.application.port.result.ChatPost;
+import com.bob.core.post.application.dto.query.ReadPostDetailQuery;
+import com.bob.core.post.application.dto.result.PostDetail;
+import com.bob.core.post.application.port.in.PostReader;
 
 @Component
 @RequiredArgsConstructor

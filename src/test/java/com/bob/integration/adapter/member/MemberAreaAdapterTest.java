@@ -11,9 +11,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.bob.core.application.area.port.in.AreaReader;
-import com.bob.core.application.member.port.result.MemberAreaResult;
-import com.bob.core.domain.area.EmdArea;
+import com.bob.core.area.application.port.in.AreaReader;
+import com.bob.core.area.domain.EmdArea;
+import com.bob.core.member.application.port.result.MemberAreaResult;
 
 @DisplayName("회원 지역 adapter 테스트")
 @ExtendWith(MockitoExtension.class)

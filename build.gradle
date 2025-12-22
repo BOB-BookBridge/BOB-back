@@ -86,7 +86,7 @@ tasks.named('test') {
 
 def jacocoExcludes = [
         'com.bob.global.utils.uuid.UuidV7Generator',
-        'com.bob.core.domain.AbstractEntity',
+        'com.bob.core.shared.entity.AbstractEntity',
         'com.bob.**.config.**',
         'com.bob.**.request.**',
         'com.bob.**.response.**',
@@ -119,7 +119,7 @@ jacocoTestCoverageVerification {
 
 def jacocoExcludesForReport = [
         'com/bob/global/utils/uuid/UuidV7Generator',
-        'com/bob/core/domain/AbstractEntity',
+        'com/bob/core/shared/entity/AbstractEntity',
         "**/*config*/**",
         "**/*request*/**",
         "**/*response*/**",

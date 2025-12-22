@@ -4,7 +4,7 @@ import static com.bob.support.fixture.book.domain.BookFixture.DEFAULT_ISBN;
 
 import java.time.LocalDate;
 
-import com.bob.core.application.book.dto.command.RegisterBookCommand;
+import com.bob.core.book.application.dto.command.RegisterBookCommand;
 
 public class CreateBookCommandFixture {
 

@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.interest.dto.command.RegisterInterestsByNamesCommand;
-import com.bob.core.application.interest.port.in.InterestRegister;
-import com.bob.core.application.member.port.out.MemberInterestPort;
-import com.bob.core.domain.interest.Interest;
+import com.bob.core.interest.application.dto.command.RegisterInterestsByNamesCommand;
+import com.bob.core.interest.application.port.in.InterestRegister;
+import com.bob.core.interest.domain.Interest;
+import com.bob.core.member.application.port.out.MemberInterestPort;
 
 @Component
 @RequiredArgsConstructor

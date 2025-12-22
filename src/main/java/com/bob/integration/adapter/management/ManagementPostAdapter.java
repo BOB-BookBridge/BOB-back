@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.management.port.out.ManagementPostPort;
-import com.bob.core.application.management.port.result.activity.ManagementMemberPost;
-import com.bob.core.application.post.dto.query.ReadMemberPostsQuery;
-import com.bob.core.application.post.port.in.PostReader;
-import com.bob.core.domain.post.Post;
+import com.bob.core.management.application.port.out.ManagementPostPort;
+import com.bob.core.management.application.port.result.activity.ManagementMemberPost;
+import com.bob.core.post.application.dto.query.ReadMemberPostsQuery;
+import com.bob.core.post.application.port.in.PostReader;
+import com.bob.core.post.domain.Post;
 
 @Component
 @RequiredArgsConstructor

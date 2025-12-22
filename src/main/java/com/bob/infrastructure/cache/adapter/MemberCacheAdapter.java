@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.member.port.out.MemberCachePort;
+import com.bob.core.member.application.port.out.MemberCachePort;
 import com.bob.infrastructure.cache.repository.KeyValueRepository;
 
 @Component

@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.bob.core.domain.file.File;
-import com.bob.core.domain.file.type.FileDomain;
+import com.bob.core.file.domain.File;
+import com.bob.core.file.domain.type.FileDomain;
 
 public class FileFixture {
 

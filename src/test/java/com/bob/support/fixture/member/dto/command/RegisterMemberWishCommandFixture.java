@@ -4,7 +4,7 @@ import static com.bob.support.fixture.book.domain.BookFixture.DEFAULT_ISBN;
 
 import java.time.LocalDate;
 
-import com.bob.core.application.member.dto.command.RegisterMemberWishCommand;
+import com.bob.core.member.application.dto.command.RegisterMemberWishCommand;
 
 public class RegisterMemberWishCommandFixture {
 

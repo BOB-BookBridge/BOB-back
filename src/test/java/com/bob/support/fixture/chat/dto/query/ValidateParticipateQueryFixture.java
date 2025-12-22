@@ -4,7 +4,7 @@ import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 
 import java.util.UUID;
 
-import com.bob.core.application.chat.dto.query.ValidateParticipantQuery;
+import com.bob.core.chat.application.dto.query.ValidateParticipantQuery;
 
 public class ValidateParticipateQueryFixture {
 

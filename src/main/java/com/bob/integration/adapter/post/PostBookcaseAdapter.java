@@ -7,15 +7,15 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.bookcase.dto.command.AllocateUsageCommand;
-import com.bob.core.application.bookcase.dto.command.FreeUsageByRefIdCommand;
-import com.bob.core.application.bookcase.dto.command.RegisterBookcaseItemCommand;
-import com.bob.core.application.bookcase.port.in.BookcaseModifier;
-import com.bob.core.application.bookcase.port.in.BookcaseRegister;
-import com.bob.core.application.post.port.out.PostBookcasePort;
-import com.bob.core.application.post.port.out.request.RegisterBookcaseRequest;
-import com.bob.core.application.post.port.result.PostBookcaseId;
-import com.bob.core.domain.bookcase.BookcaseItem;
+import com.bob.core.bookcase.application.dto.command.AllocateUsageCommand;
+import com.bob.core.bookcase.application.dto.command.FreeUsageByRefIdCommand;
+import com.bob.core.bookcase.application.dto.command.RegisterBookcaseItemCommand;
+import com.bob.core.bookcase.application.port.in.BookcaseModifier;
+import com.bob.core.bookcase.application.port.in.BookcaseRegister;
+import com.bob.core.bookcase.domain.BookcaseItem;
+import com.bob.core.post.application.port.out.PostBookcasePort;
+import com.bob.core.post.application.port.out.request.RegisterBookcaseRequest;
+import com.bob.core.post.application.port.result.PostBookcaseId;
 
 @Component
 @RequiredArgsConstructor

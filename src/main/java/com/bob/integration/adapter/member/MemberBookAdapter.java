@@ -1,6 +1,6 @@
 package com.bob.integration.adapter.member;
 
-import static com.bob.core.application.book.dto.command.RegisterBookCommand.of;
+import static com.bob.core.book.application.dto.command.RegisterBookCommand.of;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -9,12 +9,12 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.book.dto.command.RegisterBookCommand;
-import com.bob.core.application.book.port.in.BookReader;
-import com.bob.core.application.book.port.in.BookRegister;
-import com.bob.core.application.member.port.out.MemberBookPort;
-import com.bob.core.application.member.port.result.MemberBookResult;
-import com.bob.core.domain.book.Book;
+import com.bob.core.book.application.dto.command.RegisterBookCommand;
+import com.bob.core.book.application.port.in.BookReader;
+import com.bob.core.book.application.port.in.BookRegister;
+import com.bob.core.book.domain.Book;
+import com.bob.core.member.application.port.out.MemberBookPort;
+import com.bob.core.member.application.port.result.MemberBookResult;
 
 @Component
 @RequiredArgsConstructor

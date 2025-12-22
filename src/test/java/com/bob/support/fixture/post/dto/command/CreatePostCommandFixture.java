@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import com.bob.core.application.post.dto.command.CreatePostCommand;
+import com.bob.core.post.application.dto.command.CreatePostCommand;
 
 public class CreatePostCommandFixture {
 

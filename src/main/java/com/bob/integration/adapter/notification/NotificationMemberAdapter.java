@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.member.dto.result.MemberDetail;
-import com.bob.core.application.member.port.in.MemberReader;
-import com.bob.core.application.notification.port.out.NotificationMemberPort;
-import com.bob.core.application.notification.port.result.NotificationMember;
+import com.bob.core.member.application.dto.result.MemberDetail;
+import com.bob.core.member.application.port.in.MemberReader;
+import com.bob.core.notification.application.port.out.NotificationMemberPort;
+import com.bob.core.notification.application.port.result.NotificationMember;
 
 @Component
 @RequiredArgsConstructor

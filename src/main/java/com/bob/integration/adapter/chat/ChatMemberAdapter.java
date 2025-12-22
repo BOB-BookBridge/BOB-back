@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.chat.port.out.ChatMemberPort;
-import com.bob.core.application.chat.port.result.ChatMember;
-import com.bob.core.application.member.dto.result.MemberDetail;
-import com.bob.core.application.member.port.in.MemberReader;
+import com.bob.core.chat.application.port.out.ChatMemberPort;
+import com.bob.core.chat.application.port.result.ChatMember;
+import com.bob.core.member.application.dto.result.MemberDetail;
+import com.bob.core.member.application.port.in.MemberReader;
 
 @Component
 @RequiredArgsConstructor

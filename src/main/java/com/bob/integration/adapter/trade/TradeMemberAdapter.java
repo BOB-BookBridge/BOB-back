@@ -8,12 +8,12 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.member.dto.result.MemberDetail;
-import com.bob.core.application.member.dto.result.MemberWishDetail;
-import com.bob.core.application.member.port.in.MemberReader;
-import com.bob.core.application.trade.port.out.TradeMemberPort;
-import com.bob.core.application.trade.port.result.TradeBookcaseItem;
-import com.bob.core.application.trade.port.result.TradeMember;
+import com.bob.core.member.application.dto.result.MemberDetail;
+import com.bob.core.member.application.dto.result.MemberWishDetail;
+import com.bob.core.member.application.port.in.MemberReader;
+import com.bob.core.trade.application.port.out.TradeMemberPort;
+import com.bob.core.trade.application.port.result.TradeBookcaseItem;
+import com.bob.core.trade.application.port.result.TradeMember;
 
 @Component
 @RequiredArgsConstructor

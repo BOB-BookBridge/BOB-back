@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.area.port.in.AreaReader;
-import com.bob.core.application.post.port.out.PostAreaPort;
-import com.bob.core.application.post.port.result.PostArea;
-import com.bob.core.domain.area.EmdArea;
-import com.bob.core.domain.area.SiggArea;
+import com.bob.core.area.application.port.in.AreaReader;
+import com.bob.core.area.domain.EmdArea;
+import com.bob.core.area.domain.SiggArea;
+import com.bob.core.post.application.port.out.PostAreaPort;
+import com.bob.core.post.application.port.result.PostArea;
 
 @Component
 @RequiredArgsConstructor

@@ -9,15 +9,15 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.management.port.out.ManagementReportPort;
-import com.bob.core.application.management.port.result.ManagementMemberReport;
-import com.bob.core.application.report.dto.query.ReadReportCountQuery;
-import com.bob.core.application.report.dto.query.ReadReportQuery;
-import com.bob.core.application.report.port.in.ReportReader;
-import com.bob.core.domain.report.Report;
-import com.bob.core.domain.report.ReportStatus;
-import com.bob.core.domain.report.ReportTarget;
-import com.bob.core.domain.report.repository.projection.ReportCount;
+import com.bob.core.management.application.port.out.ManagementReportPort;
+import com.bob.core.management.application.port.result.ManagementMemberReport;
+import com.bob.core.report.application.dto.query.ReadReportCountQuery;
+import com.bob.core.report.application.dto.query.ReadReportQuery;
+import com.bob.core.report.application.port.in.ReportReader;
+import com.bob.core.report.domain.Report;
+import com.bob.core.report.domain.ReportStatus;
+import com.bob.core.report.domain.ReportTarget;
+import com.bob.core.report.domain.repository.projection.ReportCount;
 
 @Component
 @RequiredArgsConstructor

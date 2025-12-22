@@ -2,7 +2,7 @@ package com.bob.support.fixture.file.dto.command;
 
 import java.util.List;
 
-import com.bob.core.application.file.dto.command.MappingFileReferencesCommand;
+import com.bob.core.file.application.dto.command.MappingFileReferencesCommand;
 
 public class MappingFileReferencesCommandFixture {
 

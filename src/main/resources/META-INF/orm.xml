@@ -5,7 +5,7 @@
                                      https://hibernate.org/xsd/orm/mapping/mapping-3.1.0.xsd">
     <access>FIELD</access>
 
-    <mapped-superclass class="com.bob.core.domain.AbstractEntity">
+    <mapped-superclass class="com.bob.core.shared.entity.AbstractEntity">
         <attributes>
             <id name="id">
                 <column name="id"/>
@@ -14,7 +14,7 @@
         </attributes>
     </mapped-superclass>
 
-    <entity class="com.bob.core.domain.category.Category">
+    <entity class="com.bob.core.category.domain.Category">
         <table name="categories"/>
         <attributes>
             <id name="id">
@@ -29,7 +29,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.area.SiggArea">
+    <entity class="com.bob.core.area.domain.SiggArea">
         <table name="sigg_areas"/>
         <attributes>
             <id name="id">
@@ -47,7 +47,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.area.SidoArea">
+    <entity class="com.bob.core.area.domain.SidoArea">
         <table name="sido_areas"/>
         <attributes>
             <id name="id">
@@ -62,7 +62,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.area.EmdArea">
+    <entity class="com.bob.core.area.domain.EmdArea">
         <table name="emd_areas"/>
         <attributes>
             <id name="id">
@@ -83,7 +83,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.member.Member">
+    <entity class="com.bob.core.member.domain.Member">
         <table name="members">
             <unique-constraint name="UK_MEMBER_EMAIL">
                 <column-name>email</column-name>
@@ -146,7 +146,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.member.MemberArea">
+    <entity class="com.bob.core.member.domain.MemberArea">
         <table name="member_areas"/>
         <attributes>
             <basic name="emdId">
@@ -158,7 +158,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.member.MemberWish">
+    <entity class="com.bob.core.member.domain.MemberWish">
         <table name="member_wishes">
             <unique-constraint name="UK_MEMBER_WISH_BOOK">
                 <column-name>member_id</column-name>
@@ -172,7 +172,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.member.MemberInterest">
+    <entity class="com.bob.core.member.domain.MemberInterest">
         <table name="member_interests"/>
         <attributes>
             <basic name="interestId">
@@ -184,7 +184,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.interest.Interest">
+    <entity class="com.bob.core.interest.domain.Interest">
         <table name="interests">
             <unique-constraint name="UK_INTEREST_NAME">
                 <column-name>name</column-name>
@@ -197,7 +197,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.book.Book">
+    <entity class="com.bob.core.book.domain.Book">
         <table name="books"/>
         <attributes>
             <basic name="isbn">
@@ -224,7 +224,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.chat.Chatroom">
+    <entity class="com.bob.core.chat.domain.Chatroom">
         <table name="chatrooms"/>
         <attributes>
             <basic name="postId">
@@ -260,7 +260,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.chat.ChatroomMember">
+    <entity class="com.bob.core.chat.domain.ChatroomMember">
         <table name="chatroom_members"/>
         <attributes>
             <basic name="memberId">
@@ -278,7 +278,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.chat.ChatMessage">
+    <entity class="com.bob.core.chat.domain.ChatMessage">
         <table name="chat_messages"/>
         <attributes>
             <basic name="senderId">
@@ -297,7 +297,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.file.File">
+    <entity class="com.bob.core.file.domain.File">
         <table name="files"/>
         <attributes>
             <basic name="domain">
@@ -322,7 +322,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.bookcase.BookcaseItem">
+    <entity class="com.bob.core.bookcase.domain.BookcaseItem">
         <table name="bookcase_items"/>
         <attributes>
             <basic name="memberId">
@@ -344,7 +344,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.notification.Notification">
+    <entity class="com.bob.core.notification.domain.Notification">
         <table name="notifications"/>
         <attributes>
             <basic name="type">
@@ -369,7 +369,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.post.Post">
+    <entity class="com.bob.core.post.domain.Post">
         <table name="posts"/>
         <attributes>
             <id name="id">
@@ -436,7 +436,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.post.PostFavorite">
+    <entity class="com.bob.core.post.domain.PostFavorite">
         <table name="post_favorites">
             <unique-constraint name="UK_POST_FAVORITE_MEMBER_POST">
                 <column-name>member_id</column-name>
@@ -451,7 +451,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.trade.Trade">
+    <entity class="com.bob.core.trade.domain.Trade">
         <table name="trades"/>
         <attributes>
             <id name="id">
@@ -489,7 +489,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.trade.TradeItem">
+    <entity class="com.bob.core.trade.domain.TradeItem">
         <attributes>
             <basic name="itemId">
                 <column name="item_id" nullable="false"/>
@@ -504,7 +504,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.report.Report">
+    <entity class="com.bob.core.report.domain.Report">
         <table name="reports"/>
         <attributes>
             <basic name="status">
@@ -539,7 +539,7 @@
         </attributes>
     </entity>
 
-    <entity class="com.bob.core.domain.inquiry.Inquiry">
+    <entity class="com.bob.core.inquiry.domain.Inquiry">
         <table name="inquiries"/>
         <attributes>
             <basic name="status">

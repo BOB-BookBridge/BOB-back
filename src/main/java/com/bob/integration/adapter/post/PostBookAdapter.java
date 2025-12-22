@@ -6,11 +6,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.book.dto.query.ReadBooksQuery;
-import com.bob.core.application.book.port.in.BookReader;
-import com.bob.core.application.post.port.out.PostBookPort;
-import com.bob.core.application.post.port.result.PostBook;
-import com.bob.core.domain.book.Book;
+import com.bob.core.book.application.dto.query.ReadBooksQuery;
+import com.bob.core.book.application.port.in.BookReader;
+import com.bob.core.book.domain.Book;
+import com.bob.core.post.application.port.out.PostBookPort;
+import com.bob.core.post.application.port.result.PostBook;
 
 @Component
 @RequiredArgsConstructor

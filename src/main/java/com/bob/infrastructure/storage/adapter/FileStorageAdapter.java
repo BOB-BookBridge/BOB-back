@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.file.port.out.FileStoragePort;
+import com.bob.core.file.application.port.out.FileStoragePort;
 import com.bob.infrastructure.storage.repository.FileRepository;
 
 @Component

@@ -1,6 +1,6 @@
 package com.bob.support.fixture.inquiry.domain;
 
-import com.bob.core.domain.inquiry.Inquiry;
+import com.bob.core.inquiry.domain.Inquiry;
 
 public class InquiryFixture {
 

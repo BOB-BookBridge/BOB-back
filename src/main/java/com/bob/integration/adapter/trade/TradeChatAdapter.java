@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.chat.dto.command.CreateChatroomCommand;
-import com.bob.core.application.chat.port.in.ChatroomCreator;
-import com.bob.core.application.trade.port.out.TradeChatPort;
-import com.bob.core.domain.chat.Chatroom;
+import com.bob.core.chat.application.dto.command.CreateChatroomCommand;
+import com.bob.core.chat.application.port.in.ChatroomCreator;
+import com.bob.core.chat.domain.Chatroom;
+import com.bob.core.trade.application.port.out.TradeChatPort;
 
 @Component
 @RequiredArgsConstructor

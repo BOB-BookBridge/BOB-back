@@ -6,8 +6,8 @@ import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_I
 import java.util.List;
 import java.util.UUID;
 
-import com.bob.core.application.chat.dto.command.CreateMessageCommand;
-import com.bob.core.application.chat.dto.command.CreateSystemMessageCommand;
+import com.bob.core.chat.application.dto.command.CreateMessageCommand;
+import com.bob.core.chat.application.dto.command.CreateSystemMessageCommand;
 
 public class ChatMessageCommandFixture {
 

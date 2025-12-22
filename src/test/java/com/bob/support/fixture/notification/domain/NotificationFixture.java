@@ -5,8 +5,8 @@ import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.bob.core.domain.notification.Notification;
-import com.bob.core.domain.notification.NotificationType;
+import com.bob.core.notification.domain.Notification;
+import com.bob.core.notification.domain.NotificationType;
 
 public class NotificationFixture {
 

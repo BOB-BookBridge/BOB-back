@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.notification.port.out.NotificationMessagePort;
+import com.bob.core.notification.application.port.out.NotificationMessagePort;
 import com.bob.infrastructure.messaging.publisher.RedisPublisher;
 import com.bob.infrastructure.messaging.record.RedisRecord;
 

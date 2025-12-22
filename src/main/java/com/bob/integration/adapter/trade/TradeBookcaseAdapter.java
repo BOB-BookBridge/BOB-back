@@ -7,14 +7,14 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.application.bookcase.dto.command.AllocateUsageCommand;
-import com.bob.core.application.bookcase.dto.command.FreeUsageCommand;
-import com.bob.core.application.bookcase.dto.result.BookcaseItemDetail;
-import com.bob.core.application.bookcase.port.in.BookcaseDeleter;
-import com.bob.core.application.bookcase.port.in.BookcaseModifier;
-import com.bob.core.application.bookcase.port.in.BookcaseReader;
-import com.bob.core.application.trade.port.out.TradeBookcasePort;
-import com.bob.core.application.trade.port.result.TradeBookcaseItem;
+import com.bob.core.bookcase.application.dto.command.AllocateUsageCommand;
+import com.bob.core.bookcase.application.dto.command.FreeUsageCommand;
+import com.bob.core.bookcase.application.dto.result.BookcaseItemDetail;
+import com.bob.core.bookcase.application.port.in.BookcaseDeleter;
+import com.bob.core.bookcase.application.port.in.BookcaseModifier;
+import com.bob.core.bookcase.application.port.in.BookcaseReader;
+import com.bob.core.trade.application.port.out.TradeBookcasePort;
+import com.bob.core.trade.application.port.result.TradeBookcaseItem;
 
 @Component
 @RequiredArgsConstructor
