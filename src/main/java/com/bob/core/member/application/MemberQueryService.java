@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.member.application.dto.result.MemberAreaDetail;
+import com.bob.core.member.application.dto.result.MemberBasicInfo;
 import com.bob.core.member.application.dto.result.MemberDetail;
 import com.bob.core.member.application.dto.result.MemberSummaries;
 import com.bob.core.member.application.dto.result.MemberWishDetail;
@@ -35,14 +36,23 @@ public class MemberQueryService implements MemberReader, MemberSearcher {
     private final MemberBookcasePort bookcasePort;
     private final MemberBookPort bookPort;
 
+    @Override
     public Member read(UUID memberId) {
         return memberRepository.findById(memberId)
             .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. id : " + memberId));
     }
 
+    @Override
     public Member read(String email) {
         return memberRepository.findByEmail(email)
             .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. email : " + email));
+    }
+
+    @Override
+    public MemberBasicInfo readBasicInfo(UUID memberId) {
+        Member member = read(memberId);
+
+        return new MemberBasicInfo(member.getId(), member.getNickname(), member.getProfileImageUrl());
     }
 
     @Transactional

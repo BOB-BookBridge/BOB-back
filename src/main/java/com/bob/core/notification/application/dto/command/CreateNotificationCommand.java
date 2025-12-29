@@ -5,8 +5,9 @@ import java.util.UUID;
 
 import lombok.Builder;
 
+import com.bob.core.chat.event.ChatMessageSentEvent;
 import com.bob.core.notification.domain.NotificationType;
-import com.bob.global.event.application.dto.NotificationEvent;
+import com.bob.core.trade.event.TradeNotificationEvent;
 
 @Builder
 public record CreateNotificationCommand(
@@ -21,11 +22,25 @@ public record CreateNotificationCommand(
     boolean normalize
 ) {
 
-    public static CreateNotificationCommand fromEvent(NotificationEvent event) {
+    public static CreateNotificationCommand fromTradeEvent(TradeNotificationEvent event) {
         return CreateNotificationCommand.builder()
-            .refId(event.refId())
-            .childId(event.childId())
-            .type(NotificationType.valueOf(event.type().name()))
+            .type(NotificationType.TRADE)
+            .refId(String.valueOf(event.postId()))
+            .childId("SYSTEM")
+            .senderId(event.senderId())
+            .receiverId(event.receiverId())
+            .body(event.body())
+            .fileNames(null)
+            .isSystem(true)
+            .normalize(false)
+            .build();
+    }
+
+    public static CreateNotificationCommand fromChatEvent(ChatMessageSentEvent event) {
+        return CreateNotificationCommand.builder()
+            .type(NotificationType.CHAT)
+            .refId(String.valueOf(event.id()))
+            .childId(event.messageId())
             .senderId(event.senderId())
             .receiverId(event.receiverId())
             .body(event.body())

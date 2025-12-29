@@ -15,8 +15,6 @@ import static com.bob.core.trade.domain.status.Status.RESERVED;
 import static com.bob.core.trade.domain.status.Status.valueOf;
 import static com.bob.core.trade.domain.type.Owner.BUYER;
 import static com.bob.core.trade.domain.type.Owner.SELLER;
-import static com.bob.global.event.application.dto.NotificationEvent.toSystemEvent;
-import static com.bob.global.event.application.dto.type.NotiEventType.TRADE;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ACCESS_DENIED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ALREADY_PROCESSED;
 import static com.bob.global.exception.response.ApplicationError.TRADE_ITEM_UNCHANGEABLE;
@@ -62,8 +60,9 @@ import com.bob.core.trade.domain.Trade;
 import com.bob.core.trade.domain.repository.TradeRepository;
 import com.bob.core.trade.domain.status.Status;
 import com.bob.core.trade.domain.type.Owner;
-import com.bob.global.event.application.dto.NotificationEvent;
-import com.bob.global.event.application.dto.SystemChatMessageEvent;
+import com.bob.core.trade.event.TradeChangedEvent;
+import com.bob.core.trade.event.TradeNotificationEvent;
+import com.bob.core.trade.event.TradeStatusChangedEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 
@@ -101,7 +100,7 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
                 TradeMember buyer = memberPort.readTradeMemberProfile(command.buyerId());
 
                 final String notificationBody = REQUESTED_NOTI.format(buyer.nickname(), post.title());
-                sendTradeNotification(post, command.buyerId(), post.sellerId(), notificationBody);
+                publishTradeNotificationEvent(post, command.buyerId(), post.sellerId(), notificationBody);
 
                 return tradeRepository.save(trade);
             });
@@ -126,7 +125,7 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
         UUID receiverId = Objects.equals(senderId, trade.getSellerId()) ? trade.getBuyerId() : trade.getSellerId();
 
         String notificationBody = buildChangeStatusNotificationBody(post.title(), status, command.reason());
-        sendTradeNotification(post, senderId, receiverId, notificationBody);
+        publishTradeNotificationEvent(post, senderId, receiverId, notificationBody);
 
         if (trade.isProcessed() || trade.isRejected() || (previous != REQUESTED && trade.isCancelled())) {
             String chatMessageBody = buildChangeStatusChatMessageBody(status, command.reason());
@@ -212,7 +211,9 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
 
     private Long onReserved(Trade trade) {
         trade.updateStatus(RESERVED);
-        postPort.changeTradeProgress(trade.getPostId(), RESERVED.toPostStatusValue());
+
+        publishStatusChangedEvent(trade, RESERVED);
+
         return null;
     }
 
@@ -224,7 +225,8 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
         List<Long> itemIds = trade.getAllItemIds();
         bookcasePort.delete(itemIds);
 
-        postPort.changeTradeProgress(trade.getPostId(), COMPLETED.toPostStatusValue());
+        publishStatusChangedEvent(trade, COMPLETED);
+
         return null;
     }
 
@@ -251,7 +253,14 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
 
     private void changePostTradeProgressIfReserved(Trade trade) {
         if (trade.isReserved())
-            postPort.changeTradeProgress(trade.getPostId(), REQUESTED.toPostStatusValue());
+            publishStatusChangedEvent(trade, REQUESTED);
+    }
+
+    private void publishStatusChangedEvent(Trade trade, Status newStatus) {
+        String postStatusValue = newStatus.toPostStatusValue();
+        TradeStatusChangedEvent event = new TradeStatusChangedEvent(trade.getId(), trade.getPostId(), postStatusValue);
+
+        eventPublisher.publishEvent(event);
     }
 
     private void verifyTradeParticipate(Trade trade, UUID memberId) {
@@ -359,15 +368,15 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
         return reason.trim();
     }
 
-    private void sendTradeNotification(TradePost post, UUID senderId, UUID receiverId, String body) {
-        String postId = String.valueOf(post.id());
-        NotificationEvent event = toSystemEvent(TRADE, postId, "SYSTEM", senderId, receiverId, body);
+    private void publishTradeNotificationEvent(TradePost post, UUID senderId, UUID receiverId, String body) {
+        TradeNotificationEvent event = new TradeNotificationEvent(post.id(), senderId, receiverId, body);
+
         eventPublisher.publishEvent(event);
     }
 
     private void publishSystemMessageEvent(TradePost post, UUID senderId, UUID receiverId, String body) {
-        String postId = String.valueOf(post.id());
-        SystemChatMessageEvent event = new SystemChatMessageEvent("TRADE", postId, senderId, receiverId, body);
+        TradeChangedEvent event = new TradeChangedEvent(post.id(), senderId, receiverId, body);
+
         eventPublisher.publishEvent(event);
     }
 }

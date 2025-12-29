@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.bob.core.chat.application.dto.command.CreateSystemMessageCommand;
 import com.bob.core.chat.application.port.in.ChatMessageCreator;
-import com.bob.global.event.application.dto.SystemChatMessageEvent;
+import com.bob.core.trade.event.TradeChangedEvent;
 
 @Component
 @RequiredArgsConstructor
@@ -16,9 +16,8 @@ public class ChatMessageEventHandler {
     private final ChatMessageCreator messageCreator;
 
     @EventListener
-    public void handleSystemChatMessageEvent(SystemChatMessageEvent event) {
-        CreateSystemMessageCommand command = new CreateSystemMessageCommand(event.domain(), event.refId(),
-            event.memberId(), event.partnerId(), event.body());
+    public void handleTradeChanged(TradeChangedEvent event) {
+        CreateSystemMessageCommand command = CreateSystemMessageCommand.fromTradeEvent(event);
 
         messageCreator.createSystemChatMessage(command);
     }

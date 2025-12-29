@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import com.bob.core.post.application.dto.query.ReadMemberPostsQuery;
 import com.bob.core.post.application.dto.query.ReadPostDetailQuery;
 import com.bob.core.post.application.dto.query.ReadPostFavoritesQuery;
+import com.bob.core.post.application.dto.result.PostBasicInfo;
 import com.bob.core.post.application.dto.result.PostDetail;
 import com.bob.core.post.application.dto.result.PostSummaries;
 import com.bob.core.post.domain.Post;
@@ -23,4 +24,6 @@ public interface PostReader {
     PostSummaries readFavoriteSummariesByQuery(ReadPostFavoritesQuery query, Pageable pageable);
 
     PostDetail readDetail(Long postId, ReadPostDetailQuery query);
+
+    PostBasicInfo readBasicInfo(Long postId);
 }
