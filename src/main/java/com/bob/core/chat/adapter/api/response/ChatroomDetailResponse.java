@@ -9,11 +9,11 @@ import com.bob.core.chat.application.dto.result.ChatroomDetail;
 @Builder
 public record ChatroomDetailResponse(Long id, String title, ChatTrade trade, ChatPost post, Partner partner) {
 
-    public static ChatroomDetailResponse of(ChatroomDetail room, String tradeStatus) {
+    public static ChatroomDetailResponse of(ChatroomDetail room) {
         return ChatroomDetailResponse.builder()
             .id(room.id())
             .title(room.title())
-            .trade(new ChatTrade(room.tradeId(), tradeStatus))
+            .trade(new ChatTrade(room.trade().id(), room.trade().status()))
             .post(new ChatPost(
                 room.post().id(), room.post().tradeStatus(), room.post().sellerId(), room.post().title(),
                 room.post().thumbnailUrl(), room.post().sellPrice()

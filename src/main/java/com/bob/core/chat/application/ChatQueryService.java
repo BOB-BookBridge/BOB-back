@@ -27,6 +27,7 @@ import com.bob.core.chat.application.port.in.ChatroomReader;
 import com.bob.core.chat.application.port.out.ChatFilePort;
 import com.bob.core.chat.application.port.out.ChatMemberPort;
 import com.bob.core.chat.application.port.out.ChatPostPort;
+import com.bob.core.chat.application.port.out.ChatTradePort;
 import com.bob.core.chat.application.port.result.ChatFile;
 import com.bob.core.chat.application.port.result.ChatMember;
 import com.bob.core.chat.application.port.result.ChatPost;
@@ -46,6 +47,7 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
     private final ChatMemberPort memberPort;
     private final ChatPostPort postPort;
     private final ChatFilePort filePort;
+    private final ChatTradePort tradePort;
 
     @Override
     public Chatroom read(Long id) {
@@ -93,7 +95,9 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
 
         ChatMember member = memberPort.read(partnerId);
 
-        return ChatroomDetail.of(chatRoom, post, member);
+        String tradeStatus = tradePort.readTradeStatus(chatRoom.getTradeId());
+
+        return ChatroomDetail.of(chatRoom, post, member, tradeStatus);
     }
 
     @Override
