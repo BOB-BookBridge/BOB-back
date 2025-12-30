@@ -17,7 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import com.bob.core.chat.domain.type.ChatMessageType;
-import com.bob.core.shared.entity.AbstractEntity;
+import com.bob.shared.entity.AbstractEntity;
 
 @Entity
 @Getter

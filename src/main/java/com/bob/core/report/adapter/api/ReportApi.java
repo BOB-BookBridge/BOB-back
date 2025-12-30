@@ -22,7 +22,7 @@ import com.bob.core.report.adapter.api.response.RegisterReportResponse;
 import com.bob.core.report.application.dto.command.RegisterReportCommand;
 import com.bob.core.report.application.port.in.ReportRegister;
 import com.bob.core.report.domain.Report;
-import com.bob.core.shared.web.AuthenticationId;
+import com.bob.shared.web.annotation.AuthenticationId;
 
 @RestController
 @RequestMapping("/reports")

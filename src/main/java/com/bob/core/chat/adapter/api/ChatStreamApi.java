@@ -14,8 +14,8 @@ import com.bob.core.chat.application.dto.command.JoinChatroomCommand;
 import com.bob.core.chat.application.dto.query.ValidateParticipantQuery;
 import com.bob.core.chat.application.port.in.ChatroomModifier;
 import com.bob.core.chat.application.port.in.ChatroomReader;
-import com.bob.core.shared.web.AuthenticationId;
 import com.bob.global.event.sse.manager.EmitterManager;
+import com.bob.shared.web.annotation.AuthenticationId;
 
 @RequiredArgsConstructor
 @RequestMapping("/chatrooms")

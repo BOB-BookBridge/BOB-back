@@ -1,4 +1,4 @@
-package com.bob.core.chat.adapter.api.request.validator;
+package com.bob.shared.web.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
-import com.bob.core.chat.adapter.api.request.validator.impl.NotBlankIfNotNullValidator;
+import com.bob.shared.web.annotation.impl.NotBlankIfNotNullValidator;
 
 @Constraint(validatedBy = NotBlankIfNotNullValidator.class)
 @Target({ElementType.FIELD})

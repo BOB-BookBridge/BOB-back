@@ -1,7 +1,7 @@
 package com.bob.core.file.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.CREATED;
-import static com.bob.core.shared.web.symbol.ResponseSymbol.UPDATED;
+import static com.bob.shared.web.response.ResponseSymbol.CREATED;
+import static com.bob.shared.web.response.ResponseSymbol.UPDATED;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,10 +28,10 @@ import com.bob.core.file.application.dto.command.UpdateFilesCommand;
 import com.bob.core.file.application.dto.result.FileUploadUrl;
 import com.bob.core.file.application.port.in.FileModifier;
 import com.bob.core.file.application.port.in.FileRegister;
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
 import com.bob.global.ratelimit.annotation.RateLimit;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RequestMapping("/files")

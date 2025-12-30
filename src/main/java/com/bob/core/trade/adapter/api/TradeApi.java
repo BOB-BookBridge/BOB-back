@@ -1,7 +1,7 @@
 package com.bob.core.trade.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.DELETED;
-import static com.bob.core.shared.web.symbol.ResponseSymbol.UPDATED;
+import static com.bob.shared.web.response.ResponseSymbol.DELETED;
+import static com.bob.shared.web.response.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
 import java.util.UUID;
@@ -21,9 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
 import com.bob.core.trade.adapter.api.request.ChangeTradeItemsRequest;
 import com.bob.core.trade.adapter.api.request.ChangeTradeStatusRequest;
 import com.bob.core.trade.adapter.api.request.CreateTradeRequest;
@@ -44,6 +41,9 @@ import com.bob.core.trade.application.port.in.TradeReader;
 import com.bob.core.trade.application.port.in.TradeRemover;
 import com.bob.core.trade.domain.Trade;
 import com.bob.core.trade.domain.repository.dsl.query.ReadTradesQuery;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RestController

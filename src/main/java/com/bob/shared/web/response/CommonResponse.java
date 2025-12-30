@@ -1,4 +1,4 @@
-package com.bob.core.shared.web;
+package com.bob.shared.web.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

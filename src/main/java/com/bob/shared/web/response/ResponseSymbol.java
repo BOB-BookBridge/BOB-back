@@ -1,4 +1,4 @@
-package com.bob.core.shared.web.symbol;
+package com.bob.shared.web.response;
 
 import lombok.RequiredArgsConstructor;
 

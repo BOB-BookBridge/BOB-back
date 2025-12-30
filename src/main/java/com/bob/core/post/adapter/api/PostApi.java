@@ -1,7 +1,7 @@
 package com.bob.core.post.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.DELETED;
-import static com.bob.core.shared.web.symbol.ResponseSymbol.OK;
+import static com.bob.shared.web.response.ResponseSymbol.DELETED;
+import static com.bob.shared.web.response.ResponseSymbol.OK;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,13 +42,13 @@ import com.bob.core.post.application.port.in.PostCreator;
 import com.bob.core.post.application.port.in.PostModifier;
 import com.bob.core.post.application.port.in.PostReader;
 import com.bob.core.post.domain.repository.dsl.query.ReadPostsQuery;
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
 import com.bob.core.trade.application.dto.query.ReadPostTradeQuery;
 import com.bob.core.trade.application.dto.query.ReadTradeStatusMapQuery;
 import com.bob.core.trade.application.port.in.TradeReader;
 import com.bob.global.ratelimit.annotation.RateLimit;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RestController

@@ -1,6 +1,6 @@
 package com.bob.core.notification.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.UPDATED;
+import static com.bob.shared.web.response.ResponseSymbol.UPDATED;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,9 +20,9 @@ import com.bob.core.notification.application.dto.query.ReadByMemberQuery;
 import com.bob.core.notification.application.port.in.NotificationMarker;
 import com.bob.core.notification.application.port.in.NotificationReader;
 import com.bob.core.notification.domain.Notification;
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RestController

@@ -6,11 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import com.bob.core.shared.web.validator.ValidDomain;
-import com.bob.core.shared.web.validator.ValidFileNameFormat;
+import com.bob.shared.web.annotation.AllowedValues;
+import com.bob.shared.web.annotation.ValidFileNameFormat;
 
 public record UpdateFileRequest(
-    @ValidDomain
+    @AllowedValues(value = {"CHAT", "POST"}, ignoreCase = true)
     String domain,
 
     @NotBlank(message = "참조 ID는 필수입니다.")

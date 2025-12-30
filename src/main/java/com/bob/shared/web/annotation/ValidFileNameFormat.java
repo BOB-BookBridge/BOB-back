@@ -1,4 +1,4 @@
-package com.bob.core.shared.web.validator;
+package com.bob.shared.web.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
-import com.bob.core.shared.web.validator.impl.FileNameFormatValidator;
+import com.bob.shared.web.annotation.impl.FileNameFormatValidator;
 
 @Documented
 @Constraint(validatedBy = FileNameFormatValidator.class)

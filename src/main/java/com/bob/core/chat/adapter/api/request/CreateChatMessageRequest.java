@@ -5,9 +5,9 @@ import java.util.List;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import com.bob.core.chat.adapter.api.request.validator.NotBlankIfNotNull;
 import com.bob.core.chat.adapter.api.request.validator.ValidChatMessageContent;
-import com.bob.core.shared.web.validator.ValidFileNameFormat;
+import com.bob.shared.web.annotation.NotBlankIfNotNull;
+import com.bob.shared.web.annotation.ValidFileNameFormat;
 
 @ValidChatMessageContent
 public record CreateChatMessageRequest(

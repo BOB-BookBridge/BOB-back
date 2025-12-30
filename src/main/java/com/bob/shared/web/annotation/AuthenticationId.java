@@ -1,4 +1,4 @@
-package com.bob.core.shared.web;
+package com.bob.shared.web.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

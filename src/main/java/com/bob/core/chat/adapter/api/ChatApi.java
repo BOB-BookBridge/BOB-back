@@ -1,6 +1,6 @@
 package com.bob.core.chat.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.UPDATED;
+import static com.bob.shared.web.response.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
 import java.util.List;
@@ -38,11 +38,11 @@ import com.bob.core.chat.application.port.in.ChatMessageCreator;
 import com.bob.core.chat.application.port.in.ChatMessageReader;
 import com.bob.core.chat.application.port.in.ChatroomModifier;
 import com.bob.core.chat.application.port.in.ChatroomReader;
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
 import com.bob.core.trade.application.port.in.TradeReader;
 import com.bob.global.ratelimit.annotation.DisableRateLimit;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RequestMapping("/chatrooms")

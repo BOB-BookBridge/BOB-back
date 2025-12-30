@@ -1,6 +1,4 @@
-package com.bob.global.utils.web.validator.impl;
-
-import static com.bob.global.exception.response.ApplicationError.NO_CHANGES;
+package com.bob.shared.web.annotation.impl;
 
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
@@ -8,7 +6,7 @@ import java.util.Arrays;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-import com.bob.global.utils.web.validator.AtLeastOneNotNull;
+import com.bob.shared.web.annotation.AtLeastOneNotNull;
 
 public class AtLeastOneNotNullValidator implements ConstraintValidator<AtLeastOneNotNull, Object> {
 
@@ -28,7 +26,7 @@ public class AtLeastOneNotNullValidator implements ConstraintValidator<AtLeastOn
         boolean valid = Arrays.stream(fields).anyMatch(f -> isPresent(getRecordField(value, comps, f)));
         if (!valid) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(NO_CHANGES.getMessage()).addConstraintViolation();
+            context.buildConstraintViolationWithTemplate("변경 사항이 없습니다.").addConstraintViolation();
         }
         return valid;
     }

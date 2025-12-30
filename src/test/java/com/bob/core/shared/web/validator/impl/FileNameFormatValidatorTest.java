@@ -1,4 +1,4 @@
-package com.bob.core.shared.web.validator.impl;
+package com.bob.shared.web.validator.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.bob.shared.web.annotation.impl.FileNameFormatValidator;
 
 @DisplayName("파일 이름 형식 검증 테스트")
 @ExtendWith(MockitoExtension.class)

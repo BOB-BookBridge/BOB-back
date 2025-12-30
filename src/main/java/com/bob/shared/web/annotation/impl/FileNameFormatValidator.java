@@ -1,4 +1,4 @@
-package com.bob.core.shared.web.validator.impl;
+package com.bob.shared.web.annotation.impl;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,7 +6,7 @@ import java.util.Optional;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-import com.bob.core.shared.web.validator.ValidFileNameFormat;
+import com.bob.shared.web.annotation.ValidFileNameFormat;
 
 public class FileNameFormatValidator implements ConstraintValidator<ValidFileNameFormat, List<String>> {
 

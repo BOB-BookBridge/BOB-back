@@ -1,7 +1,7 @@
 package com.bob.core.bookcase.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.CREATED;
-import static com.bob.core.shared.web.symbol.ResponseSymbol.DELETED;
+import static com.bob.shared.web.response.ResponseSymbol.CREATED;
+import static com.bob.shared.web.response.ResponseSymbol.DELETED;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,9 +31,9 @@ import com.bob.core.bookcase.application.dto.result.BookcaseItemDetail;
 import com.bob.core.bookcase.application.port.in.BookcaseDeleter;
 import com.bob.core.bookcase.application.port.in.BookcaseReader;
 import com.bob.core.bookcase.application.port.in.BookcaseRegister;
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RestController
 @RequestMapping("/members")

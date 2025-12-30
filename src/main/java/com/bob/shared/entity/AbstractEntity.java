@@ -1,4 +1,4 @@
-package com.bob.core.shared.entity;
+package com.bob.shared.entity;
 
 import java.util.Objects;
 
