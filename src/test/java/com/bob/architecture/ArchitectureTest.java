@@ -93,22 +93,6 @@ public class ArchitectureTest {
     // ================================
 
     @ArchTest
-    public static final ArchRule domains_should_not_have_cycles =
-        slices()
-            .matching("..core.(*).domain..")
-            .should()
-            .beFreeOfCycles()
-            .because("Domain 간 순환 의존성 발생 금지");
-
-    @ArchTest
-    public static final ArchRule application_domains_should_not_have_cycles =
-        slices()
-            .matching("..core.(*).application..")
-            .should()
-            .beFreeOfCycles()
-            .because("Application 간 순환 의존성 발생 금지, Application 간 상호작용은 Outbound Port를 통해서만 이루어짐");
-
-    @ArchTest
     public static final ArchRule layers_should_not_have_cycles =
         slices()
             .matching("..core.(*).(domain|application|adapter)..")
