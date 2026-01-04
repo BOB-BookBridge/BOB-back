@@ -2,7 +2,6 @@ package com.bob.core.member.application;
 
 import static com.bob.core.member.domain.Member.createMember;
 import static com.bob.core.member.domain.Member.createSocialMember;
-import static com.bob.global.event.application.dto.member.type.AccountEventType.RECOVER;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_BANNED;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_DUPLICATED;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_UNVERIFIED;
@@ -35,18 +34,18 @@ import com.bob.core.member.application.dto.command.SocialLoginCommand;
 import com.bob.core.member.application.port.in.MemberModifier;
 import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.member.application.port.in.MemberRegister;
-import com.bob.core.member.application.port.out.MailSender;
 import com.bob.core.member.application.port.out.MemberAreaPort;
-import com.bob.core.member.application.port.out.MemberCachePort;
 import com.bob.core.member.application.port.out.MemberInterestPort;
+import com.bob.core.member.application.port.out.infra.MailSender;
+import com.bob.core.member.application.port.out.infra.MemberCachePort;
 import com.bob.core.member.domain.Member;
 import com.bob.core.member.domain.MemberArea;
 import com.bob.core.member.domain.MemberInterest;
-import com.bob.core.member.domain.PasswordEncoder;
 import com.bob.core.member.domain.Status;
+import com.bob.core.member.domain.encoder.PasswordEncoder;
 import com.bob.core.member.domain.repository.MemberRepository;
-import com.bob.global.event.application.dto.member.AccountEvent;
-import com.bob.global.event.application.dto.member.type.AccountEventType;
+import com.bob.core.member.event.MemberDeactivatedEvent;
+import com.bob.core.member.event.MemberRecoveredEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 
 @Service
@@ -187,7 +186,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
 
         member.activate();
 
-        eventPublisher.publishEvent(AccountEvent.of(member.getId(), RECOVER));
+        eventPublisher.publishEvent(new MemberRecoveredEvent(member.getId()));
 
         return member;
     }
@@ -206,7 +205,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
         removeCookie(response, "AUTHORIZATION");
         removeCookie(response, "REFRESH_KEY");
 
-        eventPublisher.publishEvent(AccountEvent.of(member.getId(), AccountEventType.DEACTIVATE));
+        eventPublisher.publishEvent(new MemberDeactivatedEvent(member.getId()));
 
         return member;
     }

@@ -109,7 +109,8 @@ INSERT INTO members (id, email, password, nickname, area_id, status, role) VALUE
 (UUID_TO_BIN('021a6930-6f73-14c6-cf0a-2fd17132f102'), 'manager@test.com', '{bcrypt}$2a$10$0wsmn7K4OYal.QNhW5.26.nmNROkJ4utkzCPjgzZS.sPyLnjVx5sa', 'manager', 4, 'ACTIVE', 'ADMIN');
 
 INSERT INTO member_wishes (id, member_id, book_id) VALUES
-(1, UUID_TO_BIN('019a6928-6f73-79f7-bd1b-6bfd4771a302'), 2);
+(1, UUID_TO_BIN('0199f8c2-30ed-7ee3-a757-16196412518c'), 2),
+(2, UUID_TO_BIN('019a6928-6f73-79f7-bd1b-6bfd4771a302'), 2);
 
 -- 도서 (6권)
 INSERT INTO books (id, isbn, title, author, description, price_standard, cover, pub_date) VALUES

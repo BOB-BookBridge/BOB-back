@@ -6,12 +6,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import com.bob.core.shared.web.validator.ValidDomain;
-import com.bob.core.shared.web.validator.ValidFileNameFormat;
+import com.bob.shared.web.annotation.AllowedValues;
+import com.bob.shared.web.annotation.ValidFileNameFormat;
 
 public record RegisterFileRequest(
 
-    @ValidDomain
+    @AllowedValues(value = {"CHAT", "POST"}, ignoreCase = true)
     String domain,
 
     @NotNull(message = "파일 이름 목록은 필수입니다.")

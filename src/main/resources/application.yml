@@ -1,8 +1,14 @@
 spring:
   profiles:
     include: secret
+
   jackson:
     time-zone: Asia/Seoul
+
+  modulith:
+    events:
+      jdbc-schema-initialization.enabled: true
+      republish-outstanding-events-on-restart: true
 
 sse:
   heartbeat-interval: 30 # 30초

@@ -18,7 +18,7 @@ import com.bob.core.notification.application.port.in.NotificationCreator;
 import com.bob.core.notification.application.port.in.NotificationMarker;
 import com.bob.core.notification.application.port.in.NotificationReader;
 import com.bob.core.notification.application.port.out.NotificationMemberPort;
-import com.bob.core.notification.application.port.out.NotificationMessagePort;
+import com.bob.core.notification.application.port.out.infra.NotificationMessagePort;
 import com.bob.core.notification.application.port.result.NotificationMember;
 import com.bob.core.notification.domain.Notification;
 import com.bob.core.notification.domain.repository.NotificationRepository;

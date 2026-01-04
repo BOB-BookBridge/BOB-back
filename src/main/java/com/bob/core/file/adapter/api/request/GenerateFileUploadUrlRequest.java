@@ -6,16 +6,15 @@ import jakarta.validation.constraints.Size;
 
 import lombok.Builder;
 
-import com.bob.core.shared.web.validator.ValidDomain;
-import com.bob.core.shared.web.validator.ValidImageContentType;
+import com.bob.shared.web.annotation.AllowedValues;
 
 @Builder
 public record GenerateFileUploadUrlRequest(
-    @ValidDomain
+    @AllowedValues(value = {"CHAT", "POST"}, ignoreCase = true)
     String domain,
 
     @Size(max = 5, message = "파일은 최대 5개까지 등록할 수 있습니다.")
-    List<@ValidImageContentType String> contentTypes
+    List<@AllowedValues(value = {"image/jpeg", "image/png", "image/gif"}, ignoreCase = true) String> contentTypes
 ) {
 
 }

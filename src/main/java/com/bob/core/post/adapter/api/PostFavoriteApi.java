@@ -1,7 +1,7 @@
 package com.bob.core.post.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.CREATED;
-import static com.bob.core.shared.web.symbol.ResponseSymbol.DELETED;
+import static com.bob.shared.web.response.ResponseSymbol.CREATED;
+import static com.bob.shared.web.response.ResponseSymbol.DELETED;
 
 import java.util.UUID;
 
@@ -24,9 +24,9 @@ import com.bob.core.post.application.dto.query.ReadPostFavoritesQuery;
 import com.bob.core.post.application.dto.result.PostSummaries;
 import com.bob.core.post.application.port.in.PostFavoriteManager;
 import com.bob.core.post.application.port.in.PostReader;
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RestController

@@ -5,7 +5,7 @@
                                      https://hibernate.org/xsd/orm/mapping/mapping-3.1.0.xsd">
     <access>FIELD</access>
 
-    <mapped-superclass class="com.bob.core.shared.entity.AbstractEntity">
+    <mapped-superclass class="com.bob.shared.entity.AbstractEntity">
         <attributes>
             <id name="id">
                 <column name="id"/>

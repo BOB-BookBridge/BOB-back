@@ -1,6 +1,6 @@
 package com.bob.core.chat.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.UPDATED;
+import static com.bob.shared.web.response.ResponseSymbol.UPDATED;
 import static org.springframework.http.HttpStatus.CREATED;
 
 import java.util.List;
@@ -38,11 +38,10 @@ import com.bob.core.chat.application.port.in.ChatMessageCreator;
 import com.bob.core.chat.application.port.in.ChatMessageReader;
 import com.bob.core.chat.application.port.in.ChatroomModifier;
 import com.bob.core.chat.application.port.in.ChatroomReader;
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
-import com.bob.core.trade.application.port.in.TradeReader;
 import com.bob.global.ratelimit.annotation.DisableRateLimit;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RequestMapping("/chatrooms")
@@ -54,8 +53,6 @@ public class ChatApi {
 
     private final ChatMessageCreator messageCreator;
     private final ChatMessageReader messageReader;
-
-    private final TradeReader tradeReader;
 
     @DisableRateLimit
     @PostMapping("/{chatroomId}/messages")
@@ -88,7 +85,7 @@ public class ChatApi {
     }
 
     @GetMapping("/{chatroomId}")
-    public ResponseEntity<ChatroomDetailResponse> readChatroomDetail(
+    public ChatroomDetailResponse readChatroomDetail(
         @PathVariable Long chatroomId,
         @AuthenticationId UUID memberId
     ) {
@@ -96,9 +93,7 @@ public class ChatApi {
 
         ChatroomDetail result = chatroomReader.readChatRoomDetail(chatroomId, query);
 
-        String status = tradeReader.readTradeStatus(result.tradeId());
-
-        return ResponseEntity.ok().body(ChatroomDetailResponse.of(result, status));
+        return ChatroomDetailResponse.of(result);
     }
 
     @GetMapping("/{chatroomId}/messages")

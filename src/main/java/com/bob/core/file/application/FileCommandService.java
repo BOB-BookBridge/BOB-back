@@ -25,7 +25,7 @@ import com.bob.core.file.application.port.in.FileModifier;
 import com.bob.core.file.application.port.in.FileReader;
 import com.bob.core.file.application.port.in.FileRegister;
 import com.bob.core.file.application.port.in.FileRemover;
-import com.bob.core.file.application.port.out.FileStoragePort;
+import com.bob.core.file.application.port.out.infra.FileStoragePort;
 import com.bob.core.file.domain.File;
 import com.bob.core.file.domain.repository.FileRepository;
 import com.bob.core.file.domain.type.FileDomain;

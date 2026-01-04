@@ -18,10 +18,10 @@ import com.bob.admin.member.application.port.out.ManagementMemberReportPort;
 import com.bob.admin.member.application.port.out.ManagementMemberTradePort;
 import com.bob.admin.member.application.port.result.ManagementMember;
 import com.bob.admin.member.application.port.result.ManagementMemberActivity;
+import com.bob.admin.member.application.port.result.ManagementMemberPost;
 import com.bob.admin.member.application.port.result.ManagementMemberReport;
 import com.bob.admin.member.application.port.result.ManagementMemberSummaries;
-import com.bob.admin.member.application.port.result.activity.ManagementMemberPost;
-import com.bob.admin.member.application.port.result.activity.ManagementMemberTrade;
+import com.bob.admin.member.application.port.result.ManagementMemberTrade;
 
 @Service
 @Transactional(readOnly = true)

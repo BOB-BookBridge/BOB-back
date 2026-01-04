@@ -12,6 +12,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.bob.core.member.application.dto.result.MemberBasicInfo;
 import com.bob.core.member.application.dto.result.MemberDetail;
 import com.bob.core.member.domain.Member;
 import com.bob.core.member.domain.repository.MemberRepository;
@@ -66,6 +67,18 @@ record MemberReaderTest(MemberReader memberReader, MemberRepository memberReposi
     }
 
     @Test
+    void 회원_기본_정보_조회() {
+        Member member = memberRepository.save(createMember());
+
+        MemberBasicInfo basicInfo = memberReader.readBasicInfo(member.getId());
+
+        assertThat(basicInfo).isNotNull();
+        assertThat(basicInfo.id()).isEqualTo(member.getId());
+        assertThat(basicInfo.nickname()).isEqualTo("tester");
+        assertThat(basicInfo.profileImageUrl()).isNull();
+    }
+
+    @Test
     void 내_정보_상세_조회() {
         Member member = memberRepository.save(createMember());
         LocalDateTime standardTime = LocalDateTime.now();
@@ -80,7 +93,7 @@ record MemberReaderTest(MemberReader memberReader, MemberRepository memberReposi
         assertThat(detail.wishes()).isNotNull();
         assertThat(detail.lastActiveAt()).isAfter(standardTime);
     }
-    
+
     @Test
     void 회원_상세_조회() {
         Member member = memberRepository.save(createMember());

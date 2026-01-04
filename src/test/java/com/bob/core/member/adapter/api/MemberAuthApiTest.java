@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.bob.core.member.adapter.api.request.SendAuthenticationCodeRequest;
 import com.bob.core.member.adapter.api.request.VerifyMailRequest;
-import com.bob.core.member.application.port.out.MemberCachePort;
+import com.bob.core.member.application.port.out.infra.MemberCachePort;
 import com.bob.support.annotation.BobApiTest;
 
 @DisplayName("회원 인증 API 테스트")

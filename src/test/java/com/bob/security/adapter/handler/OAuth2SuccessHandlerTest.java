@@ -34,8 +34,8 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.bob.security.application.port.out.AuthCachePort;
-import com.bob.security.application.port.out.TokenManager;
+import com.bob.security.application.port.out.infra.AuthCachePort;
+import com.bob.security.application.port.out.infra.TokenManager;
 import com.bob.security.config.props.HeaderProperties;
 
 @DisplayName("소셜 로그인 핸들러 테스트")

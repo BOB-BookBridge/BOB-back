@@ -1,7 +1,6 @@
 package com.bob.core.chat.application;
 
 import static com.bob.core.chat.domain.Chatroom.createChatroom;
-import static com.bob.global.event.application.dto.type.NotiEventType.CHAT;
 
 import java.util.UUID;
 
@@ -22,7 +21,7 @@ import com.bob.core.chat.application.port.out.ChatPostPort;
 import com.bob.core.chat.application.port.result.ChatPost;
 import com.bob.core.chat.domain.Chatroom;
 import com.bob.core.chat.domain.repository.ChatroomRepository;
-import com.bob.global.event.application.dto.NotificationEvent;
+import com.bob.core.chat.event.ChatMessageSentEvent;
 
 @RequiredArgsConstructor
 @Service
@@ -76,8 +75,9 @@ public class ChatroomCommandService implements ChatroomCreator, ChatroomModifier
     }
 
     private void publishSystemChatEvent(Long chatRoomId, UUID senderId, UUID receiverId) {
-        eventPublisher.publishEvent(
-            NotificationEvent.toSystemEvent(CHAT, chatRoomId.toString(), "READ_ACK", senderId, receiverId, null)
-        );
+        ChatMessageSentEvent event
+            = new ChatMessageSentEvent(chatRoomId, "READ_ACK", senderId, receiverId, null, null, true, false);
+
+        eventPublisher.publishEvent(event);
     }
 }

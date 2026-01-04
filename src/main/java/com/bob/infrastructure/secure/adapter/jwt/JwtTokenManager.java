@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.bob.security.application.port.out.TokenManager;
+import com.bob.security.application.port.out.infra.TokenManager;
 
 @Component
 @RequiredArgsConstructor

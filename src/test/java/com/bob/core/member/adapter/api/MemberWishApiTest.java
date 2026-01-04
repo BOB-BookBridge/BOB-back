@@ -29,7 +29,7 @@ import com.bob.core.member.adapter.api.request.CreateMemberWishRequest;
 import com.bob.core.member.adapter.api.response.MemberWishResponse;
 import com.bob.core.member.application.port.in.MemberWishManager;
 import com.bob.core.member.domain.Member;
-import com.bob.core.member.domain.PasswordEncoder;
+import com.bob.core.member.domain.encoder.PasswordEncoder;
 import com.bob.core.member.domain.repository.MemberRepository;
 import com.bob.security.model.MemberDetails;
 import com.bob.support.annotation.BobApiTest;

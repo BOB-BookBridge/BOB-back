@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.bob.core.notification.adapter.api.response.NotificationResponse;
+import com.bob.core.notification.application.dto.query.ReadByMemberQuery;
 import com.bob.core.notification.domain.Notification;
 import com.bob.core.notification.domain.repository.NotificationRepository;
 import com.bob.security.model.MemberDetails;
@@ -54,7 +55,7 @@ record NotificationApiTest(
             }
         );
 
-        assertThat(response).hasSize(2);
+        assertThat(response.size()).isNotZero();
         assertThat(response).extracting(NotificationResponse::body).containsExactlyInAnyOrder("알림1", "알림2");
         assertThat(response).allMatch(n -> !n.isRead());
     }

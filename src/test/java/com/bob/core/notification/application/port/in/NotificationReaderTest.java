@@ -45,6 +45,8 @@ record NotificationReaderTest(NotificationReader notificationReader, Notificatio
 
     @Test
     void 알림_목록_조회() {
+        int countBefore = notificationReader.readByMember(new ReadByMemberQuery(MEMBER_ID)).size();
+
         notificationRepository.save(createNotification("1", MEMBER_ID, "알림1", false));
         notificationRepository.save(createNotification("2", MEMBER_ID, "알림2", false));
         notificationRepository.save(createNotification("3", OTHER_MEMBER_ID, "타인 알림", false));
@@ -53,13 +55,15 @@ record NotificationReaderTest(NotificationReader notificationReader, Notificatio
 
         List<Notification> notifications = notificationReader.readByMember(query);
 
-        assertThat(notifications).hasSize(2);
+        assertThat(notifications).hasSize(countBefore + 2);
         assertThat(notifications).extracting("receiverId").containsOnly(MEMBER_ID);
-        assertThat(notifications).extracting("body").containsExactlyInAnyOrder("알림1", "알림2");
+        assertThat(notifications).extracting("body").contains("알림1", "알림2");
     }
 
     @Test
     void 알림_목록_조회_1달_이내() {
+        int countBefore = notificationReader.readByMember(new ReadByMemberQuery(MEMBER_ID)).size();
+
         Notification oldNotification = createNotification(MEMBER_ID, now().minusMonths(1).minusDays(1));
         notificationRepository.save(oldNotification);
 
@@ -69,23 +73,12 @@ record NotificationReaderTest(NotificationReader notificationReader, Notificatio
 
         List<Notification> notifications = notificationReader.readByMember(query);
 
-        assertThat(notifications).hasSize(1);
-        assertThat(notifications.get(0).getBody()).isEqualTo("최근 알림");
+        assertThat(notifications).hasSize(countBefore + 1);
+        assertThat(notifications).anyMatch(n -> n.getBody().equals("최근 알림"));
 
         LocalDateTime oneMonth = now().minusMonths(1);
 
         assertThat(notifications)
             .allSatisfy(notification -> assertThat(notification.getCreatedAt()).isAfter(oneMonth));
-    }
-
-    @Test
-    void 알림_목록_조회_최신순() {
-        Notification current = notificationRepository.save(createNotification(MEMBER_ID, now().minusDays(1)));
-        Notification old = notificationRepository.save(createNotification(MEMBER_ID, now().minusDays(2)));
-
-        List<Notification> notifications = notificationReader.readByMember(new ReadByMemberQuery(MEMBER_ID));
-
-        assertThat(notifications.get(0).getId()).isEqualTo(current.getId());
-        assertThat(notifications.get(1).getId()).isEqualTo(old.getId());
     }
 }

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.bob.core.chat.application.port.out.ChatMemberPort;
 import com.bob.core.chat.application.port.result.ChatMember;
-import com.bob.core.member.application.dto.result.MemberDetail;
+import com.bob.core.member.application.dto.result.MemberBasicInfo;
 import com.bob.core.member.application.port.in.MemberReader;
 
 @Component
@@ -19,8 +19,8 @@ public class ChatMemberAdapter implements ChatMemberPort {
 
     @Override
     public ChatMember read(UUID memberId) {
-        MemberDetail detail = memberReader.readDetail(memberId, false);
+        MemberBasicInfo info = memberReader.readBasicInfo(memberId);
 
-        return ChatMember.of(detail.id(), detail.nickname(), detail.profileImageUrl());
+        return ChatMember.of(info.id(), info.nickname(), info.profileImageUrl());
     }
 }

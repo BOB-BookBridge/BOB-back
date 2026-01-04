@@ -17,8 +17,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import com.bob.security.application.port.out.AuthCachePort;
-import com.bob.security.application.port.out.TokenManager;
+import com.bob.security.application.port.out.infra.AuthCachePort;
+import com.bob.security.application.port.out.infra.TokenManager;
 import com.bob.security.config.props.HeaderProperties;
 
 @Component

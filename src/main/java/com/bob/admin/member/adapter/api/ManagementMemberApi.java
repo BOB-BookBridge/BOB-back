@@ -1,6 +1,6 @@
 package com.bob.admin.member.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.UPDATED;
+import static com.bob.shared.web.response.ResponseSymbol.UPDATED;
 
 import java.util.UUID;
 
@@ -25,8 +25,8 @@ import com.bob.admin.member.application.dto.result.ManagementMemberDetail;
 import com.bob.admin.member.application.port.in.ManagementMemberModifier;
 import com.bob.admin.member.application.port.in.ManagementMemberReader;
 import com.bob.admin.member.application.port.result.ManagementMemberSummaries;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RestController
 @RequestMapping("/management/members")

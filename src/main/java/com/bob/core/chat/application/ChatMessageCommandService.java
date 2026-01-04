@@ -1,7 +1,6 @@
 package com.bob.core.chat.application;
 
 import static com.bob.core.chat.domain.ChatMessage.resolveMessageType;
-import static com.bob.global.event.application.dto.type.NotiEventType.CHAT;
 import static com.bob.global.event.sse.repository.chat.ChatEmitterKey.of;
 import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS_DENIED;
 
@@ -26,7 +25,7 @@ import com.bob.core.chat.domain.Chatroom;
 import com.bob.core.chat.domain.ChatroomMember;
 import com.bob.core.chat.domain.repository.ChatroomRepository;
 import com.bob.core.chat.domain.type.ChatMessageType;
-import com.bob.global.event.application.dto.NotificationEvent;
+import com.bob.core.chat.event.ChatMessageSentEvent;
 import com.bob.global.event.sse.manager.EmitterManager;
 import com.bob.global.event.sse.manager.type.EmitterType;
 import com.bob.global.exception.exceptions.ApplicationException;
@@ -62,7 +61,7 @@ public class ChatMessageCommandService implements ChatMessageCreator {
             partner.updateLastReadMessage(message.getId());
 
         imageMapping(command.fileNames(), message.getId());
-        publishChatMessageEvent(chatroom.getId(), command, message, partnerId);
+        publishMessageSentEvent(chatroom.getId(), command, message, partnerId);
 
         return ChatMessageCreationResult.of(message, partner.getLastReadMessageId());
     }
@@ -75,7 +74,8 @@ public class ChatMessageCommandService implements ChatMessageCreator {
                 ChatMessage message = chatroom.addSystemMessage(command.senderId(), command.body());
                 chatroomRepository.flush();
 
-                publishSystemChatEvent(chatroom.getId(), command.senderId(), command.partnerId(), message.getContent());
+                publishSystemMessageSentEvent(chatroom.getId(), command.senderId(), command.partnerId(),
+                    message.getContent());
 
                 return message;
             })
@@ -87,17 +87,19 @@ public class ChatMessageCommandService implements ChatMessageCreator {
             throw new ApplicationException(CHATROOM_ACCESS_DENIED);
     }
 
-    private void publishChatMessageEvent(Long id, CreateMessageCommand command, ChatMessage message, UUID partnerId) {
-        eventPublisher.publishEvent(
-            NotificationEvent.of(CHAT, id.toString(), message.getId().toString(), command.memberId(), partnerId,
-                message.getContent(), command.fileNames(), message.getType() != ChatMessageType.TEXT
-            ));
+    private void publishMessageSentEvent(Long id, CreateMessageCommand command, ChatMessage message, UUID partnerId) {
+        ChatMessageSentEvent event = ChatMessageSentEvent.of(
+            id, message.getId().toString(), command.memberId(), partnerId, message.getContent(), command.fileNames(),
+            message.getType() != ChatMessageType.TEXT
+        );
+
+        eventPublisher.publishEvent(event);
     }
 
-    private void publishSystemChatEvent(Long id, UUID senderId, UUID receiverId, String content) {
-        eventPublisher.publishEvent(
-            NotificationEvent.toSystemEvent(CHAT, id.toString(), "SYSTEM", senderId, receiverId, content)
-        );
+    private void publishSystemMessageSentEvent(Long id, UUID senderId, UUID receiverId, String content) {
+        ChatMessageSentEvent event = ChatMessageSentEvent.toSystemEvent(id, senderId, receiverId, content);
+
+        eventPublisher.publishEvent(event);
     }
 
     private void imageMapping(List<String> fileNames, Long messageId) {

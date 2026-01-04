@@ -14,13 +14,13 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
-import com.bob.core.file.application.port.out.FileStoragePort;
-import com.bob.core.member.application.port.out.MailSender;
+import com.bob.core.file.application.port.out.infra.FileStoragePort;
+import com.bob.core.member.application.port.out.infra.MailSender;
 
 @TestConfiguration
 public class BobTestConfiguration {
@@ -48,14 +48,11 @@ public class BobTestConfiguration {
 
     @Bean
     @Primary
-    public ApplicationEventPublisher applicationEventPublisher() {
-        ApplicationEventPublisher mockPublisher = Mockito.mock(ApplicationEventPublisher.class);
-        Mockito.doAnswer(invocation -> {
-            ApplicationEvent event = invocation.getArgument(0);
+    public ApplicationEventPublisher applicationEventPublisher(ApplicationContext context) {
+        return event -> {
             System.out.println("event publish success - event type: " + event.getClass().getSimpleName());
-            return null;
-        }).when(mockPublisher).publishEvent(any(ApplicationEvent.class));
-        return mockPublisher;
+            context.publishEvent(event);
+        };
     }
 
     @Bean

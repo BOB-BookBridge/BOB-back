@@ -8,9 +8,10 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.member.application.dto.result.MemberDetail;
-import com.bob.core.member.application.dto.result.MemberWishDetail;
+import com.bob.core.member.application.dto.result.MemberBasicInfo;
 import com.bob.core.member.application.port.in.MemberReader;
+import com.bob.core.member.domain.Member;
+import com.bob.core.member.domain.MemberWish;
 import com.bob.core.trade.application.port.out.TradeMemberPort;
 import com.bob.core.trade.application.port.result.TradeBookcaseItem;
 import com.bob.core.trade.application.port.result.TradeMember;
@@ -25,22 +26,19 @@ public class TradeMemberAdapter implements TradeMemberPort {
 
     @Override
     public TradeMember readTradeMemberProfile(UUID memberId) {
-        MemberDetail detail = memberReader.readDetail(memberId, false);
+        MemberBasicInfo info = memberReader.readBasicInfo(memberId);
 
-        return new TradeMember(detail.id(), detail.nickname(), detail.profileImageUrl());
+        return new TradeMember(info.id(), info.nickname(), info.profileImageUrl());
     }
 
     @Override
     public boolean wishAllMatch(UUID memberId, List<Long> ids) {
-        List<Long> wishBookIds = getWishBookIds(memberId);
+        Member member = memberReader.read(memberId);
+
+        List<Long> wishBookIds = member.getWishes().stream().map(MemberWish::getBookId).toList();
         List<Long> requesterBookIds = getRequesterBookIds(ids);
 
         return new HashSet<>(wishBookIds).containsAll(requesterBookIds);
-    }
-
-    private List<Long> getWishBookIds(UUID memberId) {
-        MemberDetail result = memberReader.readDetail(memberId, false);
-        return result.wishes().stream().map(MemberWishDetail::bookId).toList();
     }
 
     private List<Long> getRequesterBookIds(List<Long> ids) {

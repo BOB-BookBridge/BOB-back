@@ -1,6 +1,6 @@
 package com.bob.security.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.OK;
+import static com.bob.shared.web.response.ResponseSymbol.OK;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;

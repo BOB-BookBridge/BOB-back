@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bob.core.post.application.dto.query.ReadMemberPostsQuery;
 import com.bob.core.post.application.dto.query.ReadPostDetailQuery;
 import com.bob.core.post.application.dto.query.ReadPostFavoritesQuery;
+import com.bob.core.post.application.dto.result.PostBasicInfo;
 import com.bob.core.post.application.dto.result.PostDetail;
 import com.bob.core.post.application.dto.result.PostSummaries;
 import com.bob.core.post.application.port.in.PostReader;
@@ -53,6 +54,13 @@ public class PostQueryService implements PostReader {
     public Post read(Long postId) {
         return postRepository.findById(postId)
             .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다. id : " + postId));
+    }
+
+    @Override
+    public PostBasicInfo readBasicInfo(Long postId) {
+        Post post = read(postId);
+
+        return PostBasicInfo.of(post);
     }
 
     @Override

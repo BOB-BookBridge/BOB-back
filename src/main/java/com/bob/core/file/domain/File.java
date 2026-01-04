@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import com.bob.core.file.domain.type.FileDomain;
-import com.bob.core.shared.entity.AbstractEntity;
+import com.bob.shared.entity.AbstractEntity;
 
 @Entity
 @Getter

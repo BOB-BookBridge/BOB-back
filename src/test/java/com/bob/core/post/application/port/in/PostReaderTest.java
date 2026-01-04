@@ -129,6 +129,10 @@ record PostReaderTest(PostReader postReader, PostRepository postRepository, File
         assertThat(result.id()).isEqualTo(post.getId());
         assertThat(result.title()).isEqualTo(post.getTitle());
         assertThat(result.images().get(0).fileName()).isEqualTo("post/testfile.png");
+
+        assertThat(result.writer()).isNotNull();
+        assertThat(result.writer().interests()).isNotNull();
+        assertThat(result.writer().wishes()).isNotNull();
     }
 
     @Test

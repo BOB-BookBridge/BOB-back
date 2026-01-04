@@ -11,9 +11,9 @@ import com.bob.core.member.adapter.api.request.SendAuthenticationCodeRequest;
 import com.bob.core.member.adapter.api.request.VerifyMailRequest;
 import com.bob.core.member.application.dto.command.VerifyMailCommand;
 import com.bob.core.member.application.port.in.MemberAuthenticator;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
 import com.bob.global.ratelimit.annotation.RateLimit;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RequestMapping("/auth/email")

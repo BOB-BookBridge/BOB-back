@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bob.core.area.adapter.api.request.AuthenticateAreaRequest;
 import com.bob.core.area.application.dto.command.MatchAreaQuery;
 import com.bob.core.area.application.port.in.AreaAuthenticator;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RestController
 @RequestMapping("/areas")

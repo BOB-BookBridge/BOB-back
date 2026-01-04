@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.bob.core.shared.web.AuthenticationId;
 import com.bob.global.event.sse.manager.EmitterManager;
+import com.bob.shared.web.annotation.AuthenticationId;
 
 @RestController
 @RequestMapping("/notifications")

@@ -1,7 +1,5 @@
 package com.bob.integration.adapter.post;
 
-import static com.bob.core.post.application.port.result.PostMemberWishResult.of;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -19,14 +17,14 @@ import com.bob.core.post.application.port.result.PostMemberWishResult;
 @RequiredArgsConstructor
 public class PostMemberAdapter implements PostMemberPort {
 
-    private final MemberReader readUseCase;
+    private final MemberReader memberReader;
 
     @Override
     public PostMember read(UUID memberId) {
-        MemberDetail detail = readUseCase.readDetail(memberId, false);
+        MemberDetail detail = memberReader.readDetail(memberId, false);
 
         List<PostMemberWishResult> wishes = detail.wishes().stream()
-            .map((wish) -> of(wish.title(), wish.author(), wish.cover()))
+            .map((wish) -> new PostMemberWishResult(wish.title(), wish.author(), wish.cover()))
             .toList();
 
         return PostMember.builder()

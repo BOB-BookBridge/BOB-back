@@ -19,9 +19,9 @@ import org.springframework.stereotype.Service;
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.security.application.port.dto.AuthMember;
 import com.bob.security.application.port.in.TokenIssuer;
-import com.bob.security.application.port.out.AuthCachePort;
 import com.bob.security.application.port.out.MemberLoader;
-import com.bob.security.application.port.out.TokenManager;
+import com.bob.security.application.port.out.infra.AuthCachePort;
+import com.bob.security.application.port.out.infra.TokenManager;
 
 @Service
 @RequiredArgsConstructor

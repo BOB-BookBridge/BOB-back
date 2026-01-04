@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bob.core.shared.web.AuthenticationId;
 import com.bob.core.trade.application.dto.query.ReadPostTradesQuery;
 import com.bob.core.trade.application.dto.result.internal.PostTrade;
 import com.bob.core.trade.application.port.in.TradeReader;
+import com.bob.shared.web.annotation.AuthenticationId;
 
 @RequiredArgsConstructor
 @RestController

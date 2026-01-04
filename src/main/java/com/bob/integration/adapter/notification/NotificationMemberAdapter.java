@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import com.bob.core.member.application.dto.result.MemberDetail;
+import com.bob.core.member.application.dto.result.MemberBasicInfo;
 import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.notification.application.port.out.NotificationMemberPort;
 import com.bob.core.notification.application.port.result.NotificationMember;
@@ -19,8 +19,8 @@ public class NotificationMemberAdapter implements NotificationMemberPort {
 
     @Override
     public NotificationMember read(UUID memberId) {
-        MemberDetail detail = memberReader.readDetail(memberId, false);
+        MemberBasicInfo info = memberReader.readBasicInfo(memberId);
 
-        return new NotificationMember(detail.id(), detail.nickname(), detail.profileImageUrl());
+        return new NotificationMember(info.id(), info.nickname(), info.profileImageUrl());
     }
 }

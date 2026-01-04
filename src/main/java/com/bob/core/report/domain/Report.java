@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 import org.springframework.util.Assert;
 
-import com.bob.core.shared.entity.AbstractEntity;
+import com.bob.shared.entity.AbstractEntity;
 
 @Entity
 @Getter

@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bob.core.chat.application.dto.command.CreateSystemMessageCommand;
 import com.bob.core.chat.application.port.in.ChatMessageCreator;
-import com.bob.global.event.application.dto.SystemChatMessageEvent;
+import com.bob.core.trade.event.TradeChangedEvent;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("채팅 메시지 이벤트 핸들러 테스트")
@@ -28,10 +28,10 @@ class ChatMessageEventHandlerTest {
     private ChatMessageCreator chatMessageCreator;
 
     @Test
-    void 시스템_메시지_이벤트_처리() {
-        var event = new SystemChatMessageEvent("TRADE", "1", MEMBER_ID, OTHER_MEMBER_ID, "시스템메시지");
+    void 거래_변경_이벤트_처리() {
+        TradeChangedEvent event = new TradeChangedEvent(1L, MEMBER_ID, OTHER_MEMBER_ID, "시스템메시지");
 
-        chatMessageEventHandler.handleSystemChatMessageEvent(event);
+        chatMessageEventHandler.handleTradeChanged(event);
 
         var captor = ArgumentCaptor.forClass(CreateSystemMessageCommand.class);
 

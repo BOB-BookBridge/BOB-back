@@ -1,7 +1,7 @@
 package com.bob.core.member.adapter.api;
 
-import static com.bob.core.shared.web.symbol.ResponseSymbol.CREATED;
-import static com.bob.core.shared.web.symbol.ResponseSymbol.DELETED;
+import static com.bob.shared.web.response.ResponseSymbol.CREATED;
+import static com.bob.shared.web.response.ResponseSymbol.DELETED;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,9 +28,9 @@ import com.bob.core.member.application.dto.command.RemoveMemberWishCommand;
 import com.bob.core.member.application.dto.result.MemberDetail;
 import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.member.application.port.in.MemberWishManager;
-import com.bob.core.shared.web.AuthenticationId;
-import com.bob.core.shared.web.CommonResponse;
-import com.bob.core.shared.web.symbol.ResponseSymbol;
+import com.bob.shared.web.annotation.AuthenticationId;
+import com.bob.shared.web.response.CommonResponse;
+import com.bob.shared.web.response.ResponseSymbol;
 
 @RequiredArgsConstructor
 @RequestMapping("/members")
