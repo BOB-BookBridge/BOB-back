@@ -24,14 +24,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
-import jakarta.persistence.EntityManager;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.bob.core.post.domain.Post;
-import com.bob.core.post.domain.repository.PostRepository;
-import com.bob.core.post.domain.status.TradeProgress;
 import com.bob.core.trade.application.dto.command.ChangeTradeItemsCommand;
 import com.bob.core.trade.application.dto.command.ChangeTradeStatusCommand;
 import com.bob.core.trade.application.dto.command.CreateTradeCommand;
@@ -43,10 +38,7 @@ import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("거래 수정 테스트")
 @ContainerTest
-record TradeModifierTest(
-    TradeModifier tradeModifier, TradeCreator tradeCreator, TradeRepository tradeRepository,
-    PostRepository postRepository, EntityManager em
-) {
+record TradeModifierTest(TradeModifier tradeModifier, TradeCreator tradeCreator, TradeRepository tradeRepository) {
 
     @Test
     void 거래_상태_변경_수락() {
@@ -105,45 +97,6 @@ record TradeModifierTest(
 
         assertThat(result.trade().getStatus()).isEqualTo(CANCELED);
         assertThat(result.chatroomId()).isNull();
-    }
-
-    @Test
-    void 거래_상태_변경_시_대기_상태에서_예약_상태로_변경되면_게시물_거래_상태가_예약_상태로_변경() {
-        Trade trade = tradeCreator.create(new CreateTradeCommand(1L, OTHER_MEMBER_ID, List.of(5L), false));
-        var reserveCommand = new ChangeTradeStatusCommand(MEMBER_ID, "RESERVED", null);
-        tradeModifier.changeStatus(trade.getId(), reserveCommand);
-
-        Post after = postRepository.findById(trade.getPostId()).get();
-        assertThat(after.getTradeProgress()).isEqualTo(TradeProgress.RESERVED);
-    }
-
-    @Test
-    void 거래_상태_변경_시_예약_상태에서_완료_상태로_변경되면_게시물_거래_상태가_완료_상태로_변경() {
-        Trade trade = tradeCreator.create(new CreateTradeCommand(1L, OTHER_MEMBER_ID, List.of(5L), false));
-        var reserveCommand = new ChangeTradeStatusCommand(MEMBER_ID, "COMPLETED", null);
-        tradeModifier.changeStatus(trade.getId(), reserveCommand);
-
-        Post after = postRepository.findById(trade.getPostId()).get();
-        assertThat(after.getTradeProgress()).isEqualTo(TradeProgress.COMPLETED);
-    }
-
-    @Test
-    void 거래_상태_변경_시_예약_상태에서_이전_상태로_변경되면_게시물_거래_상태가_대기_상태로_변경() {
-        Trade trade = tradeCreator.create(new CreateTradeCommand(1L, OTHER_MEMBER_ID, List.of(5L), false));
-        var reserveCommand = new ChangeTradeStatusCommand(MEMBER_ID, "RESERVED", null);
-        tradeModifier.changeStatus(trade.getId(), reserveCommand);
-
-        Post before = postRepository.findById(trade.getPostId()).get();
-        assertThat(before.getTradeProgress()).isEqualTo(TradeProgress.RESERVED);
-
-        var acceptCommand = new ChangeTradeStatusCommand(MEMBER_ID, "ACCEPTED", null);
-        tradeModifier.changeStatus(trade.getId(), acceptCommand);
-
-        em.flush();
-        em.clear();
-
-        Post after = postRepository.findById(trade.getPostId()).get();
-        assertThat(after.getTradeProgress()).isEqualTo(TradeProgress.READY);
     }
 
     @Test

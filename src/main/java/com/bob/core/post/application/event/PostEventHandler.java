@@ -2,7 +2,7 @@ package com.bob.core.post.application.event;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.context.event.EventListener;
+import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
 import com.bob.core.member.event.MemberDeactivatedEvent;
@@ -19,21 +19,21 @@ public class PostEventHandler {
 
     private final PostModifier postModifier;
 
-    @EventListener
+    @ApplicationModuleListener
     public void handleMemberDeactivated(MemberDeactivatedEvent event) {
         ChangeMemberPostStatusCommand command = new ChangeMemberPostStatusCommand(event.memberId(), Status.DEACTIVATED);
 
         postModifier.changeStatusByAccountEvent(command);
     }
 
-    @EventListener
+    @ApplicationModuleListener
     public void handleMemberRecovered(MemberRecoveredEvent event) {
         ChangeMemberPostStatusCommand command = new ChangeMemberPostStatusCommand(event.memberId(), Status.ACTIVE);
 
         postModifier.changeStatusByAccountEvent(command);
     }
 
-    @EventListener
+    @ApplicationModuleListener
     public void handleTradeStatusChanged(TradeStatusChangedEvent event) {
         ChangePostTradeProgressCommand command = new ChangePostTradeProgressCommand(event.newStatus());
 

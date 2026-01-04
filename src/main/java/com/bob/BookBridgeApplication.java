@@ -2,8 +2,10 @@ package com.bob;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.modulith.Modulithic;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+@Modulithic
 @EnableAsync
 @SpringBootApplication
 public class BookBridgeApplication {

@@ -2,7 +2,7 @@ package com.bob.core.chat.application.event;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.context.event.EventListener;
+import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
 import com.bob.core.chat.application.dto.command.CreateSystemMessageCommand;
@@ -15,7 +15,7 @@ public class ChatMessageEventHandler {
 
     private final ChatMessageCreator messageCreator;
 
-    @EventListener
+    @ApplicationModuleListener
     public void handleTradeChanged(TradeChangedEvent event) {
         CreateSystemMessageCommand command = CreateSystemMessageCommand.fromTradeEvent(event);
 
