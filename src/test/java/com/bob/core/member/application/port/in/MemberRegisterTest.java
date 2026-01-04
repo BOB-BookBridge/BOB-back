@@ -17,9 +17,9 @@ import org.junit.jupiter.api.Test;
 
 import com.bob.core.member.application.dto.command.CreateMemberCommand;
 import com.bob.core.member.application.dto.command.SocialLoginCommand;
-import com.bob.core.member.application.port.out.MemberCachePort;
+import com.bob.core.member.application.port.out.infra.MemberCachePort;
 import com.bob.core.member.domain.Member;
-import com.bob.core.member.domain.PasswordEncoder;
+import com.bob.core.member.domain.encoder.PasswordEncoder;
 import com.bob.core.member.domain.repository.MemberRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;

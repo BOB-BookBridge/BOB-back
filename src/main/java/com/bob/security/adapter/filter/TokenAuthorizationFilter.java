@@ -24,7 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.security.adapter.entrypoint.TokenAuthenticationEntryPoint;
-import com.bob.security.application.port.out.TokenManager;
+import com.bob.security.application.port.out.infra.TokenManager;
 import com.bob.security.config.registry.OptionalRegistry;
 import com.bob.security.config.registry.PermitAllRegistry;
 import com.bob.security.model.MemberDetails;

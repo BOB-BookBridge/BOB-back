@@ -19,8 +19,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
-import com.bob.core.file.application.port.out.FileStoragePort;
-import com.bob.core.member.application.port.out.MailSender;
+import com.bob.core.file.application.port.out.infra.FileStoragePort;
+import com.bob.core.member.application.port.out.infra.MailSender;
 
 @TestConfiguration
 public class BobTestConfiguration {

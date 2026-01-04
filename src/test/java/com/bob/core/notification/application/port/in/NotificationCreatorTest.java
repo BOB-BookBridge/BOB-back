@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.bob.core.notification.application.dto.command.CreateNotificationCommand;
-import com.bob.core.notification.application.port.out.NotificationMessagePort;
+import com.bob.core.notification.application.port.out.infra.NotificationMessagePort;
 import com.bob.core.notification.domain.Notification;
 import com.bob.core.notification.domain.repository.NotificationRepository;
 import com.bob.support.annotation.ContainerTest;

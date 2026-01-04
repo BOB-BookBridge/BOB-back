@@ -1,4 +1,4 @@
-package com.bob.security.application.port.out;
+package com.bob.security.application.port.out.infra;
 
 import java.util.Optional;
 

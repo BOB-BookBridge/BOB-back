@@ -13,8 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.member.application.dto.command.VerifyMailCommand;
 import com.bob.core.member.application.port.in.MemberAuthenticator;
-import com.bob.core.member.application.port.out.MailSender;
-import com.bob.core.member.application.port.out.MemberCachePort;
+import com.bob.core.member.application.port.out.infra.MailSender;
+import com.bob.core.member.application.port.out.infra.MemberCachePort;
 import com.bob.global.exception.exceptions.ApplicationException;
 
 @Service

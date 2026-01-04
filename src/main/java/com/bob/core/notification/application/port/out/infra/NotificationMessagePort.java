@@ -1,4 +1,4 @@
-package com.bob.core.notification.application.port.out;
+package com.bob.core.notification.application.port.out.infra;
 
 import java.util.List;
 import java.util.UUID;

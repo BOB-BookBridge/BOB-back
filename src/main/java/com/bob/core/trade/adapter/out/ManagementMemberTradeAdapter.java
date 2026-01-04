@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.bob.admin.member.application.port.out.ManagementMemberTradePort;
-import com.bob.admin.member.application.port.result.activity.ManagementMemberTrade;
+import com.bob.admin.member.application.port.result.ManagementMemberTrade;
 import com.bob.core.trade.application.dto.result.TradeSummaries;
 import com.bob.core.trade.application.dto.result.TradeSummary;
 import com.bob.core.trade.application.port.in.TradeReader;

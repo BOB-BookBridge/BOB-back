@@ -30,8 +30,8 @@ import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.global.exception.response.AuthenticationError;
 import com.bob.global.ratelimit.repository.RateLimitRepository;
 import com.bob.security.adapter.filter.request.LoginRequest;
-import com.bob.security.application.port.out.AuthCachePort;
-import com.bob.security.application.port.out.TokenManager;
+import com.bob.security.application.port.out.infra.AuthCachePort;
+import com.bob.security.application.port.out.infra.TokenManager;
 import com.bob.security.config.props.HeaderProperties;
 import com.bob.security.model.MemberDetails;
 

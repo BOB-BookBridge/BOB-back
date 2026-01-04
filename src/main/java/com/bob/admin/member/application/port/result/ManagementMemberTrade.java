@@ -1,4 +1,4 @@
-package com.bob.admin.member.application.port.result.activity;
+package com.bob.admin.member.application.port.result;
 
 import java.util.List;
 

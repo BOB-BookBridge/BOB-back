@@ -1,4 +1,4 @@
-package com.bob.core.file.application.port.out;
+package com.bob.core.file.application.port.out.infra;
 
 import java.util.List;
 

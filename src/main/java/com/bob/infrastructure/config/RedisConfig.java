@@ -1,8 +1,5 @@
 package com.bob.infrastructure.config;
 
-import java.util.HashSet;
-import java.util.Map;
-
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -14,17 +11,13 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.bob.infrastructure.messaging.subscriber.RedisSubscriber;
-
-@RequiredArgsConstructor
 @Configuration
+@RequiredArgsConstructor
 public class RedisConfig {
 
     private final ObjectMapper objectMapper;
@@ -68,27 +61,5 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new StringRedisSerializer());
         return template;
-    }
-
-    @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer(
-        RedisConnectionFactory connectionFactory,
-        RedisSubscriber redisEventSubscriber
-    ) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-
-        new HashSet<>(topicMap().values()).forEach(topic -> container.addMessageListener(redisEventSubscriber, topic));
-
-        return container;
-    }
-
-    @Bean
-    public Map<String, ChannelTopic> topicMap() {
-        return Map.of(
-            "CHAT", new ChannelTopic("notification"),
-            "TRADE", new ChannelTopic("notification"),
-            "CHAT_MESSAGE", new ChannelTopic("chatroom")
-        );
     }
 }

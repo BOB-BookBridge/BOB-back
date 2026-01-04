@@ -1,4 +1,4 @@
-package com.bob.core.member.domain;
+package com.bob.core.member.domain.encoder;
 
 public interface PasswordEncoder {
 

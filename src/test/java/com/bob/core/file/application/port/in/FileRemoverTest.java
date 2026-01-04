@@ -9,7 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.bob.core.file.application.port.out.FileStoragePort;
+import com.bob.core.file.application.port.out.infra.FileStoragePort;
 import com.bob.core.file.domain.File;
 import com.bob.core.file.domain.repository.FileRepository;
 import com.bob.support.annotation.ContainerTest;

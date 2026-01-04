@@ -17,8 +17,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.global.exception.response.AuthenticationError;
-import com.bob.security.application.port.out.AuthCachePort;
-import com.bob.security.application.port.out.TokenManager;
+import com.bob.security.application.port.out.infra.AuthCachePort;
+import com.bob.security.application.port.out.infra.TokenManager;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("토큰 발급자 테스트")

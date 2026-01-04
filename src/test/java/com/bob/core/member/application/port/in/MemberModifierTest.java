@@ -28,7 +28,7 @@ import com.bob.core.member.application.dto.command.ChangeProfileImageCommand;
 import com.bob.core.member.application.dto.command.ChangeStatusCommand;
 import com.bob.core.member.domain.Member;
 import com.bob.core.member.domain.MemberArea;
-import com.bob.core.member.domain.PasswordEncoder;
+import com.bob.core.member.domain.encoder.PasswordEncoder;
 import com.bob.core.member.domain.repository.MemberRepository;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
