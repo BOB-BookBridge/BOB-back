@@ -5,18 +5,41 @@ import static com.bob.support.fixture.member.domain.MemberFixture.MANAGER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 
+import java.util.UUID;
+
 import com.bob.core.report.domain.Report;
+import com.bob.core.report.domain.ReportStatus;
 
 public class ReportFixture {
 
+    public static Report createReport(UUID reporterId, UUID reportedId) {
+        return Report.createReport(POST, 1L, "사기/허위", reporterId, reportedId);
+    }
+
     public static Report createReport() {
-        return Report.createReport(POST, 1L, "사기/허위", MEMBER_ID, OTHER_MEMBER_ID);
+        return createReport(MEMBER_ID, OTHER_MEMBER_ID);
     }
 
     public static Report createProcessedReport() {
         Report report = createReport();
         report.review(MANAGER_ID);
         report.process();
+
+        return report;
+    }
+
+    public static Report createDuplicatedReport() {
+        Report report = createReport();
+        report.review(MANAGER_ID);
+        report.abort(ReportStatus.DUPLICATED);
+
+        return report;
+    }
+
+    public static Report createClosedReport() {
+        Report report = createReport();
+        report.review(MANAGER_ID);
+        report.abort(ReportStatus.CLOSED);
 
         return report;
     }

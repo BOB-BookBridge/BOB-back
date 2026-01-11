@@ -1,7 +1,7 @@
 @ApplicationModule(
     type = ApplicationModule.Type.OPEN,
     allowedDependencies = {
-        "admin::out-port", "admin::out-port-result",
+        "admin::member-out-port", "admin::member-out-port-result",
 
         "security::out-port", "security::out-port-result",
 

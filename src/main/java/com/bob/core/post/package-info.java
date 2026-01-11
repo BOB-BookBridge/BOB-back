@@ -1,9 +1,9 @@
 @ApplicationModule(
     type = ApplicationModule.Type.OPEN,
     allowedDependencies = {
-        "admin :: out-port", "admin :: out-port-result",
+        "admin::member-out-port", "admin::member-out-port-result",
 
-        "core.trade", "core.trade :: event", "core.member :: event",
+        "core.trade", "core.trade::event", "core.member::event",
 
         "shared", "global"
     }
