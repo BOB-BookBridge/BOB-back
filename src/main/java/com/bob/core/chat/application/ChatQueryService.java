@@ -56,6 +56,12 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
     }
 
     @Override
+    public Chatroom readByMessageId(Long messageId) {
+        return chatRoomRepository.findByMessageId(messageId)
+            .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다. id : " + messageId));
+    }
+
+    @Override
     public Optional<Chatroom> readByPostAndBuyer(ReadChatroomByPostAndMemberQuery query) {
         return chatRoomRepository.findByPostAndBuyer(query.postId(), query.buyerId());
     }
@@ -75,7 +81,7 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
         verifyParticipating(chatroom, query.memberId());
 
         ChatroomMember member = chatroom.getMember(query.memberId());
-        List<ChatMessage> messages = chatroom.getMessagesAfter(member.getEnteredAt());
+        List<ChatMessage> messages = chatroom.getMessagesAfter(member.getEnteredAt().minusSeconds(1));
         UUID partnerId = chatroom.getPartnerId(query.memberId());
         ChatroomMember partner = chatroom.getMember(partnerId);
 

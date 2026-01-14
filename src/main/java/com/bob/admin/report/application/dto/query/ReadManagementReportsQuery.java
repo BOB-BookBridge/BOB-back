@@ -5,12 +5,19 @@ public record ReadManagementReportsQuery(String reporterEmail, String reportedEm
     public static ReadManagementReportsQuery of(String reporterEmail, String reportedEmail,
         String type, String status
     ) {
-        if (type != null)
-            type = type.toUpperCase();
+        return new ReadManagementReportsQuery(
+            emptyToNull(reporterEmail),
+            emptyToNull(reportedEmail),
+            toUpperCaseOrNull(type),
+            toUpperCaseOrNull(status)
+        );
+    }
 
-        if (status != null)
-            status = status.toUpperCase();
+    private static String emptyToNull(String value) {
+        return (value == null || value.isEmpty()) ? null : value;
+    }
 
-        return new ReadManagementReportsQuery(reporterEmail, reportedEmail, type, status);
+    private static String toUpperCaseOrNull(String value) {
+        return (value == null || value.isEmpty()) ? null : value.toUpperCase();
     }
 }

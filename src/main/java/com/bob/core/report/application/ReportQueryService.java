@@ -26,6 +26,12 @@ public class ReportQueryService implements ReportReader, ReportSearcher {
     private final ReportRepository reportRepository;
 
     @Override
+    public Report read(Long reportId) {
+        return reportRepository.findById(reportId)
+            .orElseThrow(() -> new IllegalArgumentException("신고를 찾을 수 없습니다."));
+    }
+
+    @Override
     public List<Report> read(ReadReportQuery query) {
         return reportRepository.findAllByReportedId(query.reportedId());
     }

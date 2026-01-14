@@ -15,6 +15,8 @@ public interface ChatroomReader {
 
     Chatroom read(Long chatroomId);
 
+    Chatroom readByMessageId(Long messageId);
+
     Optional<Chatroom> readByPostAndBuyer(ReadChatroomByPostAndMemberQuery query);
 
     List<ChatroomSummary> readChatRoomSummaries(ReadChatroomSummariesQuery query);

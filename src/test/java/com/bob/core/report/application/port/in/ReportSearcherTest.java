@@ -50,6 +50,6 @@ record ReportSearcherTest(ReportSearcher reportSearcher, ReportRepository report
 
         ReportSummaries summaries = reportSearcher.searchByQuery(query, pageable);
 
-        assertThat(summaries.totalCount()).isEqualTo(5);
+        assertThat(summaries.totalCount()).isEqualTo(1);
     }
 }

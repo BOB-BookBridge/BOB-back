@@ -29,7 +29,5 @@ public @interface AllowedValues {
     boolean ignoreCase() default false;
 
     boolean allowNull() default true;
-
-    boolean allowBlank() default false;
 }
 

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -21,14 +23,16 @@ import com.bob.core.chat.application.dto.query.ReadChatroomSummariesQuery;
 import com.bob.core.chat.application.dto.query.ValidateParticipantQuery;
 import com.bob.core.chat.application.dto.result.ChatroomDetail;
 import com.bob.core.chat.application.dto.result.ChatroomSummary;
+import com.bob.core.chat.domain.ChatMessage;
 import com.bob.core.chat.domain.Chatroom;
 import com.bob.core.chat.domain.repository.ChatroomRepository;
+import com.bob.core.chat.domain.type.ChatMessageType;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
 
 @ContainerTest
 @DisplayName("채팅방 조회 테스트")
-record ChatroomReaderTest(ChatroomReader chatroomReader, ChatroomRepository chatroomRepository) {
+record ChatroomReaderTest(ChatroomReader chatroomReader, ChatroomRepository chatroomRepository, EntityManager em) {
 
     @Test
     void ID_기반_채팅방_조회() {
@@ -48,6 +52,31 @@ record ChatroomReaderTest(ChatroomReader chatroomReader, ChatroomRepository chat
         assertThatThrownBy(() -> chatroomReader.read(nonExistentId))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("채팅방을 찾을 수 없습니다.");
+    }
+
+    @Test
+    void 메시지_ID_기반_채팅방_조회() {
+        Chatroom chatroom = chatroomRepository.save(createChatroom());
+        ChatMessage message = chatroom.addMessage(MEMBER_ID, "테스트 메시지", ChatMessageType.TEXT);
+
+        em.flush();
+        em.clear();
+
+        Long messageId = message.getId();
+
+        Chatroom result = chatroomReader.readByMessageId(messageId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(chatroom.getId());
+    }
+
+    @Test
+    void 메시지_ID_기반_채팅방_조회_시_존재하지_않으면_예외가_발생한다() {
+        Long nonExistentMessageId = 999L;
+
+        assertThatThrownBy(() -> chatroomReader.readByMessageId(nonExistentMessageId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("메시지를 찾을 수 없습니다.");
     }
 
     @Test

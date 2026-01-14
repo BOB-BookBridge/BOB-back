@@ -28,4 +28,12 @@ public interface ChatroomRepository extends JpaRepository<Chatroom, Long> {
             AND crm.memberId = :buyerId
         """)
     Optional<Chatroom> findByPostAndBuyer(Long postId, UUID buyerId);
+
+    @Query("""
+          SELECT cr
+          FROM Chatroom cr
+            JOIN cr.messages m
+          WHERE m.id = :messageId
+        """)
+    Optional<Chatroom> findByMessageId(Long messageId);
 }

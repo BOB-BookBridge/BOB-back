@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bob.admin.report.application.dto.query.ReadManagementReportsQuery;
 import com.bob.admin.report.application.port.in.ManagementReportReader;
 import com.bob.admin.report.application.port.out.ManagementReportPort;
+import com.bob.admin.report.application.port.result.ManagementReportDetail;
 import com.bob.admin.report.application.port.result.ManagementReportSummaries;
 
 @Service
@@ -21,5 +22,10 @@ public class ManagementReportQueryService implements ManagementReportReader {
     @Override
     public ManagementReportSummaries readAll(ReadManagementReportsQuery query, Pageable pageable) {
         return reportPort.readAll(query.reporterEmail(), query.reportedEmail(), query.type(), query.status(), pageable);
+    }
+
+    @Override
+    public ManagementReportDetail readDetail(Long reportId) {
+        return reportPort.readDetail(reportId);
     }
 }

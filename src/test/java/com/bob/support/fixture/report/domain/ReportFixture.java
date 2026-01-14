@@ -1,5 +1,6 @@
 package com.bob.support.fixture.report.domain;
 
+import static com.bob.core.report.domain.ReportTarget.CHAT;
 import static com.bob.core.report.domain.ReportTarget.POST;
 import static com.bob.support.fixture.member.domain.MemberFixture.MANAGER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
@@ -18,6 +19,14 @@ public class ReportFixture {
 
     public static Report createReport() {
         return createReport(MEMBER_ID, OTHER_MEMBER_ID);
+    }
+
+    public static Report createChatReport(Long chatMessageId, UUID reporterId, UUID reportedId) {
+        return Report.createReport(CHAT, chatMessageId, "욕설/비방", reporterId, reportedId);
+    }
+
+    public static Report createChatReport(Long chatMessageId) {
+        return createChatReport(chatMessageId, MEMBER_ID, OTHER_MEMBER_ID);
     }
 
     public static Report createProcessedReport() {

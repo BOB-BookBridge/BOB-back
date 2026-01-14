@@ -2,6 +2,7 @@ package com.bob.admin.report.application.port.out;
 
 import org.springframework.data.domain.Pageable;
 
+import com.bob.admin.report.application.port.result.ManagementReportDetail;
 import com.bob.admin.report.application.port.result.ManagementReportSummaries;
 
 public interface ManagementReportPort {
@@ -13,4 +14,6 @@ public interface ManagementReportPort {
         String status,
         Pageable pageable
     );
+
+    ManagementReportDetail readDetail(Long reportId);
 }

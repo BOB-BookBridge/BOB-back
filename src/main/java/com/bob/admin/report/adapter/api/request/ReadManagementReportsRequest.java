@@ -6,10 +6,16 @@ public record ReadManagementReportsRequest(
     String reporterEmail,
     String reportedEmail,
 
-    @AllowedValues(value = {"CHAT", "POST"}, ignoreCase = true)
+    @AllowedValues(
+        value = {"CHAT", "POST"},
+        ignoreCase = true
+    )
     String type,
 
-    @AllowedValues(value = {"PENDING", "IN_REVIEW", "PROCESSED", "CLOSED", "DUPLICATED"}, ignoreCase = true)
+    @AllowedValues(
+        value = {"PENDING", "IN_REVIEW", "PROCESSED", "CLOSED", "DUPLICATED"},
+        ignoreCase = true
+    )
     String status
 ) {
 
