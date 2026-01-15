@@ -4,7 +4,9 @@ import static com.bob.core.post.domain.status.Status.ACTIVE;
 import static com.bob.core.post.domain.status.Status.DEACTIVATED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
 import java.util.UUID;
@@ -22,6 +24,9 @@ import com.bob.core.member.event.MemberRecoveredEvent;
 import com.bob.core.post.application.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostTradeProgressCommand;
 import com.bob.core.post.application.port.in.PostModifier;
+import com.bob.core.post.application.port.in.PostReader;
+import com.bob.core.post.domain.Post;
+import com.bob.core.report.event.ReportPostProcessedEvent;
 import com.bob.core.trade.event.TradeStatusChangedEvent;
 
 @DisplayName("게시글 이벤트 처리 테스트")
@@ -30,6 +35,9 @@ class PostEventHandlerTest {
 
     @InjectMocks
     private PostEventHandler postEventHandler;
+
+    @Mock
+    private PostReader postReader;
 
     @Mock
     private PostModifier postModifier;
@@ -72,5 +80,18 @@ class PostEventHandlerTest {
         var captor = ArgumentCaptor.forClass(ChangePostTradeProgressCommand.class);
         then(postModifier).should(times(1)).changePostTradeProgress(eq(event.postId()), captor.capture());
         assertThat(captor.getValue().status()).isEqualTo("COMPLETED");
+    }
+
+    @Test
+    void 신고_게시글_제재_이벤트_처리() {
+        Long postId = 1L;
+        Post post = mock(Post.class);
+        var event = new ReportPostProcessedEvent(postId);
+        given(postReader.read(postId)).willReturn(post);
+
+        postEventHandler.handlePostReportProcessed(event);
+
+        then(postReader).should(times(1)).read(eq(event.targetId()));
+        then(post).should(times(1)).deactivate();
     }
 }

@@ -10,13 +10,17 @@ import com.bob.core.member.event.MemberRecoveredEvent;
 import com.bob.core.post.application.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostTradeProgressCommand;
 import com.bob.core.post.application.port.in.PostModifier;
+import com.bob.core.post.application.port.in.PostReader;
+import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.status.Status;
+import com.bob.core.report.event.ReportPostProcessedEvent;
 import com.bob.core.trade.event.TradeStatusChangedEvent;
 
 @Component
 @RequiredArgsConstructor
 public class PostEventHandler {
 
+    private final PostReader postReader;
     private final PostModifier postModifier;
 
     @ApplicationModuleListener
@@ -38,5 +42,12 @@ public class PostEventHandler {
         ChangePostTradeProgressCommand command = new ChangePostTradeProgressCommand(event.newStatus());
 
         postModifier.changePostTradeProgress(event.postId(), command);
+    }
+
+    @ApplicationModuleListener
+    public void handlePostReportProcessed(ReportPostProcessedEvent event) {
+        Post post = postReader.read(event.targetId());
+
+        post.deactivate();
     }
 }

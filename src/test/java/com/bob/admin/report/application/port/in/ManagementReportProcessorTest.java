@@ -22,6 +22,7 @@ import com.bob.admin.report.application.dto.command.ProcessManagementReportStatu
 import com.bob.core.member.event.MemberDeactivatedEvent;
 import com.bob.core.report.domain.Report;
 import com.bob.core.report.domain.repository.ReportRepository;
+import com.bob.core.report.event.ReportPostProcessedEvent;
 import com.bob.support.annotation.ContainerTest;
 import com.bob.support.fixture.report.domain.ReportFixture;
 
@@ -66,7 +67,7 @@ class ManagementReportProcessorTest {
         assertThat(result.getStatus()).isEqualTo(PROCESSED);
         assertThat(result.getProcessedAt()).isNotNull();
 
-        then(eventPublisher).shouldHaveNoInteractions();
+        then(eventPublisher).should().publishEvent(any(ReportPostProcessedEvent.class));
     }
 
     @Test
