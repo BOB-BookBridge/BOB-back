@@ -31,6 +31,7 @@ import com.bob.core.member.application.dto.command.ChangeProfileImageCommand;
 import com.bob.core.member.application.dto.command.ChangeStatusCommand;
 import com.bob.core.member.application.dto.command.CreateMemberCommand;
 import com.bob.core.member.application.dto.command.SocialLoginCommand;
+import com.bob.core.member.application.dto.command.UpdateMemoCommand;
 import com.bob.core.member.application.port.in.MemberModifier;
 import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.member.application.port.in.MemberRegister;
@@ -104,6 +105,11 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
 
         Member member = memberReader.read(memberId);
         member.updateStatusFromAdmin(status, command.memo());
+
+        switch (status) {
+            case ACTIVE -> eventPublisher.publishEvent(new MemberRecoveredEvent(member.getId()));
+            case BANNED, DEACTIVATED -> eventPublisher.publishEvent(new MemberDeactivatedEvent(member.getId()));
+        }
 
         return memberRepository.save(member);
     }
@@ -206,6 +212,15 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
         removeCookie(response, "REFRESH_KEY");
 
         eventPublisher.publishEvent(new MemberDeactivatedEvent(member.getId()));
+
+        return member;
+    }
+
+    @Override
+    public Member updateMemoForAdmin(UUID memberId, UpdateMemoCommand command) {
+        Member member = memberReader.read(memberId);
+
+        member.updateMemo(command.memo());
 
         return member;
     }

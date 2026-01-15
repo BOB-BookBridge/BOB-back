@@ -7,9 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import com.bob.core.report.domain.Report;
+import com.bob.core.report.domain.repository.dsl.ReportQueryRepository;
 import com.bob.core.report.domain.repository.projection.ReportCount;
 
-public interface ReportRepository extends CrudRepository<Report, Long> {
+public interface ReportRepository extends CrudRepository<Report, Long>, ReportQueryRepository {
 
     List<Report> findAllByReportedId(UUID reportedId);
 

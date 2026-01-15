@@ -9,6 +9,8 @@ import com.bob.core.report.domain.repository.projection.ReportCount;
 
 public interface ReportReader {
 
+    Report read(Long reportId);
+
     List<Report> read(ReadReportQuery query);
 
     List<ReportCount> readProcessedReportCounts(ReadReportCountQuery query);

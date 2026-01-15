@@ -3,6 +3,8 @@
     allowedDependencies = {
         "core.trade::event",
 
+        "admin::report-out-port", "admin::report-out-port-result",
+
         "shared", "global"
     }
 )

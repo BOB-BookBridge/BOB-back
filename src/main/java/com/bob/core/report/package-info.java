@@ -1,7 +1,10 @@
 @ApplicationModule(
     type = ApplicationModule.Type.OPEN,
     allowedDependencies = {
-        "admin::out-port", "admin::out-port-result",
+        "core.member", "core.chat", "core.post",
+
+        "admin::member-out-port", "admin::member-out-port-result",
+        "admin::report-out-port", "admin::report-out-port-result",
 
         "shared", "global"
     }

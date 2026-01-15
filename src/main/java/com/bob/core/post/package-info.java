@@ -1,11 +1,13 @@
 @ApplicationModule(
     type = ApplicationModule.Type.OPEN,
     allowedDependencies = {
-        "admin :: out-port", "admin :: out-port-result",
+        "core.trade", "core.trade::event", "core.member::event", "core.report::event",
 
-        "core.trade", "core.trade :: event", "core.member :: event",
+        "admin::member-out-port", "admin::member-out-port-result",
+        "admin::report-out-port", "admin::report-out-port-result",
 
         "shared", "global"
+
     }
 )
 package com.bob.core.post;

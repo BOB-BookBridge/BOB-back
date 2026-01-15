@@ -9,46 +9,72 @@ import static com.bob.global.exception.response.ApplicationError.NO_CHANGES;
 import static com.bob.support.fixture.area.domain.AreaFixture.CENTER_LAT;
 import static com.bob.support.fixture.area.domain.AreaFixture.CENTER_LON;
 import static com.bob.support.fixture.area.domain.AreaFixture.EMD_AREA_ID;
+import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.createCustomPasswordMember;
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.then;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.bob.core.member.application.dto.command.ChangePasswordCommand;
 import com.bob.core.member.application.dto.command.ChangeProfileCommand;
 import com.bob.core.member.application.dto.command.ChangeProfileImageCommand;
 import com.bob.core.member.application.dto.command.ChangeStatusCommand;
+import com.bob.core.member.application.dto.command.UpdateMemoCommand;
 import com.bob.core.member.domain.Member;
 import com.bob.core.member.domain.MemberArea;
 import com.bob.core.member.domain.encoder.PasswordEncoder;
 import com.bob.core.member.domain.repository.MemberRepository;
+import com.bob.core.member.event.MemberDeactivatedEvent;
+import com.bob.core.member.event.MemberRecoveredEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("회원 정보 변경 테스트")
+@RequiredArgsConstructor
 @ContainerTest
-record MemberModifierTest(
-    MemberModifier memberModifier, MemberRepository memberRepository,
-    PasswordEncoder passwordEncoder
-) {
+class MemberModifierTest {
+
+    private final MemberModifier memberModifier;
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private final ApplicationEventPublisher eventPublisher;
 
     @Test
     void 상태_변경() {
         Member member = memberRepository.save(createMember());
-        ChangeStatusCommand command = new ChangeStatusCommand("BANNED", "신고 누적");
+        ChangeStatusCommand banCommand = new ChangeStatusCommand("BANNED", "신고 누적");
 
-        member = memberModifier.changeStatus(member.getId(), command);
+        member = memberModifier.changeStatus(member.getId(), banCommand);
 
         assertThat(member.getStatus()).isEqualTo(BANNED);
         assertThat(member.getMemo()).isEqualTo("신고 누적");
+
+        then(eventPublisher).should().publishEvent(any(MemberDeactivatedEvent.class));
+
+        // 활성화로 상태 변경
+        ChangeStatusCommand activeCommand = new ChangeStatusCommand("ACTIVE", null);
+
+        member = memberModifier.changeStatus(member.getId(), activeCommand);
+
+        assertThat(member.getStatus()).isEqualTo(ACTIVE);
+        assertThat(member.getMemo()).isEqualTo(null);
+
+        then(eventPublisher).should().publishEvent(any(MemberRecoveredEvent.class));
     }
 
     @Test
@@ -175,5 +201,17 @@ record MemberModifierTest(
         member = memberModifier.deactivate(member.getId(), response);
 
         assertThat(member.getStatus()).isEqualTo(DEACTIVATED);
+
+        then(eventPublisher).should().publishEvent(any(MemberDeactivatedEvent.class));
+    }
+
+    @Test
+    void 관리자_메모_갱신() {
+        String memo = "메모";
+        UpdateMemoCommand command = new UpdateMemoCommand(memo);
+
+        Member result = memberModifier.updateMemoForAdmin(OTHER_MEMBER_ID, command);
+
+        assertThat(result.getMemo()).isEqualTo(memo);
     }
 }

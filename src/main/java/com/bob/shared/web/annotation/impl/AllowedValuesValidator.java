@@ -13,13 +13,11 @@ public class AllowedValuesValidator implements ConstraintValidator<AllowedValues
 
     private Set<String> allowedValues;
     private boolean ignoreCase;
-    private boolean allowBlank;
     private boolean allowNull;
 
     @Override
     public void initialize(AllowedValues annotation) {
         ignoreCase = annotation.ignoreCase();
-        allowBlank = annotation.allowBlank();
         allowNull = annotation.allowNull();
 
         if (ignoreCase) {
@@ -33,14 +31,11 @@ public class AllowedValuesValidator implements ConstraintValidator<AllowedValues
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (value == null)
+        if (value == null || value.isEmpty())
             return allowNull;
 
         if (hasWhitespace(value))
             return false;
-
-        if (value.isEmpty())
-            return allowBlank;
 
         String compareValue = ignoreCase ? value.toUpperCase() : value;
         return allowedValues.contains(compareValue);

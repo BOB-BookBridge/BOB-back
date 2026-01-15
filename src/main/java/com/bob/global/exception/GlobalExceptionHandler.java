@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ProblemDetail handleServerException(Exception ex) {
         ProblemDetail problemDetail = forStatusAndDetail(SERVER_ERROR.getStatus(), SERVER_ERROR.getMessage());
-        return setProblemDetailProperties(problemDetail, SERVER_ERROR.name());
+        return setProblemDetailProperties(ex, problemDetail, SERVER_ERROR.name());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -79,6 +79,14 @@ public class GlobalExceptionHandler {
     private static ProblemDetail setProblemDetailProperties(ProblemDetail detail, String title) {
         detail.setTitle(title);
         detail.setProperty("timestamp", LocalDateTime.now());
+
+        return detail;
+    }
+
+    private static ProblemDetail setProblemDetailProperties(Exception ex, ProblemDetail detail, String title) {
+        detail.setTitle(title);
+        detail.setProperty("timestamp", LocalDateTime.now());
+        detail.setProperty("error-message", ex.getMessage());
 
         return detail;
     }

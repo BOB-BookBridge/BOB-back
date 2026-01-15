@@ -96,7 +96,7 @@ public class GlobalExceptionHandlerTest {
         assertThat(problemDetail.getStatus()).isEqualTo(SERVER_ERROR.getStatus().value());
         assertThat(problemDetail.getTitle()).isEqualTo(SERVER_ERROR.name());
         assertThat(problemDetail.getDetail()).isEqualTo(SERVER_ERROR.getMessage());
-        assertThat(problemDetail.getProperties()).containsKeys("timestamp");
+        assertThat(problemDetail.getProperties()).containsKeys("timestamp", "error-message");
     }
 
     @Test

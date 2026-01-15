@@ -9,7 +9,7 @@ public enum SearchKey {
     ALL, EMAIL, NICKNAME;
 
     public static SearchKey from(String value) {
-        if (value == null)
+        if (value == null || value.isEmpty())
             return ALL;
 
         return valueOf(value.toUpperCase());

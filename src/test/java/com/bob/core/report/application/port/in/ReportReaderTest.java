@@ -43,12 +43,11 @@ record ReportReaderTest(ReportReader reportReader, ReportRepository reportReposi
 
         List<ReportCount> result = reportReader.readProcessedReportCounts(query);
 
-        assertThat(result).hasSize(1)
-            .satisfiesExactlyInAnyOrder(
-                reportCount -> {
-                    assertThat(reportCount.getReportedId()).isEqualTo(OTHER_MEMBER_ID);
-                    assertThat(reportCount.getCount()).isEqualTo(1);
-                }
-            );
+        assertThat(result).hasSize(1).satisfiesExactlyInAnyOrder(
+            reportCount -> {
+                assertThat(reportCount.getReportedId()).isEqualTo(OTHER_MEMBER_ID);
+                assertThat(reportCount.getCount()).isEqualTo(1);
+            }
+        );
     }
 }

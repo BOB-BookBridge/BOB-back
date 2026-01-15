@@ -39,7 +39,7 @@ public class ManagementMemberApi {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ManagementMemberSummaries readMembers(
-        ReadManagementMembersRequest request,
+        @Valid ReadManagementMembersRequest request,
         @PageableDefault(size = 20) Pageable pageable
     ) {
         return memberReader.readAll(request.key(), request.keyword(), pageable);
