@@ -2,6 +2,7 @@
     type = ApplicationModule.Type.OPEN,
     allowedDependencies = {
         "admin::member-out-port", "admin::member-out-port-result",
+        "admin::report-out-port", "admin::report-out-port-result",
 
         "security::out-port", "security::out-port-result",
 

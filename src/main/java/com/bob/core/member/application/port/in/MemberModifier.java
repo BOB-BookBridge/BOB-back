@@ -8,6 +8,7 @@ import com.bob.core.member.application.dto.command.ChangePasswordCommand;
 import com.bob.core.member.application.dto.command.ChangeProfileCommand;
 import com.bob.core.member.application.dto.command.ChangeProfileImageCommand;
 import com.bob.core.member.application.dto.command.ChangeStatusCommand;
+import com.bob.core.member.application.dto.command.UpdateMemoCommand;
 import com.bob.core.member.domain.Member;
 
 public interface MemberModifier {
@@ -25,4 +26,6 @@ public interface MemberModifier {
     Member activate(String email);
 
     Member deactivate(UUID memberId, HttpServletResponse response);
+
+    Member updateMemoForAdmin(UUID memberId, UpdateMemoCommand command);
 }

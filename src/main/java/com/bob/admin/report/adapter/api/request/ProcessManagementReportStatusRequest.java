@@ -1,12 +1,12 @@
-package com.bob.admin.member.adapter.api.request;
+package com.bob.admin.report.adapter.api.request;
 
 import jakarta.validation.constraints.Size;
 
 import com.bob.shared.web.annotation.AllowedValues;
 
-public record ChangeManagementMemberStatusRequest(
+public record ProcessManagementReportStatusRequest(
     @AllowedValues(
-        value = {"ACTIVE", "DEACTIVATED", "BANNED"},
+        value = {"IN_REVIEW", "PROCESSED", "CLOSED", "DUPLICATED"},
         ignoreCase = true,
         allowNull = false
     )

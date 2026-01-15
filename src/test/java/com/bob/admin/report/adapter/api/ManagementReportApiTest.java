@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.bob.admin.report.adapter.api.request.ProcessManagementReportStatusRequest;
 import com.bob.admin.report.application.port.result.ManagementReportDetail;
 import com.bob.admin.report.application.port.result.ManagementReportSummaries;
 import com.bob.core.report.domain.Report;
@@ -160,6 +162,24 @@ record ManagementReportApiTest(MockMvcTester mvcTester, ObjectMapper objectMappe
         assertThat(response.reported().nickname()).isNotBlank();
         assertThat(response.reportedContent()).isNotNull();
         assertThat(response.managerNickname()).isNotBlank();
+    }
+
+    @Test
+    void 신고_처리() throws JsonProcessingException {
+        Report report = reportRepository.save(ReportFixture.createInReviewReport());
+
+        var request = new ProcessManagementReportStatusRequest("PROCESSED", null);
+        String json = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.patch().uri("/management/reports/{reportId}", report.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.result", AssertThatUtils.equalsTo("UPDATED"));
     }
 
     void setAuthentication() {

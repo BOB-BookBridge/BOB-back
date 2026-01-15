@@ -29,6 +29,13 @@ public class ReportFixture {
         return createChatReport(chatMessageId, MEMBER_ID, OTHER_MEMBER_ID);
     }
 
+    public static Report createInReviewReport() {
+        Report report = createReport();
+        report.review(MANAGER_ID);
+
+        return report;
+    }
+
     public static Report createProcessedReport() {
         Report report = createReport();
         report.review(MANAGER_ID);

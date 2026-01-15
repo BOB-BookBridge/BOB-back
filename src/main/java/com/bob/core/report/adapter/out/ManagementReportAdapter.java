@@ -16,6 +16,7 @@ import com.bob.admin.report.application.port.result.ReportMemberInfo;
 import com.bob.admin.report.application.port.result.ReportedChatContent;
 import com.bob.admin.report.application.port.result.ReportedChatMessageInfo;
 import com.bob.admin.report.application.port.result.ReportedContent;
+import com.bob.admin.report.application.port.result.ReportedMemberInfo;
 import com.bob.admin.report.application.port.result.ReportedPostContent;
 import com.bob.core.chat.application.port.in.ChatroomReader;
 import com.bob.core.chat.domain.ChatMessage;
@@ -23,8 +24,10 @@ import com.bob.core.chat.domain.Chatroom;
 import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.post.application.port.in.PostReader;
 import com.bob.core.post.domain.Post;
+import com.bob.core.report.application.dto.command.ChangeReportStatusCommand;
 import com.bob.core.report.application.dto.query.ReadReportCountQuery;
 import com.bob.core.report.application.dto.result.ReportSummaries;
+import com.bob.core.report.application.port.in.ReportModifier;
 import com.bob.core.report.application.port.in.ReportReader;
 import com.bob.core.report.application.port.in.ReportSearcher;
 import com.bob.core.report.domain.Report;
@@ -39,6 +42,7 @@ public class ManagementReportAdapter implements ManagementReportPort {
 
     private final ReportSearcher reportSearcher;
     private final ReportReader reportReader;
+    private final ReportModifier reportModifier;
 
     private final MemberReader memberReader;
     private final PostReader postReader;
@@ -98,6 +102,19 @@ public class ManagementReportAdapter implements ManagementReportPort {
             .reportedContent(reportedContent)
             .reportedProcessedCount(reportedProcessedCount)
             .build();
+    }
+
+    @Override
+    public ReportedMemberInfo changeStatus(Long reportId, UUID managerId, String status) {
+        ChangeReportStatusCommand command = new ChangeReportStatusCommand(managerId, status);
+        Report report = reportModifier.changeStatus(reportId, command);
+
+        ReadReportCountQuery query = new ReadReportCountQuery(List.of(report.getReportedId()));
+        int count = reportReader.readProcessedReportCounts(query).stream()
+            .findFirst().map(ReportCount::getCount)
+            .orElse(0);
+
+        return new ReportedMemberInfo(report.getReportedId(), count);
     }
 
     private SearchReportsQuery buildQuery(String reporterEmail, String reportedEmail, String type, String status) {
