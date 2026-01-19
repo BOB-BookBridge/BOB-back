@@ -27,6 +27,7 @@ public class Inquiry extends AbstractEntity {
     private String email;
     private String title;
     private String content;
+    private String reply;
 
     private UUID managerId;
 
@@ -50,17 +51,19 @@ public class Inquiry extends AbstractEntity {
         this.status = InquiryStatus.IN_REVIEW;
     }
 
-    public void process() {
+    public void process(String reply) {
         Assert.state(status == InquiryStatus.IN_REVIEW, "검토 상태가 아닙니다");
+        Assert.hasText(reply, "답변 내용이 필요합니다");
 
+        this.reply = reply;
         this.status = InquiryStatus.PROCESSED;
         this.processedAt = LocalDateTime.now();
     }
 
-    public void close(InquiryStatus status) {
+    public void close() {
         Assert.state(this.status == InquiryStatus.IN_REVIEW, "검토 상태가 아닙니다");
 
-        this.status = status;
+        this.status = InquiryStatus.CLOSED;
         this.processedAt = LocalDateTime.now();
     }
 }

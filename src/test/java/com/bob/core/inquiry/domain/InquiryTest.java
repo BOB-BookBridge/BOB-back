@@ -50,7 +50,7 @@ class InquiryTest {
         Inquiry inquiry = InquiryFixture.createInquiry();
         inquiry.review(MEMBER_ID);
 
-        inquiry.process();
+        inquiry.process("답변");
 
         assertThat(inquiry.getStatus()).isEqualTo(InquiryStatus.PROCESSED);
     }
@@ -60,7 +60,7 @@ class InquiryTest {
         Inquiry inquiry = InquiryFixture.createInquiry();
         assertThat(inquiry.getStatus()).isEqualTo(PENDING);
 
-        assertThatThrownBy(inquiry::process)
+        assertThatThrownBy(() -> inquiry.process("답변"))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("검토 상태가 아닙니다");
     }
@@ -70,7 +70,7 @@ class InquiryTest {
         Inquiry inquiry = InquiryFixture.createInquiry();
         inquiry.review(MEMBER_ID);
 
-        inquiry.close(CLOSED);
+        inquiry.close();
 
         assertThat(inquiry.getStatus()).isEqualTo(CLOSED);
     }
@@ -80,7 +80,7 @@ class InquiryTest {
         Inquiry inquiry = InquiryFixture.createInquiry();
         assertThat(inquiry.getStatus()).isEqualTo(PENDING);
 
-        assertThatThrownBy(inquiry::process)
+        assertThatThrownBy(() -> inquiry.process("답변"))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("검토 상태가 아닙니다");
     }
