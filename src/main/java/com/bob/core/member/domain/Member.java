@@ -148,4 +148,8 @@ public class Member {
     public boolean isBanned() {
         return this.status == Status.BANNED;
     }
+
+    public boolean isAdmin() {
+        return this.role == Role.ADMIN;
+    }
 }

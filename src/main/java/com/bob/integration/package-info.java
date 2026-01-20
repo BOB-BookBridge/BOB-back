@@ -4,7 +4,7 @@
 
         "core.area", "core.member", "core.post", "core.trade", "core.chat", "core.bookcase",
 
-        "core.file", "core.notification",
+        "core.file", "core.notification", "core.inquiry", "core.report",
 
         "shared", "global"
     }
