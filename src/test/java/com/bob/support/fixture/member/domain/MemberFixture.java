@@ -13,6 +13,9 @@ public class MemberFixture {
     public static final UUID MOCK_MEMBER_ID = UUID.fromString("019a6928-6f73-79f7-bd1b-6bfd4771a303");
     public static final UUID MANAGER_ID = UUID.fromString("021a6930-6f73-14c6-cf0a-2fd17132f102");
 
+    public static final String MEMBER_EMAIL = "test@test.com";
+    public static final String OTHER_MEMBER_EMAIL = "other@test.com";
+
     public static Member createMember(String email, String password, String nickname, int emdId) {
         return Member.createMember(email, password, nickname, emdId);
     }

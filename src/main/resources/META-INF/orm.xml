@@ -204,13 +204,13 @@
                 <column name="isbn" nullable="false" unique="true" length="13"/>
             </basic>
             <basic name="title">
-                <column name="title" nullable="false" length="200"/>
+                <column name="title" nullable="false" length="500"/>
             </basic>
             <basic name="author">
                 <column name="author" nullable="false" length="200"/>
             </basic>
             <basic name="description">
-                <column name="description"/>
+                <column name="description" length="1000"/>
             </basic>
             <basic name="priceStandard">
                 <column name="price_standard"/>
@@ -384,7 +384,7 @@
                 <column name="book_id" nullable="false"/>
             </basic>
             <basic name="title">
-                <column name="title" nullable="false" length="50"/>
+                <column name="title" nullable="false" length="500"/>
             </basic>
             <basic name="categoryId">
                 <column name="category_id" nullable="false"/>
@@ -554,6 +554,9 @@
             </basic>
             <basic name="content">
                 <column name="content" nullable="false" length="200"/>
+            </basic>
+            <basic name="reply">
+                <column name="reply" length="2000"/>
             </basic>
             <basic name="managerId">
                 <column name="manager_id"/>

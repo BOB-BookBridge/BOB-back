@@ -63,7 +63,10 @@ public enum ApplicationError {
     TRADE_SELLER_WISH_NOT_MATCH("요청한 거래 물품이 판매자의 희망 도서에 해당하지 않습니다.", HttpStatus.BAD_REQUEST),
 
     // 알림 예외
-    NOTIFICATION_ACCESS_DENIED("알림에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+    NOTIFICATION_ACCESS_DENIED("알림에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN),
+
+    // 문의 예외
+    INQUIRY_ACCESS_DENIED("문의에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN);
 
     private final String message;
     private final HttpStatus status;

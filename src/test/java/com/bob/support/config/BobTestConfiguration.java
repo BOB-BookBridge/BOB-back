@@ -20,15 +20,37 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
 import com.bob.core.file.application.port.out.infra.FileStoragePort;
-import com.bob.core.member.application.port.out.infra.MailSender;
+import com.bob.core.inquiry.application.port.out.infra.InquiryMailSender;
+import com.bob.core.member.application.port.out.infra.MemberAuthMailSender;
 
 @TestConfiguration
 public class BobTestConfiguration {
 
     @Bean
     @Primary
-    public MailSender mailSender() {
-        return (email, subject, body) -> System.out.println("Email sent successfully");
+    public MemberAuthMailSender memberAuthMailSender() {
+        return new MemberAuthMailSender() {
+            @Override
+            public void sendAuthCode(String email, String code) {
+                System.out.println("Auth code email sent to: " + email);
+            }
+
+            @Override
+            public void sendTempPassword(String email, String password) {
+                System.out.println("Temp password email sent to: " + email);
+            }
+        };
+    }
+
+    @Bean
+    @Primary
+    public InquiryMailSender inquiryMailSender() {
+        return new InquiryMailSender() {
+            @Override
+            public void sendInquiryReply(String email, String content, String reply) {
+                System.out.println("Inquiry reply email sent to: " + email);
+            }
+        };
     }
 
     @Bean

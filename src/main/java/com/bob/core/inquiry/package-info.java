@@ -1,6 +1,12 @@
 @ApplicationModule(
     type = ApplicationModule.Type.OPEN,
-    allowedDependencies = {"shared", "global"}
+    allowedDependencies = {
+        "core.member",
+
+        "admin::inquiry-out-port", "admin::inquiry-out-port-result",
+
+        "shared", "global"
+    }
 )
 package com.bob.core.inquiry;
 

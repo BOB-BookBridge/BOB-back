@@ -1,6 +1,7 @@
 package com.bob.core.inquiry.domain;
 
 import static com.bob.core.inquiry.domain.InquiryStatus.CLOSED;
+import static com.bob.core.inquiry.domain.InquiryStatus.IN_REVIEW;
 import static com.bob.core.inquiry.domain.InquiryStatus.PENDING;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +51,7 @@ class InquiryTest {
         Inquiry inquiry = InquiryFixture.createInquiry();
         inquiry.review(MEMBER_ID);
 
-        inquiry.process();
+        inquiry.process("답변");
 
         assertThat(inquiry.getStatus()).isEqualTo(InquiryStatus.PROCESSED);
     }
@@ -60,9 +61,23 @@ class InquiryTest {
         Inquiry inquiry = InquiryFixture.createInquiry();
         assertThat(inquiry.getStatus()).isEqualTo(PENDING);
 
-        assertThatThrownBy(inquiry::process)
+        String reply = "답변";
+
+        assertThatThrownBy(() -> inquiry.process(reply))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("검토 상태가 아닙니다");
+    }
+
+    @Test
+    void 문의_완료_처리_시_답변_내용이_없으면_예외가_발생한다() {
+        Inquiry inquiry = InquiryFixture.createInReviewInquiry();
+        assertThat(inquiry.getStatus()).isEqualTo(IN_REVIEW);
+
+        String reply = null;
+
+        assertThatThrownBy(() -> inquiry.process(reply))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("답변 내용이 필요합니다");
     }
 
     @Test
@@ -70,7 +85,7 @@ class InquiryTest {
         Inquiry inquiry = InquiryFixture.createInquiry();
         inquiry.review(MEMBER_ID);
 
-        inquiry.close(CLOSED);
+        inquiry.close();
 
         assertThat(inquiry.getStatus()).isEqualTo(CLOSED);
     }
@@ -80,7 +95,7 @@ class InquiryTest {
         Inquiry inquiry = InquiryFixture.createInquiry();
         assertThat(inquiry.getStatus()).isEqualTo(PENDING);
 
-        assertThatThrownBy(inquiry::process)
+        assertThatThrownBy(() -> inquiry.process("답변"))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("검토 상태가 아닙니다");
     }

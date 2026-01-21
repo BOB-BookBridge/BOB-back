@@ -1,7 +1,9 @@
 package com.bob.core.notification.application.event;
 
 import static com.bob.core.notification.domain.NotificationType.CHAT;
+import static com.bob.core.notification.domain.NotificationType.INQUIRY;
 import static com.bob.core.notification.domain.NotificationType.TRADE;
+import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -18,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bob.core.chat.event.ChatMessageSentEvent;
+import com.bob.core.inquiry.event.InquiryProcessedEvent;
 import com.bob.core.notification.application.dto.command.CreateNotificationCommand;
 import com.bob.core.notification.application.port.in.NotificationCreator;
 import com.bob.core.trade.event.TradeNotificationEvent;
@@ -96,6 +99,27 @@ class NotificationEventHandlerTest {
         assertThat(command.senderId()).isEqualTo(senderId);
         assertThat(command.receiverId()).isEqualTo(receiverId);
         assertThat(command.body()).isEqualTo("거래 상태가 변경되었습니다.");
+        assertThat(command.fileNames()).isNull();
+        assertThat(command.isSystem()).isTrue();
+        assertThat(command.normalize()).isFalse();
+    }
+
+    @Test
+    void 문의_처리_알림_이벤트_처리() {
+        UUID receiverId = MEMBER_ID;
+        InquiryProcessedEvent event = new InquiryProcessedEvent(1L, receiverId);
+
+        notificationEventHandler.handleInquiryNotification(event);
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        then(notificationCreator).should(times(1)).create(captor.capture());
+
+        CreateNotificationCommand command = captor.getValue();
+        assertThat(command.type()).isEqualTo(INQUIRY);
+        assertThat(command.refId()).isEqualTo("1");
+        assertThat(command.childId()).isEqualTo("SYSTEM");
+        assertThat(command.receiverId()).isEqualTo(receiverId);
+        assertThat(command.body()).isEqualTo("문의 답변이 도착했습니다. 클릭하여 상세 내용을 확인해 주세요.");
         assertThat(command.fileNames()).isNull();
         assertThat(command.isSystem()).isTrue();
         assertThat(command.normalize()).isFalse();
