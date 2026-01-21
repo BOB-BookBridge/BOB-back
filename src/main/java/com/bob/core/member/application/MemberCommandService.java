@@ -37,7 +37,7 @@ import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.member.application.port.in.MemberRegister;
 import com.bob.core.member.application.port.out.MemberAreaPort;
 import com.bob.core.member.application.port.out.MemberInterestPort;
-import com.bob.core.member.application.port.out.infra.MailSender;
+import com.bob.core.member.application.port.out.infra.MemberAuthMailSender;
 import com.bob.core.member.application.port.out.infra.MemberCachePort;
 import com.bob.core.member.domain.Member;
 import com.bob.core.member.domain.MemberArea;
@@ -57,7 +57,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
     private final MemberRepository memberRepository;
     private final MemberReader memberReader;
 
-    private final MailSender mailSender;
+    private final MemberAuthMailSender mailSender;
     private final MemberCachePort cachePort;
 
     private final MemberAreaPort areaPort;
@@ -177,7 +177,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
         Member member = memberReader.read(email);
 
         String tempPassword = generateCode(12);
-        mailSender.send(email, "임시 비밀번호", tempPassword);
+        mailSender.sendTempPassword(email, tempPassword);
 
         member.updatePassword(encoder.encode(tempPassword));
 

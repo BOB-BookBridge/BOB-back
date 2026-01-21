@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookBridge</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333333; background-color: #ffffff;">
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 0; padding: 0;">
+    <tr>
+        <td style="padding: 40px 20px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600"
+                   style="max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); border-radius: 8px; overflow: hidden;">
+
+                <tr th:fragment="colorBar">
+                    <td style="background: linear-gradient(135deg, #F5A623 0%, #F39C12 100%); height: 4px; line-height: 0; font-size: 0;">
+                        &nbsp;
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding: 40px 30px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+
+                            <tr th:fragment="logoWithGreeting(subtitle)">
+                                <td>
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                        <tr>
+                                            <td style="padding-bottom: 30px; vertical-align: middle;" width="50">
+                                                <img src="cid:logo" alt="BookBridge Logo" width="50" height="50"
+                                                     style="display: block; width: 50px; height: 50px;"/>
+                                            </td>
+                                            <td style="padding-bottom: 30px; padding-left: 15px; vertical-align: middle;">
+                                                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #333333; line-height: 1.4;"
+                                                   th:text="${subtitle}">
+                                                    기본 제목
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <tr th:fragment="logo">
+                                <td style="padding-bottom: 30px;">
+                                    <img src="cid:logo" alt="BookBridge Logo" width="50" height="50"
+                                         style="display: block; width: 50px; height: 50px;"/>
+                                </td>
+                            </tr>
+
+                            <tr th:fragment="greeting(subtitle)">
+                                <td style="padding-bottom: 30px;">
+                                    <p style="margin: 0; font-size: 15px; color: #555555; line-height: 1.8;"
+                                       th:text="${subtitle}">
+                                        기본 제목
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <tr th:fragment="footer">
+                                <td style="padding-top: 50px; border-top: 1px solid #e5e5e5;">
+                                    <p style="margin: 0; font-size: 12px; color: #999999;">
+                                        본 메일은 발신전용입니다.
+                                    </p>
+                                </td>
+                            </tr>
+
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

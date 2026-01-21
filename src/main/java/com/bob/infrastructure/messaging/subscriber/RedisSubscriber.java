@@ -40,7 +40,7 @@ public class RedisSubscriber implements MessageListener {
 
             switch (record.type()) {
                 case "CHAT" -> handleChatEvent(record);
-                case "TRADE" -> handleTradeEvent(record);
+                case "TRADE", "INQUIRY" -> handleSystemEvent(record);
                 default -> log.warn("Unknown RedisRecord type: {}", record.type());
             }
 
@@ -75,12 +75,12 @@ public class RedisSubscriber implements MessageListener {
         logResult("NOTI_CHAT", sent, record.refId(), record.receiverId());
     }
 
-    private void handleTradeEvent(RedisRecord record) {
+    private void handleSystemEvent(RedisRecord record) {
         NotiEmitterKey notiKey = NotiEmitterKey.of(record.receiverId());
         Sender sender = Sender.of(record.sender().id(), record.sender().nickname(), record.sender().profile());
         NotiEmitEvent event = NotiEmitEvent.of(record.type(), record.refId(), record.body(), sender, record.sentAt());
         boolean sent = notify(EmitterType.NOTIFICATION, notiKey, NOTIFICATION, event);
-        logResult("NOTI_TRADE", sent, record.refId(), record.receiverId());
+        logResult("NOTI_SYSTEM", sent, record.refId(), record.receiverId());
     }
 
     private <T> boolean notify(EmitterType type, T key, EmitEventType event, Object payload) {
