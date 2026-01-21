@@ -43,7 +43,9 @@ public class InquiryQueryService implements InquiryReader, InquirySearcher {
 
         verifyAuthorize(query.memberId(), inquiry.getEmail());
 
-        String managerNickname = memberPort.readNickname(inquiry.getManagerId());
+        String managerNickname = inquiry.getManagerId() != null
+            ? memberPort.read(inquiry.getManagerId()).nickname()
+            : null;
 
         return InquiryDetail.of(inquiry, managerNickname);
     }

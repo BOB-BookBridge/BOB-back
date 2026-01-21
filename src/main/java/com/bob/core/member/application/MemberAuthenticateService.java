@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.member.application.dto.command.VerifyMailCommand;
 import com.bob.core.member.application.port.in.MemberAuthenticator;
-import com.bob.core.member.application.port.out.infra.MailSender;
+import com.bob.core.member.application.port.out.infra.MemberAuthMailSender;
 import com.bob.core.member.application.port.out.infra.MemberCachePort;
 import com.bob.global.exception.exceptions.ApplicationException;
 
@@ -22,7 +22,7 @@ import com.bob.global.exception.exceptions.ApplicationException;
 @RequiredArgsConstructor
 public class MemberAuthenticateService implements MemberAuthenticator {
 
-    private final MailSender mailSender;
+    private final MemberAuthMailSender mailSender;
 
     private final MemberCachePort cachePort;
 
@@ -30,7 +30,7 @@ public class MemberAuthenticateService implements MemberAuthenticator {
     public String sendAuthenticationCode(String email) {
         String authenticationCode = generateCode(6);
 
-        mailSender.send(email, "인증 코드", authenticationCode);
+        mailSender.sendAuthCode(email, authenticationCode);
 
         cachePort.setAuthenticationCode(email, authenticationCode);
 

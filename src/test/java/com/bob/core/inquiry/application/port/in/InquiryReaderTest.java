@@ -1,5 +1,6 @@
 package com.bob.core.inquiry.application.port.in;
 
+import static com.bob.core.inquiry.domain.InquiryStatus.PENDING;
 import static com.bob.core.inquiry.domain.InquiryStatus.PROCESSED;
 import static com.bob.support.fixture.member.domain.MemberFixture.MANAGER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
@@ -47,7 +48,7 @@ record InquiryReaderTest(InquiryReader inquiryReader, InquiryRepository inquiryR
     }
 
     @Test
-    void 문의_상세_조회() {
+    void 처리된_문의_상세_조회() {
         Inquiry inquiry = inquiryRepository.save(InquiryFixture.createProcessedInquiry());
 
         em.flush();
@@ -60,6 +61,22 @@ record InquiryReaderTest(InquiryReader inquiryReader, InquiryRepository inquiryR
         assertThat(result).isNotNull();
         assertThat(result.managerNickname()).isNotNull();
         assertThat(result.status()).isEqualTo(PROCESSED.name());
+    }
+
+    @Test
+    void 대기중_문의_상세_조회() {
+        Inquiry inquiry = inquiryRepository.save(InquiryFixture.createInquiry());
+
+        em.flush();
+        em.clear();
+
+        ReadInquiryDetailQuery query = new ReadInquiryDetailQuery(MANAGER_ID);
+
+        InquiryDetail result = inquiryReader.readDetail(inquiry.getId(), query);
+
+        assertThat(result).isNotNull();
+        assertThat(result.managerNickname()).isNull();
+        assertThat(result.status()).isEqualTo(PENDING.name());
     }
 
     @Test

@@ -556,8 +556,7 @@
                 <column name="content" nullable="false" length="200"/>
             </basic>
             <basic name="reply">
-                <column name="reply"/>
-                <lob/>
+                <column name="reply" length="2000"/>
             </basic>
             <basic name="managerId">
                 <column name="manager_id"/>

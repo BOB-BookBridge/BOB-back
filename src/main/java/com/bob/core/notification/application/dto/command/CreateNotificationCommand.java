@@ -6,6 +6,7 @@ import java.util.UUID;
 import lombok.Builder;
 
 import com.bob.core.chat.event.ChatMessageSentEvent;
+import com.bob.core.inquiry.event.InquiryProcessedEvent;
 import com.bob.core.notification.domain.NotificationType;
 import com.bob.core.trade.event.TradeNotificationEvent;
 
@@ -47,6 +48,20 @@ public record CreateNotificationCommand(
             .fileNames(event.fileNames())
             .isSystem(event.isSystem())
             .normalize(event.normalize())
+            .build();
+    }
+
+    public static CreateNotificationCommand fromInquiryEvent(InquiryProcessedEvent event) {
+        return CreateNotificationCommand.builder()
+            .type(NotificationType.INQUIRY)
+            .refId(String.valueOf(event.inquiryId()))
+            .childId("SYSTEM")
+            .senderId(event.memberId())
+            .receiverId(event.memberId())
+            .body("문의 답변이 도착했습니다. 클릭하여 상세 내용을 확인해 주세요.")
+            .fileNames(null)
+            .isSystem(true)
+            .normalize(false)
             .build();
     }
 }

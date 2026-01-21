@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -19,11 +20,16 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.bob.admin.inquiry.adapter.api.request.ProcessManagementInquiryRequest;
 import com.bob.admin.inquiry.application.port.result.ManagementInquirySummaries;
+import com.bob.admin.report.adapter.api.request.ProcessManagementReportStatusRequest;
+import com.bob.core.inquiry.domain.Inquiry;
 import com.bob.core.inquiry.domain.repository.InquiryRepository;
+import com.bob.core.report.domain.Report;
 import com.bob.security.model.MemberDetails;
 import com.bob.support.annotation.BobApiTest;
 import com.bob.support.fixture.inquiry.domain.InquiryFixture;
+import com.bob.support.fixture.report.domain.ReportFixture;
 import com.bob.support.util.AssertThatUtils;
 
 @DisplayName("관리자 - 문의 관리 API 테스트")
@@ -97,6 +103,24 @@ record ManagementInquiryApiTest(MockMvcTester tester, ObjectMapper objectMapper,
         assertThat(response.inquiries()).isNotEmpty();
         assertThat(response.inquiries())
             .allSatisfy(inquiry -> assertThat(inquiry.status()).isEqualTo("PROCESSED"));
+    }
+
+    @Test
+    void 문의_처리() throws JsonProcessingException {
+        Inquiry inquiry = inquiryRepository.save(InquiryFixture.createInReviewInquiry());
+
+        var request = new ProcessManagementInquiryRequest("PROCESSED", "답변 내용");
+        String json = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = tester.patch().uri("/management/inquiries/{inquiryId}", inquiry.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.result", AssertThatUtils.equalsTo("UPDATED"));
     }
 
     void setAuthentication() {

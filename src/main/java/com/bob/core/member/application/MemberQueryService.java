@@ -1,6 +1,7 @@
 package com.bob.core.member.application;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,11 @@ public class MemberQueryService implements MemberReader, MemberSearcher {
     public Member read(String email) {
         return memberRepository.findByEmail(email)
             .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. email : " + email));
+    }
+
+    @Override
+    public Optional<Member> findByEmail(String email) {
+        return memberRepository.findByEmail(email);
     }
 
     @Override

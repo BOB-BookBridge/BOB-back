@@ -1,5 +1,6 @@
 package com.bob.integration.adapter.inquiry;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import com.bob.core.inquiry.application.port.out.InquiryMemberPort;
+import com.bob.core.inquiry.application.port.result.InquiryMember;
 import com.bob.core.member.application.dto.result.MemberBasicInfo;
 import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.member.domain.Member;
@@ -18,12 +20,19 @@ public class InquiryMemberAdapter implements InquiryMemberPort {
     private final MemberReader memberReader;
 
     @Override
-    public String readNickname(UUID memberId) {
+    public InquiryMember read(UUID memberId) {
         MemberBasicInfo info = memberReader.readBasicInfo(memberId);
 
-        return info.nickname();
+        return new InquiryMember(info.id(), info.nickname(), info.profileImageUrl());
     }
 
+    @Override
+    public Optional<InquiryMember> findByEmail(String email) {
+        return memberReader.findByEmail(email)
+            .map(member -> new InquiryMember(member.getId(), member.getNickname(), member.getProfileImageUrl()));
+    }
+
+    @Override
     public boolean isAuthorized(UUID memberId, String email) {
         Member member = memberReader.read(memberId);
 
