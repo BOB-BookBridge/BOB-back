@@ -27,7 +27,9 @@ public class PermitAllRegistry {
             mvc(spector, POST, "/members"),
             mvc(spector, GET, "/members/{memberId:" + UUID_V7_REGEX + '}'),
             mvc(spector, PATCH, "/members/temp/password"),
-            mvc(spector, PATCH, "/members/recover")
+            mvc(spector, PATCH, "/members/recover"),
+
+            mvc(spector, GET, "/actuator/**") // 서버 보안 그룹 허용 ip 직접 접근
         );
     }
 
