@@ -30,6 +30,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.bob.global.ratelimit.config.props.RateLimiterProperties;
 import com.bob.global.ratelimit.repository.RateLimitRepository;
 import com.bob.security.adapter.entrypoint.TokenAuthenticationEntryPoint;
 import com.bob.security.adapter.filter.LoginFilter;
@@ -73,6 +74,7 @@ public class SecurityConfig {
     private final AccessDeniedHandler accessDeniedHandler;
 
     private final RateLimitRepository rateLimitRepository;
+    private final RateLimiterProperties rateLimiterProperties;
 
     private final HeaderProperties headerProperties;
 
@@ -152,7 +154,7 @@ public class SecurityConfig {
     private LoginFilter loginFilter(AuthenticationManager authenticationManager) {
         LoginFilter loginFilter = new LoginFilter(
             authenticationManager, tokenAuthenticationEntryPoint,
-            cachePort, tokenManager, rateLimitRepository, headerProperties, objectMapper
+            cachePort, tokenManager, rateLimitRepository, rateLimiterProperties, headerProperties, objectMapper
         );
         loginFilter.setFilterProcessesUrl("/auth/login");
         loginFilter.setPostOnly(true);

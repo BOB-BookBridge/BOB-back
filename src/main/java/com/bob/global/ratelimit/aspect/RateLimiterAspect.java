@@ -38,6 +38,9 @@ public class RateLimiterAspect {
 
     @Before("@annotation(rateLimit)")
     public void enforceRateLimit(JoinPoint joinPoint, RateLimit rateLimit) {
+        if (!properties.isEnabled())
+            return;
+
         HttpServletRequest request = getHttpServletRequest();
         String key = generateKey(request, joinPoint, rateLimit);
 
@@ -52,7 +55,7 @@ public class RateLimiterAspect {
 
     @Before("@within(org.springframework.web.bind.annotation.RestController) && execution(public * *(..))")
     public void enforceGlobalRateLimit(JoinPoint joinPoint) {
-        if (!properties.isGlobal())
+        if (!properties.isEnabled() || !properties.isGlobal())
             return;
 
         MethodSignature signature = (MethodSignature)joinPoint.getSignature();

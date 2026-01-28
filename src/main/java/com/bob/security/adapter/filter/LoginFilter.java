@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
 import com.bob.global.exception.response.AuthenticationError;
+import com.bob.global.ratelimit.config.props.RateLimiterProperties;
 import com.bob.global.ratelimit.repository.RateLimitRepository;
 import com.bob.security.adapter.filter.request.LoginRequest;
 import com.bob.security.application.port.out.infra.AuthCachePort;
@@ -45,6 +46,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final TokenManager tokenManager;
 
     private final RateLimitRepository rateLimitRepository;
+    private final RateLimiterProperties rateLimiterProperties;
 
     private final HeaderProperties headerProperties;
 
@@ -103,6 +105,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     /* @formatter:on */
 
     private void checkRateLimit(HttpServletRequest request) {
+        if (!rateLimiterProperties.isEnabled())
+            return;
+
         String clientIp = getClientIp(request);
         String rateLimitKey = "login:" + clientIp;
 

@@ -11,6 +11,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RateLimiterProperties {
 
     /**
+     * Rate Limiter 활성화 여부
+     * <p>
+     * false: 모든 API Rate Limit 비활성화. ({@literal @}RateLimit이 명시된 API 포함)
+     * </p>
+     */
+    private boolean enabled = true;
+
+    /**
      * 분산 환경에서 Redis를 통한 처리 제한 사용 여부
      * <p>
      * true: Redis 기반 분산 처리 제한 (다중 서버 환경, 요청 횟수 공유)

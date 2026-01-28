@@ -49,6 +49,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.bob.global.exception.exceptions.ApplicationAuthenticationException;
+import com.bob.global.ratelimit.config.props.RateLimiterProperties;
 import com.bob.global.ratelimit.repository.RateLimitRepository;
 import com.bob.security.adapter.filter.request.LoginRequest;
 import com.bob.security.application.port.out.infra.AuthCachePort;
@@ -82,6 +83,9 @@ class LoginFilterTest {
     private RateLimitRepository rateLimitRepository;
 
     @Mock
+    private RateLimiterProperties rateLimiterProperties;
+
+    @Mock
     private Authentication authentication;
 
     @Mock
@@ -102,6 +106,7 @@ class LoginFilterTest {
         LoginRequest loginRequest = new LoginRequest("test@example.com", "password");
         byte[] bytes = objectMapper.writeValueAsBytes(loginRequest);
 
+        given(rateLimiterProperties.isEnabled()).willReturn(true);
         given(request.getInputStream()).willReturn(new DelegatingServletInputStream(new ByteArrayInputStream(bytes)));
         given(request.getHeader("X-Forwarded-For")).willReturn("192.168.1.100");
         given(rateLimitRepository.isAllowed(anyString(), anyLong(), anyInt())).willReturn(true);
@@ -166,6 +171,7 @@ class LoginFilterTest {
 
     @Test
     void 로그인_시도_횟수_초과_시_예외가_발생한다() {
+        given(rateLimiterProperties.isEnabled()).willReturn(true);
         given(request.getHeader("X-Forwarded-For")).willReturn("192.168.1.100");
         given(rateLimitRepository.isAllowed("login:192.168.1.100", 60L, 5)).willReturn(false);
         given(rateLimitRepository.getWaitForRefill("login:192.168.1.100", 60L, 5)).willReturn(30L);
@@ -187,6 +193,7 @@ class LoginFilterTest {
         LoginRequest loginRequest = new LoginRequest("test@example.com", "password");
         byte[] bytes = objectMapper.writeValueAsBytes(loginRequest);
 
+        given(rateLimiterProperties.isEnabled()).willReturn(true);
         given(request.getInputStream()).willReturn(new DelegatingServletInputStream(new ByteArrayInputStream(bytes)));
         given(request.getHeader("X-Forwarded-For")).willReturn(null);
         given(request.getRemoteAddr()).willReturn("10.0.0.1");
@@ -203,6 +210,7 @@ class LoginFilterTest {
         LoginRequest loginRequest = new LoginRequest("test@example.com", "password");
         byte[] bytes = objectMapper.writeValueAsBytes(loginRequest);
 
+        given(rateLimiterProperties.isEnabled()).willReturn(true);
         given(request.getInputStream()).willReturn(new DelegatingServletInputStream(new ByteArrayInputStream(bytes)));
         given(request.getHeader("X-Forwarded-For")).willReturn("unknown");
         given(request.getRemoteAddr()).willReturn("10.0.0.2");
@@ -219,6 +227,7 @@ class LoginFilterTest {
         LoginRequest loginRequest = new LoginRequest("test@example.com", "password");
         byte[] bytes = objectMapper.writeValueAsBytes(loginRequest);
 
+        given(rateLimiterProperties.isEnabled()).willReturn(true);
         given(request.getInputStream()).willReturn(new DelegatingServletInputStream(new ByteArrayInputStream(bytes)));
         given(request.getHeader("X-Forwarded-For")).willReturn("");
         given(request.getRemoteAddr()).willReturn("10.0.0.3");

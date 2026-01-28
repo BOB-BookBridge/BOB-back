@@ -52,10 +52,23 @@ class RateLimiterAspectSkipTest {
     }
 
     @Test
-    void 전역_제한_비활성화_시_무시() {
+    void 처리_제한_비활성화() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
+        given(rateLimiterProperties.isEnabled()).willReturn(false);
+
+        rateLimiterAspect.enforceGlobalRateLimit(joinPoint);
+
+        then(rateLimitRepository).should(never()).isAllowed(anyString(), anyLong(), anyInt());
+    }
+
+    @Test
+    void 전역_옵션_비활성화_시_무시() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        given(rateLimiterProperties.isEnabled()).willReturn(true);
         given(rateLimiterProperties.isGlobal()).willReturn(false);
 
         rateLimiterAspect.enforceGlobalRateLimit(joinPoint);
@@ -69,6 +82,7 @@ class RateLimiterAspectSkipTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         Method method = TestController.class.getMethod("noRateLimitEndpoint");
+        given(rateLimiterProperties.isEnabled()).willReturn(true);
         given(rateLimiterProperties.isGlobal()).willReturn(true);
         given(joinPoint.getSignature()).willReturn(methodSignature);
         given(methodSignature.getMethod()).willReturn(method);
@@ -84,6 +98,7 @@ class RateLimiterAspectSkipTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         Method method = TestController.class.getMethod("rateLimitedEndpoint");
+        given(rateLimiterProperties.isEnabled()).willReturn(true);
         given(rateLimiterProperties.isGlobal()).willReturn(true);
         given(joinPoint.getSignature()).willReturn(methodSignature);
         given(methodSignature.getMethod()).willReturn(method);
