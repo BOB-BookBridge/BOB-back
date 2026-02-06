@@ -145,3 +145,6 @@ INSERT INTO posts (id, book_id, title, writer_id, writer_book_id, category_id, b
 -- 찜
 INSERT INTO post_favorites (member_id, post_id) VALUES
 (UUID_TO_BIN('0199f8c2-30ed-7ee3-a757-16196412518c'), 1);
+
+-- 금칙어
+INSERT INTO filter_words (keyword, predefined) VALUES ('비속어', true);
