@@ -35,4 +35,12 @@ public class PostFixture {
     public static Post createPost() {
         return createPost(MEMBER_ID);
     }
+
+    public static Post createPendingPost() {
+        return createPost(MEMBER_ID, 1, "LOW", List.of("금지어"));
+    }
+
+    public static Post createPendingPost(UUID memberId) {
+        return createPost(memberId, 1, "LOW", List.of("금지어"));
+    }
 }

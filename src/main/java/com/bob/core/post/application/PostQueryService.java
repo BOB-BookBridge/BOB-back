@@ -21,7 +21,9 @@ import com.bob.core.post.application.dto.query.ReadPostFavoritesQuery;
 import com.bob.core.post.application.dto.result.PostBasicInfo;
 import com.bob.core.post.application.dto.result.PostDetail;
 import com.bob.core.post.application.dto.result.PostSummaries;
+import com.bob.core.post.application.dto.result.SearchPostsResult;
 import com.bob.core.post.application.port.in.PostReader;
+import com.bob.core.post.application.port.in.PostSearcher;
 import com.bob.core.post.application.port.out.PostBookPort;
 import com.bob.core.post.application.port.out.PostCategoryPort;
 import com.bob.core.post.application.port.out.PostFilePort;
@@ -32,12 +34,13 @@ import com.bob.core.post.application.port.result.PostMember;
 import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.PostRepository;
 import com.bob.core.post.domain.repository.dsl.query.ReadPostsQuery;
+import com.bob.core.post.domain.repository.dsl.query.SearchManagementPostsQuery;
 import com.bob.global.exception.exceptions.ApplicationException;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class PostQueryService implements PostReader {
+public class PostQueryService implements PostReader, PostSearcher {
 
     private final PostRepository postRepository;
 
@@ -127,11 +130,19 @@ public class PostQueryService implements PostReader {
         if (!isClient)
             return;
 
-        boolean isOwner = memberId != null && post.getWriterId().equals(memberId);
+        boolean isOwner = post.getWriterId().equals(memberId);
         if (isOwner)
             return;
 
         if (post.getStatus() == DEACTIVATED || post.getStatus() == BANNED || post.getStatus() == PENDING)
             throw new ApplicationException(POST_ACCESS_DENIED);
+    }
+
+    @Override
+    public SearchPostsResult searchByQuery(SearchManagementPostsQuery query, Pageable pageable) {
+        List<Post> posts = postRepository.searchPosts(query, pageable);
+        Long totalCount = postRepository.countSearchedPosts(query);
+
+        return new SearchPostsResult(totalCount, posts);
     }
 }
