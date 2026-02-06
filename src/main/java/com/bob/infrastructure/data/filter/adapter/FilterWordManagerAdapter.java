@@ -21,7 +21,7 @@ public class FilterWordManagerAdapter implements FilterWordManager {
     @Override
     public ManagementFilterWord save(ManagementFilterWord filterWord) {
         FilterWord entity = FilterWord.builder()
-            .keyword(filterWord.getKeyword())
+            .word(filterWord.getWord())
             .predefined(filterWord.isPredefined())
             .createdAt(filterWord.getCreatedAt())
             .build();
@@ -45,8 +45,8 @@ public class FilterWordManagerAdapter implements FilterWordManager {
     }
 
     @Override
-    public boolean existsByKeyword(String keyword) {
-        return filterWordRepository.existsByKeyword(keyword);
+    public boolean existsByWord(String word) {
+        return filterWordRepository.existsByWord(word);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class FilterWordManagerAdapter implements FilterWordManager {
     private ManagementFilterWord toDomain(FilterWord entity) {
         return ManagementFilterWord.builder()
             .id(entity.getId())
-            .keyword(entity.getKeyword())
+            .word(entity.getWord())
             .predefined(entity.isPredefined())
             .createdAt(entity.getCreatedAt())
             .build();

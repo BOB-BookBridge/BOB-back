@@ -22,13 +22,13 @@ record ManagementFilterWordRemoverTest(
 
     @Test
     void 금칙어_삭제() {
-        String keyword = "삭제테스트";
-        FilterWord word = wordRepository.save(FilterWordFixture.create(keyword));
-        assertThat(wordRepository.existsByKeyword(keyword)).isTrue();
+        String word = "삭제테스트";
+        FilterWord filterWord = wordRepository.save(FilterWordFixture.create(word));
+        assertThat(wordRepository.existsByWord(word)).isTrue();
 
-        filterWordRemover.remove(word.getId());
+        filterWordRemover.remove(filterWord.getId());
 
-        assertThat(wordRepository.existsByKeyword(keyword)).isFalse();
+        assertThat(wordRepository.existsByWord(word)).isFalse();
     }
 
     @Test

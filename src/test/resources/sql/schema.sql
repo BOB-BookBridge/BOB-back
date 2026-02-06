@@ -147,4 +147,4 @@ INSERT INTO post_favorites (member_id, post_id) VALUES
 (UUID_TO_BIN('0199f8c2-30ed-7ee3-a757-16196412518c'), 1);
 
 -- 금칙어
-INSERT INTO filter_words (keyword, predefined) VALUES ('비속어', true);
+INSERT INTO filter_words (word, predefined) VALUES ('비속어', true);

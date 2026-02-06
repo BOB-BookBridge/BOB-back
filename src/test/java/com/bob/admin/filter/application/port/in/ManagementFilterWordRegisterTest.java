@@ -28,7 +28,7 @@ record ManagementFilterWordRegisterTest(
         ManagementFilterWord result = managementFilterWordRegister.register(command);
 
         assertThat(result.getId()).isNotNull();
-        assertThat(result.getKeyword()).isEqualTo("욕");
+        assertThat(result.getWord()).isEqualTo("욕");
         assertThat(result.isPredefined()).isFalse();
     }
 

@@ -66,7 +66,7 @@ record ManagementFilterWordApiTest(
             .bodyJson()
             .hasPathSatisfying("$.result", AssertThatUtils.equalsTo("CREATED"));
 
-        assertThat(wordRepository.existsByKeyword("금칙어")).isTrue();
+        assertThat(wordRepository.existsByWord("금칙어")).isTrue();
     }
 
     @Test
@@ -109,9 +109,9 @@ record ManagementFilterWordApiTest(
             .hasStatus5xxServerError();
     }
 
-    private FilterWord createFilterWord(String keyword) {
+    private FilterWord createFilterWord(String word) {
         return FilterWord.builder()
-            .keyword(keyword)
+            .word(word)
             .predefined(false)
             .createdAt(LocalDateTime.now())
             .build();

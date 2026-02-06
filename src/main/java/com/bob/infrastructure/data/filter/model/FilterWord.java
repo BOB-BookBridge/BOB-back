@@ -19,7 +19,7 @@ import com.bob.shared.entity.AbstractEntity;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilterWord extends AbstractEntity {
 
-    private String keyword;
+    private String word;
     private boolean predefined;
     private LocalDateTime createdAt;
 }

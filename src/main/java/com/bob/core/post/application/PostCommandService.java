@@ -28,6 +28,7 @@ import com.bob.core.post.application.port.out.PostAreaPort;
 import com.bob.core.post.application.port.out.PostBookcasePort;
 import com.bob.core.post.application.port.out.PostFilePort;
 import com.bob.core.post.application.port.out.PostMemberPort;
+import com.bob.core.post.application.port.out.infra.PostFilterPort;
 import com.bob.core.post.application.port.result.PostArea;
 import com.bob.core.post.application.port.result.PostBookcaseId;
 import com.bob.core.post.application.port.result.PostMember;
@@ -47,6 +48,8 @@ public class PostCommandService implements PostCreator, PostModifier {
     private final PostAreaPort areaPort;
     private final PostMemberPort memberPort;
     private final PostBookcasePort memberBookcasePort;
+
+    private final PostFilterPort filterPort;
 
     @Override
     public Post create(CreatePostCommand command) {
@@ -72,10 +75,13 @@ public class PostCommandService implements PostCreator, PostModifier {
     }
 
     private Post savePost(CreatePostCommand command, Long bookId, Long sellerBookId, PostArea areaSummary) {
+        List<String> filteredWords = filterPort.filter(command.description());
+
         return postRepository.save(
             Post.createPost(command.categoryId(), areaSummary.emdId(), bookId,
                 command.bookTitle(), command.description(), command.bookCover(),
-                command.bookStatus(), command.memberId(), sellerBookId, command.bookPriceStandard(), command.wishOnly()
+                command.bookStatus(), command.memberId(), sellerBookId, command.bookPriceStandard(), command.wishOnly(),
+                filteredWords
             )
         );
     }
@@ -92,7 +98,8 @@ public class PostCommandService implements PostCreator, PostModifier {
         Post post = postReader.read(postId);
         verifyPostOwner(command.memberId(), post.getWriterId());
 
-        post.updateInfo(command.bookStatus(), command.description(), command.wishOnly());
+        List<String> filteredWords = filterPort.filter(command.description());
+        post.updateInfo(command.bookStatus(), command.description(), command.wishOnly(), filteredWords);
 
         return post;
     }

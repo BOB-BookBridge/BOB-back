@@ -26,10 +26,10 @@ public class ManagementFilterWordCommandService implements ManagementFilterWordR
 
     @Override
     public ManagementFilterWord register(CreateFilterWordCommand command) {
-        if (filterWordManager.existsByKeyword(command.keyword()))
+        if (filterWordManager.existsByWord(command.word()))
             throw new ApplicationException(FILTER_WORD_ALREADY_EXISTS);
 
-        ManagementFilterWord filterWord = ManagementFilterWord.create(command.keyword());
+        ManagementFilterWord filterWord = ManagementFilterWord.create(command.word());
 
         return filterWordManager.save(filterWord);
     }

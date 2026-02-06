@@ -34,7 +34,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         return queryFactory
             .selectFrom(post)
             .where(
-                visibleCondition(),
+                visibleCondition(query.authenticatorId(), query.memberId()),
                 bookIdsCondition(query.bookIds()),
                 memberIdCondition(query.memberId()),
                 emdCondition(query.emdId()),
@@ -55,7 +55,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             .select(post.count())
             .from(post)
             .where(
-                visibleCondition(),
+                visibleCondition(query.authenticatorId(), query.memberId()),
                 bookIdsCondition(query.bookIds()),
                 memberIdCondition(query.memberId()),
                 emdCondition(query.emdId()),
@@ -67,8 +67,13 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             .fetchOne();
     }
 
-    private BooleanExpression visibleCondition() {
-        return post.status.notIn(Status.DEACTIVATED, Status.WITHHELD);
+    private BooleanExpression visibleCondition(UUID authenticatorId, UUID memberId) {
+        boolean isOwnPosts = authenticatorId != null && authenticatorId.equals(memberId);
+
+        if (isOwnPosts) {
+            return post.status.notIn(Status.DEACTIVATED, Status.BANNED);
+        }
+        return post.status.notIn(Status.DEACTIVATED, Status.BANNED, Status.PENDING);
     }
 
     private BooleanExpression bookIdsCondition(List<Long> bookIds) {

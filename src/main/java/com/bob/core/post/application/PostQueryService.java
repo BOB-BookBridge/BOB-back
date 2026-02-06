@@ -1,11 +1,13 @@
 package com.bob.core.post.application;
 
+import static com.bob.core.post.domain.status.Status.BANNED;
 import static com.bob.core.post.domain.status.Status.DEACTIVATED;
-import static com.bob.core.post.domain.status.Status.WITHHELD;
+import static com.bob.core.post.domain.status.Status.PENDING;
 import static com.bob.global.exception.response.ApplicationError.POST_ACCESS_DENIED;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.util.List;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 
@@ -108,7 +110,7 @@ public class PostQueryService implements PostReader {
 
         Post post = read(postId);
 
-        verifyAccessiblePost(post, query.isClient());
+        verifyAccessiblePost(post, query.isClient(), query.memberId());
 
         PostBook book = bookPort.read(post.getBookId());
         PostMember member = memberPort.read(post.getWriterId());
@@ -121,8 +123,15 @@ public class PostQueryService implements PostReader {
         return PostDetail.of(post, book, member, files, isFavorite, isOwner);
     }
 
-    private static void verifyAccessiblePost(Post post, boolean isClient) {
-        if (isClient && (post.getStatus() == DEACTIVATED || post.getStatus() == WITHHELD))
+    private static void verifyAccessiblePost(Post post, boolean isClient, UUID memberId) {
+        if (!isClient)
+            return;
+
+        boolean isOwner = memberId != null && post.getWriterId().equals(memberId);
+        if (isOwner)
+            return;
+
+        if (post.getStatus() == DEACTIVATED || post.getStatus() == BANNED || post.getStatus() == PENDING)
             throw new ApplicationException(POST_ACCESS_DENIED);
     }
 }

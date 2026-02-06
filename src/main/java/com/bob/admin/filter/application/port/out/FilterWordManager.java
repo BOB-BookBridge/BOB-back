@@ -13,7 +13,7 @@ public interface FilterWordManager {
 
     Optional<ManagementFilterWord> findById(Long id);
 
-    boolean existsByKeyword(String keyword);
+    boolean existsByWord(String word);
 
     void remove(ManagementFilterWord filterWord);
 }

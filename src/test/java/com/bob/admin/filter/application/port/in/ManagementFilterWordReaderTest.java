@@ -32,7 +32,7 @@ record ManagementFilterWordReaderTest(
         List<ManagementFilterWord> words = managementFilterWordReader.readAll();
 
         assertThat(words).hasSizeGreaterThan(0);
-        assertThat(words).extracting(ManagementFilterWord::getKeyword)
+        assertThat(words).extracting(ManagementFilterWord::getWord)
             .containsAnyOf("word1", "word2");
     }
 
@@ -45,7 +45,7 @@ record ManagementFilterWordReaderTest(
 
         ManagementFilterWord result = managementFilterWordReader.read(filterWord.getId());
         assertThat(result.getId()).isNotNull();
-        assertThat(result.getKeyword()).isEqualTo("word");
+        assertThat(result.getWord()).isEqualTo("word");
         assertThat(result.isPredefined()).isFalse();
     }
 

@@ -11,6 +11,7 @@ import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_I
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,7 @@ class PostTest {
 
         Post post = createPost(
             categoryId, emdId, bookId, title, description, thumbnailUrl,
-            bookStatus, writerId, writerBookId, price, wishOnly
+            bookStatus, writerId, writerBookId, price, wishOnly, List.of()
         );
 
         assertThat(post.getStatus()).isEqualTo(ACTIVE);
@@ -68,7 +69,7 @@ class PostTest {
         String newDescription = "수정된 설명입니다";
         Boolean newWishOnly = true;
 
-        post.updateInfo(newBookStatus, newDescription, newWishOnly);
+        post.updateInfo(newBookStatus, newDescription, newWishOnly, List.of());
 
         assertThat(post.getBookStatus()).isEqualTo(BookStatus.MEDIUM);
         assertThat(post.getDescription()).isEqualTo(newDescription);
@@ -81,7 +82,7 @@ class PostTest {
         String originalDescription = post.getDescription();
         BookStatus originalBookStatus = post.getBookStatus();
 
-        post.updateInfo(null, null, true);
+        post.updateInfo(null, null, true, List.of());
 
         assertThat(post.getBookStatus()).isEqualTo(originalBookStatus);
         assertThat(post.getDescription()).isEqualTo(originalDescription);

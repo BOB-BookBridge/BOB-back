@@ -6,9 +6,9 @@ import com.bob.infrastructure.data.filter.model.FilterWord;
 
 public class FilterWordFixture {
 
-    public static FilterWord create(String keyword) {
+    public static FilterWord create(String word) {
         return FilterWord.builder()
-            .keyword(keyword)
+            .word(word)
             .predefined(false)
             .createdAt(LocalDateTime.now())
             .build();

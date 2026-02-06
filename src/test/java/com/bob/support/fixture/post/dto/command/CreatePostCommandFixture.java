@@ -14,12 +14,12 @@ public class CreatePostCommandFixture {
         "post/uuid-1.png", "post/uuid-2.png", "post/uuid-3.png"
     );
 
-    public static CreatePostCommand createPostCommand(UUID memberId, Integer categoryId, List<String> fileNames) {
+    public static CreatePostCommand createPostCommand(UUID memberId, Integer categoryId, List<String> fileNames, String description) {
         return CreatePostCommand.builder()
             .memberId(memberId)
             .categoryId(categoryId)
             .bookStatus("BEST")
-            .description("신품급 도서 팝니다.")
+            .description(description)
             .bookIsbn("1020366172839")
             .bookTitle("JVM 밑바닥까지 파헤치기")
             .bookAuthor("저우즈밍")
@@ -33,7 +33,11 @@ public class CreatePostCommandFixture {
     }
 
     public static CreatePostCommand createPostCommand(UUID memberId) {
-        return createPostCommand(memberId, 1, FILE_NAMES);
+        return createPostCommand(memberId, 1, FILE_NAMES, "설명");
+    }
+
+    public static CreatePostCommand createPostCommand(String description) {
+        return createPostCommand(MEMBER_ID, 1, FILE_NAMES, description);
     }
 
     public static CreatePostCommand createPostCommand() {

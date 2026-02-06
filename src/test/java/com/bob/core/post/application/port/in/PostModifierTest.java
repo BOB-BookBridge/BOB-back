@@ -2,6 +2,7 @@ package com.bob.core.post.application.port.in;
 
 import static com.bob.core.post.domain.status.Status.ACTIVE;
 import static com.bob.core.post.domain.status.Status.DEACTIVATED;
+import static com.bob.core.post.domain.status.Status.PENDING;
 import static com.bob.core.post.domain.status.TradeProgress.COMPLETED;
 import static com.bob.core.post.domain.status.TradeProgress.READY;
 import static com.bob.core.post.domain.status.TradeProgress.RESERVED;
@@ -10,6 +11,7 @@ import static com.bob.global.exception.response.ApplicationError.POST_UNREMOVABL
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -40,9 +42,21 @@ record PostModifierTest(PostModifier postModifier, PostRepository postRepository
 
         Post result = postModifier.changePostInfo(post.getId(), command);
 
+        assertThat(result.getStatus()).isEqualTo(ACTIVE);
         assertThat(result.getBookStatus().name()).isEqualTo("BEST");
         assertThat(result.getDescription()).isEqualTo("새로운 설명");
         assertThat(result.isWishOnly()).isTrue();
+    }
+
+    @Test
+    void 금지_키워드_포함_게시글_정보_수정() {
+        Post post = postRepository.save(createPost());
+        ChangePostInfoCommand command = new ChangePostInfoCommand(MEMBER_ID, "BEST", "비속어", true);
+
+        Post result = postModifier.changePostInfo(post.getId(), command);
+
+        assertThat(result.getStatus()).isEqualTo(PENDING);
+        assertThat(result.getDescription()).isEqualTo("비속어");
     }
 
     @Test

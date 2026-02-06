@@ -434,7 +434,7 @@
                 </cascade>
             </one-to-many>
             <element-collection name="filterWords" fetch="LAZY">
-                <column name="keyword" length="100"/>
+                <column name="word" length="100"/>
                 <collection-table name="post_filter_words">
                     <join-column name="post_id"/>
                 </collection-table>
@@ -579,12 +579,12 @@
     <entity class="com.bob.infrastructure.data.filter.model.FilterWord">
         <table name="filter_words">
             <unique-constraint name="UK_FILTER_WORD">
-                <column-name>keyword</column-name>
+                <column-name>word</column-name>
             </unique-constraint>
         </table>
         <attributes>
-            <basic name="keyword">
-                <column name="keyword" nullable="false" length="100"/>
+            <basic name="word">
+                <column name="word" nullable="false" length="100"/>
             </basic>
             <basic name="predefined">
                 <column name="predefined" nullable="false" column-definition="BOOLEAN DEFAULT FALSE"/>

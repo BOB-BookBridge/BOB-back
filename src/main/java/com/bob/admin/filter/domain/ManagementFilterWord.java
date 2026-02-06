@@ -13,13 +13,13 @@ import lombok.Getter;
 public class ManagementFilterWord {
 
     private Long id;
-    private String keyword;
+    private String word;
     private boolean predefined;
     private LocalDateTime createdAt;
 
-    public static ManagementFilterWord create(String keyword) {
+    public static ManagementFilterWord create(String word) {
         return ManagementFilterWord.builder()
-            .keyword(keyword)
+            .word(word)
             .predefined(false)
             .createdAt(LocalDateTime.now())
             .build();

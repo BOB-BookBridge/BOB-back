@@ -44,10 +44,8 @@ public class ManagementFilterWordApi {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public CommonResponse<ResponseSymbol> create(
-        @Valid @RequestBody CreateFilterWordRequest request
-    ) {
-        CreateFilterWordCommand command = new CreateFilterWordCommand(request.keyword());
+    public CommonResponse<ResponseSymbol> create(@Valid @RequestBody CreateFilterWordRequest request) {
+        CreateFilterWordCommand command = new CreateFilterWordCommand(request.word());
 
         filterWordRegister.register(command);
 

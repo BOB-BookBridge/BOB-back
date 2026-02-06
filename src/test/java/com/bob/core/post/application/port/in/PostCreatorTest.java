@@ -1,6 +1,7 @@
 package com.bob.core.post.application.port.in;
 
 import static com.bob.core.post.domain.status.Status.ACTIVE;
+import static com.bob.core.post.domain.status.Status.PENDING;
 import static com.bob.core.post.domain.status.TradeProgress.READY;
 import static com.bob.global.exception.response.ApplicationError.POST_VERIFIED_AREA_REQUIRED;
 import static com.bob.support.fixture.area.domain.AreaFixture.EMD_AREA_ID;
@@ -43,6 +44,17 @@ record PostCreatorTest(PostCreator postCreator, MemberRepository memberRepositor
         assertThat(post.getViewCount()).isEqualTo(0);
         assertThat(post.getScrapCount()).isEqualTo(0);
         assertThat(post.getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    void 금지_키워드_포함_게시물_생성() {
+        CreatePostCommand command = createPostCommand("비속어");
+
+        Post post = postCreator.create(command);
+
+        assertThat(post.getId()).isNotNull();
+        assertThat(post.getStatus()).isEqualTo(PENDING);
+        assertThat(post.getFilterWords().get(0)).isEqualTo("비속어");
     }
 
     @Test

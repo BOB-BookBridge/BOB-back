@@ -8,7 +8,7 @@ import com.bob.infrastructure.data.filter.model.FilterWord;
 
 public interface FilterWordRepository extends JpaRepository<FilterWord, Long> {
 
-    boolean existsByKeyword(String keyword);
+    boolean existsByWord(String word);
 
     List<FilterWord> findAllByPredefinedFalse();
 }
