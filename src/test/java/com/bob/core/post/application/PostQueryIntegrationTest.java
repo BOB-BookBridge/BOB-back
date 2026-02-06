@@ -100,7 +100,7 @@ record PostQueryIntegrationTest(PostReader postReader, PostRepository postReposi
         PostSummaries result = postReader.readSummariesByQuery(query, PAGEABLE);
 
         assertThat(result.posts())
-            .extracting(PostSummary::status)
+            .extracting(PostSummary::tradeStatus)
             .containsOnly("COMPLETED");
     }
 
