@@ -576,6 +576,32 @@
         </attributes>
     </entity>
 
+    <entity class="com.bob.admin.post.domain.PostManagementHistory">
+        <table name="post_management_histories"/>
+        <attributes>
+            <basic name="postId">
+                <column name="post_id" nullable="false"/>
+            </basic>
+            <basic name="managerId">
+                <column name="manager_id" nullable="false"/>
+            </basic>
+            <basic name="previousStatus">
+                <column name="previous_status" length="20"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" length="20"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="memo">
+                <column name="memo" length="200"/>
+            </basic>
+            <basic name="processedAt">
+                <column name="processed_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
+            </basic>
+        </attributes>
+    </entity>
+
     <entity class="com.bob.infrastructure.data.filter.model.FilterWord">
         <table name="filter_words">
             <unique-constraint name="UK_FILTER_WORD">

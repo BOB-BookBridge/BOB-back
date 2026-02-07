@@ -7,12 +7,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import com.bob.core.report.domain.Report;
+import com.bob.core.report.domain.ReportTarget;
 import com.bob.core.report.domain.repository.dsl.ReportQueryRepository;
 import com.bob.core.report.domain.repository.projection.ReportCount;
 
 public interface ReportRepository extends CrudRepository<Report, Long>, ReportQueryRepository {
 
     List<Report> findAllByReportedId(UUID reportedId);
+
+    List<Report> findAllByTargetAndTargetId(ReportTarget target, Long targetId);
 
     @Query("""
           SELECT r.reportedId AS reportedId, COUNT(r) AS count

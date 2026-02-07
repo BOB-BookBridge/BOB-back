@@ -11,8 +11,11 @@ import org.springframework.stereotype.Component;
 import com.bob.admin.post.application.port.out.ManagementPostPort;
 import com.bob.admin.post.application.port.result.ManagementPost;
 import com.bob.admin.post.application.port.result.ManagementPostSummaries;
+import com.bob.admin.post.application.port.result.ManagementPostWriter;
 import com.bob.core.member.application.port.in.MemberReader;
+import com.bob.core.member.domain.Member;
 import com.bob.core.post.application.dto.result.SearchPostsResult;
+import com.bob.core.post.application.port.in.PostReader;
 import com.bob.core.post.application.port.in.PostSearcher;
 import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.dsl.query.SearchManagementPostsQuery;
@@ -21,6 +24,7 @@ import com.bob.core.post.domain.repository.dsl.query.SearchManagementPostsQuery;
 @RequiredArgsConstructor
 public class ManagementPostAdapter implements ManagementPostPort {
 
+    private final PostReader postReader;
     private final PostSearcher postSearcher;
     private final MemberReader memberReader;
 
@@ -38,23 +42,31 @@ public class ManagementPostAdapter implements ManagementPostPort {
         return new ManagementPostSummaries(result.totalCount(), managementPosts);
     }
 
+    @Override
+    public ManagementPost read(Long postId) {
+        Post post = postReader.read(postId);
+
+        return toManagementPost(post);
+    }
+
     private ManagementPost toManagementPost(Post post) {
-        String writerEmail = getEmail(post.getWriterId());
+        Member writer = memberReader.read(post.getWriterId());
 
         return ManagementPost.builder()
             .id(post.getId())
             .title(post.getTitle())
-            .writerEmail(writerEmail)
+            .thumbnailUrl(post.getThumbnailUrl())
             .status(post.getStatus().name())
             .createdAt(post.getCreatedAt())
+            .writer(new ManagementPostWriter(
+                writer.getId(),
+                writer.getEmail(),
+                writer.getNickname()
+            ))
             .build();
     }
 
     private UUID getWriterId(String email) {
         return memberReader.read(email).getId();
-    }
-
-    private String getEmail(UUID memberId) {
-        return memberReader.read(memberId).getEmail();
     }
 }

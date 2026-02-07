@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.report.application.dto.query.ReadReportCountQuery;
 import com.bob.core.report.application.dto.query.ReadReportQuery;
+import com.bob.core.report.application.dto.query.ReadReportsByTargetQuery;
 import com.bob.core.report.application.dto.result.ReportSummaries;
 import com.bob.core.report.application.port.in.ReportReader;
 import com.bob.core.report.application.port.in.ReportSearcher;
@@ -34,6 +35,11 @@ public class ReportQueryService implements ReportReader, ReportSearcher {
     @Override
     public List<Report> read(ReadReportQuery query) {
         return reportRepository.findAllByReportedId(query.reportedId());
+    }
+
+    @Override
+    public List<Report> read(ReadReportsByTargetQuery query) {
+        return reportRepository.findAllByTargetAndTargetId(query.target(), query.targetId());
     }
 
     @Override

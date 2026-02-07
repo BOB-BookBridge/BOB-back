@@ -5,6 +5,13 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 
 @Builder
-public record ManagementPost(Long id, String title, String writerEmail, String status, LocalDateTime createdAt) {
+public record ManagementPost(
+    Long id,
+    String title,
+    String thumbnailUrl,
+    String status,
+    LocalDateTime createdAt,
+    ManagementPostWriter writer
+) {
 
 }
