@@ -47,6 +47,7 @@ record ManagementPostReaderTest(
             .allSatisfy(post -> {
                 assertThat(post.id()).isNotNull();
                 assertThat(post.title()).isNotNull();
+                assertThat(post.description()).isNotNull();
                 assertThat(post.writer().email()).isNotNull();
                 assertThat(post.status()).isIn("PENDING", "BANNED");
                 assertThat(post.createdAt()).isNotNull();
@@ -130,6 +131,7 @@ record ManagementPostReaderTest(
         assertThat(detail.id()).isEqualTo(post.getId());
         assertThat(detail.status()).isEqualTo("PENDING");
         assertThat(detail.title()).isEqualTo(post.getTitle());
+        assertThat(detail.description()).isEqualTo(post.getDescription());
         assertThat(detail.writer()).isNotNull();
         assertThat(detail.writer().email()).isEqualTo("test@test.com");
         assertThat(detail.reports()).isNotNull();

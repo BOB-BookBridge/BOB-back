@@ -5,9 +5,12 @@ import static com.bob.core.report.domain.ReportStatus.DUPLICATED;
 import static com.bob.core.report.domain.ReportStatus.IN_REVIEW;
 import static com.bob.core.report.domain.ReportStatus.PROCESSED;
 import static com.bob.support.fixture.member.domain.MemberFixture.MANAGER_ID;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.then;
+
+import java.util.Optional;
 
 import jakarta.persistence.EntityManager;
 
@@ -18,6 +21,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.bob.admin.post.domain.ManagementStatus;
+import com.bob.admin.post.domain.PostManagementHistory;
+import com.bob.admin.post.domain.repository.PostManagementHistoryRepository;
 import com.bob.admin.report.application.dto.command.ProcessManagementReportStatusCommand;
 import com.bob.core.member.event.MemberDeactivatedEvent;
 import com.bob.core.report.domain.Report;
@@ -33,6 +39,7 @@ class ManagementReportProcessorTest {
 
     private final ManagementReportProcessor reportProcessor;
     private final ReportRepository reportRepository;
+    private final PostManagementHistoryRepository historyRepository;
     private final EntityManager em;
 
     @MockitoBean
@@ -66,6 +73,10 @@ class ManagementReportProcessorTest {
         assertThat(result.getManagerId()).isEqualTo(MANAGER_ID);
         assertThat(result.getStatus()).isEqualTo(PROCESSED);
         assertThat(result.getProcessedAt()).isNotNull();
+
+        PostManagementHistory founded = historyRepository.findByPostId(report.getTargetId()).get();
+        assertThat(founded.getPreviousStatus()).isEqualTo(ManagementStatus.ACTIVE);
+        assertThat(founded.getStatus()).isEqualTo(ManagementStatus.BANNED);
 
         then(eventPublisher).should().publishEvent(any(ReportPostProcessedEvent.class));
     }

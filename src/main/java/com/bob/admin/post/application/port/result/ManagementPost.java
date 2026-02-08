@@ -9,6 +9,7 @@ public record ManagementPost(
     Long id,
     String title,
     String thumbnailUrl,
+    String description,
     String status,
     LocalDateTime createdAt,
     ManagementPostWriter writer

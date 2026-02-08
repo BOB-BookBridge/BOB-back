@@ -12,6 +12,7 @@ public record ManagementPostDetail(
     String status,
     String title,
     String thumbnailUrl,
+    String description,
     LocalDateTime createdAt,
     ManagementPostWriter writer,
     ManagementPostReports reports,
@@ -28,6 +29,7 @@ public record ManagementPostDetail(
             .status(post.status())
             .title(post.title())
             .thumbnailUrl(post.thumbnailUrl())
+            .description(post.description())
             .createdAt(post.createdAt())
             .writer(post.writer())
             .reports(reports)

@@ -68,6 +68,7 @@ public class ManagementPostAdapter implements ManagementPostPort {
             .id(post.getId())
             .title(post.getTitle())
             .thumbnailUrl(post.getThumbnailUrl())
+            .description(post.getDescription())
             .status(post.getStatus().name())
             .createdAt(post.getCreatedAt())
             .writer(new ManagementPostWriter(

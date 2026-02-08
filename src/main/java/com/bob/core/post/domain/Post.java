@@ -121,6 +121,8 @@ public class Post {
     }
 
     public void activate() {
+        state(status != BANNED, "제재된 게시글은 활성화할 수 없습니다.");
+
         this.status = ACTIVE;
     }
 

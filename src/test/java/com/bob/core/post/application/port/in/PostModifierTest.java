@@ -11,6 +11,7 @@ import static com.bob.global.exception.response.ApplicationError.POST_OWNER_REQU
 import static com.bob.global.exception.response.ApplicationError.POST_UNREMOVABLE_STATE;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
+import static com.bob.support.fixture.post.domain.PostFixture.createPendingPost;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -188,6 +189,27 @@ record PostModifierTest(PostModifier postModifier, PostRepository postRepository
         Post result2 = postRepository.findById(post2.getId()).orElseThrow();
         assertThat(result1.getStatus()).isEqualTo(DEACTIVATED);
         assertThat(result2.getStatus()).isEqualTo(DEACTIVATED);
+    }
+
+    @Test
+    void 회원_계정_상태_변경에_따른_게시글_상태_변경_비활성화_시_이미_비활성_상태인_게시글은_유지() {
+        Post pendingPost = postRepository.save(createPendingPost());
+        assertThat(pendingPost.getStatus()).isEqualTo(PENDING);
+
+        Post bannedPost = postRepository.save(createPost());
+        bannedPost.ban();
+        clearPersistenceContext();
+        assertThat(bannedPost.getStatus()).isEqualTo(BANNED);
+
+        ChangeMemberPostStatusCommand command = new ChangeMemberPostStatusCommand(MEMBER_ID, DEACTIVATED);
+
+        postModifier.changeStatusByAccountEvent(command);
+        clearPersistenceContext();
+
+        Post resultPending = postRepository.findById(pendingPost.getId()).orElseThrow();
+        Post resultBanned = postRepository.findById(bannedPost.getId()).orElseThrow();
+        assertThat(resultPending.getStatus()).isEqualTo(PENDING);
+        assertThat(resultBanned.getStatus()).isEqualTo(BANNED);
     }
 
     @Test

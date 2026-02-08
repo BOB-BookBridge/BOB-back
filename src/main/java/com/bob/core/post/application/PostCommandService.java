@@ -163,10 +163,14 @@ public class PostCommandService implements PostCreator, PostModifier {
     @Override
     public void changeStatusByAccountEvent(ChangeMemberPostStatusCommand command) {
         postReader.readByMember(new ReadMemberPostsQuery(command.memberId())).forEach(p -> {
-            if (command.status() == DEACTIVATED && !p.isDeactivated())
-                p.deactivate();
-            else
-                p.activate();
+            if (command.status() == DEACTIVATED) {
+                if (!p.isDeactivated())
+                    p.deactivate();
+            }
+            else {
+                if (p.getStatus().equals(DEACTIVATED))
+                    p.activate();
+            }
         });
     }
 }
