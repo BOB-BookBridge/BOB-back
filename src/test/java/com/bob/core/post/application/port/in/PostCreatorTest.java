@@ -27,7 +27,8 @@ record PostCreatorTest(PostCreator postCreator, MemberRepository memberRepositor
 
     @Test
     void 게시물_생성() {
-        CreatePostCommand command = createPostCommand();
+        String description = null;
+        CreatePostCommand command = createPostCommand(description);
 
         Post post = postCreator.create(command);
 

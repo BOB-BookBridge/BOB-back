@@ -2,6 +2,7 @@ package com.bob.core.post.domain;
 
 import static com.bob.core.post.domain.Post.createPost;
 import static com.bob.core.post.domain.status.Status.ACTIVE;
+import static com.bob.core.post.domain.status.Status.BANNED;
 import static com.bob.core.post.domain.status.Status.DEACTIVATED;
 import static com.bob.core.post.domain.status.TradeProgress.READY;
 import static com.bob.core.post.domain.status.TradeProgress.RESERVED;
@@ -123,13 +124,36 @@ class PostTest {
     }
 
     @Test
-    void 게시글_비활성화_시_활성_상태가_아니면_예외가_발생한다() {
+    void 게시글_비활성화_시_이미_비활성_상태라면_예외가_발생한다() {
         Post post = PostFixture.createPost();
         post.deactivate();
 
         assertThatThrownBy(post::deactivate)
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("활성 상태가 아닙니다.");
+            .hasMessage("이미 비활성 상태입니다.");
+    }
+
+    @Test
+    void 게시글_제재() {
+        Post post = PostFixture.createPost();
+        post.addFavorite(MEMBER_ID);
+        post.addFavorite(OTHER_MEMBER_ID);
+
+        post.ban();
+
+        assertThat(post.getStatus()).isEqualTo(BANNED);
+        assertThat(post.isActive()).isFalse();
+        assertThat(post.getFavorites()).isEmpty();
+    }
+
+    @Test
+    void 게시글_중복_제재_시_예외가_발생한다() {
+        Post post = PostFixture.createPost();
+        post.ban();
+
+        assertThatThrownBy(post::ban)
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("이미 제재된 상태입니다.");
     }
 
     @Test
@@ -178,6 +202,7 @@ class PostTest {
 
     @Test
     void 게시글_활성화_여부_확인() {
+        // 비활성 상태
         Post post = PostFixture.createPost();
 
         assertThat(post.isActive()).isTrue();
@@ -186,5 +211,21 @@ class PostTest {
 
         assertThat(post.isActive()).isFalse();
         assertThat(post.isDeactivated()).isTrue();
+
+        // 보류 상태
+        Post post2 = PostFixture.createPendingPost();
+
+        assertThat(post2.isActive()).isFalse();
+        assertThat(post2.isDeactivated()).isTrue();
+
+        // 제재 상태
+        Post post3 = PostFixture.createPost();
+
+        assertThat(post3.isActive()).isTrue();
+
+        post3.ban();
+
+        assertThat(post3.isActive()).isFalse();
+        assertThat(post3.isDeactivated()).isTrue();
     }
 }

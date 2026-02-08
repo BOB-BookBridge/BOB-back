@@ -10,4 +10,6 @@ public interface ManagementPostPort {
     ManagementPostSummaries readAll(String email, String status, Pageable pageable);
 
     ManagementPost read(Long postId);
+
+    String changeStatus(Long postId, String status);
 }

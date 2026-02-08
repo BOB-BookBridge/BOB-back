@@ -14,7 +14,9 @@ import com.bob.admin.post.application.port.result.ManagementPostSummaries;
 import com.bob.admin.post.application.port.result.ManagementPostWriter;
 import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.member.domain.Member;
+import com.bob.core.post.application.dto.command.ChangePostStatusCommand;
 import com.bob.core.post.application.dto.result.SearchPostsResult;
+import com.bob.core.post.application.port.in.PostModifier;
 import com.bob.core.post.application.port.in.PostReader;
 import com.bob.core.post.application.port.in.PostSearcher;
 import com.bob.core.post.domain.Post;
@@ -26,6 +28,8 @@ public class ManagementPostAdapter implements ManagementPostPort {
 
     private final PostReader postReader;
     private final PostSearcher postSearcher;
+    private final PostModifier postModifier;
+
     private final MemberReader memberReader;
 
     @Override
@@ -47,6 +51,13 @@ public class ManagementPostAdapter implements ManagementPostPort {
         Post post = postReader.read(postId);
 
         return toManagementPost(post);
+    }
+
+    @Override
+    public String changeStatus(Long postId, String status) {
+        Post post = postModifier.changeStatus(postId, new ChangePostStatusCommand(status));
+
+        return post.getStatus().name();
     }
 
     private ManagementPost toManagementPost(Post post) {

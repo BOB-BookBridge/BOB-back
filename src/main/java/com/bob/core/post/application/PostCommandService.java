@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.post.application.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostInfoCommand;
+import com.bob.core.post.application.dto.command.ChangePostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostTradeProgressCommand;
 import com.bob.core.post.application.dto.command.CreatePostCommand;
 import com.bob.core.post.application.dto.command.RemovePostCommand;
@@ -34,6 +35,7 @@ import com.bob.core.post.application.port.result.PostBookcaseId;
 import com.bob.core.post.application.port.result.PostMember;
 import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.PostRepository;
+import com.bob.core.post.domain.status.Status;
 import com.bob.global.exception.exceptions.ApplicationException;
 
 @Service
@@ -146,9 +148,22 @@ public class PostCommandService implements PostCreator, PostModifier {
     }
 
     @Override
+    public Post changeStatus(Long postId, ChangePostStatusCommand command) {
+        Post post = postReader.read(postId);
+
+        switch (Status.valueOf(command.status())) {
+            case ACTIVE -> post.activate();
+            case DEACTIVATED -> post.deactivate();
+            case BANNED -> post.ban();
+        }
+
+        return post;
+    }
+
+    @Override
     public void changeStatusByAccountEvent(ChangeMemberPostStatusCommand command) {
         postReader.readByMember(new ReadMemberPostsQuery(command.memberId())).forEach(p -> {
-            if (command.status() == DEACTIVATED && p.isActive())
+            if (command.status() == DEACTIVATED && !p.isDeactivated())
                 p.deactivate();
             else
                 p.activate();

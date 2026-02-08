@@ -47,6 +47,21 @@ public class Report extends AbstractEntity {
             .build();
     }
 
+    public static Report createProcessedReport(ReportTarget target, Long targetId, String reason, UUID managerId,
+        UUID reportedId) {
+        return Report.builder()
+            .status(ReportStatus.PROCESSED)
+            .target(target)
+            .targetId(targetId)
+            .reason(reason)
+            .reporterId(managerId)
+            .reportedId(reportedId)
+            .managerId(managerId)
+            .processedAt(LocalDateTime.now())
+            .createdAt(LocalDateTime.now())
+            .build();
+    }
+
     public void review(UUID managerId) {
         Assert.state(status == ReportStatus.PENDING, "처리 대기 상태가 아닙니다");
 

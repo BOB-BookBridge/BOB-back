@@ -8,5 +8,7 @@ import com.bob.admin.post.domain.PostManagementHistory;
 
 public interface PostManagementHistoryRepository extends CrudRepository<PostManagementHistory, Long> {
 
+    Optional<PostManagementHistory> findByPostId(Long postId);
+
     Optional<PostManagementHistory> findTopByPostIdOrderByProcessedAtDesc(Long postId);
 }

@@ -1,5 +1,6 @@
 package com.bob.admin.post.adapter.api;
 
+import static com.bob.core.report.domain.ReportTarget.POST;
 import static com.bob.support.fixture.member.domain.MemberFixture.MANAGER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -24,13 +26,13 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.bob.admin.post.adapter.api.request.ProcessManagementPostStatusRequest;
 import com.bob.admin.post.application.port.result.ManagementPostDetail;
 import com.bob.admin.post.application.port.result.ManagementPostSummaries;
 import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.PostRepository;
 import com.bob.core.post.domain.status.Status;
 import com.bob.core.report.domain.Report;
-import com.bob.core.report.domain.ReportTarget;
 import com.bob.core.report.domain.repository.ReportRepository;
 import com.bob.security.model.MemberDetails;
 import com.bob.support.annotation.BobApiTest;
@@ -39,7 +41,7 @@ import com.bob.support.util.AssertThatUtils;
 @DisplayName("관리자 - 게시글 관리 API 테스트")
 @BobApiTest
 record ManagementPostApiTest(MockMvcTester mvcTester, ObjectMapper objectMapper, PostRepository postRepository,
-    ReportRepository reportRepository) {
+                             ReportRepository reportRepository) {
 
     @BeforeEach
     void setUp() {
@@ -134,7 +136,7 @@ record ManagementPostApiTest(MockMvcTester mvcTester, ObjectMapper objectMapper,
         Post post = createPendingPost();
         postRepository.save(post);
 
-        reportRepository.save(Report.createReport(ReportTarget.POST, post.getId(), "욕설/비방", OTHER_MEMBER_ID, MEMBER_ID));
+        reportRepository.save(Report.createReport(POST, post.getId(), "욕설/비방", OTHER_MEMBER_ID, MEMBER_ID));
 
         MvcTestResult result = mvcTester.get()
             .uri("/management/posts/{postId}", post.getId())
@@ -169,6 +171,30 @@ record ManagementPostApiTest(MockMvcTester mvcTester, ObjectMapper objectMapper,
         assertThat(response.posts()).isNotEmpty();
         assertThat(response.posts())
             .allSatisfy(post -> assertThat(post.writer().email()).isEqualTo("test@test.com"));
+    }
+
+    @Test
+    void 게시글_처리() throws JsonProcessingException {
+        Post post = postRepository.save(createPendingPost());
+        ;
+
+        var request = new ProcessManagementPostStatusRequest("ACTIVE", null);
+        String json = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.patch()
+            .uri("/management/posts/{postId}", post.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.success", AssertThatUtils.equalsTo(true))
+            .hasPathSatisfying("$.result", AssertThatUtils.equalsTo("UPDATED"));
+
+        Post updated = postRepository.findById(post.getId()).get();
+        assertThat(updated.getStatus()).isEqualTo(Status.ACTIVE);
     }
 
     void setAuthentication() {

@@ -2,6 +2,7 @@ package com.bob.core.post.domain;
 
 import static com.bob.core.post.domain.PostFavorite.createPostFavorite;
 import static com.bob.core.post.domain.status.Status.ACTIVE;
+import static com.bob.core.post.domain.status.Status.BANNED;
 import static com.bob.core.post.domain.status.Status.DEACTIVATED;
 import static com.bob.core.post.domain.status.Status.PENDING;
 import static com.bob.core.post.domain.status.TradeProgress.READY;
@@ -124,9 +125,16 @@ public class Post {
     }
 
     public void deactivate() {
-        state(status == ACTIVE, "활성 상태가 아닙니다.");
+        state(status != DEACTIVATED, "이미 비활성 상태입니다.");
 
         this.status = DEACTIVATED;
+        this.favorites.clear();
+    }
+
+    public void ban() {
+        state(status != BANNED, "이미 제재된 상태입니다.");
+
+        this.status = BANNED;
         this.favorites.clear();
     }
 
@@ -145,7 +153,9 @@ public class Post {
     }
 
     public boolean isDeactivated() {
-        return status == DEACTIVATED;
+        return status == DEACTIVATED
+            || status == PENDING
+            || status == BANNED;
     }
 
     public boolean isReserved() {

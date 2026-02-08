@@ -28,7 +28,8 @@ public class PostManagementHistory extends AbstractEntity {
     private LocalDateTime processedAt;
 
     public static PostManagementHistory create(Long postId, UUID managerId, ManagementStatus previousStatus,
-        ManagementStatus status, String memo) {
+        ManagementStatus status, String memo
+    ) {
         return PostManagementHistory.builder()
             .postId(postId)
             .managerId(managerId)
