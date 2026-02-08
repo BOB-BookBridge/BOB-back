@@ -1,5 +1,5 @@
 package com.bob.core.post.domain.status;
 
 public enum Status {
-    ACTIVE, DEACTIVATED, WITHHELD, HIDDEN
+    PENDING, ACTIVE, DEACTIVATED, BANNED
 }

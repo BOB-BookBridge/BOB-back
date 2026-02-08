@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.bob.core.report.application.dto.query.ReadReportCountQuery;
 import com.bob.core.report.application.dto.query.ReadReportQuery;
+import com.bob.core.report.application.dto.query.ReadReportsByTargetQuery;
 import com.bob.core.report.domain.Report;
 import com.bob.core.report.domain.repository.projection.ReportCount;
 
@@ -12,6 +13,8 @@ public interface ReportReader {
     Report read(Long reportId);
 
     List<Report> read(ReadReportQuery query);
+
+    List<Report> read(ReadReportsByTargetQuery query);
 
     List<ReportCount> readProcessedReportCounts(ReadReportCountQuery query);
 }

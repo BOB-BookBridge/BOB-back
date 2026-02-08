@@ -8,7 +8,7 @@ import lombok.Builder;
 @Builder
 public record ReadPostsQuery(
     UUID authenticatorId, SearchKey key, String keyword, UUID memberId, Integer emdId, List<Integer> categoryIds,
-    List<Long> bookIds, SearchPrice price, String postStatus, String bookStatus, SortKey sortKey
+    List<Long> bookIds, SearchPrice price, String tradeStatus, String bookStatus, SortKey sortKey
 ) {
 
     public void updateCategoryIds(List<Integer> categoryIds) {

@@ -14,6 +14,7 @@ public record PostSummary(
     Integer categoryId,
     String title,
     String status,
+    String tradeStatus,
     String thumbnailUrl,
     String bookStatus,
     Integer price,
@@ -27,7 +28,8 @@ public record PostSummary(
             .id(post.getId())
             .categoryId(post.getCategoryId())
             .title(post.getTitle())
-            .status(post.getTradeProgress().name())
+            .status(post.getStatus().name())
+            .tradeStatus(post.getTradeProgress().name())
             .thumbnailUrl(post.getThumbnailUrl())
             .bookStatus(post.getBookStatus().name())
             .price(post.getPrice())

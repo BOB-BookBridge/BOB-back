@@ -1,11 +1,13 @@
 package com.bob.core.post.application;
 
+import static com.bob.core.post.domain.status.Status.BANNED;
 import static com.bob.core.post.domain.status.Status.DEACTIVATED;
-import static com.bob.core.post.domain.status.Status.WITHHELD;
+import static com.bob.core.post.domain.status.Status.PENDING;
 import static com.bob.global.exception.response.ApplicationError.POST_ACCESS_DENIED;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.util.List;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +21,9 @@ import com.bob.core.post.application.dto.query.ReadPostFavoritesQuery;
 import com.bob.core.post.application.dto.result.PostBasicInfo;
 import com.bob.core.post.application.dto.result.PostDetail;
 import com.bob.core.post.application.dto.result.PostSummaries;
+import com.bob.core.post.application.dto.result.SearchPostsResult;
 import com.bob.core.post.application.port.in.PostReader;
+import com.bob.core.post.application.port.in.PostSearcher;
 import com.bob.core.post.application.port.out.PostBookPort;
 import com.bob.core.post.application.port.out.PostCategoryPort;
 import com.bob.core.post.application.port.out.PostFilePort;
@@ -30,12 +34,13 @@ import com.bob.core.post.application.port.result.PostMember;
 import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.PostRepository;
 import com.bob.core.post.domain.repository.dsl.query.ReadPostsQuery;
+import com.bob.core.post.domain.repository.dsl.query.SearchManagementPostsQuery;
 import com.bob.global.exception.exceptions.ApplicationException;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class PostQueryService implements PostReader {
+public class PostQueryService implements PostReader, PostSearcher {
 
     private final PostRepository postRepository;
 
@@ -108,7 +113,7 @@ public class PostQueryService implements PostReader {
 
         Post post = read(postId);
 
-        verifyAccessiblePost(post, query.isClient());
+        verifyAccessiblePost(post, query.isClient(), query.memberId());
 
         PostBook book = bookPort.read(post.getBookId());
         PostMember member = memberPort.read(post.getWriterId());
@@ -121,8 +126,23 @@ public class PostQueryService implements PostReader {
         return PostDetail.of(post, book, member, files, isFavorite, isOwner);
     }
 
-    private static void verifyAccessiblePost(Post post, boolean isClient) {
-        if (isClient && (post.getStatus() == DEACTIVATED || post.getStatus() == WITHHELD))
+    private static void verifyAccessiblePost(Post post, boolean isClient, UUID memberId) {
+        if (!isClient)
+            return;
+
+        boolean isOwner = post.getWriterId().equals(memberId);
+        if (isOwner)
+            return;
+
+        if (post.getStatus() == DEACTIVATED || post.getStatus() == BANNED || post.getStatus() == PENDING)
             throw new ApplicationException(POST_ACCESS_DENIED);
+    }
+
+    @Override
+    public SearchPostsResult searchByQuery(SearchManagementPostsQuery query, Pageable pageable) {
+        List<Post> posts = postRepository.searchPosts(query, pageable);
+        Long totalCount = postRepository.countSearchedPosts(query);
+
+        return new SearchPostsResult(totalCount, posts);
     }
 }

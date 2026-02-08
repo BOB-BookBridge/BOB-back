@@ -114,7 +114,7 @@ public class ManagementReportAdapter implements ManagementReportPort {
             .findFirst().map(ReportCount::getCount)
             .orElse(0);
 
-        return new ReportedMemberInfo(report.getReportedId(), count);
+        return new ReportedMemberInfo(report.getReportedId(), count, report.getTarget().name(), report.getTargetId());
     }
 
     private SearchReportsQuery buildQuery(String reporterEmail, String reportedEmail, String type, String status) {

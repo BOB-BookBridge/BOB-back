@@ -66,7 +66,11 @@ public enum ApplicationError {
     NOTIFICATION_ACCESS_DENIED("알림에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN),
 
     // 문의 예외
-    INQUIRY_ACCESS_DENIED("문의에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+    INQUIRY_ACCESS_DENIED("문의에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN),
+
+    // 금칙어 예외
+    FILTER_WORD_ALREADY_EXISTS("이미 등록된 금칙어입니다.", HttpStatus.CONFLICT),
+    FILTER_WORD_NOT_EDITABLE("사전 정의된 금칙어는 수정/삭제할 수 없습니다.", HttpStatus.BAD_REQUEST);
 
     private final String message;
     private final HttpStatus status;

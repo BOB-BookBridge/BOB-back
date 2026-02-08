@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.dsl.query.ReadPostsQuery;
+import com.bob.core.post.domain.repository.dsl.query.SearchManagementPostsQuery;
 import com.bob.core.post.domain.repository.dsl.query.SearchPrice;
 import com.bob.core.post.domain.repository.dsl.query.SortKey;
 import com.bob.core.post.domain.status.BookStatus;
@@ -34,13 +35,13 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         return queryFactory
             .selectFrom(post)
             .where(
-                visibleCondition(),
+                visibleCondition(query.authenticatorId(), query.memberId()),
                 bookIdsCondition(query.bookIds()),
                 memberIdCondition(query.memberId()),
                 emdCondition(query.emdId()),
                 categoryCondition(query.categoryIds()),
                 priceCondition(query.price()),
-                tradeStatusCondition(query.postStatus()),
+                tradeStatusCondition(query.tradeStatus()),
                 bookStatusCondition(query.bookStatus())
             )
             .orderBy(getSortKey(query.sortKey()), post.createdAt.desc())
@@ -55,20 +56,25 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             .select(post.count())
             .from(post)
             .where(
-                visibleCondition(),
+                visibleCondition(query.authenticatorId(), query.memberId()),
                 bookIdsCondition(query.bookIds()),
                 memberIdCondition(query.memberId()),
                 emdCondition(query.emdId()),
                 categoryCondition(query.categoryIds()),
                 priceCondition(query.price()),
-                tradeStatusCondition(query.postStatus()),
+                tradeStatusCondition(query.tradeStatus()),
                 bookStatusCondition(query.bookStatus())
             )
             .fetchOne();
     }
 
-    private BooleanExpression visibleCondition() {
-        return post.status.notIn(Status.DEACTIVATED, Status.WITHHELD);
+    private BooleanExpression visibleCondition(UUID authenticatorId, UUID memberId) {
+        boolean isOwnPosts = authenticatorId != null && authenticatorId.equals(memberId);
+
+        if (isOwnPosts) {
+            return post.status.notIn(Status.DEACTIVATED, Status.BANNED);
+        }
+        return post.status.notIn(Status.DEACTIVATED, Status.BANNED, Status.PENDING);
     }
 
     private BooleanExpression bookIdsCondition(List<Long> bookIds) {
@@ -143,5 +149,45 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             .join(post.favorites, postFavorite)
             .where(postFavorite.memberId.eq(memberId))
             .fetchOne();
+    }
+
+    @Override
+    public List<Post> searchPosts(SearchManagementPostsQuery query, Pageable pageable) {
+        return queryFactory
+            .selectFrom(post)
+            .where(
+                managementStatusCondition(query.status()),
+                writerIdCondition(query.writerId())
+            )
+            .orderBy(
+                post.status.when(Status.PENDING).then(0).otherwise(1).asc(),
+                post.id.desc()
+            )
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
+            .fetch();
+    }
+
+    @Override
+    public Long countSearchedPosts(SearchManagementPostsQuery query) {
+        return queryFactory
+            .select(post.count())
+            .from(post)
+            .where(
+                managementStatusCondition(query.status()),
+                writerIdCondition(query.writerId())
+            )
+            .fetchOne();
+    }
+
+    private BooleanExpression managementStatusCondition(String status) {
+        if (StringUtils.hasText(status))
+            return post.status.eq(Status.valueOf(status));
+
+        return post.status.in(Status.PENDING, Status.BANNED);
+    }
+
+    private BooleanExpression writerIdCondition(UUID writerId) {
+        return writerId != null ? post.writerId.eq(writerId) : null;
     }
 }

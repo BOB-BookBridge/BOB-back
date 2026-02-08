@@ -2,6 +2,7 @@ package com.bob.core.post.application.port.in;
 
 import static com.bob.global.exception.response.ApplicationError.POST_ACCESS_DENIED;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
+import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
 import static com.bob.support.fixture.post.dto.query.PostQueryFixture.defaultReadFilteredPostsQuery;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,8 +24,11 @@ import com.bob.core.post.application.dto.query.ReadPostDetailQuery;
 import com.bob.core.post.application.dto.query.ReadPostFavoritesQuery;
 import com.bob.core.post.application.dto.result.PostDetail;
 import com.bob.core.post.application.dto.result.PostSummaries;
+import com.bob.core.post.application.dto.result.PostSummary;
 import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.PostRepository;
+import com.bob.core.post.domain.repository.dsl.query.ReadPostsQuery;
+import com.bob.core.post.domain.repository.dsl.query.SortKey;
 import com.bob.core.post.domain.status.Status;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
@@ -87,6 +91,27 @@ record PostReaderTest(PostReader postReader, PostRepository postRepository, File
         PostSummaries results = postReader.readSummariesByQuery(defaultReadFilteredPostsQuery(), pageable);
 
         assertThat(results.posts()).hasSizeGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    void 목록_조회_시_소유자라면_보류_상태_게시글_포함_조회() {
+        Post pendingPost = postRepository.save(createPost());
+        ReflectionTestUtils.setField(pendingPost, "status", Status.PENDING);
+        postRepository.save(pendingPost);
+
+        ReadPostsQuery query = ReadPostsQuery.builder()
+            .authenticatorId(MEMBER_ID)
+            .memberId(MEMBER_ID)
+            .sortKey(SortKey.RECENT)
+            .build();
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        PostSummaries results = postReader.readSummariesByQuery(query, pageable);
+
+        assertThat(results.posts())
+            .extracting(PostSummary::id)
+            .contains(pendingPost.getId());
     }
 
     @Test
@@ -161,7 +186,7 @@ record PostReaderTest(PostReader postReader, PostRepository postRepository, File
         post.deactivate();
         postRepository.save(post);
 
-        ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, true);
+        ReadPostDetailQuery query = new ReadPostDetailQuery(OTHER_MEMBER_ID, true);
 
         assertThatThrownBy(() -> postReader.readDetail(post.getId(), query))
             .isInstanceOf(ApplicationException.class)
@@ -171,10 +196,10 @@ record PostReaderTest(PostReader postReader, PostRepository postRepository, File
     @Test
     void 클라이언트가_보류된_게시글_상세_조회_시_사용자_예외가_발생한다() {
         Post post = postRepository.save(createPost());
-        ReflectionTestUtils.setField(post, "status", Status.WITHHELD);
+        ReflectionTestUtils.setField(post, "status", Status.PENDING);
         postRepository.save(post);
 
-        ReadPostDetailQuery query = new ReadPostDetailQuery(MEMBER_ID, true);
+        ReadPostDetailQuery query = new ReadPostDetailQuery(OTHER_MEMBER_ID, true);
 
         assertThatThrownBy(() -> postReader.readDetail(post.getId(), query))
             .isInstanceOf(ApplicationException.class)

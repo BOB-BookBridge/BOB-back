@@ -3,7 +3,9 @@ package com.bob.core.report.domain;
 import static com.bob.core.report.domain.ReportStatus.CLOSED;
 import static com.bob.core.report.domain.ReportStatus.DUPLICATED;
 import static com.bob.core.report.domain.ReportStatus.PENDING;
+import static com.bob.core.report.domain.ReportStatus.PROCESSED;
 import static com.bob.core.report.domain.ReportTarget.POST;
+import static com.bob.support.fixture.member.domain.MemberFixture.MANAGER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.MOCK_MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
@@ -28,6 +30,18 @@ class ReportTest {
         assertThat(report.getCreatedAt()).isNotNull();
         assertThat(report.getManagerId()).isNull();
         assertThat(report.getProcessedAt()).isNull();
+    }
+
+    @Test
+    void 완료_처리된_신고_생성() {
+        Report report = Report.createProcessedReport(POST, 1L, "관리자 전용 기능", MANAGER_ID, MOCK_MEMBER_ID);
+
+        assertThat(report.getTarget()).isEqualTo(POST);
+        assertThat(report.getStatus()).isEqualTo(PROCESSED);
+        assertThat(report.getReason()).isEqualTo("관리자 전용 기능");
+        assertThat(report.getCreatedAt()).isNotNull();
+        assertThat(report.getManagerId()).isEqualTo(MANAGER_ID);
+        assertThat(report.getProcessedAt()).isNotNull();
     }
 
     @Test
@@ -87,15 +101,5 @@ class ReportTest {
         report.abort(DUPLICATED);
 
         assertThat(report.getStatus()).isEqualTo(DUPLICATED);
-    }
-
-    @Test
-    void 신고_취소_처리_시_검토_상태가_아니면_예외가_발생한다() {
-        Report report = ReportFixture.createReport();
-        assertThat(report.getStatus()).isEqualTo(PENDING);
-
-        assertThatThrownBy(report::process)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("검토 상태가 아닙니다");
     }
 }

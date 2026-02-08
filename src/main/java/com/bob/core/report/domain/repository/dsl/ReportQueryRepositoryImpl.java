@@ -33,7 +33,10 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
                 targetCondition(query.target()),
                 statusCondition(query.status())
             )
-            .orderBy(report.createdAt.desc())
+            .orderBy(
+                report.status.when(ReportStatus.PENDING).then(0).otherwise(1).asc(),
+                report.id.desc()
+            )
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();

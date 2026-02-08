@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.post.application.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostInfoCommand;
+import com.bob.core.post.application.dto.command.ChangePostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostTradeProgressCommand;
 import com.bob.core.post.application.dto.command.CreatePostCommand;
 import com.bob.core.post.application.dto.command.RemovePostCommand;
@@ -28,11 +29,13 @@ import com.bob.core.post.application.port.out.PostAreaPort;
 import com.bob.core.post.application.port.out.PostBookcasePort;
 import com.bob.core.post.application.port.out.PostFilePort;
 import com.bob.core.post.application.port.out.PostMemberPort;
+import com.bob.core.post.application.port.out.infra.PostFilterPort;
 import com.bob.core.post.application.port.result.PostArea;
 import com.bob.core.post.application.port.result.PostBookcaseId;
 import com.bob.core.post.application.port.result.PostMember;
 import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.PostRepository;
+import com.bob.core.post.domain.status.Status;
 import com.bob.global.exception.exceptions.ApplicationException;
 
 @Service
@@ -47,6 +50,8 @@ public class PostCommandService implements PostCreator, PostModifier {
     private final PostAreaPort areaPort;
     private final PostMemberPort memberPort;
     private final PostBookcasePort memberBookcasePort;
+
+    private final PostFilterPort filterPort;
 
     @Override
     public Post create(CreatePostCommand command) {
@@ -72,10 +77,13 @@ public class PostCommandService implements PostCreator, PostModifier {
     }
 
     private Post savePost(CreatePostCommand command, Long bookId, Long sellerBookId, PostArea areaSummary) {
+        List<String> filteredWords = filterPort.filter(command.description());
+
         return postRepository.save(
             Post.createPost(command.categoryId(), areaSummary.emdId(), bookId,
                 command.bookTitle(), command.description(), command.bookCover(),
-                command.bookStatus(), command.memberId(), sellerBookId, command.bookPriceStandard(), command.wishOnly()
+                command.bookStatus(), command.memberId(), sellerBookId, command.bookPriceStandard(), command.wishOnly(),
+                filteredWords
             )
         );
     }
@@ -92,7 +100,8 @@ public class PostCommandService implements PostCreator, PostModifier {
         Post post = postReader.read(postId);
         verifyPostOwner(command.memberId(), post.getWriterId());
 
-        post.updateInfo(command.bookStatus(), command.description(), command.wishOnly());
+        List<String> filteredWords = filterPort.filter(command.description());
+        post.updateInfo(command.bookStatus(), command.description(), command.wishOnly(), filteredWords);
 
         return post;
     }
@@ -139,12 +148,29 @@ public class PostCommandService implements PostCreator, PostModifier {
     }
 
     @Override
+    public Post changeStatus(Long postId, ChangePostStatusCommand command) {
+        Post post = postReader.read(postId);
+
+        switch (Status.valueOf(command.status())) {
+            case ACTIVE -> post.activate();
+            case DEACTIVATED -> post.deactivate();
+            case BANNED -> post.ban();
+        }
+
+        return post;
+    }
+
+    @Override
     public void changeStatusByAccountEvent(ChangeMemberPostStatusCommand command) {
         postReader.readByMember(new ReadMemberPostsQuery(command.memberId())).forEach(p -> {
-            if (command.status() == DEACTIVATED && p.isActive())
-                p.deactivate();
-            else
-                p.activate();
+            if (command.status() == DEACTIVATED) {
+                if (!p.isDeactivated())
+                    p.deactivate();
+            }
+            else {
+                if (p.getStatus().equals(DEACTIVATED))
+                    p.activate();
+            }
         });
     }
 }

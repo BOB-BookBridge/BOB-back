@@ -2,7 +2,9 @@ package com.bob.core.post.domain;
 
 import static com.bob.core.post.domain.PostFavorite.createPostFavorite;
 import static com.bob.core.post.domain.status.Status.ACTIVE;
+import static com.bob.core.post.domain.status.Status.BANNED;
 import static com.bob.core.post.domain.status.Status.DEACTIVATED;
+import static com.bob.core.post.domain.status.Status.PENDING;
 import static com.bob.core.post.domain.status.TradeProgress.READY;
 import static com.bob.core.post.domain.status.TradeProgress.RESERVED;
 import static org.springframework.util.Assert.state;
@@ -72,14 +74,20 @@ public class Post {
     @Builder.Default
     private List<PostFavorite> favorites = new ArrayList<>();
 
+    @Builder.Default
+    private List<String> filterWords = new ArrayList<>();
+
     private LocalDateTime createdAt;
 
     public static Post createPost(Integer categoryId, int emdId, Long bookId,
         String title, String description, String thumbnailUrl, String bookStatus,
-        UUID writerId, Long sellerBookId, Integer price, boolean wishOnly
+        UUID writerId, Long sellerBookId, Integer price, boolean wishOnly,
+        List<String> filterWords
     ) {
+        Status status = filterWords.isEmpty() ? ACTIVE : PENDING;
+
         return Post.builder()
-            .status(ACTIVE)
+            .status(status)
             .categoryId(categoryId)
             .bookId(bookId)
             .title(title)
@@ -92,14 +100,20 @@ public class Post {
             .registrationAreaId(emdId)
             .thumbnailUrl(thumbnailUrl)
             .wishOnly(wishOnly)
+            .filterWords(filterWords)
             .createdAt(LocalDateTime.now())
             .build();
     }
 
-    public void updateInfo(String bookStatus, String description, Boolean wishOnly) {
+    public void updateInfo(String bookStatus, String description, Boolean wishOnly, List<String> filterWords) {
         Optional.ofNullable(bookStatus).ifPresent(b -> this.bookStatus = BookStatus.from(b));
         Optional.ofNullable(description).ifPresent(d -> this.description = d);
         Optional.ofNullable(wishOnly).ifPresent(d -> this.wishOnly = wishOnly);
+
+        if (!filterWords.isEmpty()) {
+            this.filterWords = filterWords;
+            this.status = PENDING;
+        }
     }
 
     public void updateTradeProgress(TradeProgress status) {
@@ -107,13 +121,22 @@ public class Post {
     }
 
     public void activate() {
+        state(status != BANNED, "제재된 게시글은 활성화할 수 없습니다.");
+
         this.status = ACTIVE;
     }
 
     public void deactivate() {
-        state(status == ACTIVE, "활성 상태가 아닙니다.");
+        state(status != DEACTIVATED, "이미 비활성 상태입니다.");
 
         this.status = DEACTIVATED;
+        this.favorites.clear();
+    }
+
+    public void ban() {
+        state(status != BANNED, "이미 제재된 상태입니다.");
+
+        this.status = BANNED;
         this.favorites.clear();
     }
 
@@ -132,7 +155,9 @@ public class Post {
     }
 
     public boolean isDeactivated() {
-        return status == DEACTIVATED;
+        return status == DEACTIVATED
+            || status == PENDING
+            || status == BANNED;
     }
 
     public boolean isReserved() {

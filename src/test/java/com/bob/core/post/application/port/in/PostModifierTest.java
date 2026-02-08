@@ -1,7 +1,9 @@
 package com.bob.core.post.application.port.in;
 
 import static com.bob.core.post.domain.status.Status.ACTIVE;
+import static com.bob.core.post.domain.status.Status.BANNED;
 import static com.bob.core.post.domain.status.Status.DEACTIVATED;
+import static com.bob.core.post.domain.status.Status.PENDING;
 import static com.bob.core.post.domain.status.TradeProgress.COMPLETED;
 import static com.bob.core.post.domain.status.TradeProgress.READY;
 import static com.bob.core.post.domain.status.TradeProgress.RESERVED;
@@ -9,7 +11,9 @@ import static com.bob.global.exception.response.ApplicationError.POST_OWNER_REQU
 import static com.bob.global.exception.response.ApplicationError.POST_UNREMOVABLE_STATE;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
+import static com.bob.support.fixture.post.domain.PostFixture.createPendingPost;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -22,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import com.bob.core.post.application.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostInfoCommand;
+import com.bob.core.post.application.dto.command.ChangePostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostTradeProgressCommand;
 import com.bob.core.post.application.dto.command.RemovePostCommand;
 import com.bob.core.post.domain.Post;
@@ -40,9 +45,21 @@ record PostModifierTest(PostModifier postModifier, PostRepository postRepository
 
         Post result = postModifier.changePostInfo(post.getId(), command);
 
+        assertThat(result.getStatus()).isEqualTo(ACTIVE);
         assertThat(result.getBookStatus().name()).isEqualTo("BEST");
         assertThat(result.getDescription()).isEqualTo("새로운 설명");
         assertThat(result.isWishOnly()).isTrue();
+    }
+
+    @Test
+    void 금지_키워드_포함_게시글_정보_수정() {
+        Post post = postRepository.save(createPost());
+        ChangePostInfoCommand command = new ChangePostInfoCommand(MEMBER_ID, "BEST", "비속어", true);
+
+        Post result = postModifier.changePostInfo(post.getId(), command);
+
+        assertThat(result.getStatus()).isEqualTo(PENDING);
+        assertThat(result.getDescription()).isEqualTo("비속어");
     }
 
     @Test
@@ -133,6 +150,33 @@ record PostModifierTest(PostModifier postModifier, PostRepository postRepository
     }
 
     @Test
+    void 게시글_상태_변경() {
+        // 활성
+        Post post1 = postRepository.save(createPost());
+        ChangePostStatusCommand activateCommand = new ChangePostStatusCommand("ACTIVE");
+
+        postModifier.changeStatus(post1.getId(), activateCommand);
+
+        assertThat(post1.getStatus()).isEqualTo(ACTIVE);
+
+        // 비활성
+        Post post2 = postRepository.save(createPost());
+        ChangePostStatusCommand deactivateCommand = new ChangePostStatusCommand("DEACTIVATED");
+
+        postModifier.changeStatus(post2.getId(), deactivateCommand);
+
+        assertThat(post2.getStatus()).isEqualTo(DEACTIVATED);
+
+        // 제재
+        Post post3 = postRepository.save(createPost());
+        ChangePostStatusCommand banCommand = new ChangePostStatusCommand("BANNED");
+
+        postModifier.changeStatus(post3.getId(), banCommand);
+
+        assertThat(post3.getStatus()).isEqualTo(BANNED);
+    }
+
+    @Test
     void 회원_계정_상태_변경에_따른_게시글_상태_변경_비활성화() {
         Post post1 = postRepository.save(createPost());
         Post post2 = postRepository.save(createPost());
@@ -145,6 +189,27 @@ record PostModifierTest(PostModifier postModifier, PostRepository postRepository
         Post result2 = postRepository.findById(post2.getId()).orElseThrow();
         assertThat(result1.getStatus()).isEqualTo(DEACTIVATED);
         assertThat(result2.getStatus()).isEqualTo(DEACTIVATED);
+    }
+
+    @Test
+    void 회원_계정_상태_변경에_따른_게시글_상태_변경_비활성화_시_이미_비활성_상태인_게시글은_유지() {
+        Post pendingPost = postRepository.save(createPendingPost());
+        assertThat(pendingPost.getStatus()).isEqualTo(PENDING);
+
+        Post bannedPost = postRepository.save(createPost());
+        bannedPost.ban();
+        clearPersistenceContext();
+        assertThat(bannedPost.getStatus()).isEqualTo(BANNED);
+
+        ChangeMemberPostStatusCommand command = new ChangeMemberPostStatusCommand(MEMBER_ID, DEACTIVATED);
+
+        postModifier.changeStatusByAccountEvent(command);
+        clearPersistenceContext();
+
+        Post resultPending = postRepository.findById(pendingPost.getId()).orElseThrow();
+        Post resultBanned = postRepository.findById(bannedPost.getId()).orElseThrow();
+        assertThat(resultPending.getStatus()).isEqualTo(PENDING);
+        assertThat(resultBanned.getStatus()).isEqualTo(BANNED);
     }
 
     @Test

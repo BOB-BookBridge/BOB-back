@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Test;
 
 import com.bob.core.report.application.dto.query.ReadReportCountQuery;
 import com.bob.core.report.application.dto.query.ReadReportQuery;
+import com.bob.core.report.application.dto.query.ReadReportsByTargetQuery;
 import com.bob.core.report.domain.Report;
+import com.bob.core.report.domain.ReportTarget;
 import com.bob.core.report.domain.repository.ReportRepository;
 import com.bob.core.report.domain.repository.projection.ReportCount;
 import com.bob.support.annotation.ContainerTest;
@@ -31,6 +33,26 @@ record ReportReaderTest(ReportReader reportReader, ReportRepository reportReposi
 
         assertThat(reports).hasSize(1);
         assertThat(reports.get(0).getReportedId()).isEqualTo(OTHER_MEMBER_ID);
+    }
+
+    @Test
+    void 대상별_신고_내역_조회() {
+        Report report1 = Report.createReport(ReportTarget.POST, 1L, "욕설/비방", MEMBER_ID, OTHER_MEMBER_ID);
+        Report report2 = Report.createReport(ReportTarget.POST, 1L, "스팸", MEMBER_ID, OTHER_MEMBER_ID);
+        Report report3 = Report.createReport(ReportTarget.POST, 2L, "사기/허위", MEMBER_ID, OTHER_MEMBER_ID);
+        reportRepository.save(report1);
+        reportRepository.save(report2);
+        reportRepository.save(report3);
+
+        ReadReportsByTargetQuery query = new ReadReportsByTargetQuery(ReportTarget.POST, 1L);
+
+        List<Report> reports = reportReader.read(query);
+
+        assertThat(reports).hasSize(2);
+        assertThat(reports).allSatisfy(report -> {
+            assertThat(report.getTarget()).isEqualTo(ReportTarget.POST);
+            assertThat(report.getTargetId()).isEqualTo(1L);
+        });
     }
 
     @Test

@@ -92,6 +92,6 @@ class PostEventHandlerTest {
         postEventHandler.handlePostReportProcessed(event);
 
         then(postReader).should(times(1)).read(eq(event.targetId()));
-        then(post).should(times(1)).deactivate();
+        then(post).should(times(1)).ban();
     }
 }

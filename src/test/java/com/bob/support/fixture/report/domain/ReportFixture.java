@@ -17,6 +17,10 @@ public class ReportFixture {
         return Report.createReport(POST, 1L, "사기/허위", reporterId, reportedId);
     }
 
+    public static Report createReport(Long targetId) {
+        return Report.createReport(POST, targetId, "사기/허위", MEMBER_ID, OTHER_MEMBER_ID);
+    }
+
     public static Report createReport() {
         return createReport(MEMBER_ID, OTHER_MEMBER_ID);
     }
@@ -38,6 +42,14 @@ public class ReportFixture {
 
     public static Report createProcessedReport() {
         Report report = createReport();
+        report.review(MANAGER_ID);
+        report.process();
+
+        return report;
+    }
+
+    public static Report createProcessedReport(Long targetId) {
+        Report report = createReport(targetId);
         report.review(MANAGER_ID);
         report.process();
 

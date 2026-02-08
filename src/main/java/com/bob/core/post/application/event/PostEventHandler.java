@@ -48,6 +48,6 @@ public class PostEventHandler {
     public void handlePostReportProcessed(ReportPostProcessedEvent event) {
         Post post = postReader.read(event.targetId());
 
-        post.deactivate();
+        post.ban();
     }
 }
