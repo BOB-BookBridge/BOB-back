@@ -4,6 +4,8 @@ import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Comparator;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
 
 import com.bob.core.report.application.dto.result.ReportSummaries;
+import com.bob.core.report.domain.Report;
+import com.bob.core.report.domain.ReportStatus;
 import com.bob.core.report.domain.repository.ReportRepository;
 import com.bob.core.report.domain.repository.dsl.query.SearchReportsQuery;
 import com.bob.support.annotation.ContainerTest;
@@ -24,11 +28,11 @@ record ReportSearcherTest(ReportSearcher reportSearcher, ReportRepository report
     void setUp() {
         // 대기 1, 닫힘 1, 중복 1, 완료 2
         // MEMBER_ID -> OTHER_MEMBER_ID 신고
-        reportRepository.save(ReportFixture.createReport());
         reportRepository.save(ReportFixture.createClosedReport());
         reportRepository.save(ReportFixture.createDuplicatedReport());
         reportRepository.save(ReportFixture.createProcessedReport());
         reportRepository.save(ReportFixture.createProcessedReport());
+        reportRepository.save(ReportFixture.createReport()); // pending
     }
 
     @Test
@@ -51,5 +55,20 @@ record ReportSearcherTest(ReportSearcher reportSearcher, ReportRepository report
         ReportSummaries summaries = reportSearcher.searchByQuery(query, pageable);
 
         assertThat(summaries.totalCount()).isEqualTo(1);
+    }
+
+    @Test
+    void 신고_검색_시_정렬_1순위_PENDING_2순위_최근_등록순으로_정렬() {
+        SearchReportsQuery query = new SearchReportsQuery(null, null, null, null);
+        var pageable = PageRequest.of(0, 20);
+
+        ReportSummaries summaries = reportSearcher.searchByQuery(query, pageable);
+
+        assertThat(summaries.reports()).isNotEmpty();
+        assertThat(summaries.reports().get(0).getStatus()).isEqualTo(ReportStatus.PENDING);
+
+        assertThat(summaries.reports().subList(1, summaries.reports().size()))
+            .extracting(Report::getId)
+            .isSortedAccordingTo(Comparator.reverseOrder());
     }
 }
