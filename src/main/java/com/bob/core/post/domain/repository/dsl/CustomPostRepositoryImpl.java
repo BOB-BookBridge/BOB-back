@@ -41,7 +41,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 emdCondition(query.emdId()),
                 categoryCondition(query.categoryIds()),
                 priceCondition(query.price()),
-                tradeStatusCondition(query.postStatus()),
+                tradeStatusCondition(query.tradeStatus()),
                 bookStatusCondition(query.bookStatus())
             )
             .orderBy(getSortKey(query.sortKey()), post.createdAt.desc())
@@ -62,7 +62,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 emdCondition(query.emdId()),
                 categoryCondition(query.categoryIds()),
                 priceCondition(query.price()),
-                tradeStatusCondition(query.postStatus()),
+                tradeStatusCondition(query.tradeStatus()),
                 bookStatusCondition(query.bookStatus())
             )
             .fetchOne();

@@ -17,7 +17,7 @@ public class PostQueryFixture {
             .emdId(null)
             .categoryIds(new ArrayList<>())
             .price(null)
-            .postStatus(null)
+            .tradeStatus(null)
             .bookStatus(null)
             .sortKey(SortKey.RECENT)
             .build();
@@ -64,7 +64,7 @@ public class PostQueryFixture {
 
     public static ReadPostsQuery searchTradeStatusQuery() {
         return ReadPostsQuery.builder()
-            .postStatus("COMPLETED")
+            .tradeStatus("COMPLETED")
             .sortKey(SortKey.RECENT)
             .build();
     }
@@ -144,14 +144,14 @@ public class PostQueryFixture {
 
     public static ReadPostsQuery searchReadyTradeStatusQuery() {
         return ReadPostsQuery.builder()
-            .postStatus("READY")
+            .tradeStatus("READY")
             .sortKey(SortKey.RECENT)
             .build();
     }
 
     public static ReadPostsQuery searchReservedTradeStatusQuery() {
         return ReadPostsQuery.builder()
-            .postStatus("RESERVED")
+            .tradeStatus("RESERVED")
             .sortKey(SortKey.RECENT)
             .build();
     }

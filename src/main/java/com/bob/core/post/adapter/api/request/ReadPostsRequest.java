@@ -16,7 +16,7 @@ public record ReadPostsRequest(
     Integer emdId,
     Integer categoryId,
     Integer price,
-    String postStatus,
+    String tradeStatus,
     String bookStatus,
     String sort
 ) {
@@ -31,7 +31,7 @@ public record ReadPostsRequest(
             .categoryIds(categoryId != null ? new ArrayList<>(List.of(categoryId)) : null)
             .bookIds(keyword == null || keyword.isBlank() ? null : new ArrayList<>())
             .price(SearchPrice.fromIndex(price).orElse(null))
-            .postStatus(postStatus)
+            .tradeStatus(tradeStatus)
             .bookStatus(bookStatus)
             .sortKey(SortKey.from(sort).orElse(SortKey.RECENT))
             .build();
