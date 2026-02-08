@@ -77,8 +77,6 @@ public class Report extends AbstractEntity {
     }
 
     public void abort(ReportStatus status) {
-        Assert.state(this.status == ReportStatus.IN_REVIEW, "검토 상태가 아닙니다");
-
         this.status = status;
         this.processedAt = LocalDateTime.now();
     }

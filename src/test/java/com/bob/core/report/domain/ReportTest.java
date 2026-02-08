@@ -102,14 +102,4 @@ class ReportTest {
 
         assertThat(report.getStatus()).isEqualTo(DUPLICATED);
     }
-
-    @Test
-    void 신고_취소_처리_시_검토_상태가_아니면_예외가_발생한다() {
-        Report report = ReportFixture.createReport();
-        assertThat(report.getStatus()).isEqualTo(PENDING);
-
-        assertThatThrownBy(report::process)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("검토 상태가 아닙니다");
-    }
 }

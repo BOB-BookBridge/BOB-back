@@ -159,7 +159,10 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 managementStatusCondition(query.status()),
                 writerIdCondition(query.writerId())
             )
-            .orderBy(post.createdAt.desc())
+            .orderBy(
+                post.status.when(Status.PENDING).then(0).otherwise(1).asc(),
+                post.id.desc()
+            )
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();

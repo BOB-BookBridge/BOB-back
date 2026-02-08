@@ -65,12 +65,19 @@ public class ReportCommandService implements ReportRegister, ReportModifier {
             case IN_REVIEW -> report.review(command.managerId());
             case PROCESSED -> {
                 report.process();
-                if (report.getTarget() == POST)
+                if (report.getTarget() == POST) {
+                    duplicateRelatedReports(report);
                     eventPublisher.publishEvent(new ReportPostProcessedEvent(report.getTargetId()));
+                }
             }
             default -> report.abort(status);
         }
 
         return report;
+    }
+
+    private void duplicateRelatedReports(Report report) {
+        reportRepository.findAllByTargetAndTargetIdAndIdNot(report.getTarget(), report.getTargetId(), report.getId())
+            .forEach(r -> r.abort(ReportStatus.DUPLICATED));
     }
 }

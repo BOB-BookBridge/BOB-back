@@ -72,8 +72,8 @@ class ManagementReportProcessorTest {
 
     @Test
     void 신고_완료_처리_시_누적_신고횟수가_3회_이상이면_회원_비활성_이벤트_발행() {
-        reportRepository.save(ReportFixture.createProcessedReport()); // 누적 1회
-        reportRepository.save(ReportFixture.createProcessedReport()); // 누적 2회
+        reportRepository.save(ReportFixture.createProcessedReport(99L)); // 누적 1회
+        reportRepository.save(ReportFixture.createProcessedReport(100L)); // 누적 2회
 
         Report report = reportRepository.save(ReportFixture.createInReviewReport());
         var command = new ProcessManagementReportStatusCommand(MANAGER_ID, "PROCESSED", "메모");
@@ -87,6 +87,7 @@ class ManagementReportProcessorTest {
         assertThat(result.getStatus()).isEqualTo(PROCESSED);
         assertThat(result.getProcessedAt()).isNotNull();
 
+        then(eventPublisher).should().publishEvent(any(ReportPostProcessedEvent.class));
         then(eventPublisher).should().publishEvent(any(MemberDeactivatedEvent.class));
     }
 

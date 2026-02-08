@@ -1,5 +1,6 @@
 package com.bob.core.report.application.port.in;
 
+import static com.bob.core.report.domain.ReportStatus.DUPLICATED;
 import static com.bob.core.report.domain.ReportStatus.PROCESSED;
 import static com.bob.support.fixture.member.domain.MemberFixture.MANAGER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,5 +44,28 @@ class ReportModifierTest {
         assertThat(result.getProcessedAt()).isNotNull();
 
         then(eventPublisher).should().publishEvent(any(ReportPostProcessedEvent.class));
+    }
+
+    @Test
+    void 신고_처리_시_동일_대상_신고는_중복_처리() {
+        Report report1 = reportRepository.save(ReportFixture.createReport(1L));
+        report1.review(MANAGER_ID);
+
+        Report report2 = reportRepository.save(ReportFixture.createReport(1L));
+        Report report3 = reportRepository.save(ReportFixture.createReport(1L));
+
+        var command = new ChangeReportStatusCommand(MANAGER_ID, "PROCESSED");
+
+        Report result = reportModifier.changeStatus(report1.getId(), command);
+
+        assertThat(result.getStatus()).isEqualTo(PROCESSED);
+        assertThat(result.getManagerId()).isEqualTo(MANAGER_ID);
+        assertThat(result.getProcessedAt()).isNotNull();
+
+        then(eventPublisher).should().publishEvent(any(ReportPostProcessedEvent.class));
+
+        // 동일 대상 신고들은 중복 처리
+        assertThat(report2.getStatus()).isEqualTo(DUPLICATED);
+        assertThat(report3.getStatus()).isEqualTo(DUPLICATED);
     }
 }

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.bob.admin.post.application.port.out.ManagementPostPort;
 import com.bob.admin.post.application.port.result.ManagementPost;
@@ -34,7 +35,7 @@ public class ManagementPostAdapter implements ManagementPostPort {
 
     @Override
     public ManagementPostSummaries readAll(String email, String status, Pageable pageable) {
-        UUID writerId = email != null ? getWriterId(email) : null;
+        UUID writerId = StringUtils.hasText(email) ? getWriterId(email) : null;
         SearchManagementPostsQuery query = new SearchManagementPostsQuery(writerId, status);
 
         SearchPostsResult result = postSearcher.searchByQuery(query, pageable);
