@@ -41,6 +41,19 @@ public class GlobalExceptionHandlerTest {
     private HttpServletResponse response;
 
     @Test
+    void 예상치_못한_예외_처리() {
+        // [문제 상황] 핸들러에 매칭되지 않는 예상치 못한 예외 발생
+        Exception ex = new RuntimeException("Unexpected runtime error");
+
+        ProblemDetail problemDetail = handler.handleUnexpectedException(ex);
+
+        assertThat(problemDetail.getStatus()).isEqualTo(SERVER_ERROR.getStatus().value());
+        assertThat(problemDetail.getTitle()).isEqualTo(SERVER_ERROR.name());
+        assertThat(problemDetail.getDetail()).isEqualTo(SERVER_ERROR.getMessage());
+        assertThat(problemDetail.getProperties()).containsKeys("timestamp", "error-message");
+    }
+
+    @Test
     void 비즈니스_예외_처리() {
         // [요청 예시] POST /members with duplicate email
         // [문제 상황] 중복된 이메일로 회원가입 시도

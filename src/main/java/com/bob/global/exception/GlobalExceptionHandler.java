@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.BindingResult;
@@ -21,11 +23,20 @@ import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.global.ratelimit.exception.RateLimitExceededException;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(Exception.class)
+    public ProblemDetail handleUnexpectedException(Exception ex) {
+        log.error("Unexpected exception", ex);
+        ProblemDetail problemDetail = forStatusAndDetail(SERVER_ERROR.getStatus(), SERVER_ERROR.getMessage());
+        return setProblemDetailProperties(ex, problemDetail, SERVER_ERROR.name());
+    }
+
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ProblemDetail handleServerException(Exception ex) {
+        log.warn("Invalid argument or state", ex);
         ProblemDetail problemDetail = forStatusAndDetail(SERVER_ERROR.getStatus(), SERVER_ERROR.getMessage());
         return setProblemDetailProperties(ex, problemDetail, SERVER_ERROR.name());
     }
