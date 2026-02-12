@@ -29,11 +29,12 @@ public class RedisMessagingConfig {
 
     @Bean
     public Map<String, ChannelTopic> topicMap() {
+        ChannelTopic notification = new ChannelTopic("notification");
+        ChannelTopic chatroom = new ChannelTopic("chatroom");
+
         return Map.of(
-            "CHAT", new ChannelTopic("notification"),
-            "TRADE", new ChannelTopic("notification"),
-            "INQUIRY", new ChannelTopic("notification"),
-            "CHAT_MESSAGE", new ChannelTopic("chatroom")
+            "CHAT", notification, "TRADE", notification, "INQUIRY", notification, "REPORT", notification,
+            "CHAT_MESSAGE", chatroom
         );
     }
 }

@@ -23,6 +23,7 @@ import com.bob.core.report.domain.ReportStatus;
 import com.bob.core.report.domain.repository.ReportRepository;
 import com.bob.core.report.domain.repository.projection.ReportCount;
 import com.bob.core.report.event.ReportChatProcessedEvent;
+import com.bob.core.report.event.ReportNotificationEvent;
 import com.bob.core.report.event.ReportPostProcessedEvent;
 
 @Service
@@ -77,6 +78,7 @@ public class ReportCommandService implements ReportRegister, ReportModifier {
                     duplicateChatRelatedReports(report);
                     eventPublisher.publishEvent(new ReportChatProcessedEvent(report.getTargetId()));
                 }
+                eventPublisher.publishEvent(new ReportNotificationEvent(report.getId(), report.getReportedId()));
             }
             default -> report.abort(status);
         }

@@ -11,6 +11,7 @@ import com.bob.core.chat.event.ChatMessageSentEvent;
 import com.bob.core.inquiry.event.InquiryProcessedEvent;
 import com.bob.core.notification.application.dto.command.CreateNotificationCommand;
 import com.bob.core.notification.application.port.in.NotificationCreator;
+import com.bob.core.report.event.ReportNotificationEvent;
 import com.bob.core.trade.event.TradeNotificationEvent;
 
 @Component
@@ -37,6 +38,13 @@ public class NotificationEventHandler {
     @ApplicationModuleListener
     public void handleInquiryNotification(InquiryProcessedEvent event) {
         CreateNotificationCommand command = CreateNotificationCommand.fromInquiryEvent(event);
+        notificationCreator.create(command);
+    }
+
+    @Async
+    @ApplicationModuleListener
+    public void handleReportNotification(ReportNotificationEvent event) {
+        CreateNotificationCommand command = CreateNotificationCommand.fromReportEvent(event);
         notificationCreator.create(command);
     }
 }

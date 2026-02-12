@@ -8,6 +8,7 @@ import lombok.Builder;
 import com.bob.core.chat.event.ChatMessageSentEvent;
 import com.bob.core.inquiry.event.InquiryProcessedEvent;
 import com.bob.core.notification.domain.NotificationType;
+import com.bob.core.report.event.ReportNotificationEvent;
 import com.bob.core.trade.event.TradeNotificationEvent;
 
 @Builder
@@ -59,6 +60,20 @@ public record CreateNotificationCommand(
             .senderId(event.memberId())
             .receiverId(event.memberId())
             .body("문의 답변이 도착했습니다. 클릭하여 상세 내용을 확인해 주세요.")
+            .fileNames(null)
+            .isSystem(true)
+            .normalize(false)
+            .build();
+    }
+
+    public static CreateNotificationCommand fromReportEvent(ReportNotificationEvent event) {
+        return CreateNotificationCommand.builder()
+            .type(NotificationType.REPORT)
+            .refId(String.valueOf(event.reportId()))
+            .childId("SYSTEM")
+            .senderId(event.reportedId())
+            .receiverId(event.reportedId())
+            .body("신고 접수에 따라 관련 콘텐츠가 비활성화되었습니다. 자세한 내용은 고객센터를 통해 문의해 주세요.")
             .fileNames(null)
             .isSystem(true)
             .normalize(false)

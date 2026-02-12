@@ -23,6 +23,7 @@ import com.bob.core.report.application.dto.command.ChangeReportStatusCommand;
 import com.bob.core.report.domain.Report;
 import com.bob.core.report.domain.repository.ReportRepository;
 import com.bob.core.report.event.ReportChatProcessedEvent;
+import com.bob.core.report.event.ReportNotificationEvent;
 import com.bob.core.report.event.ReportPostProcessedEvent;
 import com.bob.support.annotation.ContainerTest;
 import com.bob.support.fixture.chat.domain.ChatroomFixture;
@@ -52,6 +53,7 @@ class ReportModifierTest {
         assertThat(result.getProcessedAt()).isNotNull();
 
         then(eventPublisher).should().publishEvent(any(ReportPostProcessedEvent.class));
+        then(eventPublisher).should().publishEvent(any(ReportNotificationEvent.class));
     }
 
     @Test
@@ -92,6 +94,7 @@ class ReportModifierTest {
 
         assertThat(result.getStatus()).isEqualTo(PROCESSED);
         then(eventPublisher).should().publishEvent(any(ReportChatProcessedEvent.class));
+        then(eventPublisher).should().publishEvent(any(ReportNotificationEvent.class));
     }
 
     @Test
