@@ -19,6 +19,8 @@ public interface ReportRepository extends CrudRepository<Report, Long>, ReportQu
 
     List<Report> findAllByTargetAndTargetIdAndIdNot(ReportTarget target, Long targetId, Long id);
 
+    List<Report> findAllByTargetAndTargetIdInAndIdNot(ReportTarget target, List<Long> targetIds, Long id);
+
     @Query("""
           SELECT r.reportedId AS reportedId, COUNT(r) AS count
             FROM Report r

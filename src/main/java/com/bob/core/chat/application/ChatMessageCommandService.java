@@ -3,6 +3,7 @@ package com.bob.core.chat.application;
 import static com.bob.core.chat.domain.ChatMessage.resolveMessageType;
 import static com.bob.global.event.sse.repository.chat.ChatEmitterKey.of;
 import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.CHATROOM_DEACTIVATED;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,6 +48,7 @@ public class ChatMessageCommandService implements ChatMessageCreator {
     @Override
     public ChatMessageCreationResult createChatMessage(Long chatroomId, CreateMessageCommand command) {
         Chatroom chatroom = chatroomReader.read(chatroomId);
+        verifyActive(chatroom);
         verifyParticipating(chatroom, command.memberId());
 
         UUID partnerId = chatroom.getPartnerId(command.memberId());
@@ -80,6 +82,11 @@ public class ChatMessageCommandService implements ChatMessageCreator {
                 return message;
             })
             .orElse(null);
+    }
+
+    private void verifyActive(Chatroom chatroom) {
+        if (!chatroom.isActive())
+            throw new ApplicationException(CHATROOM_DEACTIVATED);
     }
 
     private void verifyParticipating(Chatroom chatroom, UUID memberId) {

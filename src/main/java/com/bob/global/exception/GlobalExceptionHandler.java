@@ -9,23 +9,35 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
 import com.bob.global.ratelimit.exception.RateLimitExceededException;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(Exception.class)
+    public ProblemDetail handleUnexpectedException(Exception ex) {
+        log.error("Unexpected exception", ex);
+        ProblemDetail problemDetail = forStatusAndDetail(SERVER_ERROR.getStatus(), SERVER_ERROR.getMessage());
+        return setProblemDetailProperties(ex, problemDetail, SERVER_ERROR.name());
+    }
+
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ProblemDetail handleServerException(Exception ex) {
+        log.warn("Invalid argument or state", ex);
         ProblemDetail problemDetail = forStatusAndDetail(SERVER_ERROR.getStatus(), SERVER_ERROR.getMessage());
         return setProblemDetailProperties(ex, problemDetail, SERVER_ERROR.name());
     }
@@ -74,6 +86,11 @@ public class GlobalExceptionHandler {
         response.addHeader("Retry-After", String.valueOf(ex.getRetryAfterSeconds()));
         ProblemDetail problemDetail = forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
         return setProblemDetailProperties(problemDetail, "RATE_LIMIT_EXCEEDED");
+    }
+
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsableException(AsyncRequestNotUsableException ex) {
+        log.debug("Async response already unusable: {}", ex.getMessage());
     }
 
     private static ProblemDetail setProblemDetailProperties(ProblemDetail detail, String title) {

@@ -1,4 +1,5 @@
 HELP.md
+.claude
 .gradle
 build/
 /src/main/resources/data

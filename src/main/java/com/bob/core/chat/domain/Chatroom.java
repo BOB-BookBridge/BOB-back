@@ -39,6 +39,9 @@ public class Chatroom extends AbstractEntity {
     private LocalDateTime lastChatAt;
 
     @Builder.Default
+    private boolean active = true;
+
+    @Builder.Default
     private List<ChatroomMember> members = new ArrayList<>();
 
     @Builder.Default
@@ -154,6 +157,10 @@ public class Chatroom extends AbstractEntity {
             .filter(message -> !message.getSenderId().equals(memberId) && message.getId() > lastReadMessageId)
             .filter(message -> message.getType() != SYSTEM)
             .count();
+    }
+
+    public void deactivate() {
+        this.active = false;
     }
 
     public void reEnterAllMembers() {

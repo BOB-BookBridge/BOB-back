@@ -1,7 +1,7 @@
 @ApplicationModule(
     type = ApplicationModule.Type.OPEN,
     allowedDependencies = {
-        "core.chat::event", "core.trade::event", "core.inquiry::event",
+        "core.chat::event", "core.trade::event", "core.inquiry::event", "core.report::event",
 
         "shared", "global"
     }

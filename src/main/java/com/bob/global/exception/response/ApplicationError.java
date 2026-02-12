@@ -43,6 +43,7 @@ public enum ApplicationError {
 
     // 채팅 예외
     CHATROOM_ACCESS_DENIED("참여중이지 않은 채팅방에 접근할 수 없습니다.", HttpStatus.FORBIDDEN),
+    CHATROOM_DEACTIVATED("비활성화 된 채팅방은 메시지를 전송할 수 없습니다.", HttpStatus.BAD_REQUEST),
 
     // 파일 예외
     FILE_ACCESS_DENIED("파일을 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN),

@@ -1,5 +1,6 @@
 package com.bob.core.post.adapter.out;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ import com.bob.admin.post.application.port.result.ManagementPostWriter;
 import com.bob.core.member.application.port.in.MemberReader;
 import com.bob.core.member.domain.Member;
 import com.bob.core.post.application.dto.command.ChangePostStatusCommand;
+import com.bob.core.post.application.dto.query.ReadPostDetailQuery;
+import com.bob.core.post.application.dto.result.PostDetail;
 import com.bob.core.post.application.dto.result.SearchPostsResult;
 import com.bob.core.post.application.port.in.PostModifier;
 import com.bob.core.post.application.port.in.PostReader;
@@ -49,9 +52,11 @@ public class ManagementPostAdapter implements ManagementPostPort {
 
     @Override
     public ManagementPost read(Long postId) {
-        Post post = postReader.read(postId);
+        ReadPostDetailQuery query = new ReadPostDetailQuery(null, false);
 
-        return toManagementPost(post);
+        PostDetail detail = postReader.readDetail(postId, query);
+
+        return toManagementPost(detail);
     }
 
     @Override
@@ -61,21 +66,37 @@ public class ManagementPostAdapter implements ManagementPostPort {
         return post.getStatus().name();
     }
 
+    private ManagementPost toManagementPost(PostDetail detail) {
+        return toManagementPost(detail.id(), detail.title(), detail.thumbnailUrl(),
+            detail.description(), detail.status(), detail.createdAt(),
+            detail.writer().id(), detail.filterWords());
+    }
+
     private ManagementPost toManagementPost(Post post) {
-        Member writer = memberReader.read(post.getWriterId());
+        return toManagementPost(post.getId(), post.getTitle(), post.getThumbnailUrl(),
+            post.getDescription(), post.getStatus().name(), post.getCreatedAt(),
+            post.getWriterId(), null);
+    }
+
+    private ManagementPost toManagementPost(Long id, String title, String thumbnailUrl,
+        String description, String status, LocalDateTime createdAt,
+        UUID writerId, List<String> filterWords
+    ) {
+        Member writer = memberReader.read(writerId);
 
         return ManagementPost.builder()
-            .id(post.getId())
-            .title(post.getTitle())
-            .thumbnailUrl(post.getThumbnailUrl())
-            .description(post.getDescription())
-            .status(post.getStatus().name())
-            .createdAt(post.getCreatedAt())
+            .id(id)
+            .title(title)
+            .thumbnailUrl(thumbnailUrl)
+            .description(description)
+            .status(status)
+            .createdAt(createdAt)
             .writer(new ManagementPostWriter(
                 writer.getId(),
                 writer.getEmail(),
                 writer.getNickname()
             ))
+            .filterWords(filterWords)
             .build();
     }
 

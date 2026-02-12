@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.core.chat.application.dto.command.CreateChatroomCommand;
+import com.bob.core.chat.application.dto.command.DeactivateChatroomCommand;
 import com.bob.core.chat.application.dto.command.ExitChatroomCommand;
 import com.bob.core.chat.application.dto.command.JoinChatroomCommand;
 import com.bob.core.chat.application.dto.query.ReadChatroomByPostAndMemberQuery;
@@ -72,6 +73,13 @@ public class ChatroomCommandService implements ChatroomCreator, ChatroomModifier
         chatroom.exitMember(command.memberId());
 
         chatroom.markMessagesAsRead(command.memberId());
+    }
+
+    @Override
+    public void deactivate(DeactivateChatroomCommand command) {
+        Chatroom chatroom = chatroomReader.readByMessageId(command.chatMessageId());
+
+        chatroom.deactivate();
     }
 
     private void publishSystemChatEvent(Long chatRoomId, UUID senderId, UUID receiverId) {

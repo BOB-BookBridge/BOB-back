@@ -3,6 +3,7 @@ package com.bob.global.exception;
 import static com.bob.global.exception.response.ApplicationError.MEMBER_EMAIL_DUPLICATED;
 import static com.bob.global.exception.response.ApplicationError.SERVER_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.BDDMockito.given;
 
 import java.util.List;
@@ -25,6 +26,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.bob.global.exception.exceptions.ApplicationException;
@@ -39,6 +41,19 @@ public class GlobalExceptionHandlerTest {
 
     @Mock
     private HttpServletResponse response;
+
+    @Test
+    void 예상치_못한_예외_처리() {
+        // [문제 상황] 핸들러에 매칭되지 않는 예상치 못한 예외 발생
+        Exception ex = new RuntimeException("Unexpected runtime error");
+
+        ProblemDetail problemDetail = handler.handleUnexpectedException(ex);
+
+        assertThat(problemDetail.getStatus()).isEqualTo(SERVER_ERROR.getStatus().value());
+        assertThat(problemDetail.getTitle()).isEqualTo(SERVER_ERROR.name());
+        assertThat(problemDetail.getDetail()).isEqualTo(SERVER_ERROR.getMessage());
+        assertThat(problemDetail.getProperties()).containsKeys("timestamp", "error-message");
+    }
 
     @Test
     void 비즈니스_예외_처리() {
@@ -131,5 +146,13 @@ public class GlobalExceptionHandlerTest {
         assertThat(problemDetail.getTitle()).isEqualTo("TYPE_MISMATCH");
         assertThat(problemDetail.getDetail()).isEqualTo("[postId]의 값 'invalid-id'은(는) 올바른 형식이 아닙니다.");
         assertThat(problemDetail.getProperties()).containsKeys("timestamp");
+    }
+
+    @Test
+    void SSE_연결_끊김_예외_처리() {
+        // [문제 상황] 클라이언트와의 SSE 연결 세션이 끊긴 상황에서 heartbeat 전송 시도
+        var ex = new AsyncRequestNotUsableException("notification for disconnected client");
+
+        assertThatCode(() -> handler.handleAsyncRequestNotUsableException(ex)).doesNotThrowAnyException();
     }
 }

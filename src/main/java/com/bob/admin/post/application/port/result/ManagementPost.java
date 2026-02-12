@@ -1,6 +1,7 @@
 package com.bob.admin.post.application.port.result;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Builder;
 
@@ -12,7 +13,8 @@ public record ManagementPost(
     String description,
     String status,
     LocalDateTime createdAt,
-    ManagementPostWriter writer
+    ManagementPostWriter writer,
+    List<String> filterWords
 ) {
 
 }

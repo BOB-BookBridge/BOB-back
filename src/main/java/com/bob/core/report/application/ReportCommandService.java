@@ -1,5 +1,6 @@
 package com.bob.core.report.application;
 
+import static com.bob.core.report.domain.ReportTarget.CHAT;
 import static com.bob.core.report.domain.ReportTarget.POST;
 
 import java.util.List;
@@ -16,10 +17,13 @@ import com.bob.core.report.application.dto.command.RegisterReportCommand;
 import com.bob.core.report.application.port.in.ReportModifier;
 import com.bob.core.report.application.port.in.ReportReader;
 import com.bob.core.report.application.port.in.ReportRegister;
+import com.bob.core.report.application.port.out.ReportChatPort;
 import com.bob.core.report.domain.Report;
 import com.bob.core.report.domain.ReportStatus;
 import com.bob.core.report.domain.repository.ReportRepository;
 import com.bob.core.report.domain.repository.projection.ReportCount;
+import com.bob.core.report.event.ReportChatProcessedEvent;
+import com.bob.core.report.event.ReportNotificationEvent;
 import com.bob.core.report.event.ReportPostProcessedEvent;
 
 @Service
@@ -29,6 +33,7 @@ public class ReportCommandService implements ReportRegister, ReportModifier {
 
     private final ReportRepository reportRepository;
     private final ReportReader reportReader;
+    private final ReportChatPort reportChatPort;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -69,6 +74,11 @@ public class ReportCommandService implements ReportRegister, ReportModifier {
                     duplicateRelatedReports(report);
                     eventPublisher.publishEvent(new ReportPostProcessedEvent(report.getTargetId()));
                 }
+                if (report.getTarget() == CHAT) {
+                    duplicateChatRelatedReports(report);
+                    eventPublisher.publishEvent(new ReportChatProcessedEvent(report.getTargetId()));
+                }
+                eventPublisher.publishEvent(new ReportNotificationEvent(report.getId(), report.getReportedId()));
             }
             default -> report.abort(status);
         }
@@ -78,6 +88,12 @@ public class ReportCommandService implements ReportRegister, ReportModifier {
 
     private void duplicateRelatedReports(Report report) {
         reportRepository.findAllByTargetAndTargetIdAndIdNot(report.getTarget(), report.getTargetId(), report.getId())
+            .forEach(r -> r.abort(ReportStatus.DUPLICATED));
+    }
+
+    private void duplicateChatRelatedReports(Report report) {
+        List<Long> messageIds = reportChatPort.readMessageIds(report.getTargetId());
+        reportRepository.findAllByTargetAndTargetIdInAndIdNot(report.getTarget(), messageIds, report.getId())
             .forEach(r -> r.abort(ReportStatus.DUPLICATED));
     }
 }

@@ -6,6 +6,7 @@ import static com.bob.support.fixture.chat.domain.ChatMessageFixture.addMessage;
 import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.OTHER_MEMBER_ID;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import com.bob.support.fixture.chat.domain.ChatroomFixture;
 
 @DisplayName("채팅방 도메인 테스트")
 class ChatroomTest {
@@ -196,5 +199,15 @@ class ChatroomTest {
 
         assertThat(chatroom.isMemberExited(member1)).isFalse();
         assertThat(chatroom.isMemberExited(member2)).isFalse();
+    }
+
+    @Test
+    void 채팅방_비활성화() {
+        Chatroom chatroom = ChatroomFixture.createChatroom();
+        assertThat(chatroom.isActive()).isTrue();
+
+        chatroom.deactivate();
+
+        assertThat(chatroom.isActive()).isFalse();
     }
 }

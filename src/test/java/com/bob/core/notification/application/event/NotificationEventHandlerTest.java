@@ -2,6 +2,7 @@ package com.bob.core.notification.application.event;
 
 import static com.bob.core.notification.domain.NotificationType.CHAT;
 import static com.bob.core.notification.domain.NotificationType.INQUIRY;
+import static com.bob.core.notification.domain.NotificationType.REPORT;
 import static com.bob.core.notification.domain.NotificationType.TRADE;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,6 +24,7 @@ import com.bob.core.chat.event.ChatMessageSentEvent;
 import com.bob.core.inquiry.event.InquiryProcessedEvent;
 import com.bob.core.notification.application.dto.command.CreateNotificationCommand;
 import com.bob.core.notification.application.port.in.NotificationCreator;
+import com.bob.core.report.event.ReportNotificationEvent;
 import com.bob.core.trade.event.TradeNotificationEvent;
 
 @ExtendWith(MockitoExtension.class)
@@ -120,6 +122,27 @@ class NotificationEventHandlerTest {
         assertThat(command.childId()).isEqualTo("SYSTEM");
         assertThat(command.receiverId()).isEqualTo(receiverId);
         assertThat(command.body()).isEqualTo("문의 답변이 도착했습니다. 클릭하여 상세 내용을 확인해 주세요.");
+        assertThat(command.fileNames()).isNull();
+        assertThat(command.isSystem()).isTrue();
+        assertThat(command.normalize()).isFalse();
+    }
+
+    @Test
+    void 신고_처리_알림_이벤트_처리() {
+        UUID reportedId = MEMBER_ID;
+        ReportNotificationEvent event = new ReportNotificationEvent(1L, reportedId);
+
+        notificationEventHandler.handleReportNotification(event);
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        then(notificationCreator).should(times(1)).create(captor.capture());
+
+        CreateNotificationCommand command = captor.getValue();
+        assertThat(command.type()).isEqualTo(REPORT);
+        assertThat(command.refId()).isEqualTo("1");
+        assertThat(command.childId()).isEqualTo("SYSTEM");
+        assertThat(command.receiverId()).isEqualTo(reportedId);
+        assertThat(command.body()).contains("비활성화");
         assertThat(command.fileNames()).isNull();
         assertThat(command.isSystem()).isTrue();
         assertThat(command.normalize()).isFalse();

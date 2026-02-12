@@ -3,6 +3,7 @@ package com.bob.core.chat.application.port.in;
 import static com.bob.global.event.sse.manager.type.EmitterType.CHAT;
 import static com.bob.global.event.sse.repository.chat.ChatEmitterKey.of;
 import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS_DENIED;
+import static com.bob.global.exception.response.ApplicationError.CHATROOM_DEACTIVATED;
 import static com.bob.support.fixture.chat.domain.ChatroomFixture.createChatroom;
 import static com.bob.support.fixture.chat.dto.command.ChatMessageCommandFixture.createMessageCommand;
 import static com.bob.support.fixture.chat.dto.command.ChatMessageCommandFixture.createSystemMessageCommand;
@@ -28,6 +29,7 @@ import com.bob.core.chat.domain.type.ChatMessageType;
 import com.bob.global.event.sse.manager.EmitterManager;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.support.annotation.ContainerTest;
+import com.bob.support.fixture.chat.domain.ChatroomFixture;
 
 @DisplayName("채팅 메시지 생성 테스트")
 @ContainerTest
@@ -87,6 +89,16 @@ class ChatMessageCreatorTest {
 
         Chatroom result = chatroomRepository.findById(saved.getId()).orElseThrow();
         assertThat(result.isMemberExited(OTHER_MEMBER_ID)).isFalse();
+    }
+
+    @Test
+    void 채팅_메시지_전송_시_비활성화된_채팅방이면_사용자_예외가_발생한다() {
+        Chatroom chatroom = chatroomRepository.save(ChatroomFixture.createChatroom());
+        chatroom.deactivate();
+
+        assertThatThrownBy(() -> chatMessageCreator.createChatMessage(chatroom.getId(), createMessageCommand()))
+            .isInstanceOf(ApplicationException.class)
+            .hasMessage(CHATROOM_DEACTIVATED.getMessage());
     }
 
     @Test
