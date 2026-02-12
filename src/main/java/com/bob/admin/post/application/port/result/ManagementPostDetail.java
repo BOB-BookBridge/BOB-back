@@ -1,6 +1,7 @@
 package com.bob.admin.post.application.port.result;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Builder;
 
@@ -16,6 +17,7 @@ public record ManagementPostDetail(
     LocalDateTime createdAt,
     ManagementPostWriter writer,
     ManagementPostReports reports,
+    List<String> filterWords,
     String managerNickname,
     String previousStatus,
     String memo,
@@ -33,6 +35,7 @@ public record ManagementPostDetail(
             .createdAt(post.createdAt())
             .writer(post.writer())
             .reports(reports)
+            .filterWords(post.filterWords())
             .managerNickname(managerNickname)
             .previousStatus(history != null && history.getPreviousStatus() != null
                 ? history.getPreviousStatus().name()

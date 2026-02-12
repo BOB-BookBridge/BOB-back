@@ -16,7 +16,7 @@ public record PostDetail(
 
     String status, Integer categoryId, String title, String thumbnailUrl, String description, Integer price,
 
-    List<PostFile> images,
+    List<PostFile> images, List<String> filterWords,
 
     PostMember writer, Long writerBookId,
 
@@ -44,6 +44,7 @@ public record PostDetail(
             .description(post.getDescription())
             .price(post.getPrice())
             .images(files)
+            .filterWords(List.copyOf(post.getFilterWords()))
             .writer(member)
             .writerBookId(post.getWriterBookId())
             .book(BookInfo.of(book))
