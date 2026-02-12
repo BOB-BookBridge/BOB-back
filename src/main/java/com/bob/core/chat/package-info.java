@@ -1,7 +1,7 @@
 @ApplicationModule(
     type = ApplicationModule.Type.OPEN,
     allowedDependencies = {
-        "core.trade::event",
+        "core.trade::event", "core.report::event",
 
         "admin::report-out-port", "admin::report-out-port-result",
 
