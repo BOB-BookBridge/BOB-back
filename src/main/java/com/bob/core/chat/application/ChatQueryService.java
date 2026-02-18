@@ -5,8 +5,10 @@ import static com.bob.global.exception.response.ApplicationError.CHATROOM_ACCESS
 import static com.bob.global.utils.stream.StreamUtils.sortByDesc;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +37,7 @@ import com.bob.core.chat.domain.ChatMessage;
 import com.bob.core.chat.domain.Chatroom;
 import com.bob.core.chat.domain.ChatroomMember;
 import com.bob.core.chat.domain.repository.ChatroomRepository;
+import com.bob.core.chat.domain.repository.projection.ChatroomUnreadCount;
 import com.bob.global.exception.exceptions.ApplicationException;
 
 @Service
@@ -68,8 +71,11 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
 
     @Override
     public List<ChatroomSummary> readChatRoomSummaries(ReadChatroomSummariesQuery query) {
+        Map<Long, Long> unreadCountByChatroom = chatRoomRepository.countAllUnreadMessages(query.memberId()).stream()
+            .collect(Collectors.toMap(ChatroomUnreadCount::getChatroomId, ChatroomUnreadCount::getUnreadCount));
+
         List<ChatroomSummary> responses = chatRoomRepository.findAllByMemberId(query.memberId()).stream()
-            .map(chatRoom -> convertToChatRoomSummary(query, chatRoom))
+            .map(chatRoom -> convertToChatRoomSummary(query.memberId(), chatRoom, unreadCountByChatroom))
             .toList();
 
         return sortByDesc(responses, ChatroomSummary::lastMessageAt);
@@ -81,11 +87,9 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
         verifyParticipating(chatroom, query.memberId());
 
         ChatroomMember member = chatroom.getMember(query.memberId());
-        List<ChatMessage> messages = chatroom.getMessagesAfter(member.getEnteredAt().minusSeconds(1));
-        UUID partnerId = chatroom.getPartnerId(query.memberId());
-        ChatroomMember partner = chatroom.getMember(partnerId);
+        ChatroomMember partner = chatroom.getMember(chatroom.getPartnerId(query.memberId()));
 
-        return messages.stream()
+        return chatRoomRepository.findAfterEnteredAtMessages(id, member.getEnteredAt().minusSeconds(1)).stream()
             .map(message -> of(message, query.memberId(), readChatFiles(message), partner.getLastReadMessageId()))
             .toList();
     }
@@ -108,9 +112,9 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
 
     @Override
     public int countUnreadMessagesByMember(ReadUnreadMessageCountQuery query) {
-        return chatRoomRepository.findAllByMemberId(query.memberId()).stream()
-            .mapToInt(chatroom -> chatroom.countUnreadMessages(query.memberId()))
-            .sum();
+        Long count = chatRoomRepository.countUnreadMessagesByMember(query.memberId());
+
+        return count != null ? Math.toIntExact(count) : 0;
     }
 
     @Override
@@ -120,15 +124,12 @@ public class ChatQueryService implements ChatroomReader, ChatMessageReader {
         verifyParticipating(chatroom, query.memberId());
     }
 
-    private ChatroomSummary convertToChatRoomSummary(ReadChatroomSummariesQuery query, Chatroom chatRoom) {
-        UUID partnerId = chatRoom.getPartnerId(query.memberId());
-        ChatMember memberSummary = memberPort.read(partnerId);
+    private ChatroomSummary convertToChatRoomSummary(UUID memberId, Chatroom chatRoom, Map<Long, Long> counts) {
+        ChatMember partner = memberPort.read(chatRoom.getPartnerId(memberId));
 
-        ChatPost postSummary = postPort.read(chatRoom.getPostId());
+        ChatPost post = postPort.read(chatRoom.getPostId());
 
-        int unreadCount = chatRoom.countUnreadMessages(query.memberId());
-
-        return ChatroomSummary.of(chatRoom, memberSummary, postSummary, unreadCount);
+        return ChatroomSummary.of(chatRoom, partner, post, counts.getOrDefault(chatRoom.getId(), 0L).intValue());
     }
 
     private List<ChatFile> readChatFiles(ChatMessage message) {

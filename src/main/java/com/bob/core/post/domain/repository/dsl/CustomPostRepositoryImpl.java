@@ -32,6 +32,8 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
     @Override
     public List<Post> findFilteredPosts(ReadPostsQuery query, Pageable pageable) {
+        OrderSpecifier<?>[] sortOrders = getSortOrders(query.sortKey());
+
         return queryFactory
             .selectFrom(post)
             .where(
@@ -44,7 +46,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 tradeStatusCondition(query.tradeStatus()),
                 bookStatusCondition(query.bookStatus())
             )
-            .orderBy(getSortKey(query.sortKey()), post.createdAt.desc())
+            .orderBy(sortOrders)
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();
@@ -71,10 +73,10 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     private BooleanExpression visibleCondition(UUID authenticatorId, UUID memberId) {
         boolean isOwnPosts = authenticatorId != null && authenticatorId.equals(memberId);
 
-        if (isOwnPosts) {
+        if (isOwnPosts)
             return post.status.notIn(Status.DEACTIVATED, Status.BANNED);
-        }
-        return post.status.notIn(Status.DEACTIVATED, Status.BANNED, Status.PENDING);
+
+        return post.status.in(Status.ACTIVE);
     }
 
     private BooleanExpression bookIdsCondition(List<Long> bookIds) {
@@ -116,16 +118,14 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         return !StringUtils.hasText(status) ? null : post.bookStatus.eq(BookStatus.valueOf(status));
     }
 
-    private OrderSpecifier<?> getSortKey(SortKey sort) {
-        if (sort == null) {
-            return null;
-        }
+    private OrderSpecifier<?>[] getSortOrders(SortKey sort) {
+        SortKey sortKey = sort == null ? SortKey.RECENT : sort;
 
-        return switch (sort) {
-            case RECENT -> post.createdAt.desc();
-            case OLD -> post.createdAt.asc();
-            case LOW_PRICE -> post.price.asc();
-            case HIGH_PRICE -> post.price.desc();
+        return switch (sortKey) {
+            case RECENT -> new OrderSpecifier<?>[] {post.createdAt.desc(), post.id.desc()};
+            case OLD -> new OrderSpecifier<?>[] {post.createdAt.asc(), post.id.asc()};
+            case LOW_PRICE -> new OrderSpecifier<?>[] {post.price.asc(), post.createdAt.desc(), post.id.desc()};
+            case HIGH_PRICE -> new OrderSpecifier<?>[] {post.price.desc(), post.createdAt.desc(), post.id.desc()};
         };
     }
 
