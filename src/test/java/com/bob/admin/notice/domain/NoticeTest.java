@@ -28,7 +28,7 @@ class NoticeTest {
         assertThat(notice.getEndsAt()).isNull();
 
         Notice nonTitleNotice = Notice.createAlert(MANAGER_ID, null, "content");
-        assertThat(nonTitleNotice.getTitle()).isEqualTo("공지");
+        assertThat(nonTitleNotice.getTitle()).isEqualTo("[공지]");
     }
 
     @Test

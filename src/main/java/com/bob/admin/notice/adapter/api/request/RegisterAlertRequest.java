@@ -11,7 +11,7 @@ public record RegisterAlertRequest(
     String title,
 
     @NotBlank(message = "내용은 필수입니다")
-    @Size(max = 200, message = "내용은 200자 이하로 입력해 주세요")
+    @Size(max = 500, message = "내용은 500자 이하로 입력해 주세요")
     String content
 ) {
 

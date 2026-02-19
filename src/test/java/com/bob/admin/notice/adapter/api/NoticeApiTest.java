@@ -28,6 +28,7 @@ import com.bob.admin.notice.domain.NoticeType;
 import com.bob.admin.notice.domain.repository.NoticeRepository;
 import com.bob.security.model.MemberDetails;
 import com.bob.support.annotation.BobApiTest;
+import com.bob.support.fixture.notice.domain.NoticeFixture;
 import com.bob.support.util.AssertThatUtils;
 
 @DisplayName("공지 API 테스트")
@@ -68,7 +69,7 @@ record NoticeApiTest(MockMvcTester tester, NoticeRepository noticeRepository, Ob
 
     @Test
     void 알림용_공지_등록() throws Exception {
-        var request = new RegisterAlertRequest(null, "alert content");
+        var request = new RegisterAlertRequest(null, "content");
         String json = objectMapper.writeValueAsString(request);
 
         MvcTestResult result = tester.post().uri("/notices/alerts")
@@ -87,8 +88,8 @@ record NoticeApiTest(MockMvcTester tester, NoticeRepository noticeRepository, Ob
         Notice notice = notices.iterator().next();
         assertThat(notice.getType()).isEqualTo(NoticeType.ALERT);
         assertThat(notice.getWriterId()).isEqualTo(MANAGER_ID);
-        assertThat(notice.getTitle()).isEqualTo("공지");
-        assertThat(notice.getContent()).isEqualTo("alert content");
+        assertThat(notice.getTitle()).isEqualTo("[공지]");
+        assertThat(notice.getContent()).isEqualTo("content");
         assertThat(notice.getEndsAt()).isNull();
     }
 
@@ -134,6 +135,38 @@ record NoticeApiTest(MockMvcTester tester, NoticeRepository noticeRepository, Ob
             .hasPathSatisfying("$.result", AssertThatUtils.equalsTo("UPDATED"));
 
         assertThat(noticeRepository.findCurrentBanner(LocalDateTime.now(), PageRequest.of(0, 1))).isEmpty();
+    }
+
+    @Test
+    void 알림용_공지_목록_조회() {
+        noticeRepository.save(NoticeFixture.createAlertNotice());
+        noticeRepository.save(NoticeFixture.createAlertNotice());
+        noticeRepository.save(NoticeFixture.createBannerNotice());
+        noticeRepository.save(NoticeFixture.createAlertNotice());
+
+        MvcTestResult result = tester.get().uri("/notices/alerts")
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.length()", AssertThatUtils.equalsTo(3));
+    }
+
+    @Test
+    void 공지_상세_조회() {
+        Notice alert = noticeRepository.save(Notice.createAlert(MANAGER_ID, "title", "content"));
+
+        MvcTestResult result = tester.get().uri("/notices/" + alert.getId()).exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.title", AssertThatUtils.equalsTo("[title]"))
+            .hasPathSatisfying("$.content", AssertThatUtils.equalsTo("content"))
+            .hasPathSatisfying("$.writer.id", AssertThatUtils.equalsTo(MANAGER_ID.toString()))
+            .hasPathSatisfying("$.writer.nickname", AssertThatUtils.notNull())
+            .hasPathSatisfying("$.createdAt", AssertThatUtils.notNull());
     }
 
     private void setAuthentication() {

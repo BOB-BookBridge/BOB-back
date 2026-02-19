@@ -19,4 +19,15 @@ public class NoticeFixture {
             .createdAt(LocalDateTime.now())
             .build();
     }
+
+    public static Notice createAlertNotice() {
+        return Notice.builder()
+            .type(NoticeType.ALERT)
+            .writerId(MANAGER_ID)
+            .title("[title]")
+            .content("content")
+            .endsAt(null)
+            .createdAt(LocalDateTime.now())
+            .build();
+    }
 }

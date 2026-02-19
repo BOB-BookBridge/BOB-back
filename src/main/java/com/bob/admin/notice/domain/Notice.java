@@ -56,7 +56,7 @@ public class Notice extends AbstractEntity {
         return Notice.builder()
             .type(NoticeType.ALERT)
             .writerId(writerId)
-            .title(alertTitle)
+            .title("[" + alertTitle + "]")
             .content(content)
             .endsAt(null)
             .createdAt(LocalDateTime.now())

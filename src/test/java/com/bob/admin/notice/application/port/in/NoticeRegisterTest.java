@@ -74,7 +74,7 @@ class NoticeRegisterTest {
         assertThat(notice.getId()).isNotNull();
         assertThat(notice.getType()).isEqualTo(NoticeType.ALERT);
         assertThat(notice.getWriterId()).isEqualTo(MANAGER_ID);
-        assertThat(notice.getTitle()).isEqualTo("title");
+        assertThat(notice.getTitle()).isEqualTo("[title]");
         assertThat(notice.getContent()).isEqualTo("content");
         assertThat(notice.getEndsAt()).isNull();
 
