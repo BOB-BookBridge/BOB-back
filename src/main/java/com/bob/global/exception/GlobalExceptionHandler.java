@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -91,6 +92,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AsyncRequestNotUsableException.class)
     public void handleAsyncRequestNotUsableException(AsyncRequestNotUsableException ex) {
         log.debug("Async response already unusable: {}", ex.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        ProblemDetail problemDetail = forStatusAndDetail(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.");
+        return setProblemDetailProperties(ex, problemDetail, "ACCESS_DENIED");
     }
 
     private static ProblemDetail setProblemDetailProperties(ProblemDetail detail, String title) {

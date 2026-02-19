@@ -576,6 +576,31 @@
         </attributes>
     </entity>
 
+    <entity class="com.bob.admin.notice.domain.Notice">
+        <table name="notices"/>
+        <attributes>
+            <basic name="type">
+                <column name="type" nullable="false"/>
+                <enumerated>STRING</enumerated>
+            </basic>
+            <basic name="writerId">
+                <column name="writer_id" nullable="false"/>
+            </basic>
+            <basic name="title">
+                <column name="title"/>
+            </basic>
+            <basic name="content">
+                <column name="content" nullable="false"/>
+            </basic>
+            <basic name="endsAt">
+                <column name="ends_at"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false" column-definition="DATETIME DEFAULT CURRENT_TIMESTAMP"/>
+            </basic>
+        </attributes>
+    </entity>
+
     <entity class="com.bob.admin.post.domain.PostManagementHistory">
         <table name="post_management_histories"/>
         <attributes>
