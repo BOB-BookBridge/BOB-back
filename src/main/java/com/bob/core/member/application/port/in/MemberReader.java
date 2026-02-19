@@ -1,5 +1,6 @@
 package com.bob.core.member.application.port.in;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,4 +19,6 @@ public interface MemberReader {
     MemberBasicInfo readBasicInfo(UUID memberId);
 
     MemberDetail readDetail(UUID memberId, boolean me);
+
+    List<UUID> readAllActiveMemberIds();
 }

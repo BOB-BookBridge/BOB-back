@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bob.admin.notice.adapter.api.request.RegisterAlertRequest;
 import com.bob.admin.notice.adapter.api.request.RegisterBannerRequest;
 import com.bob.admin.notice.adapter.api.response.BannerNoticeResponse;
+import com.bob.admin.notice.application.dto.command.RegisterAlertCommand;
 import com.bob.admin.notice.application.dto.command.RegisterBannerCommand;
 import com.bob.admin.notice.application.port.in.NoticeModifier;
 import com.bob.admin.notice.application.port.in.NoticeReader;
@@ -53,6 +55,20 @@ public class NoticeApi {
         return new CommonResponse<>(true, CREATED);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/alerts")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CommonResponse<ResponseSymbol> registerAlert(
+        @Valid @RequestBody RegisterAlertRequest request,
+        @AuthenticationId UUID memberId
+    ) {
+        var command = new RegisterAlertCommand(memberId, request.title(), request.content());
+
+        noticeRegister.registerAlert(command);
+
+        return new CommonResponse<>(true, CREATED);
+    }
+
     @GetMapping("/banner")
     public ResponseEntity<BannerNoticeResponse> readBanner() {
         return noticeReader.readBanner()
@@ -63,7 +79,7 @@ public class NoticeApi {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/banner")
-    public CommonResponse<ResponseSymbol> deleteCurrentBanner() {
+    public CommonResponse<ResponseSymbol> deactivateCurrentBanner() {
         noticeModifier.deactivateCurrentBanner();
 
         return new CommonResponse<>(true, UPDATED);

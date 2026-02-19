@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.bob.admin.notice.adapter.api.request.RegisterAlertRequest;
 import com.bob.admin.notice.adapter.api.request.RegisterBannerRequest;
 import com.bob.admin.notice.domain.Notice;
 import com.bob.admin.notice.domain.NoticeType;
@@ -35,7 +36,6 @@ record NoticeApiTest(MockMvcTester tester, NoticeRepository noticeRepository, Ob
 
     @BeforeEach
     void setUp() {
-        noticeRepository.deleteAll();
         setAuthentication();
     }
 
@@ -64,6 +64,32 @@ record NoticeApiTest(MockMvcTester tester, NoticeRepository noticeRepository, Ob
         assertThat(notice.getTitle()).isEqualTo("[공지사항]");
         assertThat(notice.getContent()).isEqualTo("content");
         assertThat(notice.getEndsAt()).isEqualTo(endTime);
+    }
+
+    @Test
+    void 알림용_공지_등록() throws Exception {
+        var request = new RegisterAlertRequest(null, "alert content");
+        String json = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = tester.post().uri("/notices/alerts")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.result", AssertThatUtils.equalsTo("CREATED"));
+
+        Iterable<Notice> notices = noticeRepository.findAll();
+        assertThat(notices).hasSize(1);
+
+        Notice notice = notices.iterator().next();
+        assertThat(notice.getType()).isEqualTo(NoticeType.ALERT);
+        assertThat(notice.getWriterId()).isEqualTo(MANAGER_ID);
+        assertThat(notice.getTitle()).isEqualTo("공지");
+        assertThat(notice.getContent()).isEqualTo("alert content");
+        assertThat(notice.getEndsAt()).isNull();
     }
 
     @Test
@@ -96,7 +122,7 @@ record NoticeApiTest(MockMvcTester tester, NoticeRepository noticeRepository, Ob
     }
 
     @Test
-    void 활성화_되어있는_게시용_공지_비활성화() {
+    void 활성화된_게시용_공지_비활성화() {
         noticeRepository.save(Notice.createBanner(MANAGER_ID, "content", LocalDateTime.now().plusHours(2)));
 
         MvcTestResult result = tester.patch().uri("/notices/banner")

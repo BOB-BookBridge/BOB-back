@@ -113,6 +113,11 @@ public class MemberQueryService implements MemberReader, MemberSearcher {
             .build();
     }
 
+    @Override
+    public List<UUID> readAllActiveMemberIds() {
+        return memberRepository.findAllActiveMemberIds();
+    }
+
     public MemberSummaries searchByQuery(SearchMembersQuery query, Pageable pageable) {
         List<Member> members = memberRepository.findMembers(query, pageable);
         Long totalCount = memberRepository.countMembers(query);

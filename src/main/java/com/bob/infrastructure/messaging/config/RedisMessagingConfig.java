@@ -34,6 +34,8 @@ public class RedisMessagingConfig {
 
         return Map.of(
             "CHAT", notification, "TRADE", notification, "INQUIRY", notification, "REPORT", notification,
+            "NOTICE", notification,
+
             "CHAT_MESSAGE", chatroom
         );
     }

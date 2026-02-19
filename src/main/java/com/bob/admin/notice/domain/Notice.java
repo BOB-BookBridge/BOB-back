@@ -51,10 +51,12 @@ public class Notice extends AbstractEntity {
     public static Notice createAlert(UUID writerId, String title, String content) {
         Assert.hasText(content, "내용은 필수입니다");
 
+        String alertTitle = title == null ? "공지" : title;
+
         return Notice.builder()
             .type(NoticeType.ALERT)
             .writerId(writerId)
-            .title(title)
+            .title(alertTitle)
             .content(content)
             .endsAt(null)
             .createdAt(LocalDateTime.now())

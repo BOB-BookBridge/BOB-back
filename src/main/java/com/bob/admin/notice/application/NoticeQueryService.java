@@ -20,6 +20,7 @@ import com.bob.admin.notice.domain.repository.NoticeRepository;
 public class NoticeQueryService implements NoticeReader {
 
     private final NoticeRepository noticeRepository;
+
     private final NoticeMemberPort noticeMemberPort;
 
     @Override

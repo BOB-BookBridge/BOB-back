@@ -1,5 +1,6 @@
 package com.bob.integration.adapter.notification;
 
+import java.util.List;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -22,5 +23,10 @@ public class NotificationMemberAdapter implements NotificationMemberPort {
         MemberBasicInfo info = memberReader.readBasicInfo(memberId);
 
         return new NotificationMember(info.id(), info.nickname(), info.profileImageUrl());
+    }
+
+    @Override
+    public List<UUID> readAllMemberIds() {
+        return memberReader.readAllActiveMemberIds();
     }
 }

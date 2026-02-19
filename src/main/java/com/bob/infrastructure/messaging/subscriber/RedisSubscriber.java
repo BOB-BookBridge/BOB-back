@@ -40,7 +40,7 @@ public class RedisSubscriber implements MessageListener {
 
             switch (record.type()) {
                 case "CHAT" -> handleChatEvent(record);
-                case "TRADE", "INQUIRY", "REPORT" -> handleSystemEvent(record);
+                case "TRADE", "INQUIRY", "REPORT", "NOTICE" -> handleSystemEvent(record);
                 default -> log.warn("Unknown RedisRecord type: {}", record.type());
             }
 

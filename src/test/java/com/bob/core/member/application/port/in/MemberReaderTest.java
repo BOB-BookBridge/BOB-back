@@ -1,6 +1,7 @@
 package com.bob.core.member.application.port.in;
 
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
+import static com.bob.support.fixture.member.domain.MemberFixture.createOtherMember;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -122,5 +123,20 @@ record MemberReaderTest(MemberReader memberReader, MemberRepository memberReposi
         assertThat(detail.area()).isNotNull();
         assertThat(detail.bookcase()).isNotNull();
         assertThat(detail.wishes()).isNotNull();
+    }
+
+    @Test
+    void 활성_회원_id_목록_반환() {
+        Member member1 = memberRepository.save(createMember());
+        Member member2 = memberRepository.save(createOtherMember());
+        member2.deactivate();
+
+        em.flush();
+        em.clear();
+
+        var activeIds = memberReader.readAllActiveMemberIds();
+
+        assertThat(activeIds).contains(member1.getId());
+        assertThat(activeIds).doesNotContainSequence(member2.getId());
     }
 }

@@ -6,8 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.EntityManager;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +15,7 @@ import com.bob.support.annotation.ContainerTest;
 
 @DisplayName("공지 수정 테스트")
 @ContainerTest
-record NoticeModifierTest(NoticeModifier noticeModifier, NoticeRepository noticeRepository, EntityManager em) {
+record NoticeModifierTest(NoticeModifier noticeModifier, NoticeRepository noticeRepository) {
 
     @Test
     void 활성화된_공지_비활성화() {
