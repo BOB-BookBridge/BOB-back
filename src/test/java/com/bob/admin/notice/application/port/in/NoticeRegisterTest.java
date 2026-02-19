@@ -36,7 +36,7 @@ record NoticeRegisterTest(NoticeRegister noticeRegister, NoticeRepository notice
     }
 
     @Test
-    void 게시용_공지_등록_시_기존공지는_종료된다() {
+    void 게시용_공지_등록_시_기존공지가_종료된다() {
         Notice first = noticeRepository.save(createBannerNotice());
 
         var command = new RegisterBannerCommand(MANAGER_ID, "second", LocalDateTime.now().plusHours(5));

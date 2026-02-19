@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -92,6 +93,21 @@ record NoticeApiTest(MockMvcTester tester, NoticeRepository noticeRepository, Ob
             .exchange();
 
         assertThat(result).hasStatus(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void 활성화_되어있는_게시용_공지_비활성화() {
+        noticeRepository.save(Notice.createBanner(MANAGER_ID, "content", LocalDateTime.now().plusHours(2)));
+
+        MvcTestResult result = tester.patch().uri("/notices/banner")
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.result", AssertThatUtils.equalsTo("UPDATED"));
+
+        assertThat(noticeRepository.findCurrentBanner(LocalDateTime.now(), PageRequest.of(0, 1))).isEmpty();
     }
 
     private void setAuthentication() {

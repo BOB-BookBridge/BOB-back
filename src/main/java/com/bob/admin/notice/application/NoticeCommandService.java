@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.admin.notice.application.dto.command.RegisterBannerCommand;
+import com.bob.admin.notice.application.port.in.NoticeModifier;
 import com.bob.admin.notice.application.port.in.NoticeRegister;
 import com.bob.admin.notice.domain.Notice;
 import com.bob.admin.notice.domain.repository.NoticeRepository;
@@ -17,7 +18,7 @@ import com.bob.admin.notice.domain.repository.NoticeRepository;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class NoticeCommandService implements NoticeRegister {
+public class NoticeCommandService implements NoticeRegister, NoticeModifier {
 
     private final NoticeRepository noticeRepository;
 
@@ -30,5 +31,16 @@ public class NoticeCommandService implements NoticeRegister {
         Notice notice = createBanner(command.writerId(), command.content(), command.endTime());
 
         return noticeRepository.save(notice);
+    }
+
+    @Override
+    public Notice deactivateCurrentBanner() {
+        return noticeRepository.findCurrentBanner(now(), PageRequest.of(0, 1)).stream()
+            .findFirst()
+            .map(notice -> {
+                notice.deactivate();
+                return notice;
+            })
+            .orElseThrow(() -> new IllegalStateException("활성화 되어있는 공지가 없습니다"));
     }
 }
