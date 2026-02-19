@@ -13,7 +13,7 @@ public class NoticeFixture {
         return Notice.builder()
             .type(NoticeType.BANNER)
             .writerId(MANAGER_ID)
-            .title("[공지사항] ")
+            .title("[공지사항]")
             .content("content")
             .endsAt(null)
             .createdAt(LocalDateTime.now())

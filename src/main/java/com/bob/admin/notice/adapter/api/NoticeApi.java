@@ -9,7 +9,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +19,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bob.admin.notice.adapter.api.request.RegisterBannerRequest;
+import com.bob.admin.notice.adapter.api.response.BannerNoticeResponse;
 import com.bob.admin.notice.application.dto.command.RegisterBannerCommand;
+import com.bob.admin.notice.application.port.in.NoticeReader;
 import com.bob.admin.notice.application.port.in.NoticeRegister;
 import com.bob.shared.web.annotation.AuthenticationId;
 import com.bob.shared.web.response.CommonResponse;
@@ -29,6 +33,7 @@ import com.bob.shared.web.response.ResponseSymbol;
 public class NoticeApi {
 
     private final NoticeRegister noticeRegister;
+    private final NoticeReader noticeReader;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/banner")
@@ -42,5 +47,13 @@ public class NoticeApi {
         noticeRegister.registerBanner(command);
 
         return new CommonResponse<>(true, CREATED);
+    }
+
+    @GetMapping("/banner")
+    public ResponseEntity<BannerNoticeResponse> readBanner() {
+        return noticeReader.readBanner()
+            .map(BannerNoticeResponse::of)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.noContent().build());
     }
 }

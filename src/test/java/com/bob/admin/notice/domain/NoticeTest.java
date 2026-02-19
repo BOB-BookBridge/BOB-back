@@ -17,7 +17,7 @@ class NoticeTest {
         Notice notice = Notice.createBanner(MANAGER_ID, "content", LocalDateTime.now().plusHours(1));
 
         assertThat(notice.getType()).isEqualTo(NoticeType.BANNER);
-        assertThat(notice.getTitle()).isEqualTo("[공지사항] ");
+        assertThat(notice.getTitle()).isEqualTo("[공지사항]");
     }
 
     @Test

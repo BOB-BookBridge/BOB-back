@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -59,9 +60,38 @@ record NoticeApiTest(MockMvcTester tester, NoticeRepository noticeRepository, Ob
         Notice notice = notices.iterator().next();
         assertThat(notice.getType()).isEqualTo(NoticeType.BANNER);
         assertThat(notice.getWriterId()).isEqualTo(MANAGER_ID);
-        assertThat(notice.getTitle()).isEqualTo("[공지사항] ");
+        assertThat(notice.getTitle()).isEqualTo("[공지사항]");
         assertThat(notice.getContent()).isEqualTo("content");
         assertThat(notice.getEndsAt()).isEqualTo(endTime);
+    }
+
+    @Test
+    void 게시용_공지_조회() {
+        noticeRepository.save(Notice.createBanner(MANAGER_ID, "old", LocalDateTime.now().plusHours(2)));
+        noticeRepository.save(Notice.createBanner(MANAGER_ID, "new", LocalDateTime.now().plusHours(1)));
+
+        SecurityContextHolder.clearContext();
+
+        MvcTestResult result = tester.get().uri("/notices/banner")
+            .exchange();
+
+        assertThat(result)
+            .hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.title", AssertThatUtils.equalsTo("[공지사항]"))
+            .hasPathSatisfying("$.content", AssertThatUtils.equalsTo("new"))
+            .hasPathSatisfying("$.writer.id", AssertThatUtils.equalsTo(MANAGER_ID.toString()))
+            .hasPathSatisfying("$.writer.nickname", AssertThatUtils.notNull());
+    }
+
+    @Test
+    void 게시용_공지_없으면_204_반환() {
+        SecurityContextHolder.clearContext();
+
+        MvcTestResult result = tester.get().uri("/notices/banner")
+            .exchange();
+
+        assertThat(result).hasStatus(HttpStatus.NO_CONTENT);
     }
 
     private void setAuthentication() {

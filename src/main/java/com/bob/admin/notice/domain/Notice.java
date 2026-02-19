@@ -41,7 +41,7 @@ public class Notice extends AbstractEntity {
         return Notice.builder()
             .type(NoticeType.BANNER)
             .writerId(writerId)
-            .title("[공지사항] ")
+            .title("[공지사항]")
             .content(content)
             .endsAt(endTime)
             .createdAt(LocalDateTime.now())
