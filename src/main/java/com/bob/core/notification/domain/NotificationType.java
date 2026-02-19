@@ -1,5 +1,5 @@
 package com.bob.core.notification.domain;
 
 public enum NotificationType {
-    TRADE, CHAT, LIKE, INQUIRY, REPORT;
+    TRADE, CHAT, LIKE, INQUIRY, REPORT, NOTICE;
 }

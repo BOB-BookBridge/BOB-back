@@ -26,6 +26,7 @@ public class PermitAllRegistry {
             mvc(spector, POST, "/auth/**"),
             mvc(spector, POST, "/members"),
             mvc(spector, GET, "/members/{memberId:" + UUID_V7_REGEX + '}'),
+            mvc(spector, GET, "/notices/banner"),
             mvc(spector, PATCH, "/members/temp/password"),
             mvc(spector, PATCH, "/members/recover"),
 

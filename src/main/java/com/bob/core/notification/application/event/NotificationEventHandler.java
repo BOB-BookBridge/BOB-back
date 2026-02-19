@@ -11,14 +11,18 @@ import com.bob.core.chat.event.ChatMessageSentEvent;
 import com.bob.core.inquiry.event.InquiryProcessedEvent;
 import com.bob.core.notification.application.dto.command.CreateNotificationCommand;
 import com.bob.core.notification.application.port.in.NotificationCreator;
+import com.bob.core.notification.application.port.out.NotificationMemberPort;
 import com.bob.core.report.event.ReportNotificationEvent;
 import com.bob.core.trade.event.TradeNotificationEvent;
+import com.bob.shared.event.NoticeNotificationEvent;
 
 @Component
 @RequiredArgsConstructor
 public class NotificationEventHandler {
 
     private final NotificationCreator notificationCreator;
+
+    private final NotificationMemberPort notificationMemberPort;
 
     @Async
     @ApplicationModuleListener
@@ -46,5 +50,14 @@ public class NotificationEventHandler {
     public void handleReportNotification(ReportNotificationEvent event) {
         CreateNotificationCommand command = CreateNotificationCommand.fromReportEvent(event);
         notificationCreator.create(command);
+    }
+
+    @Async
+    @ApplicationModuleListener
+    public void handleNoticeNotification(NoticeNotificationEvent event) {
+        notificationMemberPort.readAllMemberIds().forEach(memberId -> {
+            var command = CreateNotificationCommand.fromNoticeEvent(event, memberId);
+            notificationCreator.create(command);
+        });
     }
 }

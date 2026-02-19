@@ -2,10 +2,12 @@ package com.bob.core.notification.application.event;
 
 import static com.bob.core.notification.domain.NotificationType.CHAT;
 import static com.bob.core.notification.domain.NotificationType.INQUIRY;
+import static com.bob.core.notification.domain.NotificationType.NOTICE;
 import static com.bob.core.notification.domain.NotificationType.REPORT;
 import static com.bob.core.notification.domain.NotificationType.TRADE;
 import static com.bob.support.fixture.member.domain.MemberFixture.MEMBER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
@@ -24,8 +26,10 @@ import com.bob.core.chat.event.ChatMessageSentEvent;
 import com.bob.core.inquiry.event.InquiryProcessedEvent;
 import com.bob.core.notification.application.dto.command.CreateNotificationCommand;
 import com.bob.core.notification.application.port.in.NotificationCreator;
+import com.bob.core.notification.application.port.out.NotificationMemberPort;
 import com.bob.core.report.event.ReportNotificationEvent;
 import com.bob.core.trade.event.TradeNotificationEvent;
+import com.bob.shared.event.NoticeNotificationEvent;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("알림 이벤트 처리 테스트")
@@ -36,6 +40,9 @@ class NotificationEventHandlerTest {
 
     @Mock
     private NotificationCreator notificationCreator;
+
+    @Mock
+    private NotificationMemberPort notificationMemberPort;
 
     @Test
     void 거래_알림_이벤트_처리() {
@@ -146,5 +153,33 @@ class NotificationEventHandlerTest {
         assertThat(command.fileNames()).isNull();
         assertThat(command.isSystem()).isTrue();
         assertThat(command.normalize()).isFalse();
+    }
+
+    @Test
+    void 공지_알림_이벤트_처리() {
+        UUID writerId = UUID.randomUUID();
+        UUID receiverId1 = UUID.randomUUID();
+        UUID receiverId2 = UUID.randomUUID();
+        NoticeNotificationEvent event = new NoticeNotificationEvent(10L, writerId);
+        given(notificationMemberPort.readAllMemberIds()).willReturn(List.of(receiverId1, receiverId2));
+
+        notificationEventHandler.handleNoticeNotification(event);
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        then(notificationCreator).should(times(2)).create(captor.capture());
+
+        List<CreateNotificationCommand> commands = captor.getAllValues();
+        assertThat(commands).allSatisfy(command -> {
+            assertThat(command.type()).isEqualTo(NOTICE);
+            assertThat(command.refId()).isEqualTo("10");
+            assertThat(command.childId()).isEqualTo("SYSTEM");
+            assertThat(command.senderId()).isEqualTo(writerId);
+            assertThat(command.body()).isEqualTo("공지사항이 도착했습니다. 클릭하여 상세 내용을 확인해 주세요.");
+            assertThat(command.isSystem()).isTrue();
+            assertThat(command.normalize()).isFalse();
+        });
+
+        assertThat(commands).extracting(CreateNotificationCommand::receiverId)
+            .containsExactlyInAnyOrder(receiverId1, receiverId2);
     }
 }
