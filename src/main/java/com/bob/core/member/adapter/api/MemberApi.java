@@ -1,5 +1,6 @@
 package com.bob.core.member.adapter.api;
 
+import static com.bob.global.utils.web.CookieUtils.removeCookie;
 import static com.bob.shared.web.response.ResponseSymbol.CREATED;
 import static com.bob.shared.web.response.ResponseSymbol.DELETED;
 import static com.bob.shared.web.response.ResponseSymbol.SENT;
@@ -70,10 +71,15 @@ public class MemberApi {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<MemberDetailResponse> readDetail(@AuthenticationId UUID memberId) {
-        MemberDetail detail = memberReader.readDetail(memberId, true);
+    public MemberDetailResponse readDetail(@AuthenticationId UUID memberId, HttpServletResponse response) {
+        try {
+            return MemberDetailResponse.of(memberReader.readDetail(memberId, true));
+        } catch (IllegalArgumentException ex) {
+            removeCookie(response, "AUTHORIZATION");
+            removeCookie(response, "REFRESH_KEY");
 
-        return ResponseEntity.ok(MemberDetailResponse.of(detail));
+            throw ex;
+        }
     }
 
     @GetMapping("/{memberId}")

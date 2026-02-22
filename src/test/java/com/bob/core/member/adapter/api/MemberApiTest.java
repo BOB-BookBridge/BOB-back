@@ -6,8 +6,12 @@ import static com.bob.support.fixture.area.domain.AreaFixture.EMD_AREA_ID;
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
+import jakarta.servlet.http.Cookie;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -218,6 +222,38 @@ record MemberApiTest(
 
         Member updated = memberRepository.findById(member.getId()).orElseThrow();
         assertThat(updated.isDeactivated()).isTrue();
+    }
+
+    @Test
+    void 내_정보_조회_시_예외가_발생하면_쿠키_무효화() {
+        setAuthentication(UUID.randomUUID());
+
+        MvcTestResult result = mvcTester.get()
+            .uri("/members/me")
+            .cookie(
+                new Cookie("AUTHORIZATION", "invalid-access-token"),
+                new Cookie("REFRESH_KEY", "invalid-refresh-key")
+            )
+            .exchange();
+
+        // 쿠키 존재 검증
+        List<String> requestCookieNames = Arrays.stream(Objects.requireNonNull(result.getRequest().getCookies()))
+            .map(Cookie::getName)
+            .toList();
+
+        assertThat(requestCookieNames).contains("AUTHORIZATION", "REFRESH_KEY");
+
+        // 쿠키 무효화 검증
+        assertThat(result).hasStatus(500);
+        List<String> cookies = result.getResponse().getHeaders("Set-Cookie");
+        assertThat(cookies).anySatisfy(cookie -> {
+            assertThat(cookie).contains("AUTHORIZATION=");
+            assertThat(cookie).contains("Max-Age=0");
+        });
+        assertThat(cookies).anySatisfy(cookie -> {
+            assertThat(cookie).contains("REFRESH_KEY=");
+            assertThat(cookie).contains("Max-Age=0");
+        });
     }
 
     void setAuthentication(UUID memberId) {
