@@ -22,9 +22,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.bob.core.member.event.MemberDeactivatedEvent;
 import com.bob.core.member.event.MemberRecoveredEvent;
 import com.bob.core.post.application.dto.command.ChangeMemberPostStatusCommand;
+import com.bob.core.post.application.dto.command.ChangePostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostTradeProgressCommand;
 import com.bob.core.post.application.port.in.PostModifier;
-import com.bob.core.post.application.port.in.PostReader;
 import com.bob.core.post.domain.Post;
 import com.bob.core.report.event.ReportPostProcessedEvent;
 import com.bob.core.trade.event.TradeStatusChangedEvent;
@@ -35,9 +35,6 @@ class PostEventHandlerTest {
 
     @InjectMocks
     private PostEventHandler postEventHandler;
-
-    @Mock
-    private PostReader postReader;
 
     @Mock
     private PostModifier postModifier;
@@ -87,11 +84,12 @@ class PostEventHandlerTest {
         Long postId = 1L;
         Post post = mock(Post.class);
         var event = new ReportPostProcessedEvent(postId);
-        given(postReader.read(postId)).willReturn(post);
+
+        var command = new ChangePostStatusCommand("BANNED");
+        given(postModifier.changeStatus(postId, command)).willReturn(post);
 
         postEventHandler.handlePostReportProcessed(event);
 
-        then(postReader).should(times(1)).read(eq(event.targetId()));
-        then(post).should(times(1)).ban();
+        then(postModifier).should(times(1)).changeStatus(eq(event.targetId()), eq(command));
     }
 }

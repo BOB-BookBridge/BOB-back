@@ -18,10 +18,11 @@ public class RecordSnapshotAspect {
 
     private final SnapshotRecorder snapshotRecorder;
 
-    @Around("@annotation(com.bob.global.snapshot.RecordSnapshot)")
-    public Object recordAfterCommit(ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around("@annotation(recordSnapshot)")
+    public Object recordAfterCommit(ProceedingJoinPoint joinPoint, RecordSnapshot recordSnapshot) throws Throwable {
         LocalDateTime txStartedAt = LocalDateTime.now();
         Object result = joinPoint.proceed();
+        boolean onlyCreate = recordSnapshot.onlyCreate();
 
         if (result == null)
             return null;
@@ -29,14 +30,13 @@ public class RecordSnapshotAspect {
         if (!TransactionSynchronizationManager.isSynchronizationActive()
             || !TransactionSynchronizationManager.isActualTransactionActive()
         ) {
-            snapshotRecorder.record(result, txStartedAt);
-            return result;
+            throw new IllegalStateException("@RecordSnapshot requires an active transaction");
         }
 
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                snapshotRecorder.record(result, txStartedAt);
+                snapshotRecorder.record(result, txStartedAt, onlyCreate);
             }
         });
 

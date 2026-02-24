@@ -6,6 +6,7 @@ import static com.bob.global.exception.response.ApplicationError.POST_OWNER_REQU
 import static com.bob.global.exception.response.ApplicationError.POST_UNREMOVABLE_STATE;
 import static com.bob.global.exception.response.ApplicationError.POST_VERIFIED_AREA_REQUIRED;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -37,6 +38,7 @@ import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.repository.PostRepository;
 import com.bob.core.post.domain.status.Status;
 import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.snapshot.RecordSnapshot;
 
 @Service
 @Transactional
@@ -54,6 +56,7 @@ public class PostCommandService implements PostCreator, PostModifier {
     private final PostFilterPort filterPort;
 
     @Override
+    @RecordSnapshot
     public Post create(CreatePostCommand command) {
         PostMember postMember = memberPort.read(command.memberId());
         verifyAreaAuthentication(postMember.authenticated());
@@ -125,6 +128,7 @@ public class PostCommandService implements PostCreator, PostModifier {
     }
 
     @Override
+    @RecordSnapshot
     public Post deactivate(Long postId, RemovePostCommand command) {
         Post post = postReader.read(postId);
         verifyPostOwner(command.memberId(), post.getWriterId());
@@ -148,6 +152,7 @@ public class PostCommandService implements PostCreator, PostModifier {
     }
 
     @Override
+    @RecordSnapshot
     public Post changeStatus(Long postId, ChangePostStatusCommand command) {
         Post post = postReader.read(postId);
 
@@ -161,16 +166,23 @@ public class PostCommandService implements PostCreator, PostModifier {
     }
 
     @Override
-    public void changeStatusByAccountEvent(ChangeMemberPostStatusCommand command) {
+    @RecordSnapshot
+    public List<Post> changeStatusByAccountEvent(ChangeMemberPostStatusCommand command) {
+        List<Post> changedPosts = new ArrayList<>();
         postReader.readByMember(new ReadMemberPostsQuery(command.memberId())).forEach(p -> {
             if (command.status() == DEACTIVATED) {
-                if (!p.isDeactivated())
+                if (!p.isDeactivated()) {
                     p.deactivate();
+                    changedPosts.add(p);
+                }
             }
             else {
-                if (p.getStatus().equals(DEACTIVATED))
+                if (p.getStatus().equals(DEACTIVATED)) {
                     p.activate();
+                    changedPosts.add(p);
+                }
             }
         });
+        return changedPosts;
     }
 }

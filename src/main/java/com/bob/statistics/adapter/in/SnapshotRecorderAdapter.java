@@ -19,4 +19,9 @@ public class SnapshotRecorderAdapter implements SnapshotRecorder {
     public void record(Object target, LocalDateTime txStartedAt) {
         snapshotRecorder.record(target, txStartedAt);
     }
+
+    @Override
+    public void record(Object target, LocalDateTime txStartedAt, boolean onlyCreate) {
+        snapshotRecorder.record(target, txStartedAt, onlyCreate);
+    }
 }

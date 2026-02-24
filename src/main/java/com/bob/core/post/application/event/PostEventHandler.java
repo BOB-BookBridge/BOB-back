@@ -8,10 +8,9 @@ import org.springframework.stereotype.Component;
 import com.bob.core.member.event.MemberDeactivatedEvent;
 import com.bob.core.member.event.MemberRecoveredEvent;
 import com.bob.core.post.application.dto.command.ChangeMemberPostStatusCommand;
+import com.bob.core.post.application.dto.command.ChangePostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostTradeProgressCommand;
 import com.bob.core.post.application.port.in.PostModifier;
-import com.bob.core.post.application.port.in.PostReader;
-import com.bob.core.post.domain.Post;
 import com.bob.core.post.domain.status.Status;
 import com.bob.core.report.event.ReportPostProcessedEvent;
 import com.bob.core.trade.event.TradeStatusChangedEvent;
@@ -20,7 +19,6 @@ import com.bob.core.trade.event.TradeStatusChangedEvent;
 @RequiredArgsConstructor
 public class PostEventHandler {
 
-    private final PostReader postReader;
     private final PostModifier postModifier;
 
     @ApplicationModuleListener
@@ -46,8 +44,8 @@ public class PostEventHandler {
 
     @ApplicationModuleListener
     public void handlePostReportProcessed(ReportPostProcessedEvent event) {
-        Post post = postReader.read(event.targetId());
+        var command = new ChangePostStatusCommand("BANNED");
 
-        post.ban();
+        postModifier.changeStatus(event.targetId(), command);
     }
 }
