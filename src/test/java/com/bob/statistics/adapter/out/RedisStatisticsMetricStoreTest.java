@@ -49,12 +49,9 @@ class RedisStatisticsMetricStoreTest {
         String dailyKey = "stats:daily:trade:20260224";
         String timeBucketKey = "stats:time:trade:20260224:1430";
         String metricField = "metric:status:REJECTED";
-        String traceField = "trace:status:REJECTED:entity:99:cohort:20260220";
 
         assertThat(redisTemplate.opsForHash().get(dailyKey, metricField)).isEqualTo("2");
         assertThat(redisTemplate.opsForHash().get(timeBucketKey, metricField)).isEqualTo("2");
-        assertThat(redisTemplate.opsForHash().get(dailyKey, traceField)).isEqualTo("2");
-        assertThat(redisTemplate.opsForHash().get(timeBucketKey, traceField)).isEqualTo("2");
     }
 
     @Test
@@ -106,6 +103,6 @@ class RedisStatisticsMetricStoreTest {
         assertThat(redisTemplate.opsForHash().get(dailyKey, "metric:status:ACTIVE")).isEqualTo("1");
 
         assertThat(redisTemplate.opsForHash().keys(dailyKey))
-            .doesNotContain("trace:status:ACTIVE:entity:null:cohort:null");
+            .allMatch(key -> String.valueOf(key).startsWith("metric:"));
     }
 }

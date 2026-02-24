@@ -646,4 +646,108 @@
         </attributes>
     </entity>
 
+    <entity class="com.bob.statistics.domain.StatisticsMemberDailySnapshot">
+        <table name="statistics_member_daily_snapshot">
+            <unique-constraint name="UK_STATISTICS_MEMBER_DAILY_SNAPSHOT_DATE">
+                <column-name>snapshot_date</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <basic name="snapshotDate">
+                <column name="snapshot_date" nullable="false"/>
+            </basic>
+            <basic name="newMembers">
+                <column name="new_members" nullable="false"/>
+            </basic>
+            <basic name="deactivatedMembers">
+                <column name="deactivated_members" nullable="false"/>
+            </basic>
+            <basic name="bannedMembers">
+                <column name="banned_members" nullable="false"/>
+            </basic>        </attributes>
+    </entity>
+
+    <entity class="com.bob.statistics.domain.StatisticsPostDailySnapshot">
+        <table name="statistics_post_daily_snapshot">
+            <unique-constraint name="UK_STATISTICS_POST_DAILY_SNAPSHOT_DATE">
+                <column-name>snapshot_date</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <basic name="snapshotDate">
+                <column name="snapshot_date" nullable="false"/>
+            </basic>
+            <basic name="newPosts">
+                <column name="new_posts" nullable="false"/>
+            </basic>
+            <basic name="deletedPosts">
+                <column name="deleted_posts" nullable="false"/>
+            </basic>
+            <basic name="bannedPosts">
+                <column name="banned_posts" nullable="false"/>
+            </basic>        </attributes>
+    </entity>
+
+    <entity class="com.bob.statistics.domain.StatisticsTradeDailySnapshot">
+        <table name="statistics_trade_daily_snapshot">
+            <unique-constraint name="UK_STATISTICS_TRADE_DAILY_SNAPSHOT_DATE">
+                <column-name>snapshot_date</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <basic name="snapshotDate">
+                <column name="snapshot_date" nullable="false"/>
+            </basic>
+            <basic name="newTrades">
+                <column name="new_trades" nullable="false"/>
+            </basic>
+            <basic name="requestedTrades">
+                <column name="requested_trades" nullable="false"/>
+            </basic>
+            <basic name="acceptedTrades">
+                <column name="accepted_trades" nullable="false"/>
+            </basic>
+            <basic name="rejectedTrades">
+                <column name="rejected_trades" nullable="false"/>
+            </basic>
+            <basic name="canceledTrades">
+                <column name="canceled_trades" nullable="false"/>
+            </basic>
+            <basic name="reservedTrades">
+                <column name="reserved_trades" nullable="false"/>
+            </basic>
+            <basic name="completedTrades">
+                <column name="completed_trades" nullable="false"/>
+            </basic>        </attributes>
+    </entity>
+
+    <entity class="com.bob.statistics.domain.StatisticsEntityState">
+        <table name="statistics_entity_state">
+            <unique-constraint name="UK_STATISTICS_ENTITY_STATE_DOMAIN_ENTITY">
+                <column-name>domain</column-name>
+                <column-name>entity_id</column-name>
+            </unique-constraint>
+        </table>
+        <attributes>
+            <basic name="domain">
+                <column name="domain" nullable="false" length="30"/>
+            </basic>
+            <basic name="entityId">
+                <column name="entity_id" nullable="false" length="100"/>
+            </basic>
+            <basic name="cohortDate">
+                <column name="cohort_date" nullable="false"/>
+            </basic>
+            <basic name="currentStatus">
+                <column name="current_status" length="40"/>
+            </basic>
+            <basic name="createdCounted">
+                <column name="created_counted" nullable="false"/>
+            </basic>
+            <basic name="updatedAt">
+                <column name="updated_at" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
 </entity-mappings>
