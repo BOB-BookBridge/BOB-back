@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,8 @@ import com.bob.core.post.domain.status.Status;
 import com.bob.core.trade.application.dto.result.ChangeTradeStatusResult;
 import com.bob.core.trade.domain.Trade;
 import com.bob.statistics.application.port.in.StatisticsSnapshotRecorder;
+import com.bob.statistics.application.port.out.StatisticsEntityStateStore;
+import com.bob.statistics.application.port.out.StatisticsEntityStateStore.EntityState;
 import com.bob.statistics.application.port.out.StatisticsMetricStore;
 import com.bob.statistics.domain.StatisticsMetricEvent;
 
@@ -27,6 +30,8 @@ import com.bob.statistics.domain.StatisticsMetricEvent;
 public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecorder {
 
     private final StatisticsMetricStore metricStore;
+    private final StatisticsEntityStateStore entityStateStore;
+    private final StatisticsCohortCurrentSnapshotService cohortCurrentSnapshotService;
 
     @Override
     public void record(Object target, LocalDateTime txStartedAt) {
@@ -42,15 +47,98 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
             return;
         }
 
-        // TODO: 자정 경계(KST) 기준 날짜/버킷 계산 유틸 적용
-        // TODO: Redis 일일 키(stats:daily:{domain}:{yyyyMMdd})에 집계 반영
-        // TODO: 당일 10분 버킷 키(stats:time:{domain}:{yyyyMMdd}:{HHmm})에 집계 반영
-        // TODO: cohortDate(생성일) 기준 조회 필터를 적용해 "기간 내 생성 거래" 통계를 보장
-        // TODO: 중복 카운팅 방지 규칙(생성/상태변경/삭제 이벤트) 적용
-        // TODO: Redis 저장 실패 시 재시도/로깅 등 보완
-        metricStore.saveAll(events, txStartedAt);
+        List<StatisticsMetricEvent> metricStoreEvents = eventsForMetricStore(events, txStartedAt.toLocalDate());
+        if (!metricStoreEvents.isEmpty())
+            metricStore.saveAll(metricStoreEvents, txStartedAt);
+
+        List<StatisticsMetricEvent> cohortEvents = eventsForCohortSnapshot(events, txStartedAt.toLocalDate());
+        if (!cohortEvents.isEmpty())
+            cohortCurrentSnapshotService.apply(cohortEvents);
+
         log.debug("statistics snapshot converted. targetType={}, txStartedAt={}, onlyCreate={}, events={}",
             target.getClass().getSimpleName(), txStartedAt, onlyCreate, events);
+    }
+
+    private List<StatisticsMetricEvent> eventsForMetricStore(List<StatisticsMetricEvent> events, LocalDate txDate) {
+        List<StatisticsMetricEvent> result = new ArrayList<>();
+        for (StatisticsMetricEvent event : events) {
+            if (!event.cohortDate().isEqual(txDate))
+                continue;
+
+            if ("member".equals(event.domain())) {
+                result.add(event);
+                continue;
+            }
+
+            if (event.metric().startsWith("new_")) {
+                result.add(event);
+                continue;
+            }
+
+            String nextStatus = toStatus(event.domain(), event.metric());
+            EntityState previousState = entityStateStore.read(event.domain(), event.entityId()).orElse(null);
+            String previousStatus = previousState == null ? null : previousState.currentStatus();
+            if (Objects.equals(previousStatus, nextStatus)) {
+                continue;
+            }
+
+            String previousMetric = toCounterMetric(event.domain(), previousStatus);
+            if (previousMetric != null) {
+                result.add(new StatisticsMetricEvent(
+                    event.eventDate(), event.domain(), previousMetric, -1, event.entityId(), event.cohortDate()
+                ));
+            }
+
+            String nextMetric = toCounterMetric(event.domain(), nextStatus);
+            if (nextMetric != null) {
+                result.add(new StatisticsMetricEvent(
+                    event.eventDate(), event.domain(), nextMetric, 1, event.entityId(), event.cohortDate()
+                ));
+            }
+        }
+
+        return result;
+    }
+
+    private static List<StatisticsMetricEvent> eventsForCohortSnapshot(List<StatisticsMetricEvent> events,
+        LocalDate txDate
+    ) {
+        return events.stream()
+            .filter(event -> event.cohortDate().isBefore(txDate))
+            .toList();
+    }
+
+    private static String toStatus(String domain, String metric) {
+        if ("trade".equals(domain) || "member".equals(domain))
+            return metric.substring("status:".length());
+
+        if ("post".equals(domain)) {
+            if ("deleted_posts".equals(metric))
+                return "DEACTIVATED";
+
+            if ("banned_posts".equals(metric))
+                return "BANNED";
+
+            if ("status:ACTIVE".equals(metric))
+                return "ACTIVE";
+        }
+
+        throw new IllegalArgumentException("Unsupported domain or metric. domain=" + domain + ", metric=" + metric);
+    }
+
+    private static String toCounterMetric(String domain, String status) {
+        if (status == null)
+            return null;
+
+        return switch (domain) {
+            case "trade", "member" -> "status:" + status;
+            case "post" -> switch (status) {
+                case "DEACTIVATED" -> "deleted_posts";
+                case "BANNED" -> "banned_posts";
+                default -> null;
+            };
+            default -> null;
+        };
     }
 
     List<StatisticsMetricEvent> convertToMetricEvents(Object target, LocalDateTime txStartedAt, boolean onlyCreate) {
@@ -64,8 +152,10 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
 
         if (target instanceof Member member)
             return toMemberEvents(member, txStartedAt, onlyCreate);
+
         if (target instanceof Post post)
-            return toPostEvents(post, txStartedAt);
+            return toPostEvents(post, txStartedAt, false);
+
         if (target instanceof Trade trade)
             return toTradeEvents(trade, txStartedAt);
 
@@ -79,8 +169,13 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
     ) {
         List<StatisticsMetricEvent> events = new ArrayList<>();
         for (Object element : collection) {
+            if (element instanceof Post post) {
+                events.addAll(toPostEvents(post, txStartedAt, true));
+                continue;
+            }
             events.addAll(convertToMetricEvents(element, txStartedAt, onlyCreate));
         }
+
         return events;
     }
 
@@ -89,7 +184,7 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
 
         LocalDate eventDate = txStartedAt.toLocalDate();
         LocalDate cohortDate = toDate(member.getCreatedAt());
-        String entityId = member.getId() == null ? null : member.getId().toString();
+        String entityId = member.getId().toString();
         boolean created = isCreated(member.getCreatedAt(), txStartedAt);
 
         if (created)
@@ -102,12 +197,12 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
         return events;
     }
 
-    private List<StatisticsMetricEvent> toPostEvents(Post post, LocalDateTime txStartedAt) {
+    private List<StatisticsMetricEvent> toPostEvents(Post post, LocalDateTime txStartedAt, boolean allowActiveStatus) {
         List<StatisticsMetricEvent> events = new ArrayList<>();
 
         LocalDate eventDate = txStartedAt.toLocalDate();
         LocalDate cohortDate = toDate(post.getCreatedAt());
-        String entityId = post.getId() == null ? null : String.valueOf(post.getId());
+        String entityId = String.valueOf(post.getId());
         boolean created = isCreated(post.getCreatedAt(), txStartedAt);
 
         if (created)
@@ -119,6 +214,9 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
         if (post.getStatus() == Status.BANNED)
             events.add(metric(eventDate, "post", "banned_posts", entityId, cohortDate));
 
+        if (allowActiveStatus && !created && post.getStatus() == Status.ACTIVE)
+            events.add(metric(eventDate, "post", "status:ACTIVE", entityId, cohortDate));
+
         return events;
     }
 
@@ -127,15 +225,12 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
 
         LocalDate eventDate = txStartedAt.toLocalDate();
         LocalDate cohortDate = toDate(trade.getCreatedAt());
-        String entityId = trade.getId() == null ? null : String.valueOf(trade.getId());
+        String entityId = String.valueOf(trade.getId());
         boolean created = isCreated(trade.getCreatedAt(), txStartedAt);
-        boolean requested = "REQUESTED".equals(trade.getStatus().name());
-
         if (created)
             events.add(metric(eventDate, "trade", "new_trades", entityId, cohortDate));
 
-        if (!requested || created)
-            events.add(metric(eventDate, "trade", "status:" + trade.getStatus().name(), entityId, cohortDate));
+        events.add(metric(eventDate, "trade", "status:" + trade.getStatus().name(), entityId, cohortDate));
 
         return events;
     }
@@ -147,12 +242,10 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
     }
 
     private static boolean isCreated(LocalDateTime createdAt, LocalDateTime txStartedAt) {
-        return createdAt != null && !createdAt.isBefore(txStartedAt);
+        return !createdAt.isBefore(txStartedAt);
     }
 
     private static LocalDate toDate(LocalDateTime dateTime) {
-        if (Objects.isNull(dateTime))
-            return null;
         return dateTime.toLocalDate();
     }
 }
