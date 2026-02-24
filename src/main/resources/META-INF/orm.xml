@@ -664,7 +664,11 @@
             </basic>
             <basic name="bannedMembers">
                 <column name="banned_members" nullable="false"/>
-            </basic>        </attributes>
+            </basic>
+            <basic name="dailyVisitors">
+                <column name="daily_visitors" nullable="false"/>
+            </basic>
+        </attributes>
     </entity>
 
     <entity class="com.bob.statistics.domain.StatisticsPostDailySnapshot">

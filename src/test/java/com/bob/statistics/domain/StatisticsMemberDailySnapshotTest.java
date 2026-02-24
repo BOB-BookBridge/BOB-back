@@ -20,6 +20,7 @@ class StatisticsMemberDailySnapshotTest {
         assertThat(snapshot.getNewMembers()).isZero();
         assertThat(snapshot.getDeactivatedMembers()).isZero();
         assertThat(snapshot.getBannedMembers()).isZero();
+        assertThat(snapshot.getDailyVisitors()).isZero();
     }
 
     @Test
@@ -29,9 +30,11 @@ class StatisticsMemberDailySnapshotTest {
         snapshot.addNewMembers(2);
         snapshot.addDeactivatedMembers(1);
         snapshot.addBannedMembers(3);
+        snapshot.addDailyVisitors(7);
 
         assertThat(snapshot.getNewMembers()).isEqualTo(2);
         assertThat(snapshot.getDeactivatedMembers()).isEqualTo(1);
         assertThat(snapshot.getBannedMembers()).isEqualTo(3);
+        assertThat(snapshot.getDailyVisitors()).isEqualTo(7);
     }
 }

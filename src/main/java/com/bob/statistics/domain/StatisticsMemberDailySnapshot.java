@@ -27,12 +27,15 @@ public class StatisticsMemberDailySnapshot extends AbstractEntity {
 
     private long bannedMembers;
 
+    private long dailyVisitors;
+
     public static StatisticsMemberDailySnapshot createEmpty(LocalDate snapshotDate) {
         return StatisticsMemberDailySnapshot.builder()
             .snapshotDate(snapshotDate)
             .newMembers(0)
             .deactivatedMembers(0)
             .bannedMembers(0)
+            .dailyVisitors(0)
             .build();
     }
 
@@ -46,5 +49,9 @@ public class StatisticsMemberDailySnapshot extends AbstractEntity {
 
     public void addBannedMembers(long value) {
         bannedMembers += value;
+    }
+
+    public void addDailyVisitors(long value) {
+        dailyVisitors += value;
     }
 }

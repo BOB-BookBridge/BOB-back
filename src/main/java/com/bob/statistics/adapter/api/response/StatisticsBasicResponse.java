@@ -3,6 +3,7 @@ package com.bob.statistics.adapter.api.response;
 import com.bob.statistics.application.dto.result.StatisticsBasicMetrics;
 
 public record StatisticsBasicResponse(
+    long visitor,
     long newMembers,
     long newPosts,
     long newTrades,
@@ -13,6 +14,7 @@ public record StatisticsBasicResponse(
 
     public static StatisticsBasicResponse of(StatisticsBasicMetrics metrics) {
         return new StatisticsBasicResponse(
+            metrics.visitor(),
             metrics.newMembers(),
             metrics.newPosts(),
             metrics.newTrades(),

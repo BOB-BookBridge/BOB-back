@@ -62,6 +62,7 @@ record StatisticsApiTest(
         redisTemplate.opsForHash().putAll("stats:daily:member:" + todayText, Map.of("metric:new_members", "3"));
         redisTemplate.opsForHash().putAll("stats:daily:post:" + todayText, Map.of("metric:new_posts", "4"));
         redisTemplate.opsForHash().putAll("stats:daily:trade:" + todayText, Map.of("metric:new_trades", "5"));
+        redisTemplate.opsForSet().add("stats:visitors:" + todayText, "127.0.0.1", "127.0.0.2", "127.0.0.3");
 
         var result = mvcTester.get()
             .uri("/statistics/basic")
@@ -69,6 +70,7 @@ record StatisticsApiTest(
 
         assertThat(result).hasStatus2xxSuccessful()
             .bodyJson()
+            .hasPathSatisfying("$.dau", AssertThatUtils.equalsTo(3))
             .hasPathSatisfying("$.newMembers", AssertThatUtils.equalsTo(3))
             .hasPathSatisfying("$.newPosts", AssertThatUtils.equalsTo(4))
             .hasPathSatisfying("$.newTrades", AssertThatUtils.equalsTo(5))

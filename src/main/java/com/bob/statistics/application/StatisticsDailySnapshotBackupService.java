@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bob.statistics.application.port.out.StatisticsBackupLockStore;
 import com.bob.statistics.application.port.out.StatisticsDailyMetricStore;
+import com.bob.statistics.application.port.out.StatisticsVisitorStore;
 import com.bob.statistics.domain.StatisticsMemberDailySnapshot;
 import com.bob.statistics.domain.StatisticsPostDailySnapshot;
 import com.bob.statistics.domain.StatisticsTradeDailySnapshot;
@@ -26,6 +27,7 @@ public class StatisticsDailySnapshotBackupService {
 
     private final StatisticsDailyMetricStore dailyMetricStore;
     private final StatisticsBackupLockStore backupLockStore;
+    private final StatisticsVisitorStore visitorStore;
     private final StatisticsMemberDailySnapshotRepository memberRepository;
     private final StatisticsPostDailySnapshotRepository postRepository;
     private final StatisticsTradeDailySnapshotRepository tradeRepository;
@@ -54,7 +56,9 @@ public class StatisticsDailySnapshotBackupService {
 
     private void backupMember(LocalDate snapshotDate) {
         Map<String, Long> metrics = dailyMetricStore.readDailyMetrics("member", snapshotDate);
-        if (metrics.isEmpty())
+        long dailyVisitors = visitorStore.countDailyVisitors(snapshotDate);
+
+        if (metrics.isEmpty() && dailyVisitors == 0)
             return;
 
         StatisticsMemberDailySnapshot snapshot = memberRepository.findBySnapshotDate(snapshotDate)
@@ -73,8 +77,10 @@ public class StatisticsDailySnapshotBackupService {
             }
         }
 
+        snapshot.addDailyVisitors(dailyVisitors);
         memberRepository.save(snapshot);
         dailyMetricStore.deleteDailyMetrics("member", snapshotDate);
+        visitorStore.deleteDailyVisitors(snapshotDate);
     }
 
     private void backupPost(LocalDate snapshotDate) {

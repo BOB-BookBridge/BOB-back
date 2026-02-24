@@ -21,7 +21,7 @@ import com.bob.core.trade.domain.status.Status;
 import com.bob.statistics.application.dto.result.StatisticsBasicMetrics;
 import com.bob.support.annotation.ContainerTest;
 
-@DisplayName("통계 조회 테스트")
+@DisplayName("기본 통계 조회 테스트")
 @ContainerTest
 record StatisticsBasicReaderTest(
     StatisticsBasicReader statisticsBasicReader,
@@ -48,9 +48,11 @@ record StatisticsBasicReaderTest(
         redisTemplate.opsForHash().putAll("stats:daily:member:" + todayText, Map.of("metric:new_members", "3"));
         redisTemplate.opsForHash().putAll("stats:daily:post:" + todayText, Map.of("metric:new_posts", "4"));
         redisTemplate.opsForHash().putAll("stats:daily:trade:" + todayText, Map.of("metric:new_trades", "5"));
+        redisTemplate.opsForSet().add("stats:visitors:" + todayText, "127.0.0.1", "127.0.0.2", "127.0.0.3");
 
         StatisticsBasicMetrics result = statisticsBasicReader.readBasic();
 
+        assertThat(result.visitor()).isEqualTo(3);
         assertThat(result.newMembers()).isEqualTo(3);
         assertThat(result.newPosts()).isEqualTo(4);
         assertThat(result.newTrades()).isEqualTo(5);
@@ -63,6 +65,7 @@ record StatisticsBasicReaderTest(
     void 당일_신규_키가_없으면_0_반환() {
         StatisticsBasicMetrics result = statisticsBasicReader.readBasic();
 
+        assertThat(result.visitor()).isZero();
         assertThat(result.newMembers()).isZero();
         assertThat(result.newPosts()).isZero();
         assertThat(result.newTrades()).isZero();

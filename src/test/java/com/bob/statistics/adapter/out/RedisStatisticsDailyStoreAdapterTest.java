@@ -50,6 +50,15 @@ class RedisStatisticsDailyStoreAdapterTest {
     }
 
     @Test
+    void 일일_지표가_없으면_빈맵_반환() {
+        LocalDate date = LocalDate.of(2026, 2, 24);
+
+        Map<String, Long> metrics = adapter.readDailyMetrics("post", date);
+
+        assertThat(metrics).isEmpty();
+    }
+
+    @Test
     void 일일_지표_키_삭제() {
         LocalDate date = LocalDate.of(2026, 2, 24);
         String key = "stats:daily:member:20260224";
@@ -71,5 +80,16 @@ class RedisStatisticsDailyStoreAdapterTest {
         assertThat(acquired).isTrue();
         assertThat(owner).isEqualTo("owner-1");
         assertThat(redisTemplate.hasKey("stats:backup:lock:20260224")).isFalse();
+    }
+
+    @Test
+    void 이미_락이_있으면_획득_실패() {
+        LocalDate date = LocalDate.of(2026, 2, 24);
+
+        boolean first = adapter.acquire(date, "owner-1");
+        boolean second = adapter.acquire(date, "owner-2");
+
+        assertThat(first).isTrue();
+        assertThat(second).isFalse();
     }
 }
