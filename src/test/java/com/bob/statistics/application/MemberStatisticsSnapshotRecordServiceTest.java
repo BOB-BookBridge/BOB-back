@@ -2,6 +2,7 @@ package com.bob.statistics.application;
 
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,12 +15,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.bob.core.member.domain.Member;
 import com.bob.core.member.domain.Status;
+import com.bob.statistics.application.port.out.StatisticsMetricStore;
 import com.bob.statistics.domain.StatisticsMetricEvent;
 
 @DisplayName("회원 통계 스냅샷 변환 테스트")
 class MemberStatisticsSnapshotRecordServiceTest {
 
-    final StatisticsSnapshotRecordService recordService = new StatisticsSnapshotRecordService();
+    private final StatisticsSnapshotRecordService recordService =
+        new StatisticsSnapshotRecordService(mock(StatisticsMetricStore.class));
 
     @Test
     void 회원_생성_집계() {

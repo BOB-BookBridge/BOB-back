@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
@@ -17,11 +18,15 @@ import com.bob.core.post.domain.status.Status;
 import com.bob.core.trade.application.dto.result.ChangeTradeStatusResult;
 import com.bob.core.trade.domain.Trade;
 import com.bob.statistics.application.port.in.StatisticsSnapshotRecorder;
+import com.bob.statistics.application.port.out.StatisticsMetricStore;
 import com.bob.statistics.domain.StatisticsMetricEvent;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecorder {
+
+    private final StatisticsMetricStore metricStore;
 
     @Override
     public void record(Object target, LocalDateTime txStartedAt) {
@@ -39,10 +44,11 @@ public class StatisticsSnapshotRecordService implements StatisticsSnapshotRecord
 
         // TODO: 자정 경계(KST) 기준 날짜/버킷 계산 유틸 적용
         // TODO: Redis 일일 키(stats:daily:{domain}:{yyyyMMdd})에 집계 반영
-        // TODO: 당일 10분 버킷 키(stats:realtime:{domain}:{yyyyMMdd}:{HHmm})에 집계 반영
+        // TODO: 당일 10분 버킷 키(stats:time:{domain}:{yyyyMMdd}:{HHmm})에 집계 반영
         // TODO: cohortDate(생성일) 기준 조회 필터를 적용해 "기간 내 생성 거래" 통계를 보장
         // TODO: 중복 카운팅 방지 규칙(생성/상태변경/삭제 이벤트) 적용
         // TODO: Redis 저장 실패 시 재시도/로깅 등 보완
+        metricStore.saveAll(events, txStartedAt);
         log.debug("statistics snapshot converted. targetType={}, txStartedAt={}, onlyCreate={}, events={}",
             target.getClass().getSimpleName(), txStartedAt, onlyCreate, events);
     }

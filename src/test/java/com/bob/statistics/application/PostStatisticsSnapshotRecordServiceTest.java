@@ -2,6 +2,7 @@ package com.bob.statistics.application;
 
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,12 +13,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.bob.core.post.domain.Post;
+import com.bob.statistics.application.port.out.StatisticsMetricStore;
 import com.bob.statistics.domain.StatisticsMetricEvent;
 
 @DisplayName("게시글 통계 스냅샷 변환 테스트")
 class PostStatisticsSnapshotRecordServiceTest {
 
-    final StatisticsSnapshotRecordService recordService = new StatisticsSnapshotRecordService();
+    private final StatisticsSnapshotRecordService recordService =
+        new StatisticsSnapshotRecordService(mock(StatisticsMetricStore.class));
 
     @Test
     void 게시글_생성_집계() {

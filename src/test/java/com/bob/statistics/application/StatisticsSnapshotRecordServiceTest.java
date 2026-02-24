@@ -3,6 +3,7 @@ package com.bob.statistics.application;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
 import static com.bob.support.fixture.trade.domain.TradeFixture.createTrade;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,12 +17,14 @@ import com.bob.core.post.domain.Post;
 import com.bob.core.trade.application.dto.result.ChangeTradeStatusResult;
 import com.bob.core.trade.domain.Trade;
 import com.bob.core.trade.domain.status.Status;
+import com.bob.statistics.application.port.out.StatisticsMetricStore;
 import com.bob.statistics.domain.StatisticsMetricEvent;
 
 @DisplayName("통계 스냅샷 변환 공통 테스트")
 class StatisticsSnapshotRecordServiceTest {
 
-    final StatisticsSnapshotRecordService recordService = new StatisticsSnapshotRecordService();
+    private final StatisticsSnapshotRecordService recordService =
+        new StatisticsSnapshotRecordService(mock(StatisticsMetricStore.class));
 
     @Test
     void 단일_이벤트_기반_기록_수집() {
