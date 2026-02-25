@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +48,7 @@ class RedisStatisticsMetricStoreTest {
         store.saveAll(List.of(event), txStartedAt);
 
         String dailyKey = "stats:daily:trade:20260224";
-        String timeBucketKey = "stats:time:trade:20260224:1430";
+        String timeBucketKey = "stats:time:trade:20260224:1400";
         String metricField = "metric:status:REJECTED";
 
         assertThat(redisTemplate.opsForHash().get(dailyKey, metricField)).isEqualTo("2");
@@ -62,7 +63,7 @@ class RedisStatisticsMetricStoreTest {
 
         store.saveAll(List.of(event), txStartedAt);
 
-        String timeBucketKey = "stats:time:post:20260224:1450";
+        String timeBucketKey = "stats:time:post:20260224:1400";
         assertThat(redisTemplate.hasKey(timeBucketKey)).isTrue();
         assertThat(redisTemplate.opsForHash().get(timeBucketKey, "metric:deleted_posts")).isEqualTo("1");
     }
@@ -76,7 +77,7 @@ class RedisStatisticsMetricStoreTest {
         store.saveAll(List.of(event), txStartedAt);
 
         String dailyKey = "stats:daily:trade:20260224";
-        String timeBucketKey = "stats:time:trade:20260224:1430";
+        String timeBucketKey = "stats:time:trade:20260224:1400";
 
         Long dailyTtl = redisTemplate.getExpire(dailyKey);
         Long timeBucketTtl = redisTemplate.getExpire(timeBucketKey);
@@ -104,5 +105,18 @@ class RedisStatisticsMetricStoreTest {
 
         assertThat(redisTemplate.opsForHash().keys(dailyKey))
             .allMatch(key -> String.valueOf(key).startsWith("metric:"));
+    }
+
+    @Test
+    void 시간_버킷_조회() {
+        LocalDate date = LocalDate.of(2026, 2, 24);
+        LocalDateTime txStartedAt = LocalDateTime.of(2026, 2, 24, 14, 39, 0);
+
+        var event = new StatisticsMetricEvent(date, "member", "new_members", 3, "1", date);
+        store.saveAll(List.of(event), txStartedAt);
+
+        var metrics = store.readTimeMetrics("member", date, LocalTime.of(14, 0));
+
+        assertThat(metrics.get("new_members")).isEqualTo(3L);
     }
 }

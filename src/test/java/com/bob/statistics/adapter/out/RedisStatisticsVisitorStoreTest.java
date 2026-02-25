@@ -3,6 +3,7 @@ package com.bob.statistics.adapter.out;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,5 +60,15 @@ class RedisStatisticsVisitorStoreTest {
         store.deleteDailyVisitors(date);
 
         assertThat(store.countDailyVisitors(date)).isZero();
+    }
+
+    @Test
+    void 시간별_방문자_조회() {
+        LocalDate date = LocalDate.of(2026, 2, 24);
+        redisTemplate.opsForSet().add("stats:time:visitor:20260224:1430", "10.0.0.1", "10.0.0.2");
+
+        long count = store.countTimeVisitors(date, LocalTime.of(14, 30));
+
+        assertThat(count).isEqualTo(2);
     }
 }

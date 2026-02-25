@@ -1,4 +1,4 @@
-package com.bob.statistics.application;
+package com.bob.statistics.application.recorder;
 
 import java.time.LocalDate;
 

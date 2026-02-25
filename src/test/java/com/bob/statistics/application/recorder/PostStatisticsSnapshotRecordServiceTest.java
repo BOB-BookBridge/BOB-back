@@ -1,4 +1,4 @@
-package com.bob.statistics.application;
+package com.bob.statistics.application.recorder;
 
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
 import static org.assertj.core.api.Assertions.assertThat;

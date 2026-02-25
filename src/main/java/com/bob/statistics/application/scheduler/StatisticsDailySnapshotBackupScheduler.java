@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.bob.statistics.application.StatisticsDailySnapshotBackupService;
+import com.bob.statistics.application.recorder.StatisticsDailySnapshotBackupService;
 
 @Component
 @RequiredArgsConstructor

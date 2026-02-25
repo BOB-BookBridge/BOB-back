@@ -1,4 +1,4 @@
-package com.bob.statistics.application;
+package com.bob.statistics.application.recorder;
 
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;
 import static com.bob.support.fixture.trade.domain.TradeFixture.createTrade;
@@ -9,7 +9,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;

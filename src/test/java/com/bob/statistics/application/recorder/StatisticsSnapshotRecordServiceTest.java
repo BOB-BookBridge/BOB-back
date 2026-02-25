@@ -1,4 +1,4 @@
-package com.bob.statistics.application;
+package com.bob.statistics.application.recorder;
 
 import static com.bob.support.fixture.member.domain.MemberFixture.createMember;
 import static com.bob.support.fixture.post.domain.PostFixture.createPost;

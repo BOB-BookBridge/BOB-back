@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +26,8 @@ import com.bob.core.post.domain.repository.PostRepository;
 import com.bob.core.trade.domain.repository.TradeRepository;
 import com.bob.core.trade.domain.status.Status;
 import com.bob.security.model.MemberDetails;
+import com.bob.statistics.domain.StatisticsMemberDailySnapshot;
+import com.bob.statistics.domain.repository.StatisticsMemberDailySnapshotRepository;
 import com.bob.support.annotation.BobApiTest;
 import com.bob.support.util.AssertThatUtils;
 
@@ -37,17 +38,15 @@ record StatisticsApiTest(
     MemberRepository memberRepository,
     PostRepository postRepository,
     TradeRepository tradeRepository,
+    StatisticsMemberDailySnapshotRepository memberDailySnapshotRepository,
     StringRedisTemplate redisTemplate
 ) {
 
     @BeforeEach
     void setUp() {
-        setAuthentication();
-    }
-
-    @AfterEach
-    void tearDown() {
         redisTemplate.getConnectionFactory().getConnection().flushDb();
+        memberDailySnapshotRepository.deleteAll();
+        setAuthentication();
     }
 
     @Test
@@ -64,19 +63,88 @@ record StatisticsApiTest(
         redisTemplate.opsForHash().putAll("stats:daily:trade:" + todayText, Map.of("metric:new_trades", "5"));
         redisTemplate.opsForSet().add("stats:visitors:" + todayText, "127.0.0.1", "127.0.0.2", "127.0.0.3");
 
-        var result = mvcTester.get()
-            .uri("/statistics/basic")
-            .exchange();
+        var result = mvcTester.get().uri("/statistics/basic").exchange();
 
         assertThat(result).hasStatus2xxSuccessful()
             .bodyJson()
-            .hasPathSatisfying("$.dau", AssertThatUtils.equalsTo(3))
+            .hasPathSatisfying("$.visitor", AssertThatUtils.equalsTo(3))
             .hasPathSatisfying("$.newMembers", AssertThatUtils.equalsTo(3))
             .hasPathSatisfying("$.newPosts", AssertThatUtils.equalsTo(4))
             .hasPathSatisfying("$.newTrades", AssertThatUtils.equalsTo(5))
             .hasPathSatisfying("$.totalMembers", AssertThatUtils.equalsTo((int)memberRepository.count()))
             .hasPathSatisfying("$.totalPosts", AssertThatUtils.equalsTo((int)postRepository.count()))
             .hasPathSatisfying("$.totalTrades", AssertThatUtils.equalsTo((int)tradeRepository.count()));
+    }
+
+    @Test
+    void 과거_회원_통계_조회() {
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        String todayText = today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        StatisticsMemberDailySnapshot yesterdaySnapshot = StatisticsMemberDailySnapshot.createEmpty(yesterday);
+        yesterdaySnapshot.addDailyVisitors(10);
+        yesterdaySnapshot.addNewMembers(2);
+        yesterdaySnapshot.addDeactivatedMembers(1);
+        yesterdaySnapshot.addBannedMembers(1);
+        memberDailySnapshotRepository.save(yesterdaySnapshot);
+
+        redisTemplate.opsForHash().putAll("stats:daily:member:" + todayText, Map.of(
+            "metric:new_members", "3",
+            "metric:status:DEACTIVATED", "2",
+            "metric:status:BANNED", "1"
+        ));
+        redisTemplate.opsForSet().add("stats:visitors:" + todayText, "10.0.0.1", "10.0.0.2", "10.0.0.3");
+
+        var result = mvcTester.get()
+            .uri("/statistics/members?from={from}&to={to}", yesterday, today)
+            .exchange();
+
+        assertThat(result).hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.totals.visit", AssertThatUtils.equalsTo(13))
+            .hasPathSatisfying("$.totals.new", AssertThatUtils.equalsTo(5))
+            .hasPathSatisfying("$.totals.deactivated", AssertThatUtils.equalsTo(3))
+            .hasPathSatisfying("$.totals.banned", AssertThatUtils.equalsTo(2))
+            .hasPathSatisfying("$.points.length()", AssertThatUtils.equalsTo(2))
+            .hasPathSatisfying("$.points[0].time", AssertThatUtils.equalsTo(yesterday + "T00:00:00"))
+            .hasPathSatisfying("$.points[1].time", AssertThatUtils.equalsTo(today + "T00:00:00"));
+    }
+
+    @Test
+    void 당일_회원_통계_조회() {
+        LocalDate today = LocalDate.now();
+        String todayText = today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        redisTemplate.opsForHash().putAll("stats:daily:member:" + todayText, Map.of(
+            "metric:new_members", "5",
+            "metric:status:DEACTIVATED", "2",
+            "metric:status:BANNED", "1"
+        ));
+        redisTemplate.opsForSet().add("stats:visitors:" + todayText, "10.0.0.1", "10.0.0.2");
+        redisTemplate.opsForHash().putAll("stats:time:member:" + todayText + ":1000", Map.of(
+            "metric:new_members", "2",
+            "metric:status:DEACTIVATED", "1",
+            "metric:status:BANNED", "1"
+        ));
+        redisTemplate.opsForSet().add("stats:time:visitor:" + todayText + ":1000", "10.0.0.1", "10.0.0.2");
+
+        var result = mvcTester.get()
+            .uri("/statistics/members")
+            .exchange();
+
+        assertThat(result).hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.totals.visit", AssertThatUtils.equalsTo(2))
+            .hasPathSatisfying("$.totals.new", AssertThatUtils.equalsTo(5))
+            .hasPathSatisfying("$.totals.deactivated", AssertThatUtils.equalsTo(2))
+            .hasPathSatisfying("$.totals.banned", AssertThatUtils.equalsTo(1))
+            .hasPathSatisfying("$.points.length()", AssertThatUtils.equalsTo(24))
+            .hasPathSatisfying("$.points[10].time", AssertThatUtils.equalsTo(today + "T10:00:00"))
+            .hasPathSatisfying("$.points[10].visit", AssertThatUtils.equalsTo(2))
+            .hasPathSatisfying("$.points[10].new", AssertThatUtils.equalsTo(2))
+            .hasPathSatisfying("$.points[10].deactivated", AssertThatUtils.equalsTo(1))
+            .hasPathSatisfying("$.points[10].banned", AssertThatUtils.equalsTo(1));
     }
 
     private void setAuthentication() {

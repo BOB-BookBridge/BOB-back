@@ -10,10 +10,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.bob.statistics.application.StatisticsDailySnapshotBackupService;
+import com.bob.statistics.application.recorder.StatisticsDailySnapshotBackupService;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("통계 일일 백업 스케줄러 테스트제 ")
+@DisplayName("통계 일일 백업 스케줄러 테스트")
 class StatisticsDailySnapshotBackupSchedulerTest {
 
     @InjectMocks
