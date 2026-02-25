@@ -27,7 +27,9 @@ import com.bob.core.trade.domain.repository.TradeRepository;
 import com.bob.core.trade.domain.status.Status;
 import com.bob.security.model.MemberDetails;
 import com.bob.statistics.domain.StatisticsMemberDailySnapshot;
+import com.bob.statistics.domain.StatisticsPostDailySnapshot;
 import com.bob.statistics.domain.repository.StatisticsMemberDailySnapshotRepository;
+import com.bob.statistics.domain.repository.StatisticsPostDailySnapshotRepository;
 import com.bob.support.annotation.BobApiTest;
 import com.bob.support.util.AssertThatUtils;
 
@@ -39,6 +41,7 @@ record StatisticsApiTest(
     PostRepository postRepository,
     TradeRepository tradeRepository,
     StatisticsMemberDailySnapshotRepository memberDailySnapshotRepository,
+    StatisticsPostDailySnapshotRepository postDailySnapshotRepository,
     StringRedisTemplate redisTemplate
 ) {
 
@@ -46,6 +49,7 @@ record StatisticsApiTest(
     void setUp() {
         redisTemplate.getConnectionFactory().getConnection().flushDb();
         memberDailySnapshotRepository.deleteAll();
+        postDailySnapshotRepository.deleteAll();
         setAuthentication();
     }
 
@@ -82,12 +86,12 @@ record StatisticsApiTest(
         LocalDate yesterday = today.minusDays(1);
         String todayText = today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-        StatisticsMemberDailySnapshot yesterdaySnapshot = StatisticsMemberDailySnapshot.createEmpty(yesterday);
-        yesterdaySnapshot.addDailyVisitors(10);
-        yesterdaySnapshot.addNewMembers(2);
-        yesterdaySnapshot.addDeactivatedMembers(1);
-        yesterdaySnapshot.addBannedMembers(1);
-        memberDailySnapshotRepository.save(yesterdaySnapshot);
+        StatisticsMemberDailySnapshot snapshot = StatisticsMemberDailySnapshot.createEmpty(yesterday);
+        snapshot.addDailyVisitors(10);
+        snapshot.addNewMembers(2);
+        snapshot.addDeactivatedMembers(1);
+        snapshot.addBannedMembers(1);
+        memberDailySnapshotRepository.save(snapshot);
 
         redisTemplate.opsForHash().putAll("stats:daily:member:" + todayText, Map.of(
             "metric:new_members", "3",
@@ -145,6 +149,68 @@ record StatisticsApiTest(
             .hasPathSatisfying("$.points[10].new", AssertThatUtils.equalsTo(2))
             .hasPathSatisfying("$.points[10].deactivated", AssertThatUtils.equalsTo(1))
             .hasPathSatisfying("$.points[10].banned", AssertThatUtils.equalsTo(1));
+    }
+
+    @Test
+    void 과거_게시글_통계_조회() {
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        String todayText = today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        StatisticsPostDailySnapshot snapshot = StatisticsPostDailySnapshot.createEmpty(yesterday);
+        snapshot.addNewPosts(5);
+        snapshot.addDeletedPosts(2);
+        snapshot.addBannedPosts(1);
+        postDailySnapshotRepository.save(snapshot);
+
+        redisTemplate.opsForHash().putAll("stats:daily:post:" + todayText, Map.of(
+            "metric:new_posts", "3",
+            "metric:deleted_posts", "1",
+            "metric:banned_posts", "0"
+        ));
+
+        var result = mvcTester.get()
+            .uri("/statistics/posts?from={from}&to={to}", yesterday, today)
+            .exchange();
+
+        assertThat(result).hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.totals.registered", AssertThatUtils.equalsTo(8))
+            .hasPathSatisfying("$.totals.deleted", AssertThatUtils.equalsTo(4))
+            .hasPathSatisfying("$.categoryDistribution.length()", AssertThatUtils.equalsTo(1))
+            .hasPathSatisfying("$.categoryDistribution[0].categoryId", AssertThatUtils.equalsTo(21))
+            .hasPathSatisfying("$.categoryDistribution[0].count", AssertThatUtils.equalsTo(5))
+            .hasPathSatisfying("$.areaDistribution.length()", AssertThatUtils.equalsTo(1))
+            .hasPathSatisfying("$.areaDistribution[0].emdId", AssertThatUtils.equalsTo(213))
+            .hasPathSatisfying("$.areaDistribution[0].count", AssertThatUtils.equalsTo(5));
+    }
+
+    @Test
+    void 당일_게시글_통계_조회() {
+        LocalDate today = LocalDate.now();
+        String todayText = today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        StatisticsPostDailySnapshot snapshot = StatisticsPostDailySnapshot.createEmpty(today.minusDays(1));
+        postDailySnapshotRepository.save(snapshot);
+
+        redisTemplate.opsForHash().putAll("stats:daily:post:" + todayText, Map.of(
+            "metric:new_posts", "3",
+            "metric:deleted_posts", "1",
+            "metric:banned_posts", "0"
+        ));
+
+        var result = mvcTester.get().uri("/statistics/posts").exchange();
+
+        assertThat(result).hasStatus2xxSuccessful()
+            .bodyJson()
+            .hasPathSatisfying("$.totals.registered", AssertThatUtils.equalsTo(3))
+            .hasPathSatisfying("$.totals.deleted", AssertThatUtils.equalsTo(1))
+            .hasPathSatisfying("$.categoryDistribution.length()", AssertThatUtils.equalsTo(1))
+            .hasPathSatisfying("$.categoryDistribution[0].categoryId", AssertThatUtils.equalsTo(21))
+            .hasPathSatisfying("$.categoryDistribution[0].count", AssertThatUtils.equalsTo(5))
+            .hasPathSatisfying("$.areaDistribution.length()", AssertThatUtils.equalsTo(1))
+            .hasPathSatisfying("$.areaDistribution[0].emdId", AssertThatUtils.equalsTo(213))
+            .hasPathSatisfying("$.areaDistribution[0].count", AssertThatUtils.equalsTo(5));
     }
 
     private void setAuthentication() {

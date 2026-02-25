@@ -11,13 +11,18 @@ import com.bob.core.post.domain.Post;
 public class PostFixture {
 
     public static Post createPost(UUID memberId, Integer categoryId, String bookStatus) {
-        return Post.createPost(categoryId, EMD_AREA_ID, 1L, "제목", "설명", "https://image.jpg", bookStatus, memberId, 1L,
-            30000, false, List.of());
+        return Post.createPost(categoryId, EMD_AREA_ID, 1L, "title", "description", "https://image.jpg", bookStatus,
+            memberId, 1L, 30000, false, List.of());
+    }
+
+    public static Post createPost(UUID memberId, Integer categoryId, Integer emdId, String bookStatus) {
+        return Post.createPost(categoryId, emdId, 1L, "title", "description", "https://image.jpg", bookStatus,
+            memberId, 1L, 30000, false, List.of());
     }
 
     public static Post createPost(UUID memberId, Integer categoryId, String bookStatus, List<String> filterWords) {
-        return Post.createPost(categoryId, EMD_AREA_ID, 1L, "제목", "설명", "https://image.jpg", bookStatus, memberId, 1L,
-            30000, false, filterWords);
+        return Post.createPost(categoryId, EMD_AREA_ID, 1L, "title", "description", "https://image.jpg", bookStatus,
+            memberId, 1L, 30000, false, filterWords);
     }
 
     public static Post createPost(String bookStatus) {
@@ -37,10 +42,10 @@ public class PostFixture {
     }
 
     public static Post createPendingPost() {
-        return createPost(MEMBER_ID, 1, "LOW", List.of("금지어"));
+        return createPost(MEMBER_ID, 1, "LOW", List.of("forbidden"));
     }
 
     public static Post createPendingPost(UUID memberId) {
-        return createPost(memberId, 1, "LOW", List.of("금지어"));
+        return createPost(memberId, 1, "LOW", List.of("forbidden"));
     }
 }
