@@ -13,12 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bob.statistics.adapter.api.request.ReadStatisticsMemberRequest;
 import com.bob.statistics.adapter.api.request.ReadStatisticsPostRequest;
+import com.bob.statistics.adapter.api.request.ReadStatisticsTradeRequest;
 import com.bob.statistics.adapter.api.response.StatisticsBasicResponse;
 import com.bob.statistics.adapter.api.response.StatisticsMemberResponse;
 import com.bob.statistics.adapter.api.response.StatisticsPostResponse;
+import com.bob.statistics.adapter.api.response.StatisticsTradeResponse;
 import com.bob.statistics.application.port.in.StatisticsBasicReader;
 import com.bob.statistics.application.port.in.StatisticsMemberReader;
 import com.bob.statistics.application.port.in.StatisticsPostReader;
+import com.bob.statistics.application.port.in.StatisticsTradeReader;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class StatisticsApi {
     private final StatisticsBasicReader statisticsBasicReader;
     private final StatisticsMemberReader statisticsMemberReader;
     private final StatisticsPostReader statisticsPostReader;
+    private final StatisticsTradeReader statisticsTradeReader;
 
     @GetMapping("/basic")
     @PreAuthorize("hasRole('ADMIN')")
@@ -53,5 +57,15 @@ public class StatisticsApi {
         LocalDate to = request.to() == null ? today : request.to();
 
         return StatisticsPostResponse.of(statisticsPostReader.readPost(from, to));
+    }
+
+    @GetMapping("/trades")
+    @PreAuthorize("hasRole('ADMIN')")
+    public StatisticsTradeResponse readTrade(@Valid ReadStatisticsTradeRequest request) {
+        LocalDate today = LocalDate.now();
+        LocalDate from = request.from() == null ? today : request.from();
+        LocalDate to = request.to() == null ? today : request.to();
+
+        return StatisticsTradeResponse.of(statisticsTradeReader.readTrade(from, to));
     }
 }

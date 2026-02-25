@@ -1,6 +1,7 @@
 package com.bob.statistics.domain.repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,5 +12,5 @@ public interface StatisticsTradeDailySnapshotRepository extends JpaRepository<St
 
     Optional<StatisticsTradeDailySnapshot> findBySnapshotDate(LocalDate snapshotDate);
 
-    void deleteBySnapshotDate(LocalDate snapshotDate);
+    List<StatisticsTradeDailySnapshot> findAllBySnapshotDateBetweenOrderBySnapshotDateAsc(LocalDate from, LocalDate to);
 }
