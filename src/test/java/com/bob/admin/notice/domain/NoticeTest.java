@@ -14,7 +14,7 @@ class NoticeTest {
 
     @Test
     void 게시용_공지_생성() {
-        Notice notice = Notice.createBanner(MANAGER_ID, "content", LocalDateTime.now().plusHours(1));
+        Notice notice = Notice.createBanner(MANAGER_ID, "content", null);
 
         assertThat(notice.getType()).isEqualTo(NoticeType.BANNER);
         assertThat(notice.getTitle()).isEqualTo("[공지사항]");

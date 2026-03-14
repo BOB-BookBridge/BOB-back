@@ -48,6 +48,7 @@ import com.bob.core.member.domain.repository.MemberRepository;
 import com.bob.core.member.event.MemberDeactivatedEvent;
 import com.bob.core.member.event.MemberRecoveredEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
+import com.bob.global.snapshot.RecordSnapshot;
 
 @Service
 @Transactional
@@ -68,6 +69,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
+    @RecordSnapshot
     public Member signup(CreateMemberCommand command) {
         verifyEmailConfirm(command.email());
         verifyEmailDuplicate(command.email());
@@ -92,6 +94,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
     }
 
     @Override
+    @RecordSnapshot(onlyCreate = true)
     public Member socialLogin(SocialLoginCommand command) {
         String email = command.email();
 
@@ -100,6 +103,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
     }
 
     @Override
+    @RecordSnapshot
     public Member changeStatus(UUID memberId, ChangeStatusCommand command) {
         Status status = Status.valueOf(command.status());
 
@@ -203,6 +207,7 @@ public class MemberCommandService implements MemberRegister, MemberModifier {
     }
 
     @Override
+    @RecordSnapshot
     public Member deactivate(UUID memberId, HttpServletResponse response) {
         Member member = memberReader.read(memberId);
 

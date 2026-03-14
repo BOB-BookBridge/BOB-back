@@ -65,6 +65,7 @@ import com.bob.core.trade.event.TradeNotificationEvent;
 import com.bob.core.trade.event.TradeStatusChangedEvent;
 import com.bob.global.exception.exceptions.ApplicationException;
 import com.bob.global.exception.response.ApplicationError;
+import com.bob.global.snapshot.RecordSnapshot;
 
 @Service
 @Transactional
@@ -82,6 +83,7 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
+    @RecordSnapshot
     public Trade create(CreateTradeCommand command) {
         TradePost post = postPort.read(command.postId());
         verifySelfTrade(post.sellerId(), command.buyerId());
@@ -107,6 +109,7 @@ public class TradeCommandService implements TradeCreator, TradeModifier, TradeRe
     }
 
     @Override
+    @RecordSnapshot
     public ChangeTradeStatusResult changeStatus(Long id, ChangeTradeStatusCommand command) {
         Trade trade = tradeReader.read(id);
         Status previous = trade.getStatus();

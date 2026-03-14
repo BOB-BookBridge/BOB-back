@@ -1,0 +1,93 @@
+package com.bob.statistics.application.recorder;
+
+import static com.bob.support.fixture.trade.domain.TradeFixture.createTrade;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.bob.core.trade.domain.Trade;
+import com.bob.core.trade.domain.status.Status;
+import com.bob.statistics.application.port.out.StatisticsEntityStateStore;
+import com.bob.statistics.application.port.out.StatisticsMetricStore;
+import com.bob.statistics.domain.StatisticsMetricEvent;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("거래 통계 스냅샷 변환 테스트")
+class TradeStatisticsSnapshotRecordServiceTest {
+
+    @InjectMocks
+    private StatisticsSnapshotRecordService recordService;
+
+    @Mock
+    private StatisticsMetricStore metricStore;
+
+    @Mock
+    private StatisticsEntityStateStore entityStateStore;
+
+    @Mock
+    private StatisticsCohortCurrentSnapshotService cohortCurrentSnapshotService;
+
+    @Test
+    void 거래_생성_집계() {
+        LocalDateTime txStartedAt = LocalDateTime.now();
+        Trade created = createTrade(Status.REQUESTED);
+        ReflectionTestUtils.setField(created, "id", 1L);
+        ReflectionTestUtils.setField(created, "createdAt", txStartedAt.plusSeconds(1));
+
+        List<StatisticsMetricEvent> events = recordService.convertToMetricEvents(created, txStartedAt, false);
+
+        assertThat(countMetric(events, "new_trades")).isEqualTo(1);
+        assertThat(countMetric(events, "status:REQUESTED")).isEqualTo(1);
+    }
+
+    @Test
+    void 거래_수락_상태_변경_집계() {
+        assertTradeStatusMetric(Status.ACCEPTED, "status:ACCEPTED");
+    }
+
+    @Test
+    void 거래_예약_상태_변경_집계() {
+        assertTradeStatusMetric(Status.RESERVED, "status:RESERVED");
+    }
+
+    @Test
+    void 거래_완료_상태_변경_집계() {
+        assertTradeStatusMetric(Status.COMPLETED, "status:COMPLETED");
+    }
+
+    @Test
+    void 거래_취소_상태_변경_집계() {
+        assertTradeStatusMetric(Status.CANCELED, "status:CANCELED");
+    }
+
+    @Test
+    void 거래_거절_상태_변경_집계() {
+        assertTradeStatusMetric(Status.REJECTED, "status:REJECTED");
+    }
+
+    private void assertTradeStatusMetric(Status status, String metricName) {
+        LocalDateTime txStartedAt = LocalDateTime.now();
+        Trade trade = createTrade(status);
+        ReflectionTestUtils.setField(trade, "id", 7L);
+        ReflectionTestUtils.setField(trade, "createdAt", txStartedAt.minusDays(1));
+
+        List<StatisticsMetricEvent> events = recordService.convertToMetricEvents(trade, txStartedAt, false);
+
+        assertThat(countMetric(events, "new_trades")).isZero();
+        assertThat(countMetric(events, metricName)).isEqualTo(1);
+    }
+
+    private static long countMetric(List<StatisticsMetricEvent> events, String metricName) {
+        return events.stream().filter(event -> metricName.equals(event.metric())).count();
+    }
+}

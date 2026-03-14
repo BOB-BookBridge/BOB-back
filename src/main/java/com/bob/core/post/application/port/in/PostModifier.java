@@ -1,5 +1,7 @@
 package com.bob.core.post.application.port.in;
 
+import java.util.List;
+
 import com.bob.core.post.application.dto.command.ChangeMemberPostStatusCommand;
 import com.bob.core.post.application.dto.command.ChangePostInfoCommand;
 import com.bob.core.post.application.dto.command.ChangePostStatusCommand;
@@ -19,5 +21,5 @@ public interface PostModifier {
 
     Post changeStatus(Long postId, ChangePostStatusCommand command);
 
-    void changeStatusByAccountEvent(ChangeMemberPostStatusCommand command);
+    List<Post> changeStatusByAccountEvent(ChangeMemberPostStatusCommand command);
 }

@@ -36,7 +36,8 @@ public class Notice extends AbstractEntity {
     public static Notice createBanner(UUID writerId, String content, LocalDateTime endTime) {
         Assert.hasText(content, "내용은 필수입니다");
 
-        Assert.isTrue(endTime.isAfter(LocalDateTime.now()), "게시 종료 시각은 현재 시각 이후여야 합니다");
+        if (endTime != null)
+            Assert.isTrue(endTime.isAfter(LocalDateTime.now()), "게시 종료 시각은 현재 시각 이후여야 합니다");
 
         return Notice.builder()
             .type(NoticeType.BANNER)
